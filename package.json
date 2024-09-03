@@ -16,6 +16,7 @@
   "devDependencies": {
     "@matterlabs/hardhat-zksync": "^1.1.0",
     "@matterlabs/zksync-contracts": "^0.6.1",
+    "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-verify": "^2.0.9",
     "@openzeppelin/contracts": "^4.9.2",
     "@types/chai": "^4.3.16",

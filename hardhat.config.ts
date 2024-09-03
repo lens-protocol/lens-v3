@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 
 import "@matterlabs/hardhat-zksync";
+import "@nomicfoundation/hardhat-foundry";
 
 const config: HardhatUserConfig = {
   defaultNetwork: "lensSepoliaTestnet",
