@@ -6,7 +6,7 @@ import {RuleConfiguration} from "./../../types/Types.sol";
 
 interface IFollowRule {
     // This should be called by the primitive, and stored under the "msg.sender" context (msg.sender == primitive)
-    function configure(address account, RuleConfiguration calldata ruleConfiguration) external;
+    function _configure(address account, RuleConfiguration calldata ruleConfiguration) internal;
 
     /**
      * Predicate to be evaluated upon each follow using the logic set by `accountToFollow`. Finishes execution
@@ -14,7 +14,7 @@ interface IFollowRule {
      * @param accountToFollow The account to be followed.
      * @param data Data that the rule might require to evalute the follow.
      */
-    function processFollow(address msgSender, address accountToFollow, uint256 followId, bytes calldata data)
+    function _processFollow(address msgSender, address accountToFollow, uint256 followId, bytes calldata data)
         external;
 
     // We don't have processUnfollow() function because it can prevent from unfollowing or have other weird consequences

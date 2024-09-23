@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IRule} from "./../rules/IRule.sol";
-import {RuleConfiguration} from "./../../types/Types.sol";
+import {RuleConfiguration, RuleExecutionData} from "./../../types/Types.sol";
 
 contract RuleBased {
     struct RuleState {
@@ -21,7 +21,8 @@ contract RuleBased {
         mapping(bytes32 => RulesStorage) rulesStorage;
     }
 
-    // keccak256('lens.rule.based.storage')
+    // keccak256('lens.rule.based.storage') // TODO: Replace this with ruleBased or rule-based or smth
+    // TODO: Why again we don't use dynamic keccak here?
     bytes32 constant RULE_BASED_STORAGE_SLOT = 0x78c2efc16b0e28b79e7018ec8a12d1eec1218d52bcd7993a02f6763876b0ceb6;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
@@ -39,59 +40,50 @@ contract RuleBased {
     // Internal
 
     function _addRule(RuleConfiguration memory rule) internal virtual {
-        _addDefaultRule(DEFAULT_RULES_STORAGE_KEY, rule);
+        // TODO: We don't need msg.sender rn, but it's possible. Maybe we should move this decision into primitive
+        _addRule(DEFAULT_RULES_STORAGE_KEY, IRule.DEFAULT_CONFIGURE_SELECTOR, abi.encode(msg.sender), rule);
     }
 
     function _updateRule(RuleConfiguration memory rule) internal virtual {
-        _updateDefaultRule(DEFAULT_RULES_STORAGE_KEY, rule);
+        // TODO: We don't need msg.sender rn, but it's possible. Maybe we should move this decision into primitive
+        _updateRule(DEFAULT_RULES_STORAGE_KEY, IRule.DEFAULT_CONFIGURE_SELECTOR, abi.encode(msg.sender), rule);
     }
 
     function _removeRule(address rule) internal virtual {
         _removeRule(DEFAULT_RULES_STORAGE_KEY, rule);
     }
 
-    function _processRules(bytes[] memory datas) internal virtual {
-        _processRules(DEFAULT_RULES_STORAGE_KEY, datas);
-    }
-
-    function _addRule(bytes32 ruleStorageKey, RuleConfiguration memory rule, bytes memory encodedConfigureCall)
+    function _processRules(bytes4 selector, bytes memory primitiveParams, RuleExecutionData calldata userDatas)
         internal
         virtual
     {
-        require(!_ruleAlreadySet(ruleStorageKey, rule.ruleAddress), "AddRule: Same rule was already added");
-        _addRuleToStorage(ruleStorageKey, rule.ruleAddress, rule.isRequired);
-        (bool success,) = rule.ruleAddress.call(encodedConfigureCall);
-        require(success, "AddRule: Rule configuration failed");
+        _processRules(DEFAULT_RULES_STORAGE_KEY, selector, primitiveParams, userDatas);
     }
 
-    function _addDefaultRule(bytes32 ruleStorageKey, RuleConfiguration memory rule) private {
+    function _addRule(
+        bytes32 ruleStorageKey,
+        bytes4 selector,
+        bytes memory primitiveData,
+        RuleConfiguration memory rule
+    ) internal virtual {
         require(!_ruleAlreadySet(ruleStorageKey, rule.ruleAddress), "AddRule: Same rule was already added");
         _addRuleToStorage(ruleStorageKey, rule.ruleAddress, rule.isRequired);
-        IRule(rule.ruleAddress).configure(rule.configData);
+        IRule(rule.ruleAddress).configure(selector, primitiveData, rule.configData);
     }
 
-    function _updateRule(bytes32 ruleStorageKey, RuleConfiguration memory rule, bytes memory encodedCall)
-        internal
-        virtual
-    {
+    function _updateRule(
+        bytes32 ruleStorageKey,
+        bytes4 selector,
+        bytes memory primitiveData,
+        RuleConfiguration memory rule
+    ) internal virtual {
         require(_ruleAlreadySet(ruleStorageKey, rule.ruleAddress), "ConfigureRule: Rule doesn't exist");
         if ($ruleBasedStorage().rulesStorage[ruleStorageKey].ruleStates[rule.ruleAddress].isRequired != rule.isRequired)
         {
             _removeRuleFromStorage(ruleStorageKey, rule.ruleAddress);
             _addRuleToStorage(ruleStorageKey, rule.ruleAddress, rule.isRequired);
         }
-        (bool success,) = rule.ruleAddress.call(encodedCall);
-        require(success, "AddRule: Rule configuration failed");
-    }
-
-    function _updateDefaultRule(bytes32 ruleStorageKey, RuleConfiguration memory rule) private {
-        require(_ruleAlreadySet(ruleStorageKey, rule.ruleAddress), "ConfigureRule: Rule doesn't exist");
-        if ($ruleBasedStorage().rulesStorage[ruleStorageKey].ruleStates[rule.ruleAddress].isRequired != rule.isRequired)
-        {
-            _removeRuleFromStorage(ruleStorageKey, rule.ruleAddress);
-            _addRuleToStorage(ruleStorageKey, rule.ruleAddress, rule.isRequired);
-        }
-        IRule(rule.ruleAddress).configure(rule.configData);
+        IRule(rule.ruleAddress).configure(selector, primitiveData, rule.configData);
     }
 
     function _removeRule(bytes32 ruleStorageKey, address rule) internal virtual {
@@ -99,22 +91,34 @@ contract RuleBased {
         _removeRuleFromStorage(ruleStorageKey, rule);
     }
 
-    function _processRules(bytes32 ruleStorageKey, bytes[] memory encodedCall) internal virtual {
+    function _processRules(
+        bytes32 ruleStorageKey,
+        bytes4 selector,
+        bytes memory primitiveParams,
+        RuleExecutionData calldata userDatas
+    ) internal virtual {
         // Processing AND rules:
         address[] storage requiredRules = _getRulesArray(ruleStorageKey, true);
         for (uint256 i = 0; i < requiredRules.length; i++) {
-            (bool callNotReverted,) = requiredRules[i].call(encodedCall[i]);
-            require(callNotReverted, "RuleCombinator: Some required rule failed");
+            IRule(requiredRules[i]).process(selector, primitiveParams, userDatas.dataForRequiredRules[i]);
         }
+
         // Processing OR rules:
         address[] storage anyOfRules = _getRulesArray(ruleStorageKey, false);
-        for (uint256 i = requiredRules.length; i < requiredRules.length + anyOfRules.length; i++) {
-            (bool success, bytes memory returnData) = anyOfRules[i].call(encodedCall[i]);
+        if (anyOfRules.length == 0) {
+            return;
+        }
+        for (uint256 i = 0; i < anyOfRules.length; i++) {
+            (bool success, bytes memory returnData) = anyOfRules[i].call(
+                abi.encodeWithSelector(
+                    IRule(anyOfRules[i]).process.selector, selector, primitiveParams, userDatas.dataForAnyOfRules[i]
+                )
+            );
             if (success && abi.decode(returnData, (bool))) {
-                return; // If any of the rules passed, we can return
+                return; // If any of the OR rules passed, we can return
             }
         }
-        revert("RuleCombinator: All of the OR rules failed");
+        revert("RuleCombinator: None of the OR rules passed");
     }
 
     // Private

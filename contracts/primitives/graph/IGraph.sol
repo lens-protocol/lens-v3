@@ -3,14 +3,8 @@ pragma solidity ^0.8.0;
 
 import {IFollowRule} from "./IFollowRule.sol";
 import {IGraphRule} from "./IGraphRule.sol";
-import {DataElement} from "../../types/Types.sol";
-import {RuleConfiguration} from "./../../types/Types.sol";
+import {RuleConfiguration, RuleExecutionData} from "./../../types/Types.sol";
 
-// TODO: Might worth to add extraData to the follow entity
-// Maybe it requires a targetExtraData and a followerExtraData
-// so then you have different auth for them, and they store different data
-// e.g. the follower can store a label/tag/category, like "I follow this account because of crypto/politics/etc"
-// and the target can store other information like tiers, etc.
 struct Follow {
     uint256 id;
     uint256 timestamp;
@@ -45,33 +39,38 @@ interface IGraph {
         address indexed followerAccount, address indexed accountToUnfollow, uint256 followId, bytes graphRulesData
     );
 
-    event Lens_Graph_ExtraDataSet(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
-
     function addGraphRules(RuleConfiguration[] calldata rules) external;
 
     function updateGraphRules(RuleConfiguration[] calldata rules) external;
 
     function removeGraphRules(address[] calldata rules) external;
 
-    function addFollowRules(address account, RuleConfiguration[] calldata rules, bytes[] calldata graphRulesData)
+    function addFollowRules(
+        address account,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata graphRulesData
+    ) external;
+    function updateFollowRules(
+        address account,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata graphRulesData
+    ) external;
+    function removeFollowRules(address account, address[] calldata rules, RuleExecutionData calldata graphRulesData)
         external;
-    function updateFollowRules(address account, RuleConfiguration[] calldata rules, bytes[] calldata graphRulesData)
-        external;
-    function removeFollowRules(address account, address[] calldata rules, bytes[] calldata graphRulesData) external;
-
-    function setExtraData(DataElement[] calldata extraDataToSet) external;
 
     function follow(
         address followerAccount,
         address targetAccount,
         uint256 followId,
-        bytes calldata graphRulesData,
-        bytes calldata followRulesData
+        RuleExecutionData calldata graphRulesData,
+        RuleExecutionData calldata followRulesData
     ) external returns (uint256);
 
-    function unfollow(address followerAccount, address targetAccount, bytes calldata graphRulesData)
+    function unfollow(address followerAccount, address targetAccount, RuleExecutionData calldata graphRulesData)
         external
         returns (uint256);
+
+    function setMetadataUri(string calldata metadataURI) external;
 
     // Getters
 
@@ -83,9 +82,7 @@ interface IGraph {
 
     function getFollowersCount(address account) external view returns (uint256);
 
-    function getFollowRules(address account) external view returns (IFollowRule);
+    function getFollowRules(address account, bool isRequired) external view returns (IFollowRule);
 
     function getGraphRules(bool isRequired) external view returns (address[] memory);
-
-    function getExtraData(bytes32 key) external view returns (bytes memory);
 }
