@@ -70,16 +70,18 @@ contract Graph is IGraph, RuleBased, AccessControlled {
     // Public user functions
 
     // TODO: For now we pass graphRulesData as a concatenation of Required[] + Optional[] arrays. Think if this is best.
-    function addFollowRules(address account, RuleConfiguration[] calldata rules, bytes[] calldata graphRulesData)
-        external
-        override
-    {
+    function addFollowRules(
+        address account,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata graphRulesData
+    ) external override {
         require(msg.sender == account || _hasAccess(SKIP_FOLLOW_RULES_CHECKS_RID));
         address[] memory ruleAddresses = new address[](rules.length);
+        bytes32 followRuleKey = _getFollowRuleKeyByAccount(account);
         for (uint256 i = 0; i < rules.length; i++) {
             // Passes the rule to add, and the call to do to configure the rule (account, configData)
             _addRule(
-                FOLLOW_RULE_STORAGE_KEY,
+                followRuleKey,
                 rules[i],
                 abi.encodeWithSelector(IFollowRule.configure.selector, account, rules[i].configData)
             );
@@ -89,16 +91,18 @@ contract Graph is IGraph, RuleBased, AccessControlled {
         _processFollowRulesChange(account, ruleAddresses, graphRulesData);
     }
 
-    function updateFollowRules(address account, RuleConfiguration[] calldata rules, bytes[] calldata graphRulesData)
-        external
-        override
-    {
+    function updateFollowRules(
+        address account,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata graphRulesData
+    ) external override {
         require(msg.sender == account || _hasAccess(SKIP_FOLLOW_RULES_CHECKS_RID));
         address[] memory ruleAddresses = new address[](rules.length);
+        bytes32 followRuleKey = _getFollowRuleKeyByAccount(account);
         for (uint256 i = 0; i < rules.length; i++) {
             // Passes the rule to add, and the call to do to configure the rule (account, configData)
             _updateRule(
-                FOLLOW_RULE_STORAGE_KEY,
+                followRuleKey,
                 rules[i],
                 abi.encodeWithSelector(IFollowRule.configure.selector, account, rules[i].configData)
             );
@@ -108,14 +112,15 @@ contract Graph is IGraph, RuleBased, AccessControlled {
         _processFollowRulesChange(account, ruleAddresses, graphRulesData);
     }
 
-    function removeFollowRules(address account, address[] calldata rules, bytes[] calldata graphRulesData)
+    function removeFollowRules(address account, address[] calldata rules, RuleExecutionData calldata graphRulesData)
         external
         override
     {
         require(msg.sender == account || _hasAccess(SKIP_FOLLOW_RULES_CHECKS_RID));
+        bytes32 followRuleKey = _getFollowRuleKeyByAccount(account);
         for (uint256 i = 0; i < rules.length; i++) {
             // Passes the rule to add, and the call to do to configure the rule (account, configData)
-            _removeRule(FOLLOW_RULE_STORAGE_KEY, rules[i]);
+            _removeRule(followRuleKey, rules[i]);
             emit Lens_Graph_Follow_RuleRemoved(account, rules[i]);
         }
         _processFollowRulesChange(account, rules, graphRulesData);
@@ -169,18 +174,113 @@ contract Graph is IGraph, RuleBased, AccessControlled {
 
     // Internal
 
-    function _processFollowRulesChange(address account, address[] memory rules, bytes[] calldata graphRulesData)
-        internal
-    {
-        if (address(Core.$storage().graphRules) != address(0)) {
-            bytes[] memory graphRulesEncodedDatas = new bytes[](graphRulesData.length);
-            for (uint256 i = 0; i < graphRulesData.length; i++) {
-                graphRulesEncodedDatas[i] =
-                    abi.encodeWithSelector(IGraphRule.processFollowRulesChange.selector, account, rules, graphRulesData);
+    function _getFollowRuleKeyByAccount(address account) internal pure returns (bytes32) {
+        return keccak256(abi.encode(FOLLOW_RULE_STORAGE_KEY, account));
+    }
+
+    // TODO: Think how else can you limit the users adding FollowRules by the owner of the primitive
+    function _processFollowRulesChange(
+        address account,
+        address[] memory rules,
+        RuleExecutionData calldata graphRulesData
+    ) internal {
+        uint256 totalGraphRules = _getRulesArray(true).length + _getRulesArray(false).length;
+        if (totalGraphRules > 0) {
+            uint256 totalRulesDatasLength =
+                graphRulesData.dataForRequiredRules.length + graphRulesData.dataForOptionalRules.length;
+            bytes[] memory graphRulesEncodedDatas = new bytes[](totalRulesDatasLength);
+            for (uint256 i = 0; i < graphRulesData.dataForRequiredRules.length; i++) {
+                graphRulesEncodedDatas[i] = abi.encodeWithSelector(
+                    IGraphRule.processFollowRulesChange.selector, account, rules, graphRulesData.dataForRequiredRules[i]
+                );
+            }
+            for (uint256 i = 0; i < graphRulesData.dataForOptionalRules.length; i++) {
+                graphRulesEncodedDatas[graphRulesData.dataForRequiredRules.length + i] = abi.encodeWithSelector(
+                    IGraphRule.processFollowRulesChange.selector, account, rules, graphRulesData.dataForOptionalRules[i]
+                );
             }
             _processRules(graphRulesEncodedDatas);
         }
     }
+
+    // TODO: Think how else can you limit the users adding FollowRules by the owner of the primitive
+    function _globalProcessFollow(address account, address[] memory rules, RuleExecutionData calldata followRulesData)
+        internal
+    {
+        uint256 totalGraphRules = _getRulesArray(true).length + _getRulesArray(false).length;
+        if (totalGraphRules > 0) {
+            uint256 totalRulesDatasLength =
+                followRulesData.dataForRequiredRules.length + followRulesData.dataForOptionalRules.length;
+            bytes[] memory graphRulesEncodedDatas = new bytes[](totalRulesDatasLength);
+            for (uint256 i = 0; i < followRulesData.dataForRequiredRules.length; i++) {
+                graphRulesEncodedDatas[i] = abi.encodeWithSelector(
+                    IGraphRule.processFollow.selector, account, rules, followRulesData.dataForRequiredRules[i]
+                );
+            }
+            for (uint256 i = 0; i < followRulesData.dataForOptionalRules.length; i++) {
+                graphRulesEncodedDatas[followRulesData.dataForRequiredRules.length + i] = abi.encodeWithSelector(
+                    IGraphRule.processFollow.selector, account, rules, followRulesData.dataForOptionalRules[i]
+                );
+            }
+            _processRules(graphRulesEncodedDatas);
+        }
+    }
+
+    // TODO: Think how else can you limit the users adding FollowRules by the owner of the primitive
+    function _localProcessFollow(address account, address[] memory rules, RuleExecutionData calldata followRulesData)
+        internal
+    {
+        uint256 totalGraphRules = _getRulesArray(true).length + _getRulesArray(false).length;
+        if (totalGraphRules > 0) {
+            uint256 totalRulesDatasLength =
+                followRulesData.dataForRequiredRules.length + followRulesData.dataForOptionalRules.length;
+            bytes[] memory graphRulesEncodedDatas = new bytes[](totalRulesDatasLength);
+            for (uint256 i = 0; i < followRulesData.dataForRequiredRules.length; i++) {
+                graphRulesEncodedDatas[i] = abi.encodeWithSelector(
+                    IGraphRule.processFollow.selector, account, rules, followRulesData.dataForRequiredRules[i]
+                );
+            }
+            for (uint256 i = 0; i < followRulesData.dataForOptionalRules.length; i++) {
+                graphRulesEncodedDatas[followRulesData.dataForRequiredRules.length + i] = abi.encodeWithSelector(
+                    IGraphRule.processFollow.selector, account, rules, followRulesData.dataForOptionalRules[i]
+                );
+            }
+            _processRules(graphRulesEncodedDatas);
+        }
+    }
+
+    // function _processRules(bytes selector, bytes fixedParamsEncoded, RuleExecutionData calldata userGivenRuleDatas) {
+    //     bytes memory encodedCall;
+    //      // Processing AND rules:
+    //     address[] storage requiredRules = _getRulesArray(ruleStorageKey, true);
+    //     for (uint256 i = 0; i < requiredRules.length; i++) {
+    //         encodedCall = abi.encodeWithSelector(selector, abi.encodePacked(fixedParamsEncoded, userGivenRuleDatas.dataForRequiredRules[i]));
+    //         (bool callNotReverted,) = requiredRules[i].call(encodedCall);
+    //         require(callNotReverted, "RuleCombinator: Some required rule failed");
+    //     }
+    //     // Processing OR rules:
+    //     address[] storage anyOfRules = _getRulesArray(ruleStorageKey, false);
+    //     for (uint256 i = requiredRules.length; i < requiredRules.length + anyOfRules.length; i++) {
+    //         abi.encodePacked(selector, abi.encode(fixedParamsEncoded, userGivenRuleDatas.dataForAnyOfRules[i]));
+    //         encodedCall = abi.encodeWithSelector(selector, abi.encodePacked(fixedParamsEncoded, userGivenRuleDatas.dataForAnyOfRules[i]));
+    //         (bool success, bytes memory returnData) = anyOfRules[i].call(encodedCall);
+    //         if (success && abi.decode(returnData, (bool))) {
+    //             return; // If any of the rules passed, we can return
+    //         }
+    //     }
+    //     revert("RuleCombinator: All of the OR rules failed");
+    // }
+
+    // processRule(selector, primitiveBasedParams, userGivenRuleDatas) {
+    //     if (selector == "processFollow") {
+    //         _processFollow(primitiveBasedParams, userGivenRuleDatas);
+    //     }
+    // }
+
+    // _processFollow(bytes primitiveBasedParams, userGivenRuleDatas) {
+    //     abi.decode( userGivenRuleDatas, (RuleExecutionData) );
+    //     // Process the follow rule data
+    // }
 
     // Getters
 
@@ -201,7 +301,7 @@ contract Graph is IGraph, RuleBased, AccessControlled {
     }
 
     function getFollowRules(address account) external view override returns (IFollowRule) {
-        // return ???
+        return _getRulesArray(_getFollowRuleKeyByAccount(account), isRequired);
     }
 
     function getFollowersCount(address account) external view override returns (uint256) {

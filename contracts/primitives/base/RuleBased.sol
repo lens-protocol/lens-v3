@@ -100,11 +100,13 @@ contract RuleBased {
     }
 
     function _processRules(bytes32 ruleStorageKey, bytes[] memory encodedCall) internal virtual {
+        // Processing AND rules:
         address[] storage requiredRules = _getRulesArray(ruleStorageKey, true);
         for (uint256 i = 0; i < requiredRules.length; i++) {
             (bool callNotReverted,) = requiredRules[i].call(encodedCall[i]);
             require(callNotReverted, "RuleCombinator: Some required rule failed");
         }
+        // Processing OR rules:
         address[] storage anyOfRules = _getRulesArray(ruleStorageKey, false);
         for (uint256 i = requiredRules.length; i < requiredRules.length + anyOfRules.length; i++) {
             (bool success, bytes memory returnData) = anyOfRules[i].call(encodedCall[i]);

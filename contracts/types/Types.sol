@@ -11,3 +11,8 @@ struct RuleConfiguration {
     bytes configData;
     bool isRequired;
 }
+
+struct RuleExecutionData {
+    bytes[] dataForRequiredRules;
+    bytes[] dataForAnyOfRules;
+}
