@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.17;
 
-import {IFollowGraph} from './IFollowGraph.sol';
-import {IGraphExtension} from './IGraphExtension.sol';
-import {IFollowModule} from './IFollowModule.sol';
+import {IFollowGraph} from "./IFollowGraph.sol";
+import {IGraphExtension} from "./IGraphExtension.sol";
+import {IFollowModule} from "./IFollowModule.sol";
 
 contract ERC721 {
     mapping(uint256 => address) internal _ownerOf;
@@ -130,11 +130,9 @@ contract FollowTokenizer is ERC721, IGraphExtension, IFollowGraph {
         _followGraph.unfollow(followerAccount, accountToUnfollow, graphExtensionData);
     }
 
-    function follow(
-        address accountToFollow,
-        bytes calldata graphExtensionData,
-        bytes calldata followModuleData
-    ) external {
+    function follow(address accountToFollow, bytes calldata graphExtensionData, bytes calldata followModuleData)
+        external
+    {
         _followGraph.follow(msg.sender, accountToFollow, 0, graphExtensionData, followModuleData);
     }
 

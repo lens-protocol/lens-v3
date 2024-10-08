@@ -12,6 +12,7 @@ import {FeedFactory} from "./FeedFactory.sol";
 import {GraphFactory} from "./GraphFactory.sol";
 import {UsernameFactory} from "./UsernameFactory.sol";
 import {AppFactory, AppInitialProperties} from "./AppFactory.sol";
+import {AccountFactory} from "./AccountFactory.sol";
 
 // struct RoleConfiguration {
 //     uint256 roleId;
@@ -35,6 +36,8 @@ struct TokenizationConfiguration {
 
 contract LensFactory {
     uint256 immutable ADMIN_ROLE_ID = uint256(keccak256("ADMIN"));
+
+    AccountFactory internal immutable ACCOUNT_FACTORY;
     AppFactory internal immutable APP_FACTORY;
     CommunityFactory internal immutable COMMUNITY_FACTORY;
     FeedFactory internal immutable FEED_FACTORY;
@@ -43,18 +46,27 @@ contract LensFactory {
     IAccessControl internal immutable _factoryOwnedAccessControl;
 
     constructor(
+        AccountFactory accountFactory,
         AppFactory appFactory,
         CommunityFactory communityFactory,
         FeedFactory feedFactory,
         GraphFactory graphFactory,
         UsernameFactory usernameFactory
     ) {
+        ACCOUNT_FACTORY = accountFactory;
         APP_FACTORY = appFactory;
         COMMUNITY_FACTORY = communityFactory;
         FEED_FACTORY = feedFactory;
         GRAPH_FACTORY = graphFactory;
         USERNAME_FACTORY = usernameFactory;
         _factoryOwnedAccessControl = new OwnerOnlyAccessControl({owner: address(this)});
+    }
+
+    function deployAccount(address owner, string memory metadataURI, address[] calldata profileManagers)
+        external
+        returns (address)
+    {
+        return ACCOUNT_FACTORY.deployAccount(owner, metadataURI, profileManagers);
     }
 
     function deployApp(
