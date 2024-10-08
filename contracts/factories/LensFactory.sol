@@ -62,11 +62,11 @@ contract LensFactory {
         _factoryOwnedAccessControl = new OwnerOnlyAccessControl({owner: address(this)});
     }
 
-    function deployAccount(address owner, string memory metadataURI, address[] calldata profileManagers)
+    function deployAccount(address owner, string memory metadataURI, address[] calldata accountManagers)
         external
         returns (address)
     {
-        return ACCOUNT_FACTORY.deployAccount(owner, metadataURI, profileManagers);
+        return ACCOUNT_FACTORY.deployAccount(owner, metadataURI, accountManagers);
     }
 
     function deployApp(

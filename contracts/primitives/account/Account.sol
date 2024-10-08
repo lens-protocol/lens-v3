@@ -6,34 +6,35 @@ import {Events} from "./../../types/Events.sol";
 import {IAccount} from "./IAccount.sol";
 
 contract Account is IAccount, DefaultAccount {
-    mapping(address => bool) public profileManagers;
-    address public immutable owner;
-    string public metadataURI;
+    mapping(address => bool) public accountManagers; // TODO: Add permissions etc when needed
+    address public immutable owner; // TODO: Transfer ownership is not possible right now
+    string public metadataURI; // TODO: Add getter/setter/internal etc
 
-    constructor(address _owner, string memory _metadataURI, address[] memory _profileManagers) {
+    constructor(address _owner, string memory _metadataURI, address[] memory _accountManagers) {
         owner = _owner;
         metadataURI = _metadataURI;
         emit Lens_Account_MetadataURISet(_metadataURI);
-        for (uint256 i = 0; i < _profileManagers.length; i++) {
-            profileManagers[_profileManagers[i]] = true;
-            emit Lens_Account_ProfileManagerAdded(_profileManagers[i]);
+        for (uint256 i = 0; i < _accountManagers.length; i++) {
+            accountManagers[_accountManagers[i]] = true;
+            emit Lens_Account_AccountManagerAdded(_accountManagers[i]);
         }
         emit Events.Lens_Contract_Deployed("account", "lens.account", "account", "lens.account");
     }
 
-    function addProfileManager(address _profileManager) external override {
-        require(msg.sender == address(this), "NOT_AUTHORIZED");
-        profileManagers[_profileManager] = true;
-        emit Lens_Account_ProfileManagerAdded(_profileManager);
+    function addAccountManager(address _accountManager) external override {
+        require(msg.sender == owner, "NOT_AUTHORIZED");
+        accountManagers[_accountManager] = true;
+        emit Lens_Account_AccountManagerAdded(_accountManager);
     }
 
-    function removeProfileManager(address _profileManager) external override {
-        require(msg.sender == address(this), "NOT_AUTHORIZED");
-        delete profileManagers[_profileManager];
-        emit Lens_Account_ProfileManagerRemoved(_profileManager);
+    function removeAccountManager(address _accountManager) external override {
+        require(msg.sender == owner, "NOT_AUTHORIZED");
+        delete accountManagers[_accountManager];
+        emit Lens_Account_AccountManagerRemoved(_accountManager);
     }
 
     function setMetadataURI(string calldata _metadataURI) external override {
+        require(msg.sender == owner, "NOT_AUTHORIZED");
         metadataURI = _metadataURI;
         emit Lens_Account_MetadataURISet(_metadataURI);
     }
@@ -42,8 +43,8 @@ contract Account is IAccount, DefaultAccount {
         address recoveredAddress = _recoverAddress(_hash, _signature);
         if (recoveredAddress == address(0)) return false;
         if (recoveredAddress == owner) return true;
-        if (profileManagers[recoveredAddress]) {
-            // Can add additional require's here if needed (like checking which address or function is called)
+        if (accountManagers[recoveredAddress]) {
+            // TODO: Can add additional require's here if needed (like checking which address or function is called)
             // (but then need Transaction object in this function)
             return true;
         } else {
