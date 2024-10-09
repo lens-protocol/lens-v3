@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "../libraries/ExtraDataLib.sol";
+
 library CommunityCore {
+    using ExtraDataLib for mapping(bytes32 => bytes);
+
     struct Membership {
         uint256 id;
         uint256 timestamp;
@@ -10,12 +14,11 @@ library CommunityCore {
     // Storage
 
     struct Storage {
-        address accessControl;
-        address communityRules;
         string metadataURI;
         uint256 lastMemberIdAssigned;
         uint256 numberOfMembers;
         mapping(address => Membership) memberships;
+        mapping(bytes32 => bytes) extraData;
     }
 
     // keccak256('lens.community.core.storage')
@@ -37,6 +40,10 @@ library CommunityCore {
         return _revokeMembership(account);
     }
 
+    function setExtraData(DataElement[] calldata extraDataToSet) external {
+        $storage().extraData.set(extraDataToSet);
+    }
+
     // Internal functions - Use these functions to be called as an inlined library
 
     function _grantMembership(address account) internal returns (uint256) {
@@ -53,5 +60,9 @@ library CommunityCore {
         $storage().numberOfMembers--;
         delete $storage().memberships[account];
         return membershipId;
+    }
+
+    function _setExtraData(DataElement[] calldata extraDataToSet) internal {
+        $storage().extraData.set(extraDataToSet);
     }
 }

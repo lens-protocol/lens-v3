@@ -1,0 +1,83 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "graph",
+        "type": "address"
+      }
+    ],
+    "name": "Lens_GraphFactory_Deployment",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "contract IAccessControl",
+        "name": "accessControl",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "deployGraph",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

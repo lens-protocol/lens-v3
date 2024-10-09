@@ -1,0 +1,106 @@
+Why do we have a Rule Combinator?
+
+- Rules makes sense to be composable, combinable, because of our dashboard "single-click" vision. Otherwise, if we do not
+  use something like the "Rule Combinator" we would need to build a new custom rule contract for each combination desired
+  The conclusion is, Rule Combinator makes sense as it is now
+
+
+***
+
+P.S. Notes:
+
+We should take into account that the configuration changes in the rules should be able to be tracked through events.
+An Access Control change is really important, even sometimes more than a normal config change (e.g. use another ERC-20).
+
+--
+
+Our current simplifying assumptions:
+1) All rules are set through the Rule Combinator
+2) post() is called via User AA account (user == msg.sender ALWAYS)
+3) Rule Combinator is used to configure all the rules and store their shit
+4) configure() in RuleCombinator expects "user == msg.sender" for AccessControl (who can set up the rules etc)
+
+--
+
+Why we didn't use "LensPrimitive.Rules.RulesData" storage scheme?
+- Because if we allow malicious rules to write directly to storage - we're rekt.
+
+--
+
+Can we use some kind of a Proxy/Router/Helper to COMBINE the Primitive and RuleCombinator into **one address**?
+- No, because then msg.sender == Proxy/Router/Helper, unless we delegate-call
+- But if we delegateCall - then the Storage will be in Proxy/Router/Helper
+- And this is the same as having "Primitive inherits RuleCombinator" as a single contract (with the dangerous storage conflict above)
+
+--
+
+So how do we separate the storages, but keep things in one contract, and also keep the msg.sender == user?
+How do we do THIS:
+1) Call one contract, events from one contract
+2) Have two separate storages :-D
+3) Have msg.sender == user if the call goes down to two contracts (to solve the two separate storages case)
+
+---
+
+This is either impossible, or we need `tx.origin`
+
+Why is not possible?
+- Because to have two separate storages - we need to CALL two contracts underneath the Router
+- But if we call two contracts underneath - the msg.sender will be the Router contract, not the user
+
+---
+
+But Alan says the 3rd point is not needed, because:
+
+1. Some address 0xC0FFEE calls primitive to configure rule.
+2. Primitive checks that 0xC0FFEE has permissions to configure rule in the access control
+3. If 0xC0FFEE had permissions, then the Primitive calls the rule to be configured with the params 0xC0FFEE passed
+4. [Inside the rule] The msg.sender becomes the Primitive address instead of 0xC0FFEE, we don't care about 0xC0FFEE,
+we just care that he had permissions to configure the rule
+5. The rule/ruleCombinator takes the msg.sender (Primitive) to save the configuration inside a mapping(address primitive => RuleConfig)
+   ^^^ This will not work - see the CAPS note at the bottom)
+
+---
+
+Now we just need to think how events are emitted? The Rule will be a RuleCombinator. And how all this gonna work?
+
+---
+
+ISSUE #1: RuleCombinator
+
+0xC0FFEE ==CALL==> Primitive ==CALL==> RuleCombinator ==DELEGATECALL==> InnerRules
+
+- Storage (where)
+    - Primitive: stores the rule combinator address (or any address that is the upper-most rule)
+    - RuleCombinator/Upper-most rule: stores the whole data for all the rules below
+- Access Control (who checks and where):
+    - Primitive: checks the access control for the configure rule
+      - RuleCombinator/Upper-most rule: doesn't check anything for configuring()?
+        + No, because it will be configured for the msg.sender which is the primitive, which has the responsibility to check the permissions
+      - InnerRules: doesn't check anything for configuring()?
+        + No, because it will be delegateCalled and the msg.sender is still the primitive, which had the responsibility to check the permissions
+    - Rules Execution (not config) [this is solved]: share a diff access control (diff storage slot, but can be the same addy) for skipping permissions
+
+
+----
+
+I create a malicious primitive just to troll everyone.
+
+I set for my troll-primitive a RuleCombinator that is used by a good/legit pirmitive.
+
+I configure the RuleCombinator for my troll-primitive to use a malicious inner rule.
+
+I can configure because in theory I checked the access control in my troll-primitive, and it's all good.
+
+Even when the RuleCombinator was done with mappings, so configurations are not shared...
+
+...the delegatecall to inner malicious rules can fuck mappings from other legit primitives.
+
+^^^^
+
+AND THIS MEANS WE CANNOT HAVE MAPPINGS, AND NEED SEPARATE STORAGE PER USER, PER PRIMITIVE
+
+And this is why, kids, we deploy the RuleCombinator every time - to separate the storage
+AND HAS SPECIFIC ACCESS CONTROL FOR CONFIGS
+
+* ^ . / % THE END % \ . ^ *

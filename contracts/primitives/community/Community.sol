@@ -2,91 +2,98 @@
 pragma solidity ^0.8.0;
 
 import {ICommunity} from "./ICommunity.sol";
-import {ICommunityRule} from "./ICommunityRule.sol";
 import {CommunityCore as Core} from "./CommunityCore.sol";
 import {IAccessControl} from "./../access-control/IAccessControl.sol";
+import {RuleConfiguration, RuleExecutionData, DataElement} from "./../../types/Types.sol";
+import {RuleBasedCommunity} from "./RuleBasedCommunity.sol";
+import {AccessControlled} from "./../base/AccessControlled.sol";
+import {Events} from "./../../types/Events.sol";
 
-contract Community is ICommunity {
+contract Community is ICommunity, RuleBasedCommunity, AccessControlled {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_RID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_RID = uint256(keccak256("SET_METADATA"));
-    uint256 constant CHANGE_ACCESS_CONTROL_RID = uint256(keccak256("CHANGE_ACCESS_CONTROL"));
+    uint256 constant SET_EXTRA_DATA_RID = uint256(keccak256("SET_EXTRA_DATA"));
+    uint256 constant REMOVE_MEMBER_RID = uint256(keccak256("REMOVE_MEMBER"));
 
-    constructor(string memory metadataURI, IAccessControl accessControl) {
+    constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
         Core.$storage().metadataURI = metadataURI;
-        Core.$storage().accessControl = address(accessControl);
-        emit Lens_Community_MetadataUriSet(metadataURI);
+        emit Lens_Community_MetadataURISet(metadataURI);
+        _emitRIDs();
+        emit Events.Lens_Contract_Deployed("community", "lens.community", "community", "lens.community");
+    }
+
+    function _emitRIDs() internal override {
+        super._emitRIDs();
+        emit Lens_ResourceId_Available(SET_RULES_RID, "SET_RULES");
+        emit Lens_ResourceId_Available(SET_METADATA_RID, "SET_METADATA");
+        emit Lens_ResourceId_Available(SET_EXTRA_DATA_RID, "SET_EXTRA_DATA");
+        emit Lens_ResourceId_Available(REMOVE_MEMBER_RID, "REMOVE_MEMBER");
     }
 
     // Access Controlled functions
 
-    function setCommunityRules(ICommunityRule communityRules) external override {
-        require(
-            IAccessControl(Core.$storage().accessControl).hasAccess({
-                account: msg.sender,
-                resourceLocation: address(this),
-                resourceId: SET_RULES_RID
-            })
-        );
-        Core.$storage().communityRules = address(communityRules);
-        emit Lens_Community_RulesSet(address(communityRules));
-    }
-
     function setMetadataURI(string calldata metadataURI) external override {
-        require(
-            IAccessControl(Core.$storage().accessControl).hasAccess({
-                account: msg.sender,
-                resourceLocation: address(this),
-                resourceId: SET_METADATA_RID
-            })
-        );
+        _requireAccess(msg.sender, SET_METADATA_RID);
         Core.$storage().metadataURI = metadataURI;
-        emit Lens_Community_MetadataUriSet(metadataURI);
+        emit Lens_Community_MetadataURISet(metadataURI);
     }
 
-    // TODO: This is a 1-step operation, while some of our AC owner transfers are a 2-step, or even 3-step operations.
-    function setAccessControl(IAccessControl accessControl) external {
-        require(
-            IAccessControl(Core.$storage().accessControl).hasAccess({
-                account: msg.sender,
-                resourceLocation: address(this),
-                resourceId: CHANGE_ACCESS_CONTROL_RID
-            })
-        ); // msg.sender must have permissions to change access control
-        accessControl.hasAccess(address(0), address(0), 0); // We expect this to not panic.
-        Core.$storage().accessControl = address(accessControl);
+    function addCommunityRules(RuleConfiguration[] calldata rules) external override {
+        _requireAccess(msg.sender, SET_RULES_RID);
+        for (uint256 i = 0; i < rules.length; i++) {
+            _addCommunityRule(rules[i]);
+            emit Lens_Community_RuleAdded(rules[i].ruleAddress, rules[i].configData, rules[i].isRequired);
+        }
+    }
+
+    function updateCommunityRules(RuleConfiguration[] calldata rules) external override {
+        _requireAccess(msg.sender, SET_RULES_RID);
+        for (uint256 i = 0; i < rules.length; i++) {
+            _updateCommunityRule(rules[i]);
+            emit Lens_Community_RuleUpdated(rules[i].ruleAddress, rules[i].configData, rules[i].isRequired);
+        }
+    }
+
+    function removeCommunityRules(address[] calldata rules) external override {
+        _requireAccess(msg.sender, SET_RULES_RID);
+        for (uint256 i = 0; i < rules.length; i++) {
+            _removeCommunityRule(rules[i]);
+            emit Lens_Community_RuleRemoved(rules[i]);
+        }
+    }
+
+    function setExtraData(DataElement[] calldata extraDataToSet) external override {
+        _requireAccess(msg.sender, SET_EXTRA_DATA_RID);
+        Core._setExtraData(extraDataToSet);
+        for (uint256 i = 0; i < extraDataToSet.length; i++) {
+            emit Lens_Community_ExtraDataSet(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
+        }
     }
 
     // Public functions
 
-    function joinCommunity(address account, bytes calldata data) external override {
+    function joinCommunity(address account, RuleExecutionData calldata communityRulesData) external override {
         require(msg.sender == account);
-        ICommunityRule rules = ICommunityRule(Core.$storage().communityRules);
-        if (address(rules) != address(0)) {
-            rules.processJoining(msg.sender, account, data);
-        }
         uint256 membershipId = Core._grantMembership(account);
-        emit Lens_Community_MemberJoined(account, membershipId, data);
+        _processJoining(account, membershipId, communityRulesData);
+        emit Lens_Community_MemberJoined(account, membershipId, communityRulesData);
     }
 
-    function leaveCommunity(address account, bytes calldata data) external override {
+    function leaveCommunity(address account, RuleExecutionData calldata communityRulesData) external override {
         require(msg.sender == account);
-        ICommunityRule rules = ICommunityRule(Core.$storage().communityRules);
-        if (address(rules) != address(0)) {
-            rules.processLeaving(msg.sender, account, data);
-        }
         uint256 membershipId = Core._revokeMembership(account);
-        emit Lens_Community_MemberLeft(account, membershipId, data);
+        _processLeaving(account, membershipId, communityRulesData);
+        emit Lens_Community_MemberLeft(account, membershipId, communityRulesData);
     }
 
     // TODO: Why don't we have addMember? Because we don't want to kidnap someone into the community?
 
-    function removeMember(address account, bytes calldata data) external override {
-        ICommunityRule rules = ICommunityRule(Core.$storage().communityRules);
-        require(address(rules) != address(0), "Community: rules are required to remove members");
-        rules.processRemoval(msg.sender, account, data);
+    function removeMember(address account, RuleExecutionData calldata communityRulesData) external override {
+        _requireAccess(msg.sender, REMOVE_MEMBER_RID);
         uint256 membershipId = Core._revokeMembership(account);
-        emit Lens_Community_MemberRemoved(account, membershipId, data);
+        _processRemoval(account, membershipId, communityRulesData);
+        emit Lens_Community_MemberRemoved(account, membershipId, communityRulesData);
     }
 
     // Getters
@@ -107,11 +114,11 @@ contract Community is ICommunity {
         return Core.$storage().memberships[account].id;
     }
 
-    function getCommunityRules() external view override returns (address) {
-        return Core.$storage().communityRules;
+    function getCommunityRules(bool isRequired) external view override returns (address[] memory) {
+        return _getCommunityRules(isRequired);
     }
 
-    function getAccessControl() external view override returns (address) {
-        return Core.$storage().accessControl;
+    function getExtraData(bytes32 key) external view override returns (bytes memory) {
+        return Core.$storage().extraData[key];
     }
 }

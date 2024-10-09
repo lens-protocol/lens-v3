@@ -1,0 +1,59 @@
+How did Collect work in V2?
+---------------------------
+
+- The post signalled itself to be Collectable and set the shit inside the post itself.
+- Then you could action on that Collectible Post, and mint an NFT of it
+
+How will the collects work in V3?
+---------------------------------
+
+- Now we have Feed primitive that has the Posts, and has no idea of Collect or other actions
+- An Author Posts some picture on that Feed, and wants to make it Collectible
+- Where is this stored? Where is the Collect Price stored? What makes a Mint?
+  
+  [Option A - Collect Action in a separate contract]
+  There is a CollectAction contract somewhere, that handles the minting.
+  It can be a global CollectAction (so all NFTs are of the same collection)
+  It can be AuthorBased CollectAction (so collection has all NFTs of an author)
+  It can even be PostBased Collection
+  or any other way the Collect Action is designed (even supporting all of them with a switch)
+
+  Author goes to CollectAction of his choice, chooses the parameters:
+  - Chooses which collection he wants (Global, Authorbased, Postbased, etc)
+  - Chooses the collect params (price, token, time limit, amount limit, etc)
+  - Chooses the Post he wants to allow Collecting (TODO: Does it has to be his own post???)
+  - Submits! And voila - this makes the post collectable!
+
+  To Collect the post, a consumer User goes to the CollectAction, and performs the Collect, providing the params:
+  - Which post he wants to collect
+  - The recipient
+  - Some params like referrals, amount, etc
+  
+  To index this shit Josh has to do the following:
+  - Know which CollectActions are availabe (Registry?)
+  - Listen to events from these Actions:
+    * when a post is made collectible - event is fired - you index the post as collectible
+    * when a post is collected - event is fired - you index the Collect
+    * when some param is changed (price, collectible is disabled, etc) - event is fired - you index and update
+
+---
+
+The same thing describe above as CollectAction - can be any Action.
+Actions can be postActions (actions that accept a Post as param), User actions (actions that accept a User), or any
+other action imaginable (just Action).
+We don't have to really separate them in the protocol (because Primitives are not aware of them), but we can advise an
+Interfaces for each of them, and create different Registries to make them easier to Consume.
+
+---
+
+- You can have as many actions as you wish
+- Some actions will require the author/target to enable them, but others will not.
+    + For example, Collect on a Post will require the author to enable it and give legitimacy.
+    + But Tipping, either on a Post or a Profile, could be done without configuration (you by default can tip anyone).
+    + Of course, the author/target could go an maybe set a currency of preference, and that stuff.
+    + Also, of course, someone can create a Collect action that do not require enabling, but this will lack
+      legitimacy, so the NFTs minted by this action will not be taken into account by the community, will be valueless.
+- You should be able to add, remove or re-configure actions. It should not be felt as a rigid thing anymore
+- If we have some Action interface, it would be nice to have a function that is called upon update or removal, so for example
+  maybe a Paid-Collect action will allow you to stop the minting or increase the price, but not to make it unlimited or free after
+  a limit or a price was set. So basically anti-rug mechanisms ideally.

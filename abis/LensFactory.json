@@ -1,0 +1,462 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract AppFactory",
+        "name": "appFactory",
+        "type": "address"
+      },
+      {
+        "internalType": "contract CommunityFactory",
+        "name": "communityFactory",
+        "type": "address"
+      },
+      {
+        "internalType": "contract FeedFactory",
+        "name": "feedFactory",
+        "type": "address"
+      },
+      {
+        "internalType": "contract GraphFactory",
+        "name": "graphFactory",
+        "type": "address"
+      },
+      {
+        "internalType": "contract UsernameFactory",
+        "name": "usernameFactory",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "admins",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "graph",
+            "type": "address"
+          },
+          {
+            "internalType": "address[]",
+            "name": "feeds",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address",
+            "name": "username",
+            "type": "address"
+          },
+          {
+            "internalType": "address[]",
+            "name": "communities",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address",
+            "name": "defaultFeed",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "defaultCommunity",
+            "type": "address"
+          },
+          {
+            "internalType": "address[]",
+            "name": "signers",
+            "type": "address[]"
+          },
+          {
+            "internalType": "address",
+            "name": "paymaster",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "treasury",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct AppInitialProperties",
+        "name": "initialProperties",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "deployApp",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "admins",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraData",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "tokenizationEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "tokenName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tokenSymbol",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "baseURI",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct TokenizationConfiguration",
+        "name": "tokenizationConfig",
+        "type": "tuple"
+      }
+    ],
+    "name": "deployCommunity",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "admins",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "deployFeed",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "admins",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraData",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "deployGraph",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "namespace",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "admins",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraData",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "tokenizationEnabled",
+            "type": "bool"
+          },
+          {
+            "internalType": "string",
+            "name": "tokenName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "tokenSymbol",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "baseURI",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct TokenizationConfiguration",
+        "name": "tokenizationConfig",
+        "type": "tuple"
+      }
+    ],
+    "name": "deployUsername",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

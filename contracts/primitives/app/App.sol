@@ -2,128 +2,116 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "./../access-control/IAccessControl.sol";
+import {IApp} from "./IApp.sol";
+import {AppCore as Core} from "./AppCore.sol";
+import {DataElement} from "./../../types/Types.sol";
+import {AccessControlled} from "./../base/AccessControlled.sol";
+import {Events} from "./../../types/Events.sol";
 
-interface IApp {
-    event Lens_App_GraphAdded(address graph);
-    event Lens_App_DefaultGraphSet(address graph);
-    event Lens_App_FeedAdded(address feed);
-    event Lens_App_FeedRemoved(address feed);
-    event Lens_App_FeedsSet(address[] feeds);
-    event Lens_App_DefaultFeedSet(address feed);
-    event Lens_App_UsernameAdded(address username);
-    event Lens_App_DefaultUsernameSet(address username);
-    event Lens_App_CommunityAdded(address community);
-    event Lens_App_CommunityRemoved(address community);
-    event Lens_App_CommunitiesSet(address[] communities);
-    event Lens_App_DefaultCommunitySet(address community);
-    event Lens_App_PaymasterAdded(address paymaster);
-    event Lens_App_DefaultPaymasterSet(address paymaster);
-    event Lens_App_MetadataUriSet(string metadataURI);
+struct AppInitialProperties {
+    address graph;
+    address[] feeds;
+    address username;
+    address[] communities;
+    address defaultFeed;
+    address defaultCommunity;
+    address[] signers;
+    address paymaster;
+    address treasury;
 }
 
-struct InitialProperties {
-    address _graph;
-    address[] _feeds;
-    address _username;
-    address[] _communities;
-    address _defaultFeed;
-    address _defaultCommunity;
-    address[] _signers;
-    address _paymaster;
-}
-
-contract App is IApp {
-    IAccessControl _accessControl; // Owner, admins, moderators, permissions.
-    string _metadataURI; // Name, description, logo, other attribiutes like category/topic, etc.
-    address _treasury; // Can also be defined as a permission in the AC... and allow multiple revenue recipients!
-
-    address[] _graphs; // Graphs that this App uses.
-    address[] _feeds; // Feeds that this App uses
-    address[] _usernames; // Usernames that this App uses.
-    address[] _communities; // Communities that this App uses.
-
-    address _defaultGraph;
-    address _defaultFeed;
-    address _defaultUsername;
-    address _defaultCommunity;
-    address _defaultPaymaster;
-
-    address[] _signers; // Signers that belong to this App.
-
-    address[] _paymasters;
-
-    // TODO: Make the storage follow our Core.$storage pattern.
-
-    // TODO: Make functions restricted by access control
+contract App is IApp, AccessControlled {
+    // Resource IDs involved in the contract
+    uint256 constant SET_PRIMITIVES = uint256(keccak256("SET_PRIMITIVES"));
+    uint256 constant SET_SIGNERS = uint256(keccak256("SET_SIGNERS"));
+    uint256 constant SET_TREASURY = uint256(keccak256("SET_TREASURY"));
+    uint256 constant SET_PAYMASTER = uint256(keccak256("SET_PAYMASTER"));
+    uint256 constant SET_EXTRA_DATA = uint256(keccak256("SET_EXTRA_DATA"));
+    uint256 constant SET_METADATA = uint256(keccak256("SET_METADATA"));
 
     constructor(
-        IAccessControl accessControl,
         string memory metadataURI,
-        address treasury,
-        InitialProperties memory props
-    ) {
-        _accessControl = accessControl;
-        _metadataURI = metadataURI;
-        _treasury = treasury;
+        IAccessControl accessControl,
+        AppInitialProperties memory initialProps,
+        DataElement[] memory extraData
+    ) AccessControlled(accessControl) {
+        _setMetadataURI(metadataURI);
+        _setTreasury(initialProps.treasury);
+        _setGraph(initialProps.graph);
+        _setFeeds(initialProps.feeds);
+        _setUsername(initialProps.username);
+        _setCommunity(initialProps.communities);
+        _setDefaultFeed(initialProps.defaultFeed);
+        _setDefaultCommunity(initialProps.defaultCommunity);
+        _setSigners(initialProps.signers);
+        _setPaymaster(initialProps.paymaster);
+        _setExtraData(extraData);
 
-        setGraph(props._graph);
-        setFeeds(props._feeds);
-        setUsername(props._username);
-        setCommunity(props._communities);
-        setDefaultFeed(props._defaultFeed);
-        setDefaultCommunity(props._defaultCommunity);
-        setSigners(props._signers);
-        setPaymaster(props._paymaster);
-        emit Lens_App_MetadataUriSet(metadataURI);
+        _emitRIDs();
+
+        emit Events.Lens_Contract_Deployed("app", "lens.app", "app", "lens.app");
     }
 
-    // TODO: Add ACCESS CONTROL to all the functions below!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    function _emitRIDs() internal override {
+        super._emitRIDs();
+        emit Lens_ResourceId_Available(SET_PRIMITIVES, "SET_PRIMITIVES");
+        emit Lens_ResourceId_Available(SET_SIGNERS, "SET_SIGNERS");
+        emit Lens_ResourceId_Available(SET_TREASURY, "SET_TREASURY");
+        emit Lens_ResourceId_Available(SET_PAYMASTER, "SET_PAYMASTER");
+        emit Lens_ResourceId_Available(SET_EXTRA_DATA, "SET_EXTRA_DATA");
+        emit Lens_ResourceId_Available(SET_METADATA, "SET_METADATA");
+    }
 
     // TODO:
     // In this implementation we assume you can only have one graph.
 
     function setGraph(address graph) public {
-        // TODO: Check for graph == 0x0, or add a add/remove function.
-        if (_graphs.length == 0) {
-            _graphs.push(graph);
-            _defaultGraph = graph;
-        } else {
-            _graphs[0] = graph;
-            _defaultGraph = graph;
-        }
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        _setGraph(graph);
+    }
+
+    function _setGraph(address graph) internal {
+        Core._setGraph(graph);
         emit Lens_App_GraphAdded(graph);
         emit Lens_App_DefaultGraphSet(graph);
     }
 
     // function setDefaultGraph(address graph) public {
-    //     _defaultGraph = graph;
+    //     _requireAccess(msg.sender, SET_PRIMITIVES);
+    //     Core._setDefaultGraph(graph);
     // }
 
-    function setFeeds(address[] memory feeds) public {
-        _feeds = feeds;
-        if (_feeds.length == 0) {
-            delete _defaultFeed;
-        } else {
-            _defaultFeed = _feeds[0];
-        }
+    function setFeeds(address[] calldata feeds) public {
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        _setFeeds(feeds);
+    }
+
+    function _setFeeds(address[] memory feeds) internal {
+        address defaultFeedSet = Core._setFeeds(feeds);
+        emit Lens_App_DefaultFeedSet(defaultFeedSet);
         emit Lens_App_FeedsSet(feeds);
     }
 
     function setDefaultFeed(address feed) public {
-        _defaultFeed = feed;
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        _setDefaultFeed(feed);
+    }
+
+    function _setDefaultFeed(address feed) internal {
+        Core._setDefaultFeed(feed);
         emit Lens_App_DefaultFeedSet(feed);
     }
 
     function addFeed(address feed) public {
+        _requireAccess(msg.sender, SET_PRIMITIVES);
         // TODO: Add check for duplicate, or use a mapping.
-        _feeds.push(feed);
+        Core._addFeed(feed);
         emit Lens_App_FeedAdded(feed);
     }
 
     function removeFeed(address feed, uint256 index) public {
-        if (_feeds[index] == feed) {
-            delete _feeds[index];
-        }
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        Core._removeFeed(feed, index);
         emit Lens_App_FeedRemoved(feed);
     }
 
@@ -131,63 +119,106 @@ contract App is IApp {
     // In this implementation we assume you can only have one username.
 
     function setUsername(address username) public {
-        if (_usernames.length == 0) {
-            _usernames.push(username);
-            _defaultUsername = username;
-        } else {
-            _usernames[0] = username;
-            _defaultUsername = username;
-        }
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        _setUsername(username);
+    }
+
+    function _setUsername(address username) internal {
+        Core._setUsername(username);
         emit Lens_App_UsernameAdded(username);
         emit Lens_App_DefaultUsernameSet(username);
     }
 
     // function setDefaultUsername(address username) public {
-    //     _defaultUsername = username;
+    //     _requireAccess(msg.sender, SET_PRIMITIVES);
+    //     Core._setDefaultUsername(username);
     // }
 
-    function setCommunity(address[] memory communities) public {
-        _communities = communities;
-        if (_communities.length == 0) {
-            delete _defaultCommunity;
-        } else {
-            _defaultCommunity = _communities[0];
-        }
+    function setCommunity(address[] calldata communities) public {
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        _setCommunity(communities);
+    }
+
+    function _setCommunity(address[] memory communities) internal {
+        address defaultCommunitySet = Core._setCommunity(communities);
+        emit Lens_App_DefaultCommunitySet(defaultCommunitySet);
         emit Lens_App_CommunitiesSet(communities);
     }
 
     function setDefaultCommunity(address community) public {
-        _defaultCommunity = community;
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        _setDefaultCommunity(community);
+    }
+
+    function _setDefaultCommunity(address community) internal {
+        Core._setDefaultCommunity(community);
         emit Lens_App_DefaultCommunitySet(community);
     }
 
     function addCommunity(address community) public {
+        _requireAccess(msg.sender, SET_PRIMITIVES);
         // TODO: Add check for duplicate, or use a mapping.
-        _communities.push(community);
+        Core._addCommunity(community);
         emit Lens_App_CommunityAdded(community);
     }
 
     function removeCommunity(address community, uint256 index) public {
-        if (_communities[index] == community) {
-            delete _communities[index];
-        }
+        _requireAccess(msg.sender, SET_PRIMITIVES);
+        Core._removeCommunity(community, index);
         emit Lens_App_CommunityRemoved(community);
     }
 
-    function setSigners(address[] memory signers) public {
-        _signers = signers;
+    function setSigners(address[] calldata signers) public {
+        _requireAccess(msg.sender, SET_SIGNERS);
+        _setSigners(signers);
+    }
+
+    function _setSigners(address[] memory signers) internal {
+        Core._setSigners(signers);
+        emit Lens_App_SignersSet(signers);
     }
 
     function setPaymaster(address paymaster) public {
-        if (_paymasters.length == 0) {
-            _paymasters.push(paymaster);
-            _defaultPaymaster = paymaster;
-        } else {
-            _paymasters[0] = paymaster;
-            _defaultPaymaster = paymaster;
-        }
+        _requireAccess(msg.sender, SET_PAYMASTER);
+        _setPaymaster(paymaster);
+    }
+
+    function _setPaymaster(address paymaster) internal {
+        Core._setPaymaster(paymaster);
         emit Lens_App_PaymasterAdded(paymaster);
         emit Lens_App_DefaultPaymasterSet(paymaster);
+    }
+
+    function setTreasury(address treasury) public {
+        _requireAccess(msg.sender, SET_TREASURY);
+        _setTreasury(treasury);
+    }
+
+    function _setTreasury(address treasury) internal {
+        Core._setTreasury(treasury);
+        emit Lens_App_TreasurySet(treasury);
+    }
+
+    function setMetadataURI(string calldata metadataURI) public override {
+        _requireAccess(msg.sender, SET_METADATA);
+        _setMetadataURI(metadataURI);
+    }
+
+    function _setMetadataURI(string memory metadataURI) internal {
+        Core._setMetadataURI(metadataURI);
+        emit Lens_App_MetadataURISet(metadataURI);
+    }
+
+    function setExtraData(DataElement[] calldata extraDataToSet) public override {
+        _requireAccess(msg.sender, SET_EXTRA_DATA);
+        _setExtraData(extraDataToSet);
+    }
+
+    function _setExtraData(DataElement[] memory extraDataToSet) internal {
+        Core._setExtraData(extraDataToSet);
+        for (uint256 i = 0; i < extraDataToSet.length; i++) {
+            emit Lens_App_ExtraDataSet(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -195,38 +226,46 @@ contract App is IApp {
     //////////////////////////////////////////////////////////////////////////
 
     function getGraphs() public view returns (address[] memory) {
-        return _graphs;
+        return Core.$storage().graphs;
     }
 
     function getFeeds() public view returns (address[] memory) {
-        return _feeds;
+        return Core.$storage().feeds;
     }
 
     function getUsernames() public view returns (address[] memory) {
-        return _usernames;
+        return Core.$storage().usernames;
     }
 
     function getCommunities() public view returns (address[] memory) {
-        return _communities;
+        return Core.$storage().communities;
     }
 
     function getDefaultGraph() public view returns (address) {
-        return _defaultGraph;
+        return Core.$storage().defaultGraph;
     }
 
     function getDefaultFeed() public view returns (address) {
-        return _defaultFeed;
+        return Core.$storage().defaultFeed;
     }
 
     function getDefaultUsername() public view returns (address) {
-        return _defaultUsername;
+        return Core.$storage().defaultUsername;
     }
 
     function getDefaultCommunity() public view returns (address) {
-        return _defaultCommunity;
+        return Core.$storage().defaultCommunity;
     }
 
     function getSigners() public view returns (address[] memory) {
-        return _signers;
+        return Core.$storage().signers;
+    }
+
+    function getExtraData(bytes32 key) external view override returns (bytes memory) {
+        return Core.$storage().extraData[key];
+    }
+
+    function getMetadataURI() external view override returns (string memory) {
+        return Core.$storage().metadataURI;
     }
 }

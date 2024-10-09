@@ -1,0 +1,842 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "value",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes",
+        "name": "valueIndexed",
+        "type": "bytes"
+      }
+    ],
+    "name": "Lens_Graph_ExtraDataSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ruleAddress",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleConfiguration",
+        "name": "ruleConfiguration",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Graph_Follow_RuleAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ruleAddress",
+        "type": "address"
+      }
+    ],
+    "name": "Lens_Graph_Follow_RuleRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ruleAddress",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleConfiguration",
+        "name": "ruleConfiguration",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Graph_Follow_RuleUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "followerAccount",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "accountToFollow",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "followId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleExecutionData",
+        "name": "followRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Graph_Followed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      }
+    ],
+    "name": "Lens_Graph_MetadataURISet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ruleAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "configData",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "Lens_Graph_RuleAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ruleAddress",
+        "type": "address"
+      }
+    ],
+    "name": "Lens_Graph_RuleRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ruleAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "configData",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "Lens_Graph_RuleUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "followerAccount",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "accountToUnfollow",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "followId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Graph_Unfollowed",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "addFollowRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "addGraphRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "followerAccount",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "targetAccount",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "followId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "followRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "follow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getExtraData",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "followerAccount",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "followedAccount",
+        "type": "address"
+      }
+    ],
+    "name": "getFollow",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "timestamp",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Follow",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "getFollowRules",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "followId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getFollowerById",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "getFollowersCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "getGraphRules",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMetadataURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "followerAccount",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "targetAccount",
+        "type": "address"
+      }
+    ],
+    "name": "isFollowing",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "rules",
+        "type": "address[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "removeFollowRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "rules",
+        "type": "address[]"
+      }
+    ],
+    "name": "removeGraphRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraDataToSet",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "setExtraData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadata",
+        "type": "string"
+      }
+    ],
+    "name": "setMetadataURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "followerAccount",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "targetAccount",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "unfollow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "graphRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "updateFollowRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "updateGraphRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

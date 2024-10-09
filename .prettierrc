@@ -6,14 +6,6 @@
   "tabWidth": 2,
   "overrides": [
     {
-      "files": "*.sol",
-      "options": {
-        "semi": true,
-        "printWidth": 120,
-        "tabWidth": 4
-      }
-    },
-    {
       "files": "*.svg",
       "options": {
         "bracketSameLine": true,

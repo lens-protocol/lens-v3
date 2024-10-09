@@ -9,7 +9,7 @@ function extractAbiFromJson(jsonPath: string) {
     const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
     const contractData = JSON.parse(jsonContent);
     const abi = contractData.abi;
-    const abiFileName = path.basename(jsonPath, '.json') + '.abi';
+    const abiFileName = path.basename(jsonPath);
     const abiFilePath = path.join(abisFolderPath, abiFileName);
     fs.writeFileSync(abiFilePath, JSON.stringify(abi, null, 2));
     console.log(`Extracted ABI from ${jsonPath} to ${abiFilePath}`);

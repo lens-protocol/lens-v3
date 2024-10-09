@@ -1,0 +1,111 @@
+
+Starting deployment process of "UsernameFactory"...
+Estimated deployment cost: 1.945518124004067874 ETH
+
+"UsernameFactory" was successfully deployed:
+ - Contract address: 0x7C8e899B78f0d9238A7fFd46b48EEda9512fcfA6
+ - Contract source: contracts/factories/UsernameFactory.sol:UsernameFactory
+ - Encoded constructor arguments: 0x
+
+Requesting contract verification...
+Your verification ID is: 238
+Contract successfully verified on ZKsync block explorer!
+
+✔ UsernameFactory deployed at 0x7C8e899B78f0d9238A7fFd46b48EEda9512fcfA6
+
+Starting deployment process of "GraphFactory"...
+Estimated deployment cost: 2.33566703490471239 ETH
+
+"GraphFactory" was successfully deployed:
+ - Contract address: 0xF43Ad6fdEAaE8Cb0B39dbA459BaBcaa3883a3D7a
+ - Contract source: contracts/factories/GraphFactory.sol:GraphFactory
+ - Encoded constructor arguments: 0x
+
+Requesting contract verification...
+Your verification ID is: 239
+Contract successfully verified on ZKsync block explorer!
+
+✔ GraphFactory deployed at 0xF43Ad6fdEAaE8Cb0B39dbA459BaBcaa3883a3D7a
+
+Starting deployment process of "FeedFactory"...
+Estimated deployment cost: 4.221745590682411624 ETH
+
+"FeedFactory" was successfully deployed:
+ - Contract address: 0xD46A76A6d53b76063059212EebEc81591C40292E
+ - Contract source: contracts/factories/FeedFactory.sol:FeedFactory
+ - Encoded constructor arguments: 0x
+
+Requesting contract verification...
+Your verification ID is: 240
+Contract successfully verified on ZKsync block explorer!
+
+✔ FeedFactory deployed at 0xD46A76A6d53b76063059212EebEc81591C40292E
+
+Starting deployment process of "CommunityFactory"...
+Estimated deployment cost: 1.842053408943581232 ETH
+
+"CommunityFactory" was successfully deployed:
+ - Contract address: 0x11D5c105c2b9e2511bC95C86261e9CCE6e36f0E7
+ - Contract source: contracts/factories/CommunityFactory.sol:CommunityFactory
+ - Encoded constructor arguments: 0x
+
+Requesting contract verification...
+Your verification ID is: 241
+Contract successfully verified on ZKsync block explorer!
+
+✔ CommunityFactory deployed at 0x11D5c105c2b9e2511bC95C86261e9CCE6e36f0E7
+
+Starting deployment process of "AppFactory"...
+Estimated deployment cost: 1.574768910847962972 ETH
+
+"AppFactory" was successfully deployed:
+ - Contract address: 0x0e9a37D7288f8184Ff3f3c0757ff3c8E11dde82b
+ - Contract source: contracts/factories/AppFactory.sol:AppFactory
+ - Encoded constructor arguments: 0x
+
+Requesting contract verification...
+Your verification ID is: 242
+Contract successfully verified on ZKsync block explorer!
+
+✔ AppFactory deployed at 0x0e9a37D7288f8184Ff3f3c0757ff3c8E11dde82b
+
+Starting deployment process of "LensFactory"...
+Estimated deployment cost: 1.120060581767149282 ETH
+
+"LensFactory" was successfully deployed:
+ - Contract address: 0xCbDE0758e1AE231cF6950DfE6E1562BAFF3a8fC4
+ - Contract source: contracts/factories/LensFactory.sol:LensFactory
+ - Encoded constructor arguments: 0x0000000000000000000000000e9a37d7288f8184ff3f3c0757ff3c8e11dde82b00000000000000000000000011d5c105c2b9e2511bc95c86261e9cce6e36f0e7000000000000000000000000d46a76a6d53b76063059212eebec81591c40292e000000000000000000000000f43ad6fdeaae8cb0b39dba459babcaa3883a3d7a0000000000000000000000007c8e899b78f0d9238a7ffd46b48eeda9512fcfa6
+
+Requesting contract verification...
+Your verification ID is: 243
+Contract successfully verified on ZKsync block explorer!
+
+✔ LensFactory deployed at 0xCbDE0758e1AE231cF6950DfE6E1562BAFF3a8fC4
+Deploying Global Feed...
+Your verification ID is: 244
+Contract successfully verified on ZKsync block explorer!
+Deploying Global Graph...
+Your verification ID is: 245
+Contract successfully verified on ZKsync block explorer!
+
+
+--- Indexer file ---
+
+
+# CONTRACTS
+GRAPH_FACTORY=0xF43Ad6fdEAaE8Cb0B39dbA459BaBcaa3883a3D7a
+GLOBAL_GRAPH=0xfF9A786b4bc3337d8DEBb7236D9D4C05E806BB04
+
+ACCOUNT_FACTORY=0x0000000000000000000000000000000000000000
+
+APP_FACTORY=0x0e9a37D7288f8184Ff3f3c0757ff3c8E11dde82b
+
+USERNAME_FACTORY=0x7C8e899B78f0d9238A7fFd46b48EEda9512fcfA6
+
+FEED_FACTORY=0xD46A76A6d53b76063059212EebEc81591C40292E
+GLOBAL_FEED=0x32c72F99B75E8Aa8273aB10646e454A78dBd0813
+
+LENS_FACTORY=0xCbDE0758e1AE231cF6950DfE6E1562BAFF3a8fC4
+
+COMMUNITY_FACTORY=0x11D5c105c2b9e2511bC95C86261e9CCE6e36f0E7

@@ -1,0 +1,314 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "configure",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "localSequentialId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "author",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "source",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "contentURI",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quotedPostId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "parentPostId",
+            "type": "uint256"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "ruleAddress",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes",
+                "name": "configData",
+                "type": "bytes"
+              },
+              {
+                "internalType": "bool",
+                "name": "isRequired",
+                "type": "bool"
+              }
+            ],
+            "internalType": "struct RuleConfiguration[]",
+            "name": "rules",
+            "type": "tuple[]"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes[]",
+                "name": "dataForRequiredRules",
+                "type": "bytes[]"
+              },
+              {
+                "internalType": "bytes[]",
+                "name": "dataForAnyOfRules",
+                "type": "bytes[]"
+              }
+            ],
+            "internalType": "struct RuleExecutionData",
+            "name": "feedRulesData",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes[]",
+                "name": "dataForRequiredRules",
+                "type": "bytes[]"
+              },
+              {
+                "internalType": "bytes[]",
+                "name": "dataForAnyOfRules",
+                "type": "bytes[]"
+              }
+            ],
+            "internalType": "struct RuleExecutionData",
+            "name": "changeRulesQuotePostRulesData",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes[]",
+                "name": "dataForRequiredRules",
+                "type": "bytes[]"
+              },
+              {
+                "internalType": "bytes[]",
+                "name": "dataForAnyOfRules",
+                "type": "bytes[]"
+              }
+            ],
+            "internalType": "struct RuleExecutionData",
+            "name": "changeRulesParentPostRulesData",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes[]",
+                "name": "dataForRequiredRules",
+                "type": "bytes[]"
+              },
+              {
+                "internalType": "bytes[]",
+                "name": "dataForAnyOfRules",
+                "type": "bytes[]"
+              }
+            ],
+            "internalType": "struct RuleExecutionData",
+            "name": "quotesPostRulesData",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes[]",
+                "name": "dataForRequiredRules",
+                "type": "bytes[]"
+              },
+              {
+                "internalType": "bytes[]",
+                "name": "dataForAnyOfRules",
+                "type": "bytes[]"
+              }
+            ],
+            "internalType": "struct RuleExecutionData",
+            "name": "parentsPostRulesData",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "key",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes",
+                "name": "value",
+                "type": "bytes"
+              }
+            ],
+            "internalType": "struct DataElement[]",
+            "name": "extraData",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct CreatePostParams",
+        "name": "postParams",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "processCreatePost",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "localSequentialId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "feedRulesData",
+        "type": "bytes"
+      }
+    ],
+    "name": "processDeletePost",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "localSequentialId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "contentURI",
+            "type": "string"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "key",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes",
+                "name": "value",
+                "type": "bytes"
+              }
+            ],
+            "internalType": "struct DataElement[]",
+            "name": "extraData",
+            "type": "tuple[]"
+          }
+        ],
+        "internalType": "struct EditPostParams",
+        "name": "newPostParams",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "processEditPost",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "postId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "localSequentialId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "newPostRules",
+        "type": "tuple[]"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "processPostRulesChanged",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

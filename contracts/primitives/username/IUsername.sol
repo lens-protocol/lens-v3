@@ -1,24 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IUsernameRule} from "./IUsernameRule.sol";
+import {DataElement, RuleConfiguration, RuleExecutionData} from "../../types/Types.sol";
+import {IMetadataBased} from "./../base/IMetadataBased.sol";
 
-interface IUsername {
-    // event Lens_Username_RulesSet(address usernameRules, bytes initializationData);
+interface IUsername is IMetadataBased {
+    event Lens_Username_RuleAdded(address indexed ruleAddress, bytes configData, bool indexed isRequired);
 
-    event Lens_Username_RulesSet(address usernameRules);
+    event Lens_Username_RuleUpdated(address indexed ruleAddress, bytes configData, bool indexed isRequired);
 
-    event Lens_Username_Registered(string username, address indexed account, bytes data);
+    event Lens_Username_RuleRemoved(address indexed ruleAddress);
 
-    event Lens_Username_Unregistered(string username, address indexed previousAccount, bytes data);
+    event Lens_Username_Registered(string username, address indexed account, RuleExecutionData data);
 
-    // function setUsernameRules(address usernameRules, bytes calldata initializationData) external;
+    event Lens_Username_Unregistered(string username, address indexed previousAccount, RuleExecutionData data);
 
-    function setUsernameRules(IUsernameRule usernameRules) external;
+    event Lens_Username_ExtraDataSet(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
 
-    function registerUsername(address account, string memory username, bytes calldata data) external;
+    event Lens_Username_MetadataURISet(string metadataURI);
 
-    function unregisterUsername(string memory username, bytes calldata data) external;
+    function setExtraData(DataElement[] calldata extraDataToSet) external;
+
+    function addUsernameRules(RuleConfiguration[] calldata ruleConfigurations) external;
+
+    function updateUsernameRules(RuleConfiguration[] calldata ruleConfigurations) external;
+
+    function removeUsernameRules(address[] calldata rules) external;
+
+    function registerUsername(address account, string memory username, RuleExecutionData calldata data) external;
+
+    function unregisterUsername(string memory username, RuleExecutionData calldata data) external;
 
     function usernameOf(address user) external view returns (string memory);
 
@@ -26,5 +37,7 @@ interface IUsername {
 
     function getNamespace() external view returns (string memory);
 
-    function getUsernameRules() external view returns (address);
+    function getUsernameRules(bool isRequired) external view returns (address[] memory);
+
+    function getExtraData(bytes32 key) external view returns (bytes memory);
 }

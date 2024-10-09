@@ -3,12 +3,17 @@ pragma solidity ^0.8.17;
 
 import {Ownership} from "./../../diamond/Ownership.sol";
 import {IRoleBasedAccessControl} from "./IRoleBasedAccessControl.sol";
+import {Events} from "./../../types/Events.sol";
 
 contract AddressBasedAccessControl is Ownership, IRoleBasedAccessControl {
     mapping(address => mapping(uint256 => AccessPermission)) internal _globalAccess;
     mapping(address => mapping(address => mapping(uint256 => AccessPermission))) internal _scopedAccess;
 
-    constructor(address owner) Ownership(owner) {}
+    constructor(address owner) Ownership(owner) {
+        emit Events.Lens_Contract_Deployed(
+            "access-control", "lens.access-control.address-based", "access-control", "lens.access-control.address-based"
+        );
+    }
 
     function hasAccess(address account, address resourceLocation, uint256 resourceId)
         external
@@ -28,17 +33,17 @@ contract AddressBasedAccessControl is Ownership, IRoleBasedAccessControl {
         }
     }
 
-    function setRole(address account, uint256 roleId, bytes calldata /* data */ ) external pure override {
+    function grantRole(address account, uint256 roleId) external pure override {
         // Roles are already pre-assigned. Reverts on every attempt except when it matches the already assigned role.
         require(roleId == _addressToRoleId(account));
     }
 
-    function hasRole(address account, uint256 roleId) external pure override returns (bool) {
-        return roleId == _addressToRoleId(account);
+    function revokeRole(address, /* account */ uint256 /* roleId */ ) external pure override {
+        revert();
     }
 
-    function getRole(address account) external pure override returns (uint256) {
-        return _addressToRoleId(account);
+    function hasRole(address account, uint256 roleId) external pure override returns (bool) {
+        return roleId == _addressToRoleId(account);
     }
 
     // Note: We allow to deny access to current owner. It will not change the access while it is still the owner,
@@ -66,26 +71,14 @@ contract AddressBasedAccessControl is Ownership, IRoleBasedAccessControl {
         _scopedAccess[_roleIdToAddress(roleId)][resourceLocation][resourceId] = accessPermission;
     }
 
-    function getGlobalAccess(uint256 roleId, uint256 resourceId)
-        external
-        view
-        override
-        onlyOwner
-        returns (AccessPermission)
-    {
+    function getGlobalAccess(uint256 roleId, uint256 resourceId) external view override returns (AccessPermission) {
         if (!_isValidRoleId(roleId)) {
             return AccessPermission.UNDEFINED;
         }
         return _getGlobalAccess(_roleIdToAddress(roleId), resourceId);
     }
 
-    function getGlobalAccess(address account, uint256 resourceId)
-        external
-        view
-        override
-        onlyOwner
-        returns (AccessPermission)
-    {
+    function getGlobalAccess(address account, uint256 resourceId) external view override returns (AccessPermission) {
         return _getGlobalAccess(account, resourceId);
     }
 

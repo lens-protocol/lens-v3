@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "../libraries/ExtraDataLib.sol";
+
 library UsernameCore {
+    using ExtraDataLib for mapping(bytes32 => bytes);
+
     // Storage
+
     struct Storage {
-        address accessControl;
-        address usernameRules;
         string namespace;
+        string metadataURI;
         mapping(string => address) usernameToAccount;
         mapping(address => string) accountToUsername;
+        mapping(bytes32 => bytes) extraData;
     }
 
     // keccak256('lens.username.core.storage')
@@ -45,5 +50,9 @@ library UsernameCore {
         require(account != address(0)); // Username must be registered
         delete $storage().accountToUsername[account];
         delete $storage().usernameToAccount[username];
+    }
+
+    function _setExtraData(DataElement[] calldata extraDataToSet) internal {
+        $storage().extraData.set(extraDataToSet);
     }
 }

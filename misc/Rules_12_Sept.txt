@@ -1,0 +1,71 @@
+Which properties do we want to achieve/guarantee for the Dashboard?
+- Customize your rule combining smaller rules without adding code (ofc, you need to use existing rules!)
+
+- You remove a rule, you add it back, what happens with the configuration and internal state of it?
+    + For example:
+      - Payment rule has just currency and amount.
+      - But Stake rule has staked balances stored (and should remember them even if you remove/add, to not lose the money).
+
+- 
+
+Which properties do we want to achieve/guarantee for the rest of the devs?
+- I wanna use a single rule directly, I don't want to 
+
+-----
+
+There is a thing that is amazing and is the Rules interface. Why?
+
+- Because you just have a crazy generic "configure" function. This allows you to:
+    + Make the rule a Singleton standalone rule that can be re-used by anyone, sharing storage (the storage is in the rule, there is a mapping using the primtive as key).
+        * For example:
+
+    + Make the rule a standalone rule that should be re-deployed each time, without shared storage.
+    + Make the rule as a proxy-used-only rule. Like library-based.
+You can literally choose how to. As long as you end up setting an address that behave like a rule (follows the interface)
+and it is configured for the primitive where you are setting it.
+
+---
+
+Let's say we do singleton rules re-usable by different primitives.
+
+1. This requires some authentication method that would auth the primitive to configure settings for themselves
+   (like the primitives to have a generic call function)
+
+2. What happens with the primitives that uses rule combinator?
+
+    2.1 Will the rule be configured with the rule combinator address?
+    
+        - Can be yes, but then your settings are linked to the RuleCombinator address (not the Primitive)
+          And also the RuleCombinator should call the rule with a Call method when using it.
+
+        - Can be no, if the auth metod used doesn't depend on msg.sender (like a EIP1271 contract signature?)
+          But then how to determine who is the primitive when the call is performed from RuleCombinator? (which settings to use)
+
+        - In both anwsers - really weird shit happens, so I guess you cannot use Singleton Rules with RuleCombinator?
+
+    2.2 Is there any way to use rule combinator but still be configured with the primitive address? So then you can remove the combinator or change to other combinator and still have the configuraiton for the same primitive.
+
+---
+
+- You cannot do DELEGATECALL from the primitive, because this can mess-up the primitive's storage. So the primitive should always CALL (and become a msg.sender).
+- Primitive will call the RuleCombinator, and the RuleCombinator is who will be calling the inner rules and appearing as the msg.sender. So the RuleCombinator will be "seen" as the "primitive" by the singleton rules.
+
+---
+
+Rule #0: Rules being DelegateCalled can mess-up your storage, so you should NEVER delegateCall them from the Primitive (too dangerous)
+
+Rule #1: We (Lens, Dashboard, etc) always use the RuleCombinator, as the storage of configs and it delegateCalls the rules. It should be a proxy, so you can upgrade it.
+
+Rule #2: We will say that our rules are "Libraries" that would signal they are supposed to be used with delegateCall
+         (But we won't really make them Libraries, cause of issue with zkSync deployments)
+
+Rule #3: If you (brave dev), for some reason want to use the rule directly - you should understand the following limitations of that:
+         (1) Your rule will store the storage. This means - you are locked to your rule, if you want to keep that storage
+         (2) If you want to add another rule (by switching to RuleCombinator) - you lose the storage you had before in your rule
+         (3) You can develop Singleton rules that accept msg.sender as an owner of configuration - but then you're either:
+                (3.1) Locked to one rule (not using RuleCombinator)
+                (3.2) Your RuleCombinator becomes a primitive, and you might have problem calling/checking the real primitive
+
+Conclusion: Don't play smart and just use the RuleCombinator. It's the best way to go.
+
+Note: Rules can still mess up the storage of your RuleCombinator by overwriting anything they want

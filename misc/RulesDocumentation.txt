@@ -1,0 +1,78 @@
+General Rule Interface and Architecture description:
+----------------------------------------------------
+
+- A primitive will set the address of the rule to use via its `set rule` function. For example:
+
+    + function setFeedRules(IFeedRule feedRules) external;
+    + function setUsernameRules(IUsernameRule usernameRules) external;
+    + etc...
+
+    This will fire an event from the primitive address, and this will link the primitive with the rule.
+
+    + event Lens_Username_RulesSet(address indexed usernameRules);
+    + event Lens_Feed_RulesSet(address indexed feedRules);
+    + etc...
+
+
+
+- The rule set on the primitive will be already configured, or can be configured after. This is done via calling the
+  Rule itself, through the following function that every rule has, no matter the rule type:
+
+  + function configure(bytes calldata data) external
+  
+  Which will fire the following event from the rule address itself:
+
+  + event Lens_RuleConfigured(bytes data);
+
+
+- Aside of the `configure` function, every other rule function will depend on its type.
+  For example, the Community rule interface has `processJoining` function, while the Username rule
+  has `processRegistering`, and each of those functions will have their own ad-hoc parameters.
+
+  However, this does not stop a rule (for example a "PaymentRule") to implement multiple interfaces of different rule types
+  and be able to be re-used by them. So, the PaymentRule can implement IFeedRule, IUsernameRule, ICommunityRule, etc...
+  And then this same rule implementation (address) be set and used in all of these primitives.
+
+
+[Low-level notes]
+- The rule stores it's state inside itself, and is called from the primitive via CALL opcode.
+  
+
+Our Lens Dashboard Architecture description (specific case of the above):
+-------------------------------------------------------------------------
+
+- Given that we want "one-click" "state-preserving" "custom-combined" rules, we will never setup a single-purpose-rule 
+directly into a primitive, but instead we will ALWAYS set a special rule, called RuleCombinator, which will combine
+smaller inner rules into a bigger single rule.
+
+- We will build every inner rule to be re-usable by every RuleCombinator. But the RuleCombinator will need to be deployed
+for each primitive instance. So, there is a one-by-one mapping between a Primitive Instance and its RuleCombinator.
+
+- The RuleCombinator will be set as the rule for the primitive, and then the RuleCombinator will handle all the 
+inner rules internally, abstracting them from the primitive.
+  So, in this setup, the Primitive has a 1-to-1 mapping with the RuleCombinator, and the RuleCombinator has a 1-to-many
+  with the inner rules.
+  (primitive calls the RuleCombinator via CALL, RuleCombinator calls the inner rules via DELEGATECALL)
+
+- For the first release, we will have a single flavor of RuleCombinator, which supports two arrays of inner rules:
+    + Mandatory rules: combined through AND gate, all must pass.
+    + One-out-of-many rules: combined through OR gate, at least one must pass.
+
+    In the future, if the need arises, a more complex and even a full-power RuleCombinator can be implemented.
+    We already tested a RPN-based combinator that allows literally ANY combination of rules. But we won't release it yet.
+    
+- Note that the RuleCombinator used for the release (Mandatory + One-out-of-many) do not affect the current Dashboard designs:
+    + Rules that we feel "could have been a baked-in feature" but we also agree they must be rules, they are added as 
+      mandatory rules. For example, the restricted addresses/relayers, the Ban/Block rule, etc.
+    + Then, if they user chooses to combine extra rules through "AND" gate, they are just appended to the array of
+     mandatory rules. Along the rules that we mentioend in the previous bullet/item point.
+    + If the user chooses to combine extra rules through "OR" gate, they are added to the array of one-out-of-many rules.
+    + As you see, the UI of the dashboard stays the same.
+
+[Low-level notes]
+- RuleCombinator calls the inner rules via DELEGATECALL opcode, so they don't have any state and use the RuleCombinator's state.
+- This means Rules can use and reuse each other's state (you can replace one flavor of PaymentRule with another, while
+keeping the configuration, as long as they use the same configuration names i.e. storage slots)
+- RuleCombinator's MUST NOT be NESTED. Custom inner rules or a more complex RuleCombinator should be used instead in the future.
+(because of the DELEGATECALL opcode, the storage would be overwritten)
+- User should only use the Rules they trust, because they can access the RuleCombinator's state and potentially other rules' state.

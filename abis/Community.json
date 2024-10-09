@@ -1,0 +1,591 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      },
+      {
+        "internalType": "contract IAccessControl",
+        "name": "accessControl",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "accessControl",
+        "type": "address"
+      }
+    ],
+    "name": "Lens_AccessControlSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "value",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes",
+        "name": "valueIndexed",
+        "type": "bytes"
+      }
+    ],
+    "name": "Lens_Community_ExtraDataSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleExecutionData",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Community_MemberJoined",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleExecutionData",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Community_MemberLeft",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "membershipId",
+        "type": "uint256"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct RuleExecutionData",
+        "name": "data",
+        "type": "tuple"
+      }
+    ],
+    "name": "Lens_Community_MemberRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      }
+    ],
+    "name": "Lens_Community_MetadataURISet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "rule",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "configData",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "Lens_Community_RuleAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "rule",
+        "type": "address"
+      }
+    ],
+    "name": "Lens_Community_RuleRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "rule",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "configData",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "Lens_Community_RuleUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "resourceId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      }
+    ],
+    "name": "Lens_ResourceId_Available",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "addCommunityRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getAccessControl",
+    "outputs": [
+      {
+        "internalType": "contract IAccessControl",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "isRequired",
+        "type": "bool"
+      }
+    ],
+    "name": "getCommunityRules",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getExtraData",
+    "outputs": [
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "getMembershipId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "getMembershipTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMetadataURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getNumberOfMembers",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "communityRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "joinCommunity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "communityRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "leaveCommunity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "rules",
+        "type": "address[]"
+      }
+    ],
+    "name": "removeCommunityRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes[]",
+            "name": "dataForRequiredRules",
+            "type": "bytes[]"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "dataForAnyOfRules",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct RuleExecutionData",
+        "name": "communityRulesData",
+        "type": "tuple"
+      }
+    ],
+    "name": "removeMember",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IAccessControl",
+        "name": "newAccessControl",
+        "type": "address"
+      }
+    ],
+    "name": "setAccessControl",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "key",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "value",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct DataElement[]",
+        "name": "extraDataToSet",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "setExtraData",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "metadataURI",
+        "type": "string"
+      }
+    ],
+    "name": "setMetadataURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "ruleAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes",
+            "name": "configData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bool",
+            "name": "isRequired",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct RuleConfiguration[]",
+        "name": "rules",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "updateCommunityRules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

@@ -5,7 +5,8 @@ import {IAccessControl} from "./IAccessControl.sol";
 
 // TODO: Should we add `bytes data` param to the `hasAccess`? For more complex logic like providing admin signatures.
 interface IRoleBasedAccessControl is IAccessControl {
-    event Lens_AccessControl_RoleSet(address indexed account, uint256 indexed roleId);
+    event Lens_AccessControl_RoleGranted(address indexed account, uint256 indexed roleId);
+    event Lens_AccessControl_RoleRevoked(address indexed account, uint256 indexed roleId);
     event Lens_AccessControl_GlobalAccessSet(
         uint256 indexed roleId, uint256 indexed resourceId, AccessPermission indexed accessPermission
     );
@@ -24,11 +25,11 @@ interface IRoleBasedAccessControl is IAccessControl {
     }
 
     // Role functions
-    function setRole(address account, uint256 roleId, bytes calldata data) external;
+    function grantRole(address account, uint256 roleId) external;
+
+    function revokeRole(address account, uint256 roleId) external;
 
     function hasRole(address account, uint256 roleId) external view returns (bool);
-
-    function getRole(address account) external view returns (uint256);
 
     // Resource access permissions functions - Global
     function setGlobalAccess(uint256 roleId, uint256 resourceId, AccessPermission accessPermission, bytes calldata data)

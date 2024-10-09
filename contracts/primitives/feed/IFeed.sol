@@ -1,98 +1,156 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IPostRule} from "./IPostRule.sol";
-import {IFeedRule} from "./IFeedRule.sol";
-import {IAccessControl} from "../access-control/IAccessControl.sol";
+import {DataElement, RuleConfiguration, RuleExecutionData} from "../../types/Types.sol";
+import {IMetadataBased} from "./../base/IMetadataBased.sol";
 
-/*
-    TODO: Natspec
-    
-    // extraData - arbitrary key-value storage
-
-    >> 1. pass extraData(name, value)
-        2. store value at "name" somehow
-        3. anyone can go to post and ask for "name" to get the value (or get 0 or "" or smth if not set)
-
-    Example:
-        mapping(uint256 postId => mapping(bytes32 (keccak256(name)) => bytes abi.encoded(value) or "" empty bytes)
-*/
-
-struct DataElement {
-    bytes32 key;
-    bytes value;
+// TODO: Discuss if there's a need for anything else to be added here
+struct EditPostParams {
+    string contentURI;
+    DataElement[] extraData;
 }
 
-struct PostParams {
+struct CreatePostParams {
     address author; // Multiple authors can be added in extraData
     address source; // Client source, if any
-    string metadataURI;
-    uint256[] quotedPostIds;
-    uint256[] parentPostIds;
-    IPostRule postRules;
+    string contentURI;
+    uint256 quotedPostId;
+    uint256 parentPostId;
+    RuleConfiguration[] rules;
+    RuleExecutionData feedRulesData;
+    RuleExecutionData changeRulesQuotePostRulesData;
+    RuleExecutionData changeRulesParentPostRulesData;
+    RuleExecutionData quotesPostRulesData;
+    RuleExecutionData parentsPostRulesData;
+    DataElement[] extraData;
+}
+
+struct CreateRepostParams {
+    address author;
+    address source;
+    uint256 parentPostId;
+    RuleExecutionData feedRulesData;
+    RuleExecutionData parentsPostRulesData;
     DataElement[] extraData;
 }
 
 // This is a return type (for getters)
 struct Post {
     address author;
+    uint256 localSequentialId;
     address source;
-    string metadataURI;
-    uint256[] quotedPostIds;
-    uint256[] parentPostIds;
-    IPostRule postRules;
+    string contentURI;
+    bool isRepost;
+    uint256 quotedPostId;
+    uint256 parentPostId;
+    address[] requiredRules;
+    address[] anyOfRules;
     uint80 creationTimestamp;
     uint80 lastUpdatedTimestamp;
 }
 
-interface IFeed {
-    event Lens_Feed_MetadataUriSet(string metadataURI);
-
-    event Lens_Feed_PostCreated(uint256 indexed postId, PostParams postParams, bytes feedRulesData, uint256 postTypeId);
-
-    event Lens_Feed_PostEdited(
+interface IFeed is IMetadataBased {
+    event Lens_Feed_PostCreated(
         uint256 indexed postId,
-        PostParams newPostParams,
-        bytes feedRulesData,
-        bytes postRulesChangeFeedRulesData,
-        uint256 postTypeId
+        address indexed author,
+        uint256 indexed localSequentialId,
+        CreatePostParams postParams,
+        uint256 rootPostId
     );
 
-    event Lens_Feed_PostDeleted(uint256 indexed postId, bytes feedRulesData);
+    event Lens_Feed_RepostCreated(
+        uint256 indexed postId,
+        address indexed author,
+        uint256 indexed localSequentialId,
+        CreateRepostParams postParams,
+        uint256 rootPostId
+    );
 
-    event Lens_Feed_RulesSet(address feedRules);
+    event Lens_Feed_PostEdited(
+        uint256 indexed postId, address indexed author, EditPostParams newPostParams, RuleExecutionData feedRulesData
+    );
 
-    function createPost(PostParams calldata postParams, bytes calldata data) external returns (uint256);
+    event Lens_Feed_PostDeleted(uint256 indexed postId, address indexed author, RuleExecutionData feedRulesData);
+
+    event Lens_Feed_ExtraDataSet(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+
+    event Lens_Feed_RuleAdded(address indexed ruleAddress, bytes configData, bool indexed isRequired);
+    event Lens_Feed_RuleUpdated(address indexed ruleAddress, bytes configData, bool indexed isRequired);
+    event Lens_Feed_RuleRemoved(address indexed ruleAddress);
+
+    event Lens_Feed_Post_RuleAdded(
+        uint256 indexed postId, address indexed author, address indexed ruleAddress, bytes configData, bool isRequired
+    );
+    event Lens_Feed_Post_RuleUpdated(
+        uint256 indexed postId, address indexed author, address indexed ruleAddress, bytes configData, bool isRequired
+    );
+    event Lens_Feed_Post_RuleRemoved(uint256 indexed postId, address indexed author, address indexed ruleAddress);
+
+    event Lens_Feed_MetadataURISet(string metadataURI);
+
+    function addFeedRules(RuleConfiguration[] calldata rules) external;
+
+    function updateFeedRules(RuleConfiguration[] calldata rules) external;
+
+    function removeFeedRules(address[] calldata rules) external;
+
+    function createPost(CreatePostParams calldata postParams) external returns (uint256);
+
+    function createRepost(CreateRepostParams calldata repostParams) external returns (uint256);
 
     function editPost(
         uint256 postId,
-        PostParams calldata newPostParams,
-        bytes calldata editPostFeedRulesData,
-        bytes calldata postRulesChangeFeedRulesData
+        EditPostParams calldata newPostParams,
+        RuleExecutionData calldata editPostFeedRulesData
     ) external;
 
     // "Delete" - u know u cannot delete stuff from the internet, right? :]
     // But this will at least remove it from the current state, so contracts accesing it will know.
-    function deletePost(uint256 postId, bytes32[] calldata extraDataKeysToDelete, bytes calldata feedRulesData)
-        external;
+    function deletePost(
+        uint256 postId,
+        bytes32[] calldata extraDataKeysToDelete,
+        RuleExecutionData calldata feedRulesData
+    ) external;
 
-    function setFeedRules(IFeedRule feedRules) external;
+    function addPostRules(
+        uint256 postId,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata feedRulesData,
+        RuleExecutionData calldata quotePostRulesData,
+        RuleExecutionData calldata parentPostRulesData
+    ) external;
+
+    function updatePostRules(
+        uint256 postId,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata feedRulesData,
+        RuleExecutionData calldata quotePostRulesData,
+        RuleExecutionData calldata parentPostRulesData
+    ) external;
+
+    function removePostRules(
+        uint256 postId,
+        RuleConfiguration[] calldata rules,
+        RuleExecutionData calldata feedRulesData,
+        RuleExecutionData calldata quotePostRulesData,
+        RuleExecutionData calldata parentPostRulesData
+    ) external;
+
+    function setExtraData(DataElement[] calldata extraDataToSet) external;
 
     // Getters
 
     function getPost(uint256 postId) external view returns (Post memory);
 
-    function getPostTypeId(uint256 postId) external view returns (uint8);
-
     function getPostAuthor(uint256 postId) external view returns (address);
 
-    function getFeedRules() external view returns (IFeedRule);
+    function getFeedRules(bool isRequired) external view returns (address[] memory);
 
-    function getPostRules(uint256 postId) external view returns (IPostRule);
+    function getPostRules(uint256 postId, bool isRequired) external view returns (address[] memory);
 
     function getPostCount() external view returns (uint256);
 
-    function getFeedMetadataURI() external view returns (string memory);
+    function getPostExtraData(uint256 postId, bytes32 key) external view returns (bytes memory);
 
-    function getAccessControl() external view returns (IAccessControl);
+    function getExtraData(bytes32 key) external view returns (bytes memory);
 }

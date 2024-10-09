@@ -1,0 +1,49 @@
+==============================================
+!!! VERY IMPORTANT FINDING ABOUT THE RULES !!!
+==============================================
+
+There's a problem that we are ALWAYS calling ALL the rules in the Mantadory/Optional lists, even if they don't implement
+the functions we're calling. We cannot know if they implement these functions at the calling time, so we need a way to
+"ignore" such rules in the chain of calls.
+
+Here is a way to "ignore
+
+When is mandatory (required), to be "ignored" in the chain of calls, it should: PASS - return directly
+
+When it's optional (anyOf), to be "ignored" in the OR chain, it should revert: REVERT - straight away
+
+---
+
+Proposal: Given that we do not use return types... can we use the return value to signal "ignore or not" ?
+
+---
+
+Solution: you should return bool:
+
+true - Function present and processed succesfully
+
+false - Function present 
+
+revert - Function was implemented but it REVERTED
+
+Is the function present in the contract?
+
+YES: Did it has implementation code or empty?
+    
+    EMPTY -> Should return false.
+    CODE -> Should return true or revert.
+
+NO: It's wrong. It should always be present! Will panic.
+
+So then on the Mandatory rules we should treat the "false" returns as PASSED
+And on Optional rules we should treat the "false" returns as REVERTED
+
+---
+
+A hacky hack to make this universal:
+
+``` solidity
+fallback() returns (bool) {
+    return false; // :-)
+}
+```

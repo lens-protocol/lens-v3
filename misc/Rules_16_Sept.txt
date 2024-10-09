@@ -1,0 +1,19 @@
+What do we need from Rules and their Combinators?
+
+- Customize your rule combining smaller inner rules
+- You can replace a rule with another flavor, but same config and 
+  If yes (at least READ):
+    - You remove an inner rule, you add it back, you keep the previous config and storage state.it should work
+    - Do we want to allow different rules to access the same storage? 
+      - Same for the whole flavor of RuleCombinator?
+  If yes (READ & WRITE):
+    - One rule can change the configuration that was set by another rule (with same config option)
+      
+
+
+
+
+
+Issues we need to fix:
+
+#1 - Nested combinators collide their storage
