@@ -130,3 +130,9 @@ dist
 
 deployment-zk/*
 !deployment-zk/lensSepoliaTestnet/
+
+# VsCode files
+.vscode/settings.json
+cache_forge/solidity-files-cache.json
+package-lock.json
+yarn.lock
