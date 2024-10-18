@@ -50,7 +50,7 @@ contract AccessControlled {
     }
 
     // Access Controlled Functions
-    function setAccessControl(IAccessControl newAccessControl) external {
+    function setAccessControl(IAccessControl newAccessControl) external virtual {
         _accessControl().requireAccess(msg.sender, SET_ACCESS_CONTROL_PID);
         newAccessControl.verifyHasAccessFunction();
         _setAccessControl(address(newAccessControl));

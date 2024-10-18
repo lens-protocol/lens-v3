@@ -23,6 +23,27 @@ contract OwnerAdminOnlyAccessControl is RoleBasedAccessControl {
         emit Lens_AccessControl_RoleGranted(account, roleId);
     }
 
+    function hasAccess(address account, address contractAddress, uint256 permissionId)
+        external
+        view
+        override
+        returns (bool)
+    {
+        uint256 SET_ACCESS_CONTROL_PID = uint256(keccak256("SET_ACCESS_CONTROL"));
+        if (permissionId == SET_ACCESS_CONTROL_PID) return false;
+
+        // `_getScopedAccess` always returns Access.GRANTED for Owner and Admins.
+        Access scopedAccess = _getScopedAccess(account, contractAddress, permissionId);
+        if (scopedAccess == Access.GRANTED) {
+            return true;
+        } else if (scopedAccess == Access.DENIED) {
+            return false;
+        } else {
+            // scopedAccess == Access.UNDEFINED, so it depends exclusively on the global access.
+            return _getGlobalAccess(account, permissionId) == Access.GRANTED;
+        }
+    }
+
     function setGlobalAccess(uint256, /* roleId */ uint256, /* permissionId */ Access /* access */ )
         external
         virtual
