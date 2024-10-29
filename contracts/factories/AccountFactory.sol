@@ -8,12 +8,14 @@ contract AccountFactory {
         address indexed account, address indexed owner, string metadataURI, address[] accountManagers
     );
 
-    function deployAccount(address owner, string calldata metadataURI, address[] calldata accountManagers)
-        external
-        returns (address)
-    {
+    function deployAccount(
+        address owner,
+        address metadataURISource,
+        string calldata metadataURI,
+        address[] calldata accountManagers
+    ) external returns (address) {
         // TODO: Make it a proxy
-        Account account = new Account(owner, metadataURI, accountManagers);
+        Account account = new Account(owner, metadataURISource, metadataURI, accountManagers);
         emit Lens_AccountFactory_Deployment(address(account), owner, metadataURI, accountManagers);
         return address(account);
     }

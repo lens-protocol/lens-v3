@@ -8,16 +8,21 @@ import {IAccount} from "./IAccount.sol";
 
 contract Account is IAccount, Ownable {
     mapping(address => bool) public accountManagers;
-    string public metadataURI; // TODO: Add getter/setter/internal etc
+    mapping(address => string) public metadataURI; // TODO: Add getter/setter/internal etc
 
-    constructor(address _owner, string memory _metadataURI, address[] memory _accountManagers) Ownable() {
-        metadataURI = _metadataURI;
+    constructor(
+        address _owner,
+        address metadataURISource,
+        string memory _metadataURI,
+        address[] memory _accountManagers
+    ) Ownable() {
+        metadataURI[metadataURISource] = _metadataURI;
         for (uint256 i = 0; i < _accountManagers.length; i++) {
             accountManagers[_accountManagers[i]] = true;
             emit Lens_Account_AccountManagerAdded(_accountManagers[i]);
         }
         _transferOwnership(_owner);
-        emit Lens_Account_MetadataURISet(_metadataURI);
+        emit Lens_Account_MetadataURISet(metadataURISource, _metadataURI);
         emit Events.Lens_Contract_Deployed("account", "lens.account", "account", "lens.account");
     }
 
@@ -38,9 +43,9 @@ contract Account is IAccount, Ownable {
         emit Lens_Account_AccountManagerRemoved(_accountManager);
     }
 
-    function setMetadataURI(string calldata _metadataURI) external override onlyOwner {
-        metadataURI = _metadataURI;
-        emit Lens_Account_MetadataURISet(_metadataURI);
+    function setMetadataURI(address source, string calldata _metadataURI) external override onlyOwner {
+        metadataURI[source] = _metadataURI;
+        emit Lens_Account_MetadataURISet(source, _metadataURI);
     }
 
     function executeTransaction(address to, uint256 value, bytes calldata data)

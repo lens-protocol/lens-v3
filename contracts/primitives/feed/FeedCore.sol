@@ -24,7 +24,7 @@ library FeedCore {
     // Storage
 
     struct Storage {
-        string metadataURI;
+        mapping(address => string) metadataURI;
         uint256 postCount;
         mapping(uint256 => PostStorage) posts;
         mapping(bytes32 => DataElementValue) extraData;

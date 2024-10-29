@@ -16,12 +16,13 @@ contract GroupFactory {
     }
 
     function deployGroup(
+        address metadataURISource,
         string memory metadataURI,
         IAccessControl accessControl,
         RuleConfiguration[] calldata rules,
         DataElement[] calldata extraData
     ) external returns (address) {
-        Group group = new Group(metadataURI, _factoryOwnedAccessControl);
+        Group group = new Group(metadataURISource, metadataURI, _factoryOwnedAccessControl);
         group.addGroupRules(rules);
         group.setExtraData(extraData);
         group.setAccessControl(accessControl);

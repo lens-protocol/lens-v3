@@ -16,12 +16,13 @@ contract FeedFactory {
     }
 
     function deployFeed(
+        address metadataURISource,
         string memory metadataURI,
         IAccessControl accessControl,
         RuleConfiguration[] calldata rules,
         DataElement[] calldata extraData
     ) external returns (address) {
-        Feed feed = new Feed(metadataURI, _factoryOwnedAccessControl);
+        Feed feed = new Feed(metadataURISource, metadataURI, _factoryOwnedAccessControl);
         feed.addFeedRules(rules);
         feed.setExtraData(extraData);
         feed.setAccessControl(accessControl);

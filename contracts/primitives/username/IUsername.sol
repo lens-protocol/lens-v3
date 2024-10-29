@@ -23,7 +23,7 @@ interface IUsername is IMetadataBased {
     event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
 
-    event Lens_Username_MetadataURISet(string metadataURI);
+    event Lens_Username_MetadataURISet(address indexed source, string metadataURI);
 
     function setExtraData(DataElement[] calldata extraDataToSet) external;
 

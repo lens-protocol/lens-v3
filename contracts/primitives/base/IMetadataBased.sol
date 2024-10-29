@@ -2,6 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IMetadataBased {
-    function getMetadataURI() external view returns (string memory);
-    function setMetadataURI(string memory metadata) external;
+    function getMetadataURI(address source) external view returns (string memory);
+    function setMetadataURI(address source, string memory metadataURI) external;
 }

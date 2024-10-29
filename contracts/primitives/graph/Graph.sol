@@ -17,9 +17,11 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled {
 
     // uint256 constant SKIP_FOLLOW_RULES_CHECKS_PID = uint256(keccak256("SKIP_FOLLOW_RULES_CHECKS"));
 
-    constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Graph_MetadataURISet(metadataURI);
+    constructor(address metadataURISource, string memory metadataURI, IAccessControl accessControl)
+        AccessControlled(accessControl)
+    {
+        Core.$storage().metadataURI[metadataURISource] = metadataURI;
+        emit Lens_Graph_MetadataURISet(metadataURISource, metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("graph", "lens.graph", "graph", "lens.graph");
     }
@@ -33,10 +35,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled {
 
     // Access Controlled functions
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function setMetadataURI(address source, string calldata metadataURI) external override {
         _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Graph_MetadataURISet(metadataURI);
+        Core.$storage().metadataURI[source] = metadataURI;
+        emit Lens_Graph_MetadataURISet(source, metadataURI);
     }
 
     function addGraphRules(RuleConfiguration[] calldata rules) external override {
@@ -188,7 +190,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled {
         return _getFollowRules(account, isRequired);
     }
 
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
+    function getMetadataURI(address source) external view override returns (string memory) {
+        return Core.$storage().metadataURI[source];
     }
 }

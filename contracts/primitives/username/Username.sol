@@ -31,6 +31,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
     // TODO: We need initializer for all primitives to make them upgradeable
     constructor(
         string memory namespace,
+        address metadataURISource,
         string memory metadataURI,
         IAccessControl accessControl,
         string memory nftName,
@@ -38,8 +39,8 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         ITokenURIProvider tokenURIProvider
     ) LensERC721(nftName, nftSymbol, tokenURIProvider) AccessControlled(accessControl) {
         Core.$storage().namespace = namespace;
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Username_MetadataURISet(metadataURI);
+        Core.$storage().metadataURI[metadataURISource] = metadataURI;
+        emit Lens_Username_MetadataURISet(metadataURISource, metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("username", "lens.username", "username", "lens.username");
     }
@@ -58,10 +59,10 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
 
     // Access Controlled functions
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function setMetadataURI(address source, string calldata metadataURI) external override {
         _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Username_MetadataURISet(metadataURI);
+        Core.$storage().metadataURI[source] = metadataURI;
+        emit Lens_Username_MetadataURISet(source, metadataURI);
     }
 
     function addUsernameRules(RuleConfiguration[] calldata ruleConfigurations) external {
@@ -224,7 +225,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         return _getUsernameRules(isRequired);
     }
 
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
+    function getMetadataURI(address source) external view override returns (string memory) {
+        return Core.$storage().metadataURI[source];
     }
 }

@@ -36,7 +36,7 @@ interface IApp is IMetadataBased {
     event Lens_App_ExtraDataRemoved(bytes32 indexed key);
 
     // Medatada URI
-    event Lens_App_MetadataURISet(string metadataURI);
+    event Lens_App_MetadataURISet(address indexed source, string metadataURI);
 
     // Treasury
     event Lens_App_TreasurySet(address indexed treasury);

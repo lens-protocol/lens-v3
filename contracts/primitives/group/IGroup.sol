@@ -17,7 +17,7 @@ interface IGroup is IMetadataBased {
     event Lens_Group_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Group_ExtraDataRemoved(bytes32 indexed key);
 
-    event Lens_Group_MetadataURISet(string metadataURI);
+    event Lens_Group_MetadataURISet(address indexed source, string metadataURI);
 
     function addGroupRules(RuleConfiguration[] calldata rules) external;
 

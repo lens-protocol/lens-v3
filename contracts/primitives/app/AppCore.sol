@@ -15,7 +15,7 @@ library AppCore {
     // Storage
 
     struct Storage {
-        string metadataURI; // Name, description, logo, other attribiutes like category/topic, etc.
+        mapping(address => string) metadataURI; // Name, description, logo, other attribiutes like category/topic, etc.
         address treasury; // Can also be defined as a permission in the AC... and allow multiple revenue recipients!
         mapping(address => ArrayStorageHelper) signerStorageHelper;
         mapping(address => ArrayStorageHelper) paymasterStorageHelper;
@@ -177,8 +177,8 @@ library AppCore {
 
     ////////////// Metadata URI
 
-    function _setMetadataURI(string memory metadataURI) internal {
-        $storage().metadataURI = metadataURI;
+    function _setMetadataURI(address source, string memory metadataURI) internal {
+        $storage().metadataURI[source] = metadataURI;
     }
 
     ////////////// Extra Data

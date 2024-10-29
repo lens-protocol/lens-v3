@@ -18,6 +18,7 @@ contract UsernameFactory {
 
     function deployUsername(
         string memory namespace,
+        address metadataURISource,
         string memory metadataURI,
         IAccessControl accessControl,
         RuleConfiguration[] calldata rules,
@@ -26,8 +27,9 @@ contract UsernameFactory {
         string memory nftSymbol,
         ITokenURIProvider tokenURIProvider
     ) external returns (address) {
-        Username username =
-            new Username(namespace, metadataURI, _factoryOwnedAccessControl, nftName, nftSymbol, tokenURIProvider);
+        Username username = new Username(
+            namespace, metadataURISource, metadataURI, _factoryOwnedAccessControl, nftName, nftSymbol, tokenURIProvider
+        );
         username.addUsernameRules(rules);
         username.setExtraData(extraData);
         username.setAccessControl(accessControl);

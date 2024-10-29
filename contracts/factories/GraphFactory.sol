@@ -16,12 +16,13 @@ contract GraphFactory {
     }
 
     function deployGraph(
+        address metadataURISource,
         string memory metadataURI,
         IAccessControl accessControl,
         RuleConfiguration[] calldata rules,
         DataElement[] calldata extraData
     ) external returns (address) {
-        Graph graph = new Graph(metadataURI, _factoryOwnedAccessControl);
+        Graph graph = new Graph(metadataURISource, metadataURI, _factoryOwnedAccessControl);
         graph.addGraphRules(rules);
         graph.setExtraData(extraData);
         graph.setAccessControl(accessControl);

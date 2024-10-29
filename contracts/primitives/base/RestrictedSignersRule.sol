@@ -59,8 +59,10 @@ abstract contract RestrictedSignersRule {
     );
 
     function _configure(bytes calldata data) internal virtual {
-        (address[] memory signers, bool[] memory isWhitelisted) = abi.decode(data, (address[], bool[]));
+        (address[] memory signers, string[] memory labels, bool[] memory isWhitelisted) =
+            abi.decode(data, (address[], string[], bool[]));
         require(signers.length == isWhitelisted.length);
+        require(signers.length == labels.length);
         for (uint256 i = 0; i < signers.length; i++) {
             bool wasWhitelisted = $ruleStorage(msg.sender).isWhitelistedSigner[signers[i]];
             if (wasWhitelisted != isWhitelisted[i]) {

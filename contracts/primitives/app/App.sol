@@ -29,12 +29,13 @@ contract App is IApp, AccessControlled {
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
 
     constructor(
+        address metadataURISource,
         string memory metadataURI,
         IAccessControl accessControl,
         AppInitialProperties memory initialProps,
         DataElement[] memory extraData
     ) AccessControlled(accessControl) {
-        _setMetadataURI(metadataURI);
+        _setMetadataURI(metadataURISource, metadataURI);
         _setTreasury(initialProps.treasury);
         _setGraph(initialProps.graph);
         _addFeeds(initialProps.feeds);
@@ -248,14 +249,14 @@ contract App is IApp, AccessControlled {
 
     ///////////////// Metadata URI
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function setMetadataURI(address source, string calldata metadataURI) external override {
         _requireAccess(msg.sender, SET_METADATA_PID);
-        _setMetadataURI(metadataURI);
+        _setMetadataURI(source, metadataURI);
     }
 
-    function _setMetadataURI(string memory metadataURI) internal {
-        Core._setMetadataURI(metadataURI);
-        emit Lens_App_MetadataURISet(metadataURI);
+    function _setMetadataURI(address source, string memory metadataURI) internal {
+        Core._setMetadataURI(source, metadataURI);
+        emit Lens_App_MetadataURISet(source, metadataURI);
     }
 
     ///////////////// Extra Data
@@ -333,7 +334,7 @@ contract App is IApp, AccessControlled {
         return Core.$storage().extraData[key];
     }
 
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
+    function getMetadataURI(address source) external view override returns (string memory) {
+        return Core.$storage().metadataURI[source];
     }
 }

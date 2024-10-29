@@ -17,9 +17,11 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
     uint256 constant DELETE_POST_PID = uint256(keccak256("DELETE_POST"));
 
-    constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Feed_MetadataURISet(metadataURI);
+    constructor(address metadataURISource, string memory metadataURI, IAccessControl accessControl)
+        AccessControlled(accessControl)
+    {
+        Core.$storage().metadataURI[metadataURISource] = metadataURI;
+        emit Lens_Feed_MetadataURISet(metadataURISource, metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
     }
@@ -34,10 +36,10 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
 
     // Access Controlled functions
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function setMetadataURI(address source, string calldata metadataURI) external override {
         _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Feed_MetadataURISet(metadataURI);
+        Core.$storage().metadataURI[source] = metadataURI;
+        emit Lens_Feed_MetadataURISet(source, metadataURI);
     }
 
     function addFeedRules(RuleConfiguration[] calldata rules) external override {
@@ -277,8 +279,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         return Core.$storage().postCount;
     }
 
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
+    function getMetadataURI(address source) external view override returns (string memory) {
+        return Core.$storage().metadataURI[source];
     }
 
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (DataElementValue memory) {

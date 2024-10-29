@@ -67,6 +67,7 @@ contract LensFactory {
 
     // TODO: This function belongs to an App probably.
     function createAccountWithUsernameFree(
+        address metadataURISource,
         string calldata metadataURI,
         address owner,
         address[] calldata accountManagers,
@@ -75,7 +76,7 @@ contract LensFactory {
         RuleExecutionData calldata createUsernameData,
         RuleExecutionData calldata assignUsernameData
     ) external returns (address) {
-        address account = ACCOUNT_FACTORY.deployAccount(address(this), metadataURI, accountManagers);
+        address account = ACCOUNT_FACTORY.deployAccount(address(this), metadataURISource, metadataURI, accountManagers);
         IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
         bytes memory txData = abi.encodeCall(usernamePrimitive.createUsername, (account, username, createUsernameData));
         IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
@@ -85,55 +86,70 @@ contract LensFactory {
         return account;
     }
 
-    function deployAccount(string memory metadataURI, address owner, address[] calldata accountManagers)
-        external
-        returns (address)
-    {
-        return ACCOUNT_FACTORY.deployAccount(owner, metadataURI, accountManagers);
+    function deployAccount(
+        address metadataURISource,
+        string memory metadataURI,
+        address owner,
+        address[] calldata accountManagers
+    ) external returns (address) {
+        return ACCOUNT_FACTORY.deployAccount(owner, metadataURISource, metadataURI, accountManagers);
     }
 
     function deployApp(
+        address metadataURISource,
         string memory metadataURI,
         address owner,
         address[] calldata admins,
         AppInitialProperties calldata initialProperties,
         DataElement[] calldata extraData
     ) external returns (address) {
-        return APP_FACTORY.deployApp(metadataURI, _deployAccessControl(owner, admins), initialProperties, extraData);
+        return APP_FACTORY.deployApp(
+            metadataURISource, metadataURI, _deployAccessControl(owner, admins), initialProperties, extraData
+        );
     }
 
     function deployGroup(
+        address metadataURISource,
         string memory metadataURI,
         address owner,
         address[] calldata admins,
         RuleConfiguration[] calldata rules,
         DataElement[] calldata extraData
     ) external returns (address) {
-        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
+        return GROUP_FACTORY.deployGroup(
+            metadataURISource, metadataURI, _deployAccessControl(owner, admins), rules, extraData
+        );
     }
 
     function deployFeed(
+        address metadataURISource,
         string memory metadataURI,
         address owner,
         address[] calldata admins,
         RuleConfiguration[] calldata rules,
         DataElement[] calldata extraData
     ) external returns (address) {
-        return FEED_FACTORY.deployFeed(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
+        return FEED_FACTORY.deployFeed(
+            metadataURISource, metadataURI, _deployAccessControl(owner, admins), rules, extraData
+        );
     }
 
     function deployGraph(
+        address metadataURISource,
         string memory metadataURI,
         address owner,
         address[] calldata admins,
         RuleConfiguration[] calldata rules,
         DataElement[] calldata extraData
     ) external returns (address) {
-        return GRAPH_FACTORY.deployGraph(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
+        return GRAPH_FACTORY.deployGraph(
+            metadataURISource, metadataURI, _deployAccessControl(owner, admins), rules, extraData
+        );
     }
 
     function deployUsername(
         string memory namespace,
+        address metadataURISource,
         string memory metadataURI,
         address owner,
         address[] calldata admins,
@@ -145,6 +161,7 @@ contract LensFactory {
         ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider(); // TODO!
         return USERNAME_FACTORY.deployUsername(
             namespace,
+            metadataURISource,
             metadataURI,
             _deployAccessControl(owner, admins),
             rules,

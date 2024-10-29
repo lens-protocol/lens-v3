@@ -48,7 +48,7 @@ interface IGraph is IMetadataBased {
     event Lens_Graph_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Graph_ExtraDataRemoved(bytes32 indexed key);
 
-    event Lens_Graph_MetadataURISet(string metadataURI);
+    event Lens_Graph_MetadataURISet(address indexed source, string metadataURI);
 
     function addGraphRules(RuleConfiguration[] calldata rules) external;
 
