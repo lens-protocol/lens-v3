@@ -48,9 +48,6 @@ contract SimplePayRule is IFeedRule, IPostRule, IGraphRule, IFollowRule, IGroupR
         _graphAccountConfigurations[msg.sender][account] = abi.decode(data, (SimplePayConfiguration));
     }
 
-    // We transfer money from the primitive, because we cannot trust primitives to pass a correct account to the rule.
-    // Rules process() functions are called from the primitive (as msg.sender)
-
     // PRIMITIVE BASED PROCESSING:
 
     // IFeedRule processing
@@ -232,6 +229,8 @@ contract SimplePayRule is IFeedRule, IPostRule, IGraphRule, IFollowRule, IGroupR
 
     // Internal functions
 
+    // We transfer money from the primitive, because we cannot trust primitives to pass a correct account to the rule.
+    // Rules process() functions are called from the primitive (as msg.sender)
     function _processPayment(SimplePayConfiguration memory configuration) internal {
         if (configuration.amount > 0) {
             IERC20(configuration.token).safeTransferFrom(msg.sender, configuration.recipient, configuration.amount);
