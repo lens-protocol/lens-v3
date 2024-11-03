@@ -119,7 +119,8 @@ contract RuleBasedGraph {
         uint256 followId,
         bytes calldata data
     ) internal returns (bool, bytes memory) {
-        return rule.call(abi.encodeCall(IFollowRule.processFollow, (followerAcount, accountToFollow, followId, data)));
+        return
+            rule.call(abi.encodeCall(IFollowRule.processFollowLocal, (followerAcount, accountToFollow, followId, data)));
     }
 
     function _accountProcessFollow(

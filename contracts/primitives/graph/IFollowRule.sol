@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import {RuleConfiguration} from "./../../types/Types.sol";
 
+// TODO: Rename this so it's more clear that it's a local rule of graph user, not a global graph-rule
 interface IFollowRule {
     function configure(address account, bytes calldata data) external;
 
-    function processFollow(address followerAccount, address accountToFollow, uint256 followId, bytes calldata data)
+    function processFollowLocal(address followerAccount, address accountToFollow, uint256 followId, bytes calldata data)
         external
         returns (bool);
 
