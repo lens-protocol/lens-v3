@@ -11,7 +11,7 @@ import {IUsernameRule} from "./../primitives/username/IUsernameRule.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {CreatePostParams, EditPostParams} from "./../primitives/feed/IFeed.sol";
+import {CreatePostParams, EditPostParams, Post, IFeed} from "./../primitives/feed/IFeed.sol";
 import {RuleConfiguration} from "./../types/Types.sol";
 
 struct SimplePayConfiguration {
@@ -56,40 +56,40 @@ contract SimplePayRule is IFeedRule, IPostRule, IGraphRule, IFollowRule, IGroupR
     // IFeedRule processing
 
     function processCreatePost(
-        uint256, /* postId */
+        uint256 postId,
         uint256, /* localSequentialId */
         CreatePostParams calldata, /* postParams */
         bytes calldata /* data */
     ) external returns (bool) {
-        _processPayment(_primitiveConfigurations[msg.sender]);
+        _complexPostTypeProcessingLogic(postId);
         return true;
     }
 
     function processEditPost(
-        uint256, /* postId */
+        uint256 postId,
         uint256, /* localSequentialId */
         EditPostParams calldata, /* editPostParams */
         bytes calldata /* data */
     ) external returns (bool) {
-        _processPayment(_primitiveConfigurations[msg.sender]);
+        _complexPostTypeProcessingLogic(postId);
         return true;
     }
 
-    function processDeletePost(uint256, /* postId */ uint256, /* localSequentialId */ bytes calldata /* data */ )
+    function processDeletePost(uint256 postId, uint256, /* localSequentialId */ bytes calldata /* data */ )
         external
         returns (bool)
     {
-        _processPayment(_primitiveConfigurations[msg.sender]);
+        _complexPostTypeProcessingLogic(postId);
         return true;
     }
 
     function processPostRulesChanged(
-        uint256, /* postId */
+        uint256 postId,
         uint256, /* localSequentialId */
         RuleConfiguration[] calldata, /* newPostRules */
         bytes calldata /* data */
     ) external returns (bool) {
-        _processPayment(_primitiveConfigurations[msg.sender]);
+        _complexPostTypeProcessingLogic(postId);
         return true;
     }
 
@@ -235,6 +235,37 @@ contract SimplePayRule is IFeedRule, IPostRule, IGraphRule, IFollowRule, IGroupR
     function _processPayment(SimplePayConfiguration memory configuration) internal {
         if (configuration.amount > 0) {
             IERC20(configuration.token).safeTransferFrom(msg.sender, configuration.recipient, configuration.amount);
+        }
+    }
+
+    function _complexPostTypeProcessingLogic(uint256 postId) internal {
+        // TODO: Think if we can optimize this not fetching everything from storage
+        Post memory postParams = IFeed(msg.sender).getPost(postId);
+        uint256 rootPostId = postParams.rootPostId;
+
+        if (rootPostId == postId) {
+            if (postParams.quotedPostId == 0) {
+                // Post is a simple root post (not a quote, reply or repost)
+                _processPayment(_primitiveConfigurations[msg.sender]);
+            } else {
+                // Post is a quote
+                _processPayment(_feedPostConfigurations[msg.sender][postParams.quotedPostId]);
+            }
+        } else {
+            // Post is either a repost or a reply
+            if (postParams.repostedPostId > 0) {
+                // Post is a repost
+                _processPayment(_feedPostConfigurations[msg.sender][postParams.repostedPostId]);
+            } else {
+                // Post is a reply (with or without a quote)
+                if (postParams.quotedPostId > 0) {
+                    // Post is a reply with a quote
+                    _processPayment(_feedPostConfigurations[msg.sender][postParams.quotedPostId]);
+                } else {
+                    // Post is a simple reply
+                    _processPayment(_feedPostConfigurations[msg.sender][postParams.repliedPostId]);
+                }
+            }
         }
     }
 }
