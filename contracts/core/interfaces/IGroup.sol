@@ -35,8 +35,7 @@ interface IGroup is IMetadataBased {
 
     function leaveGroup(address account, RuleExecutionData calldata data, SourceStamp calldata sourceStamp) external;
 
-    function removeMember(address account, RuleExecutionData calldata data, SourceStamp calldata sourceStamp)
-        external;
+    function removeMember(address account, RuleExecutionData calldata data, SourceStamp calldata sourceStamp) external;
 
     function getNumberOfMembers() external view returns (uint256);
 

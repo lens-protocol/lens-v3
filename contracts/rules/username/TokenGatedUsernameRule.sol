@@ -42,11 +42,11 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreation(address account, string calldata, /* username */ bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processCreation(
+        address account,
+        string calldata, /* username */
+        bytes calldata /* data */
+    ) external view returns (bool) {
         return _validateTokenBalance(
             _configuration[msg.sender].restrictions.restrictCreation,
             _configuration[msg.sender].accessControl,
@@ -55,11 +55,11 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         );
     }
 
-    function processAssigning(address account, string calldata, /* username */ bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processAssigning(
+        address account,
+        string calldata, /* username */
+        bytes calldata /* data */
+    ) external view returns (bool) {
         return _validateTokenBalance(
             _configuration[msg.sender].restrictions.restrictAssigning,
             _configuration[msg.sender].accessControl,

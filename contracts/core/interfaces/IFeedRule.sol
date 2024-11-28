@@ -8,15 +8,21 @@ import {RuleChange} from "./../types/Types.sol";
 interface IFeedRule {
     function configure(bytes calldata data) external;
 
-    function processCreatePost(uint256 postId, CreatePostParams calldata postParams, bytes calldata data)
-        external
-        returns (bool);
+    function processCreatePost(
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        bytes calldata data
+    ) external returns (bool);
 
-    function processEditPost(uint256 postId, EditPostParams calldata editPostParams, bytes calldata data)
-        external
-        returns (bool);
+    function processEditPost(
+        uint256 postId,
+        EditPostParams calldata editPostParams,
+        bytes calldata data
+    ) external returns (bool);
 
-    function processPostRuleChanges(uint256 postId, RuleChange[] calldata ruleChanges, bytes calldata data)
-        external
-        returns (bool);
+    function processPostRuleChanges(
+        uint256 postId,
+        RuleChange[] calldata ruleChanges,
+        bytes calldata data
+    ) external returns (bool);
 }

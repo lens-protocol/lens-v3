@@ -21,12 +21,12 @@ contract FollowersOnlyPostRule is IPostRule {
         _configuration[msg.sender][postId] = configuration;
     }
 
-    function processQuote(uint256 rootPostId, uint256, /* quotedPostId */ uint256 postId, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
+    function processQuote(
+        uint256 rootPostId,
+        uint256, /* quotedPostId */
+        uint256 postId,
+        bytes calldata /* data */
+    ) external view override returns (bool) {
         return _processRestriction({
             isRestrictionEnabled: _configuration[msg.sender][rootPostId].quotesRestricted,
             feed: msg.sender,
@@ -36,12 +36,12 @@ contract FollowersOnlyPostRule is IPostRule {
         });
     }
 
-    function processReply(uint256 rootPostId, uint256, /* repliedPostId */ uint256 postId, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
+    function processReply(
+        uint256 rootPostId,
+        uint256, /* repliedPostId */
+        uint256 postId,
+        bytes calldata /* data */
+    ) external view override returns (bool) {
         return _processRestriction({
             isRestrictionEnabled: _configuration[msg.sender][rootPostId].repliesRestricted,
             feed: msg.sender,
@@ -51,12 +51,12 @@ contract FollowersOnlyPostRule is IPostRule {
         });
     }
 
-    function processRepost(uint256 rootPostId, uint256, /* repostedPostId */ uint256 postId, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
+    function processRepost(
+        uint256 rootPostId,
+        uint256, /* repostedPostId */
+        uint256 postId,
+        bytes calldata /* data */
+    ) external view override returns (bool) {
         return _processRestriction({
             isRestrictionEnabled: _configuration[msg.sender][rootPostId].repostsRestricted,
             feed: msg.sender,

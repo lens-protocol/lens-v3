@@ -14,11 +14,11 @@ contract TokenGatedFollowRule is TokenGatedRule, IFollowRule {
         _configuration[msg.sender][account] = configuration;
     }
 
-    function processFollow(address followerAccount, address accountToFollow, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processFollow(
+        address followerAccount,
+        address accountToFollow,
+        bytes calldata /* data */
+    ) external view returns (bool) {
         _validateTokenBalance(_configuration[msg.sender][accountToFollow], followerAccount);
         return true;
     }

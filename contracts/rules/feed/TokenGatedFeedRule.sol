@@ -16,12 +16,11 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreatePost(uint256, /* postId */ CreatePostParams calldata postParams, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
+    function processCreatePost(
+        uint256, /* postId */
+        CreatePostParams calldata postParams,
+        bytes calldata /* data */
+    ) external view override returns (bool) {
         _validateTokenBalance(_configuration[msg.sender], postParams.author);
         return true;
     }

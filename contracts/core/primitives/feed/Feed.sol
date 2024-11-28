@@ -92,11 +92,10 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
 
     // Public user functions
 
-    function createPost(CreatePostParams calldata createPostParams, SourceStamp calldata sourceStamp)
-        external
-        override
-        returns (uint256)
-    {
+    function createPost(
+        CreatePostParams calldata createPostParams,
+        SourceStamp calldata sourceStamp
+    ) external override returns (uint256) {
         require(msg.sender == createPostParams.author, "MSG_SENDER_NOT_AUTHOR");
 
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) =

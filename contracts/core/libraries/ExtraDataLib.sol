@@ -5,17 +5,17 @@ pragma solidity ^0.8.17;
 import {DataElement} from "./../types/Types.sol";
 
 library ExtraDataLib {
-    function set(mapping(bytes32 => bytes) storage _extraDataStorage, DataElement memory extraDataElementToSet)
-        internal
-        returns (bool)
-    {
+    function set(
+        mapping(bytes32 => bytes) storage _extraDataStorage,
+        DataElement memory extraDataElementToSet
+    ) internal returns (bool) {
         return _setExtraDataElement(_extraDataStorage, extraDataElementToSet);
     }
 
-    function set(mapping(bytes32 => bytes) storage _extraDataStorage, DataElement[] calldata extraDataToSet)
-        internal
-        returns (bool[] memory)
-    {
+    function set(
+        mapping(bytes32 => bytes) storage _extraDataStorage,
+        DataElement[] calldata extraDataToSet
+    ) internal returns (bool[] memory) {
         bool[] memory werePreviousValuesSet = new bool[](extraDataToSet.length);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             werePreviousValuesSet[i] = _setExtraDataElement(_extraDataStorage, extraDataToSet[i]);

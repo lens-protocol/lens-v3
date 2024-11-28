@@ -40,10 +40,11 @@ contract RuleBasedGroup {
         $groupRulesStorage().removeRule(rule);
     }
 
-    function _internalProcessJoining(address rule, address account, bytes calldata data)
-        internal
-        returns (bool, bytes memory)
-    {
+    function _internalProcessJoining(
+        address rule,
+        address account,
+        bytes calldata data
+    ) internal returns (bool, bytes memory) {
         return rule.call(abi.encodeCall(IGroupRule.processJoining, (account, data)));
     }
 
@@ -51,10 +52,11 @@ contract RuleBasedGroup {
         _processGroupRule(_internalProcessJoining, account, data);
     }
 
-    function _internalProcessRemoval(address rule, address account, bytes calldata data)
-        internal
-        returns (bool, bytes memory)
-    {
+    function _internalProcessRemoval(
+        address rule,
+        address account,
+        bytes calldata data
+    ) internal returns (bool, bytes memory) {
         return rule.call(abi.encodeCall(IGroupRule.processRemoval, (account, data)));
     }
 

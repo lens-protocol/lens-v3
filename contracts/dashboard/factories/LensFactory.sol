@@ -206,10 +206,7 @@ contract LensFactory {
         );
     }
 
-    function _deployAccessControl(address owner, address[] calldata admins)
-        internal
-        returns (IRoleBasedAccessControl)
-    {
+    function _deployAccessControl(address owner, address[] calldata admins) internal returns (IRoleBasedAccessControl) {
         return ACCESS_CONTROL_FACTORY.deployOwnerAdminOnlyAccessControl(owner, admins);
     }
 }

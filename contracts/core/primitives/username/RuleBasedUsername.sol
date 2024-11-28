@@ -41,10 +41,12 @@ contract RuleBasedUsername {
         $usernameRulesStorage().removeRule(rule);
     }
 
-    function _internalProcessCreation(address rule, address account, string calldata username, bytes calldata data)
-        internal
-        returns (bool, bytes memory)
-    {
+    function _internalProcessCreation(
+        address rule,
+        address account,
+        string calldata username,
+        bytes calldata data
+    ) internal returns (bool, bytes memory) {
         return rule.call(abi.encodeCall(IUsernameRule.processCreation, (account, username, data)));
     }
 
@@ -52,10 +54,12 @@ contract RuleBasedUsername {
         _processUsernameRule(_internalProcessCreation, account, username, data);
     }
 
-    function _internalProcessAssigning(address rule, address account, string calldata username, bytes calldata data)
-        internal
-        returns (bool, bytes memory)
-    {
+    function _internalProcessAssigning(
+        address rule,
+        address account,
+        string calldata username,
+        bytes calldata data
+    ) internal returns (bool, bytes memory) {
         return rule.call(abi.encodeCall(IUsernameRule.processAssigning, (account, username, data)));
     }
 

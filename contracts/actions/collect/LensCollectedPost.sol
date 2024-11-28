@@ -27,9 +27,11 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     bool internal immutable _isImmutable; // TODO:"" This can be replaced with bytes(_contentURISnapshot).length
     address internal immutable _collectAction;
 
-    constructor(address feed, uint256 postId, bool isImmutable)
-        LensERC721("Lens Collected Post", "LCP", ITokenURIProvider(address(0)))
-    {
+    constructor(
+        address feed,
+        uint256 postId,
+        bool isImmutable
+    ) LensERC721("Lens Collected Post", "LCP", ITokenURIProvider(address(0))) {
         string memory contentURI = IFeed(feed).getPost(postId).contentURI;
         require(bytes(contentURI).length > 0, "Post content URI is empty");
         _feed = feed;

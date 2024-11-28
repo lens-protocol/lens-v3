@@ -121,8 +121,7 @@ contract RuleBasedFeed {
         for (uint256 i = 0; i < rulesToProcess.anyOfRules.length; i++) {
             (bool callNotReverted, bytes memory returnData) = rulesToProcess.anyOfRules[i].call(
                 abi.encodeCall(
-                    IPostRule.processReply,
-                    (rootPostId, repliedPostId, postId, parentPostRulesData.dataForAnyOfRules[i])
+                    IPostRule.processReply, (rootPostId, repliedPostId, postId, parentPostRulesData.dataForAnyOfRules[i])
                 )
             );
             if (callNotReverted && abi.decode(returnData, (bool))) {
@@ -206,9 +205,7 @@ contract RuleBasedFeed {
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $feedRulesStorage().requiredRules.length; i++) {
             (bool callNotReverted,) = $feedRulesStorage().requiredRules[i].call(
-                abi.encodeCall(
-                    IFeedRule.processEditPost, (postId, newPostParams, feedRulesData.dataForRequiredRules[i])
-                )
+                abi.encodeCall(IFeedRule.processEditPost, (postId, newPostParams, feedRulesData.dataForRequiredRules[i]))
             );
             require(callNotReverted, "Some required rule failed");
         }

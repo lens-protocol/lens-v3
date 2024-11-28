@@ -43,17 +43,18 @@ library FeedCore {
 
     // External functions - Use these functions to be called through DELEGATECALL
 
-    function createPost(CreatePostParams calldata postParams, address source)
-        external
-        returns (uint256, uint256, uint256)
-    {
+    function createPost(
+        CreatePostParams calldata postParams,
+        address source
+    ) external returns (uint256, uint256, uint256) {
         return _createPost(postParams, source);
     }
 
-    function editPost(uint256 postId, EditPostParams calldata postParams, address source)
-        external
-        returns (bool[] memory)
-    {
+    function editPost(
+        uint256 postId,
+        EditPostParams calldata postParams,
+        address source
+    ) external returns (bool[] memory) {
         return _editPost(postId, postParams, source);
     }
 
@@ -75,10 +76,10 @@ library FeedCore {
         return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), localSequentialId)));
     }
 
-    function _createPost(CreatePostParams calldata postParams, address source)
-        internal
-        returns (uint256, uint256, uint256)
-    {
+    function _createPost(
+        CreatePostParams calldata postParams,
+        address source
+    ) internal returns (uint256, uint256, uint256) {
         uint256 localSequentialId = ++$storage().postCount;
         uint256 postId = _generatePostId(localSequentialId);
         PostStorage storage _newPost = $storage().posts[postId];
@@ -113,10 +114,11 @@ library FeedCore {
         return (postId, localSequentialId, rootPostId);
     }
 
-    function _editPost(uint256 postId, EditPostParams calldata postParams, address source)
-        internal
-        returns (bool[] memory)
-    {
+    function _editPost(
+        uint256 postId,
+        EditPostParams calldata postParams,
+        address source
+    ) internal returns (bool[] memory) {
         PostStorage storage _post = $storage().posts[postId];
         require(_post.creationTimestamp != 0, "CANNOT_EDIT_NON_EXISTENT_POST"); // Post must exist
         if (_post.repostedPostId != 0) {

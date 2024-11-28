@@ -9,12 +9,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract TippingAccountAction is IAccountAction {
     using SafeERC20 for IERC20;
 
-    function configure(address, /* account */ bytes calldata /* data */ )
-        external
-        pure
-        override
-        returns (bytes memory)
-    {
+    function configure(
+        address, /* account */
+        bytes calldata /* data */
+    ) external pure override returns (bytes memory) {
         revert(); // Configuration not needed for tipping.
     }
 

@@ -20,8 +20,10 @@ interface IAccount {
     event Lens_Account_AccountManagerUpdated(address accountManager, AccountManagerPermissions permissions);
     event Lens_Account_AllowNonOwnerSpending(bool allow, uint256 timestamp);
 
-    function addAccountManager(address _accountManager, AccountManagerPermissions calldata accountManagerPermissions)
-        external;
+    function addAccountManager(
+        address _accountManager,
+        AccountManagerPermissions calldata accountManagerPermissions
+    ) external;
 
     function removeAccountManager(address _accountManager) external;
 
@@ -32,10 +34,11 @@ interface IAccount {
 
     function setMetadataURI(string calldata _metadataURI, SourceStamp calldata sourceStamp) external;
 
-    function executeTransaction(address to, uint256 value, bytes calldata data)
-        external
-        payable
-        returns (bytes memory);
+    function executeTransaction(
+        address to,
+        uint256 value,
+        bytes calldata data
+    ) external payable returns (bytes memory);
 
     function getMetadataURI(address source) external view returns (string memory);
 

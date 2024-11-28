@@ -27,11 +27,11 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
         userBlocks[msg.sender][target] = 0;
     }
 
-    function processCreatePost(uint256 postId, CreatePostParams calldata postParams, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processCreatePost(
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        bytes calldata /* data */
+    ) external view returns (bool) {
         if (postParams.repliedPostId != 0) {
             address author = postParams.author;
             address repliedToAuthor = IFeed(msg.sender).getPostAuthor(postParams.repliedPostId);
@@ -47,11 +47,11 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
         return true;
     }
 
-    function processFollow(address followerAccount, address accountToFollow, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processFollow(
+        address followerAccount,
+        address accountToFollow,
+        bytes calldata /* data */
+    ) external view returns (bool) {
         if (_isBlocked({source: accountToFollow, blockTarget: followerAccount})) {
             revert("User is blocked from following this user");
         }

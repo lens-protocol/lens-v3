@@ -42,10 +42,11 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreation(address account, string calldata, /* username */ bytes calldata data)
-        external
-        returns (bool)
-    {
+    function processCreation(
+        address account,
+        string calldata, /* username */
+        bytes calldata data
+    ) external returns (bool) {
         return _processPayment(
             _configuration[msg.sender].restrictions.restrictCreation,
             _configuration[msg.sender].accessControl,
@@ -55,10 +56,11 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         );
     }
 
-    function processAssigning(address account, string calldata, /* username */ bytes calldata data)
-        external
-        returns (bool)
-    {
+    function processAssigning(
+        address account,
+        string calldata, /* username */
+        bytes calldata data
+    ) external returns (bool) {
         return _processPayment(
             _configuration[msg.sender].restrictions.restrictAssigning,
             _configuration[msg.sender].accessControl,

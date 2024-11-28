@@ -17,18 +17,22 @@ struct RuleState {
 }
 
 library RulesLib {
-    function addRule(RulesStorage storage ruleStorage, RuleConfiguration memory rule, bytes memory encodedConfigureCall)
-        internal
-    {
+    function addRule(
+        RulesStorage storage ruleStorage,
+        RuleConfiguration memory rule,
+        bytes memory encodedConfigureCall
+    ) internal {
         require(!_ruleAlreadySet(ruleStorage, rule.ruleAddress), "AddRule: Same rule was already added");
         _addRuleToStorage(ruleStorage, rule.ruleAddress, rule.isRequired);
         (bool success,) = rule.ruleAddress.call(encodedConfigureCall);
         require(success, "AddRule: Rule configuration failed");
     }
 
-    function updateRule(RulesStorage storage ruleStorage, RuleConfiguration memory rule, bytes memory encodedCall)
-        internal
-    {
+    function updateRule(
+        RulesStorage storage ruleStorage,
+        RuleConfiguration memory rule,
+        bytes memory encodedCall
+    ) internal {
         require(_ruleAlreadySet(ruleStorage, rule.ruleAddress), "ConfigureRule: Rule doesn't exist");
         if (ruleStorage.ruleStates[rule.ruleAddress].isRequired != rule.isRequired) {
             _removeRuleFromStorage(ruleStorage, rule.ruleAddress);
@@ -43,11 +47,10 @@ library RulesLib {
         _removeRuleFromStorage(ruleStorage, rule);
     }
 
-    function getRulesArray(RulesStorage storage ruleStorage, bool requiredRules)
-        internal
-        view
-        returns (address[] storage)
-    {
+    function getRulesArray(
+        RulesStorage storage ruleStorage,
+        bool requiredRules
+    ) internal view returns (address[] storage) {
         return requiredRules ? ruleStorage.requiredRules : ruleStorage.anyOfRules;
     }
     // Private

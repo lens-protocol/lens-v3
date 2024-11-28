@@ -16,11 +16,11 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreatePost(uint256, /* postId */ CreatePostParams calldata postParams, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processCreatePost(
+        uint256, /* postId */
+        CreatePostParams calldata postParams,
+        bytes calldata data
+    ) external override returns (bool) {
         _processPayment(_configuration[msg.sender], abi.decode(data, (PaymentConfiguration)), postParams.author);
         return true;
     }

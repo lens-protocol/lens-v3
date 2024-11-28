@@ -86,10 +86,11 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     // Public functions
 
-    function joinGroup(address account, RuleExecutionData calldata groupRulesData, SourceStamp calldata sourceStamp)
-        external
-        override
-    {
+    function joinGroup(
+        address account,
+        RuleExecutionData calldata groupRulesData,
+        SourceStamp calldata sourceStamp
+    ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
         _processJoining(account, groupRulesData);
@@ -99,10 +100,11 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
         emit Lens_Group_MemberJoined(account, membershipId, groupRulesData, sourceStamp.source);
     }
 
-    function leaveGroup(address account, RuleExecutionData calldata groupRulesData, SourceStamp calldata sourceStamp)
-        external
-        override
-    {
+    function leaveGroup(
+        address account,
+        RuleExecutionData calldata groupRulesData,
+        SourceStamp calldata sourceStamp
+    ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._revokeMembership(account);
         if (sourceStamp.source != address(0)) {
@@ -113,10 +115,11 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     // TODO: Why don't we have addMember? Because we don't want to kidnap someone into the group?
 
-    function removeMember(address account, RuleExecutionData calldata groupRulesData, SourceStamp calldata sourceStamp)
-        external
-        override
-    {
+    function removeMember(
+        address account,
+        RuleExecutionData calldata groupRulesData,
+        SourceStamp calldata sourceStamp
+    ) external override {
         _requireAccess(msg.sender, REMOVE_MEMBER_PID);
         uint256 membershipId = Core._revokeMembership(account);
         _processRemoval(account, groupRulesData);

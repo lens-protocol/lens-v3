@@ -48,23 +48,18 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         return keccak256("lens.access-control.role-based-access-control");
     }
 
-    function canChangeAccessControl(address account, address /* contractAddress */ )
-        external
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function canChangeAccessControl(
+        address account,
+        address /* contractAddress */
+    ) external view virtual override returns (bool) {
         return account == _owner;
     }
 
-    function hasAccess(address account, address contractAddress, uint256 permissionId)
-        external
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function hasAccess(
+        address account,
+        address contractAddress,
+        uint256 permissionId
+    ) external view virtual override returns (bool) {
         return _hasAccess(account, contractAddress, permissionId);
     }
 
@@ -115,11 +110,12 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         return _hasRole(account, roleId);
     }
 
-    function setAccess(uint256 roleId, address contractAddress, uint256 permissionId, Access access)
-        external
-        virtual
-        override
-    {
+    function setAccess(
+        uint256 roleId,
+        address contractAddress,
+        uint256 permissionId,
+        Access access
+    ) external virtual override {
         _beforeSettingAccess(roleId, contractAddress, permissionId, access);
         _setAccess(roleId, contractAddress, permissionId, access);
     }
@@ -134,10 +130,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         require(roleId != OWNER_ROLE_ID, "Cannot set access for owner role");
     }
 
-    function _setAccess(uint256 roleId, address contractAddress, uint256 permissionId, Access access)
-        internal
-        virtual
-    {
+    function _setAccess(uint256 roleId, address contractAddress, uint256 permissionId, Access access) internal virtual {
         Access perviousAccess = _access[roleId][contractAddress][permissionId];
         _access[roleId][contractAddress][permissionId] = access;
         if (perviousAccess == Access.UNDEFINED) {
@@ -150,12 +143,11 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         }
     }
 
-    function _hasAccess(address account, address contractAddress, uint256 permissionId)
-        internal
-        view
-        virtual
-        returns (bool)
-    {
+    function _hasAccess(
+        address account,
+        address contractAddress,
+        uint256 permissionId
+    ) internal view virtual returns (bool) {
         for (uint256 i = 0; i < _roles[account].length; i++) {
             if (_hasAccess(_roles[account][i], contractAddress, permissionId)) {
                 // GRANTED-overrides strategy
@@ -165,12 +157,11 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         return false;
     }
 
-    function _hasAccess(uint256 roleId, address contractAddress, uint256 permissionId)
-        internal
-        view
-        virtual
-        returns (bool)
-    {
+    function _hasAccess(
+        uint256 roleId,
+        address contractAddress,
+        uint256 permissionId
+    ) internal view virtual returns (bool) {
         require(contractAddress != ANY_CONTRACT_ADDRESS);
         require(permissionId != ANY_PERMISSION_ID);
 
@@ -191,13 +182,11 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         }
     }
 
-    function getAccess(uint256 roleId, address contractAddress, uint256 permissionId)
-        external
-        view
-        virtual
-        override
-        returns (Access)
-    {
+    function getAccess(
+        uint256 roleId,
+        address contractAddress,
+        uint256 permissionId
+    ) external view virtual override returns (Access) {
         return _access[roleId][contractAddress][permissionId];
     }
 

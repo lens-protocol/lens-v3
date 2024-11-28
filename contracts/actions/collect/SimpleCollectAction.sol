@@ -129,10 +129,11 @@ contract SimpleCollectAction is ISimpleCollectAction {
         });
     }
 
-    function _validateCollect(address feed, uint256 postId, CollectActionExecutionParams memory expectedParams)
-        internal
-        virtual
-    {
+    function _validateCollect(
+        address feed,
+        uint256 postId,
+        CollectActionExecutionParams memory expectedParams
+    ) internal virtual {
         CollectActionData storage data = $collectDataStorage().collectData[feed][postId];
 
         require(data.collectionAddress != address(0), "Collect not configured for this post");
