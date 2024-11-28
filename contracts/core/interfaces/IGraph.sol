@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleConfiguration, RuleChange, RuleExecutionData, DataElement, SourceStamp} from "./../types/Types.sol";
+import {RuleConfiguration, RuleChange, RuleExecutionData, KeyValue, SourceStamp} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 // TODO: Might worth to add extraData to the follow entity
@@ -76,7 +76,7 @@ interface IGraph is IMetadataBased {
         SourceStamp calldata sourceStamp
     ) external returns (uint256);
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external;
+    function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
     // Getters
 

@@ -62,13 +62,13 @@ library FeedCore {
         _deletePost(postId, extraDataKeysToDelete);
     }
 
-    function setExtraData(DataElement calldata extraDataToSet) external returns (bool) {
+    function setExtraData(KeyValue calldata extraDataToSet) external returns (bool) {
         return _setExtraData(extraDataToSet);
     }
 
     // Internal functions - Use these functions to be called as an inlined library
 
-    function _setExtraData(DataElement calldata extraDataToSet) internal returns (bool) {
+    function _setExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
         return $storage().extraData.set(extraDataToSet);
     }
 

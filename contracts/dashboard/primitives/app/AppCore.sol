@@ -186,11 +186,11 @@ library AppCore {
 
     ////////////// Extra Data
 
-    function setExtraData(DataElement memory extraDataToSet) external returns (bool) {
+    function setExtraData(KeyValue memory extraDataToSet) external returns (bool) {
         return _setExtraData(extraDataToSet);
     }
 
-    function _setExtraData(DataElement memory extraDataToSet) internal returns (bool) {
+    function _setExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
         return $storage().extraData.set(extraDataToSet);
     }
 }

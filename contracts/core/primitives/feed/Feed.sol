@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IFeed, Post, EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
 import {FeedCore as Core} from "./FeedCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {DataElement} from "./../../types/Types.sol";
+import {KeyValue} from "./../../types/Types.sol";
 import {RuleBasedFeed} from "./RuleBasedFeed.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {RuleConfiguration, RuleChange, RuleOperation, RuleExecutionData, SourceStamp} from "./../../types/Types.sol";
@@ -202,7 +202,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         emit Lens_Feed_PostDeleted(postId, author, feedRulesData, sourceStamp.source);
     }
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external override {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);

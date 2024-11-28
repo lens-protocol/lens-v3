@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-struct DataElement {
+struct KeyValue {
     bytes32 key;
     bytes value;
 }

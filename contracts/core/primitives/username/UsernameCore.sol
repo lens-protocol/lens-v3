@@ -45,7 +45,7 @@ library UsernameCore {
         _unassignUsername(username);
     }
 
-    function setExtraData(DataElement calldata extraDataToSet) external returns (bool) {
+    function setExtraData(KeyValue calldata extraDataToSet) external returns (bool) {
         return _setExtraData(extraDataToSet);
     }
 
@@ -78,7 +78,7 @@ library UsernameCore {
         delete $storage().usernameToAccount[username];
     }
 
-    function _setExtraData(DataElement calldata extraDataToSet) internal returns (bool) {
+    function _setExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
         return $storage().extraData.set(extraDataToSet);
     }
 }

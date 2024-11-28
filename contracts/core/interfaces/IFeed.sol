@@ -2,13 +2,13 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {DataElement, RuleConfiguration, RuleChange, RuleExecutionData, SourceStamp} from "./../types/Types.sol";
+import {KeyValue, RuleConfiguration, RuleChange, RuleExecutionData, SourceStamp} from "./../types/Types.sol";
 import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
 
 // TODO: Discuss if there's a need for anything else to be added here
 struct EditPostParams {
     string contentURI;
-    DataElement[] extraData;
+    KeyValue[] extraData;
 }
 
 struct CreatePostParams {
@@ -22,7 +22,7 @@ struct CreatePostParams {
     RuleExecutionData repostedPostRulesData;
     RuleExecutionData quotedPostRulesData;
     RuleExecutionData repliedPostRulesData;
-    DataElement[] extraData;
+    KeyValue[] extraData;
 }
 
 // This is a return type (for getters)
@@ -117,7 +117,7 @@ interface IFeed is IMetadataBased {
         RuleExecutionData calldata feedRulesData
     ) external;
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external;
+    function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
     // Getters
 

@@ -10,7 +10,7 @@ import {
     RuleOperation,
     RuleChange,
     RuleExecutionData,
-    DataElement,
+    KeyValue,
     SourceStamp
 } from "./../../types/Types.sol";
 import {RuleBasedGraph} from "./RuleBasedGraph.sol";
@@ -130,7 +130,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled {
         return followId;
     }
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external override {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);

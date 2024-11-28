@@ -12,7 +12,7 @@ import {
     RuleExecutionData,
     RuleConfiguration,
     RuleOperation,
-    DataElement,
+    KeyValue,
     SourceStamp
 } from "./../../core/types/Types.sol";
 import {GroupFactory} from "./GroupFactory.sol";
@@ -126,7 +126,7 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         AppInitialProperties calldata initialProperties,
-        DataElement[] calldata extraData
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return APP_FACTORY.deployApp(
             metadataURI,
@@ -142,7 +142,7 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
     }
@@ -152,7 +152,7 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return FEED_FACTORY.deployFeed(
             metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules), extraData
@@ -176,7 +176,7 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return GRAPH_FACTORY.deployGraph(
             metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules), extraData
@@ -189,7 +189,7 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         RuleChange[] calldata rules,
-        DataElement[] calldata extraData,
+        KeyValue[] calldata extraData,
         string calldata nftName,
         string calldata nftSymbol
     ) external returns (address) {

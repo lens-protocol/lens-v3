@@ -6,7 +6,7 @@ import {UsernameCore as Core} from "./UsernameCore.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {
-    DataElement,
+    KeyValue,
     RuleExecutionData,
     RuleOperation,
     RuleChange,
@@ -169,7 +169,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         }
     }
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external override {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
