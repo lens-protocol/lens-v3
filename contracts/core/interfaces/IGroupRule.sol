@@ -2,10 +2,38 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
+import {KeyValue} from "./../types/Types.sol";
+
 interface IGroupRule {
-    function configure(bytes calldata data) external;
+    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external;
 
-    function processJoining(address account, bytes calldata data) external returns (bool);
+    function processMemberAddition(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
 
-    function processRemoval(address account, bytes calldata data) external returns (bool);
+    function processMemberRemoval(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
+
+    function processMemberJoining(
+        bytes32 configSalt,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
+
+    function processMemberLeaving(
+        bytes32 configSalt,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
 }

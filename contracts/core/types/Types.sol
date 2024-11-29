@@ -7,26 +7,34 @@ struct KeyValue {
     bytes value;
 }
 
-struct RuleConfiguration {
+struct Rule {
+    address addr;
+    bytes32 configSalt;
+}
+
+struct RuleProcessingParams {
     address ruleAddress;
-    bytes configData;
+    bytes32 configSalt;
+    KeyValue[] customParams;
+}
+
+struct RuleChange {
+    RuleConfigurationParams configuration;
+    RuleOperation operation;
+}
+
+struct RuleConfigurationParams {
+    bytes4 ruleSelector;
+    address ruleAddress;
     bool isRequired;
+    bytes32 configSalt;
+    KeyValue[] customParams;
 }
 
 enum RuleOperation {
     ADD,
     UPDATE,
     REMOVE
-}
-
-struct RuleChange {
-    RuleConfiguration configuration;
-    RuleOperation operation;
-}
-
-struct RuleExecutionData {
-    bytes[] dataForRequiredRules;
-    bytes[] dataForAnyOfRules;
 }
 
 struct SourceStamp {

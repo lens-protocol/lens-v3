@@ -23,6 +23,7 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
     uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
+    uint256 constant ADD_MEMBER_PID = uint256(keccak256("ADD_MEMBER"));
     uint256 constant REMOVE_MEMBER_PID = uint256(keccak256("REMOVE_MEMBER"));
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
@@ -37,32 +38,20 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
         emit Events.Lens_PermissionId_Available(SET_RULES_PID, "SET_RULES");
         emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
         emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
+        emit Events.Lens_PermissionId_Available(ADD_MEMBER_PID, "ADD_MEMBER");
         emit Events.Lens_PermissionId_Available(REMOVE_MEMBER_PID, "REMOVE_MEMBER");
     }
 
     // Access Controlled functions
 
+    function _beforeChangeGroupRules(RuleChange[] calldata ruleChanges) internal virtual override {
+        _requireAccess(msg.sender, SET_RULES_PID);
+    }
+
     function setMetadataURI(string calldata metadataURI) external override {
         _requireAccess(msg.sender, SET_METADATA_PID);
         Core.$storage().metadataURI = metadataURI;
         emit Lens_Group_MetadataURISet(metadataURI);
-    }
-
-    function changeGroupRules(RuleChange[] calldata ruleChanges) external override {
-        _requireAccess(msg.sender, SET_RULES_PID);
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfiguration memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addGroupRule(ruleConfig);
-                emit Lens_Group_RuleAdded(ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired);
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateGroupRule(ruleConfig);
-                emit Lens_Group_RuleUpdated(ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired);
-            } else {
-                _removeGroupRule(ruleConfig.ruleAddress);
-                emit Lens_Group_RuleRemoved(ruleConfig.ruleAddress);
-            }
-        }
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -86,17 +75,42 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     // Public functions
 
-    function joinGroup(
+    function addMember(
+        address account,
+        KeyValue[] customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) external override {
+        uint256 membershipId = Core._grantMembership(account);
+        if (_amountOfRules(IGraphRules.processMemberAddition.selector) != 0) {
+            _processMemberAddition(account, groupRulesData);
+        } else {
+            _requireAccess(msg.sender, ADD_MEMBER_PID);
+        }
+        _processSourceStamp(customParams, true);
+        emit Lens_Group_MemberAdded(account, customParams, ruleProcessingParams);
+    }
+
+    function removeMember(
         address account,
         RuleExecutionData calldata groupRulesData,
         SourceStamp calldata sourceStamp
     ) external override {
+        _requireAccess(msg.sender, REMOVE_MEMBER_PID);
+        uint256 membershipId = Core._revokeMembership(account);
+        _processRemoval(account, groupRulesData);
+        _processSourceStamp(customParams, false);
+        emit Lens_Group_MemberRemoved(account, membershipId, groupRulesData, sourceStamp.source);
+    }
+
+    function joinGroup(
+        address account,
+        KeyValue[] customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
         _processJoining(account, groupRulesData);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        _processSourceStamp(customParams, true);
         emit Lens_Group_MemberJoined(account, membershipId, groupRulesData, sourceStamp.source);
     }
 
@@ -107,26 +121,24 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
     ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._revokeMembership(account);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        _processSourceStamp(customParams, false);
         emit Lens_Group_MemberLeft(account, membershipId, groupRulesData, sourceStamp.source);
     }
 
-    // TODO: Why don't we have addMember? Because we don't want to kidnap someone into the group?
+    bytes32 constant SOURCE_STAMP_CUSTOM_PARAM = keccak256("lens.core.sourceStamp");
+    bytes32 constant SOURCE_EXTRA_DATA = keccak256("lens.core.source");
 
-    function removeMember(
-        address account,
-        RuleExecutionData calldata groupRulesData,
-        SourceStamp calldata sourceStamp
-    ) external override {
-        _requireAccess(msg.sender, REMOVE_MEMBER_PID);
-        uint256 membershipId = Core._revokeMembership(account);
-        _processRemoval(account, groupRulesData);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
+    function _processSourceStamp(KeyValue[] calldata customParams, bool storeSourceStamp) internal {
+        for (uint256 i = 0; i < customParams.length; i++) {
+            if (customParams[i].key == SOURCE_STAMP_CUSTOM_PARAM) {
+                SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
+                ISource(sourceStamp.source).validateSource(sourceStamp);
+                if (storeSourceStamp) {
+                    // TODO: Create a new library for "extra storage" / "extra data"
+                    _setExtraData(membershipId, KeyValue(SOURCE_EXTRA_DATA, abi.encode(sourceStamp.source)));
+                }
+            }
         }
-        emit Lens_Group_MemberRemoved(account, membershipId, groupRulesData, sourceStamp.source);
     }
 
     // Getters
@@ -145,10 +157,6 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     function getMembershipId(address account) external view override returns (uint256) {
         return Core.$storage().memberships[account].id;
-    }
-
-    function getGroupRules(bool isRequired) external view override returns (address[] memory) {
-        return _getGroupRules(isRequired);
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
