@@ -78,68 +78,77 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
     function addMember(
         address account,
         KeyValue[] customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        SourceStamp calldata sourceStamp
     ) external override {
-        uint256 membershipId = Core._grantMembership(account);
+        uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
         if (_amountOfRules(IGraphRules.processMemberAddition.selector) != 0) {
             _processMemberAddition(account, groupRulesData);
         } else {
             _requireAccess(msg.sender, ADD_MEMBER_PID);
         }
-        _processSourceStamp(customParams, true);
-        emit Lens_Group_MemberAdded(account, customParams, ruleProcessingParams);
+        _processSourceStamp(sourceStamp);
+        emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }
 
     function removeMember(
         address account,
-        RuleExecutionData calldata groupRulesData,
+        KeyValue[] customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         _requireAccess(msg.sender, REMOVE_MEMBER_PID);
         uint256 membershipId = Core._revokeMembership(account);
         _processRemoval(account, groupRulesData);
-        _processSourceStamp(customParams, false);
-        emit Lens_Group_MemberRemoved(account, membershipId, groupRulesData, sourceStamp.source);
+        _processSourceStamp(sourceStamp);
+        emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }
 
     function joinGroup(
         address account,
         KeyValue[] customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        SourceStamp calldata sourceStamp
     ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
         _processJoining(account, groupRulesData);
-        _processSourceStamp(customParams, true);
-        emit Lens_Group_MemberJoined(account, membershipId, groupRulesData, sourceStamp.source);
+        _processSourceStamp(sourceStamp);
+        emit Lens_Group_MemberJoined(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }
 
     function leaveGroup(
         address account,
-        RuleExecutionData calldata groupRulesData,
+        KeyValue[] customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._revokeMembership(account);
-        _processSourceStamp(customParams, false);
-        emit Lens_Group_MemberLeft(account, membershipId, groupRulesData, sourceStamp.source);
+        _processSourceStamp(sourceStamp);
+        emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }
 
-    bytes32 constant SOURCE_STAMP_CUSTOM_PARAM = keccak256("lens.core.sourceStamp");
-    bytes32 constant SOURCE_EXTRA_DATA = keccak256("lens.core.source");
-
-    function _processSourceStamp(KeyValue[] calldata customParams, bool storeSourceStamp) internal {
-        for (uint256 i = 0; i < customParams.length; i++) {
-            if (customParams[i].key == SOURCE_STAMP_CUSTOM_PARAM) {
-                SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
-                ISource(sourceStamp.source).validateSource(sourceStamp);
-                if (storeSourceStamp) {
-                    // TODO: Create a new library for "extra storage" / "extra data"
-                    _setExtraData(membershipId, KeyValue(SOURCE_EXTRA_DATA, abi.encode(sourceStamp.source)));
-                }
-            }
+    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
+        if (sourceStamp.source != address(0)) {
+            ISource(sourceStamp.source).validateSource(sourceStamp);
         }
     }
+
+    // bytes32 constant SOURCE_STAMP_CUSTOM_PARAM = keccak256("lens.core.sourceStamp");
+    // bytes32 constant SOURCE_EXTRA_DATA = keccak256("lens.core.source");
+    // function _processSourceStamp(KeyValue[] calldata customParams, bool storeSourceStamp) internal {
+    //     for (uint256 i = 0; i < customParams.length; i++) {
+    //         if (customParams[i].key == SOURCE_STAMP_CUSTOM_PARAM) {
+    //             SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
+    //             ISource(sourceStamp.source).validateSource(sourceStamp);
+    //             if (storeSourceStamp) {
+    //                 // TODO: Create a new library for "extra storage" / "extra data"
+    //                 _setExtraData(membershipId, KeyValue(SOURCE_EXTRA_DATA, abi.encode(sourceStamp.source)));
+    //             }
+    //         }
+    //     }
+    // }
 
     // Getters
 
