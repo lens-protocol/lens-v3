@@ -7,10 +7,10 @@ import {IUsername} from "./../../interfaces/IUsername.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {
     KeyValue,
-    RuleExecutionData,
+    RuleProcessingParams,
     RuleOperation,
     RuleChange,
-    RuleConfiguration,
+    RuleConfigurationParams,
     SourceStamp
 } from "./../../types/Types.sol";
 import {RuleBasedUsername} from "./RuleBasedUsername.sol";
@@ -68,21 +68,8 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         emit Lens_Username_MetadataURISet(metadataURI);
     }
 
-    function changeUsernameRules(RuleChange[] calldata ruleChanges) external override {
+    function _beforeChangeUsernameRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfiguration memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addUsernameRule(ruleConfig);
-                emit Lens_Username_RuleAdded(ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired);
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateUsernameRule(ruleConfig);
-                emit Lens_Username_RuleUpdated(ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired);
-            } else {
-                _removeUsernameRule(ruleConfig.ruleAddress);
-                emit Lens_Username_RuleRemoved(ruleConfig.ruleAddress);
-            }
-        }
     }
 
     // Permissionless functions
@@ -90,8 +77,9 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
     function createAndAssignUsername(
         address account,
         string calldata username,
-        RuleExecutionData calldata createData,
-        RuleExecutionData calldata assignData,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata creationProcessingParams,
+        RuleProcessingParams[] calldata assigningProcessingParams,
         SourceStamp calldata sourceStamp
     ) external {
         require(msg.sender == account); // msg.sender must be the account
@@ -99,21 +87,20 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         _safeMint(account, id);
         _idToUsername[id] = username;
         Core._createUsername(username);
-        emit Lens_Username_Created(username, account, createData, sourceStamp.source);
+        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, sourceStamp.source);
         _unassignIfAssigned(account, sourceStamp.source);
         Core._assignUsername(account, username);
-        emit Lens_Username_Assigned(username, account, assignData, sourceStamp.source);
-        _processCreation(account, username, createData);
-        _processAssigning(account, username, assignData);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, sourceStamp.source);
+        _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
+        _processAssigning(msg.sender, account, username, customParams, assigningProcessingParams);
+        _processSourceStamp(sourceStamp);
     }
 
     function createUsername(
         address account,
         string calldata username,
-        RuleExecutionData calldata data,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         require(msg.sender == account); // msg.sender must be the account
@@ -121,11 +108,9 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         _safeMint(account, id);
         _idToUsername[id] = username;
         Core._createUsername(username);
-        _processCreation(account, username, data);
-        emit Lens_Username_Created(username, account, data, sourceStamp.source);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
+        emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, sourceStamp.source);
+        _processSourceStamp(sourceStamp);
     }
 
     function removeUsername(string calldata username, SourceStamp calldata sourceStamp) external override {
@@ -136,15 +121,14 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         _burn(id);
         Core._removeUsername(username);
         emit Lens_Username_Removed(username, owner, sourceStamp.source);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        _processSourceStamp(sourceStamp);
     }
 
     function assignUsername(
         address account,
         string calldata username,
-        RuleExecutionData calldata data,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         require(msg.sender == account); // msg.sender must be the account
@@ -152,11 +136,9 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         _unassignIfAssigned(account, sourceStamp.source);
         _unassignIfAssigned(username, sourceStamp.source);
         Core._assignUsername(account, username);
-        _processAssigning(account, username, data);
-        emit Lens_Username_Assigned(username, account, data, sourceStamp.source);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        _processAssigning(msg.sender, account, username, customParams, ruleProcessingParams);
+        emit Lens_Username_Assigned(username, account, customParams, ruleProcessingParams, sourceStamp.source);
+        _processSourceStamp(sourceStamp);
     }
 
     function unassignUsername(string calldata username, SourceStamp calldata sourceStamp) external override {
@@ -164,9 +146,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
         require(msg.sender == account || msg.sender == _ownerOf(_computeId(username)));
         Core._unassignUsername(username);
         emit Lens_Username_Unassigned(username, account, sourceStamp.source);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
+        _processSourceStamp(sourceStamp);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -191,6 +171,12 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
     }
 
     // Internal
+
+    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
+        if (sourceStamp.source != address(0)) {
+            ISource(sourceStamp.source).validateSource(sourceStamp);
+        }
+    }
 
     function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
         emit Lens_Username_Transfer(from, to, tokenId);
@@ -232,10 +218,6 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return Core.$storage().extraData[key];
-    }
-
-    function getUsernameRules(bool isRequired) external view override returns (address[] memory) {
-        return _getUsernameRules(isRequired);
     }
 
     function getMetadataURI() external view override returns (string memory) {

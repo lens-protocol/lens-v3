@@ -6,10 +6,10 @@ import {IGroup} from "./../../interfaces/IGroup.sol";
 import {GroupCore as Core} from "./GroupCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {
-    RuleConfiguration,
+    RuleConfigurationParams,
     RuleOperation,
     RuleChange,
-    RuleExecutionData,
+    RuleProcessingParams,
     KeyValue,
     SourceStamp
 } from "./../../types/Types.sol";
@@ -17,6 +17,7 @@ import {RuleBasedGroup} from "./RuleBasedGroup.sol";
 import {AccessControlled} from "./../../access//AccessControlled.sol";
 import {Events} from "./../../types/Events.sol";
 import {ISource} from "./../../interfaces/ISource.sol";
+import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
 
 contract Group is IGroup, RuleBasedGroup, AccessControlled {
     // Resource IDs involved in the contract
@@ -44,7 +45,7 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     // Access Controlled functions
 
-    function _beforeChangeGroupRules(RuleChange[] calldata ruleChanges) internal virtual override {
+    function _beforeChangeGroupRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
@@ -77,13 +78,13 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     function addMember(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
-        if (_amountOfRules(IGraphRules.processMemberAddition.selector) != 0) {
-            _processMemberAddition(account, groupRulesData);
+        if (_amountOfRules(IGroupRule.processMemberAddition.selector) != 0) {
+            _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         } else {
             _requireAccess(msg.sender, ADD_MEMBER_PID);
         }
@@ -93,38 +94,39 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
 
     function removeMember(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         _requireAccess(msg.sender, REMOVE_MEMBER_PID);
         uint256 membershipId = Core._revokeMembership(account);
-        _processRemoval(account, groupRulesData);
+        _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
         _processSourceStamp(sourceStamp);
         emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }
 
     function joinGroup(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
-        _processJoining(account, groupRulesData);
+        _processMemberJoining(msg.sender, account, customParams, ruleProcessingParams);
         _processSourceStamp(sourceStamp);
         emit Lens_Group_MemberJoined(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }
 
     function leaveGroup(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._revokeMembership(account);
+        _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
         _processSourceStamp(sourceStamp);
         emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
     }

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleChange, RuleProcessingParams, SourceStamp} from "./../types/Types.sol";
+import {KeyValue, RuleChange, RuleProcessingParams, Rule, SourceStamp} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IGroup is IMetadataBased {
@@ -28,7 +28,7 @@ interface IGroup is IMetadataBased {
         address indexed account,
         uint256 indexed membershipId,
         KeyValue[] customParams,
-        RuleProcessingParams ruleProcessingParams,
+        RuleProcessingParams[] ruleProcessingParams,
         address source
     );
 
@@ -36,7 +36,7 @@ interface IGroup is IMetadataBased {
         address indexed account,
         uint256 indexed membershipId,
         KeyValue[] customParams,
-        RuleProcessingParams ruleProcessingParams,
+        RuleProcessingParams[] ruleProcessingParams,
         address source
     );
 
@@ -44,7 +44,7 @@ interface IGroup is IMetadataBased {
         address indexed account,
         uint256 indexed membershipId,
         KeyValue[] customParams,
-        RuleProcessingParams ruleProcessingParams,
+        RuleProcessingParams[] ruleProcessingParams,
         address source
     );
 
@@ -52,7 +52,7 @@ interface IGroup is IMetadataBased {
         address indexed account,
         uint256 indexed membershipId,
         KeyValue[] customParams,
-        RuleProcessingParams ruleProcessingParams,
+        RuleProcessingParams[] ruleProcessingParams,
         address source
     );
 
@@ -66,28 +66,28 @@ interface IGroup is IMetadataBased {
 
     function addMember(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external;
 
     function removeMember(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external;
 
     function joinGroup(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external;
 
     function leaveGroup(
         address account,
-        KeyValue[] customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         SourceStamp calldata sourceStamp
     ) external;

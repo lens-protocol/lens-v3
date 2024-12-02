@@ -23,7 +23,7 @@ library RulesLib {
         bytes memory encodedConfigureCall
     ) internal {
         require(
-            !_ruleAlreadySet(ruleStorage, ruleConfig.ruleAddress, ruleConfig.configSalt),
+            !_ruleAlreadySet(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt),
             "AddRule: Same rule was already added"
         );
         _addRuleToStorage(
@@ -39,11 +39,14 @@ library RulesLib {
         bytes memory encodedConfigureCall
     ) internal {
         require(
-            _ruleAlreadySet(ruleStorage, ruleConfig.ruleAddress, ruleConfig.configSalt),
+            _ruleAlreadySet(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt),
             "ConfigureRule: Rule doesn't exist"
         );
-        if (ruleStorage.ruleStates[ruleConfig.ruleAddress][ruleConfig.configSalt].isRequired != ruleConfig.isRequired) {
-            _removeRuleFromStorage(ruleStorage, ruleConfig.ruleSelector, ruleConfig.configSalt, ruleConfig.ruleAddress);
+        if (
+            ruleStorage.ruleStates[ruleConfig.ruleSelector][ruleConfig.ruleAddress][ruleConfig.configSalt].isRequired
+                != ruleConfig.isRequired
+        ) {
+            _removeRuleFromStorage(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt);
             _addRuleToStorage(
                 ruleStorage,
                 ruleConfig.ruleSelector,
@@ -57,11 +60,14 @@ library RulesLib {
     }
 
     function removeRule(RulesStorage storage ruleStorage, RuleConfigurationParams memory ruleConfig) internal {
-        require(_ruleAlreadySet(ruleStorage, rule.ruleAddress, rule.configSalt), "RuleNotSet");
-        _removeRuleFromStorage(ruleStorage, ruleConfig.ruleSelector, ruleConfig.configSalt, ruleConfig.ruleAddress);
+        require(
+            _ruleAlreadySet(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt),
+            "RuleNotSet"
+        );
+        _removeRuleFromStorage(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt);
     }
 
-    function getRulesArray(
+    function _getRulesArray(
         RulesStorage storage ruleStorage,
         bytes4 ruleSelector,
         bool requiredRules
@@ -78,10 +84,10 @@ library RulesLib {
         bytes32 configSalt,
         bool requiredRule
     ) private {
-        address[] storage rules = getRulesArray(ruleStorage, ruleSelector, requiredRule);
+        Rule[] storage rules = _getRulesArray(ruleStorage, ruleSelector, requiredRule);
         uint8 index = uint8(rules.length); // TODO: Add a check if needed
-        rules.push(ruleAddress);
-        ruleStorage.ruleStates[ruleAddress][configSalt] =
+        rules.push(Rule(ruleAddress, configSalt));
+        ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt] =
             RuleState({index: index, isRequired: requiredRule, isSet: true});
     }
 
@@ -91,24 +97,26 @@ library RulesLib {
         address ruleAddress,
         bytes32 configSalt
     ) private {
-        uint8 index = ruleStorage.ruleStates[ruleAddress][configSalt].index;
-        address[] storage rules =
-            getRulesArray(ruleStorage, ruleSelector, ruleStorage.ruleStates[ruleAddress][configSalt].isRequired);
+        uint8 index = ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt].index;
+        Rule[] storage rules = _getRulesArray(
+            ruleStorage, ruleSelector, ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired
+        );
         if (rules.length > 1) {
             // Copy the last element in the array into the index of the rule to delete
             rules[index] = rules[rules.length - 1];
             // Set the proper index for the swapped rule
-            ruleStorage.ruleStates[rules[index]][configSalt].index = index;
+            ruleStorage.ruleStates[ruleSelector][rules[index].addr][rules[index].configSalt].index = index;
         }
         rules.pop();
-        delete ruleStorage.ruleStates[ruleAddress];
+        delete ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt];
     }
 
     function _ruleAlreadySet(
         RulesStorage storage ruleStorage,
+        bytes4 ruleSelector,
         address rule,
         bytes32 configSalt
     ) private view returns (bool) {
-        return ruleStorage.ruleStates[rule][configSalt].isSet;
+        return ruleStorage.ruleStates[ruleSelector][rule][configSalt].isSet;
     }
 }
