@@ -8,12 +8,16 @@ interface IGraphRule {
     function configure(bytes calldata data) external;
 
     function processFollow(
+        bytes32 configSalt,
+        address originalMsgSender,
         address followerAccount,
         address accountToFollow,
-        bytes calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
     function processFollowRuleChanges(
+        bytes32 configSalt,
         address account,
         RuleChange[] calldata ruleChanges,
         bytes calldata data
