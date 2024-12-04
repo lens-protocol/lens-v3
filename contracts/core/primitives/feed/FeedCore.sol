@@ -132,7 +132,7 @@ library FeedCore {
     }
 
     // TODO(by: @donosonaumczuk): We should do soft-delete (disable/enable post feature), keep the storage there.
-    function _deletePost(uint256 postId, bytes32[] calldata extraDataKeysToDelete) internal {
+    function _deletePost(uint256 postId, bytes32[] calldata /* extraDataKeysToDelete */ ) internal {
         // $storage().posts[postId].extraData.remove(extraDataKeysToDelete); // TODO: What do we do? What about ExtraData Deleted events?
         delete $storage().posts[postId];
     }

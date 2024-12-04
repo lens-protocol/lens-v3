@@ -2,28 +2,32 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-// TODO: We do not have native referrals here, shoud we add them?
+import {CreatePostParams, EditPostParams} from "./IFeed.sol";
+import {KeyValue} from "./../types/Types.sol";
+
 interface IPostRule {
-    function configure(uint256 postId, bytes calldata data) external;
-
-    function processQuote(
-        uint256 rootPostId,
-        uint256 quotedPostId,
+    function configure(
         uint256 postId,
-        bytes calldata data
+        bytes4 ruleSelector,
+        bytes32 salt,
+        KeyValue[] calldata ruleConfigurationParams
+    ) external;
+
+    function processCreatePost(
+        bytes32 configSalt,
+        uint256 rootPostId,
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
-    function processReply(
+    function processEditPost(
+        bytes32 configSalt,
         uint256 rootPostId,
-        uint256 repliedPostId,
         uint256 postId,
-        bytes calldata data
-    ) external returns (bool);
-
-    function processRepost(
-        uint256 rootPostId,
-        uint256 repostedPostId,
-        uint256 postId,
-        bytes calldata data
+        EditPostParams calldata postParams,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 }

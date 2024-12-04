@@ -2,10 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleConfiguration, RuleChange, RuleExecutionData, SourceStamp} from "./../types/Types.sol";
+import {
+    KeyValue, RuleConfigurationParams, Rule, RuleChange, RuleProcessingParams, SourceStamp
+} from "./../types/Types.sol";
 import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
 
-// TODO: Discuss if there's a need for anything else to be added here
 struct EditPostParams {
     string contentURI;
     KeyValue[] extraData;
@@ -17,11 +18,7 @@ struct CreatePostParams {
     uint256 repostedPostId;
     uint256 quotedPostId;
     uint256 repliedPostId;
-    RuleConfiguration[] rules;
-    RuleExecutionData feedRulesData;
-    RuleExecutionData repostedPostRulesData;
-    RuleExecutionData quotedPostRulesData;
-    RuleExecutionData repliedPostRulesData;
+    RuleConfigurationParams[] rules;
     KeyValue[] extraData;
 }
 
@@ -34,8 +31,6 @@ struct Post {
     uint256 repostedPostId;
     uint256 quotedPostId;
     uint256 repliedPostId;
-    address[] requiredRules;
-    address[] anyOfRules;
     uint80 creationTimestamp;
     address creationSource;
     uint80 lastUpdatedTimestamp;
@@ -47,8 +42,10 @@ interface IFeed is IMetadataBased {
         uint256 indexed postId,
         address indexed author,
         uint256 indexed localSequentialId,
-        CreatePostParams postParams,
         uint256 rootPostId,
+        CreatePostParams postParams,
+        RuleProcessingParams[] feedRulesData,
+        RuleProcessingParams[] postRulesData,
         address source
     );
 
@@ -56,29 +53,58 @@ interface IFeed is IMetadataBased {
         uint256 indexed postId,
         address indexed author,
         EditPostParams newPostParams,
-        RuleExecutionData feedRulesData,
+        RuleProcessingParams[] feedRulesData,
+        RuleProcessingParams[] postRulesData,
         address source
     );
 
-    event Lens_Feed_PostDeleted(
-        uint256 indexed postId, address indexed author, RuleExecutionData feedRulesData, address source
-    );
+    event Lens_Feed_PostDeleted(uint256 indexed postId, address indexed author, KeyValue[] customParams, address source);
 
     event Lens_Feed_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Feed_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Feed_ExtraDataRemoved(bytes32 indexed key);
 
-    event Lens_Feed_RuleAdded(address indexed ruleAddress, bytes configData, bool indexed isRequired);
-    event Lens_Feed_RuleUpdated(address indexed ruleAddress, bytes configData, bool indexed isRequired);
-    event Lens_Feed_RuleRemoved(address indexed ruleAddress);
+    event Lens_Feed_RuleAdded(
+        address indexed rule,
+        bytes32 indexed configSalt,
+        bytes4 indexed ruleSelector,
+        KeyValue[] configParams,
+        bool isRequired
+    );
+
+    event Lens_Feed_RuleUpdated(
+        address indexed rule,
+        bytes32 indexed configSalt,
+        bytes4 indexed ruleSelector,
+        KeyValue[] configParams,
+        bool isRequired
+    );
+
+    event Lens_Feed_RuleRemoved(address indexed rule, bytes32 indexed configSalt, bytes4 indexed ruleSelector);
 
     event Lens_Feed_Post_RuleAdded(
-        uint256 indexed postId, address indexed author, address indexed ruleAddress, bytes configData, bool isRequired
+        uint256 indexed postId,
+        address author,
+        address indexed rule,
+        bytes32 configSalt,
+        bytes4 indexed ruleSelector,
+        KeyValue[] configParams,
+        bool isRequired
     );
+
     event Lens_Feed_Post_RuleUpdated(
-        uint256 indexed postId, address indexed author, address indexed ruleAddress, bytes configData, bool isRequired
+        uint256 indexed postId,
+        address author,
+        address indexed rule,
+        bytes32 configSalt,
+        bytes4 indexed ruleSelector,
+        KeyValue[] configParams,
+        bool isRequired
     );
-    event Lens_Feed_Post_RuleRemoved(uint256 indexed postId, address indexed author, address indexed ruleAddress);
+
+    event Lens_Feed_Post_RuleRemoved(
+        uint256 indexed postId, address author, address indexed rule, bytes32 configSalt, bytes4 indexed ruleSelector
+    );
 
     event Lens_Feed_Post_ExtraDataAdded(
         uint256 indexed postId, bytes32 indexed key, bytes value, bytes indexed valueIndexed
@@ -92,29 +118,37 @@ interface IFeed is IMetadataBased {
 
     function changeFeedRules(RuleChange[] calldata ruleChanges) external;
 
-    function createPost(CreatePostParams calldata postParams, SourceStamp calldata source) external returns (uint256);
+    function createPost(
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams,
+        RuleProcessingParams[] calldata postRulesParams,
+        SourceStamp calldata sourceStamp
+    ) external returns (uint256);
 
     function editPost(
         uint256 postId,
-        EditPostParams calldata newPostParams,
-        RuleExecutionData calldata editPostFeedRulesData,
-        SourceStamp calldata source
+        EditPostParams calldata postParams,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams,
+        RuleProcessingParams[] calldata postRulesParams,
+        SourceStamp calldata sourceStamp
     ) external;
 
     // "Delete" - u know u cannot delete stuff from the internet, right? :]
-    // But this will at least remove it from the current state, so contracts accesing it will know.
+    // But this will at least remove it from the current state, so contracts accessing it will know.
     // TODO: Debate post deletion, soft vs. hard delete, extra data deletion, etc.
     function deletePost(
         uint256 postId,
         bytes32[] calldata extraDataKeysToDelete,
-        RuleExecutionData calldata feedRulesData,
-        SourceStamp calldata source
+        KeyValue[] calldata customParams,
+        SourceStamp calldata sourceStamp
     ) external;
 
     function changePostRules(
         uint256 postId,
         RuleChange[] calldata ruleChanges,
-        RuleExecutionData calldata feedRulesData
+        RuleProcessingParams[] calldata feedRulesParams
     ) external;
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
@@ -125,9 +159,9 @@ interface IFeed is IMetadataBased {
 
     function getPostAuthor(uint256 postId) external view returns (address);
 
-    function getFeedRules(bool isRequired) external view returns (address[] memory);
+    function getFeedRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
-    function getPostRules(uint256 postId, bool isRequired) external view returns (address[] memory);
+    function getPostRules(bytes4 ruleSelector, uint256 postId, bool isRequired) external view returns (Rule[] memory);
 
     function getPostCount() external view returns (uint256);
 
