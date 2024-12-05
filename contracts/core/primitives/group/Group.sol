@@ -15,11 +15,12 @@ import {
 } from "./../../types/Types.sol";
 import {RuleBasedGroup} from "./RuleBasedGroup.sol";
 import {AccessControlled} from "./../../access//AccessControlled.sol";
+import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
 import {ISource} from "./../../interfaces/ISource.sol";
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
 
-contract Group is IGroup, RuleBasedGroup, AccessControlled {
+contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -58,7 +59,7 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -171,6 +172,6 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled {
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().extraData[key];
+        return _getPrimitiveExtraData(key);
     }
 }

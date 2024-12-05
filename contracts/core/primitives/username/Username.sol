@@ -15,13 +15,14 @@ import {
 } from "./../../types/Types.sol";
 import {RuleBasedUsername} from "./RuleBasedUsername.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
+import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {Events} from "./../../types/Events.sol";
 import {LensERC721} from "./../../base/LensERC721.sol";
 import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
 import {ISource} from "./../../interfaces/ISource.sol";
 
-contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled {
+contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled, ExtraStorageBased {
     event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     // TODO: Do we want more granular resources here? Like add/update/remove PIDs? Or are we OK with the multi-purpose?
@@ -152,7 +153,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -217,7 +218,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled 
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().extraData[key];
+        return _getPrimitiveExtraData(key);
     }
 
     function getMetadataURI() external view override returns (string memory) {
