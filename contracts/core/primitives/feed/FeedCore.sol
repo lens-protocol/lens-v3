@@ -7,7 +7,7 @@ import "./../../libraries/ExtraDataLib.sol";
 
 struct PostStorage {
     address author;
-    uint256 localSequentialId;
+    uint256 localSequentialId; // TODO: should we accent that this is now the author-based sequential ID?
     string contentURI;
     uint256 rootPostId;
     uint256 repostedPostId;
@@ -28,6 +28,7 @@ library FeedCore {
     struct Storage {
         string metadataURI;
         uint256 postCount;
+        mapping(address => uint256) authorPostCount;
         mapping(uint256 => PostStorage) posts;
         mapping(bytes32 => bytes) extraData;
     }
@@ -72,16 +73,17 @@ library FeedCore {
         return $storage().extraData.set(extraDataToSet);
     }
 
-    function _generatePostId(uint256 localSequentialId) internal view returns (uint256) {
-        return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), localSequentialId)));
+    function _generatePostId(address author, uint256 localSequentialId) internal view returns (uint256) {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), author, localSequentialId)));
     }
 
     function _createPost(
         CreatePostParams calldata postParams,
         address source
     ) internal returns (uint256, uint256, uint256) {
-        uint256 localSequentialId = ++$storage().postCount;
-        uint256 postId = _generatePostId(localSequentialId);
+        $storage().postCount++;
+        uint256 localSequentialId = ++$storage().authorPostCount[postParams.author];
+        uint256 postId = _generatePostId(postParams.author, localSequentialId);
         PostStorage storage _newPost = $storage().posts[postId];
         _newPost.author = postParams.author;
         _newPost.localSequentialId = localSequentialId;

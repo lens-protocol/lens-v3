@@ -270,4 +270,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return Core.$storage().extraData[key];
     }
+
+    function getAuthorPostId(address author, uint256 localSequentialId) external view returns (uint256) {
+        return Core._generatePostId(author, localSequentialId);
+    }
 }
