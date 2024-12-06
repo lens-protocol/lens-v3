@@ -2,11 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import "./../../libraries/ExtraDataLib.sol";
-
 library GroupCore {
-    using ExtraDataLib for mapping(bytes32 => bytes);
-
     struct Membership {
         uint256 id;
         uint256 timestamp;
@@ -20,7 +16,6 @@ library GroupCore {
         uint256 lastMemberIdAssigned;
         uint256 numberOfMembers;
         mapping(address => Membership) memberships;
-        mapping(bytes32 => bytes) extraData;
     }
 
     // keccak256('lens.group.core.storage')
@@ -42,10 +37,6 @@ library GroupCore {
         return _revokeMembership(account);
     }
 
-    function setExtraData(KeyValue calldata extraDataToSet) external returns (bool) {
-        return _setExtraData(extraDataToSet);
-    }
-
     // Internal functions - Use these functions to be called as an inlined library
 
     function _grantMembership(address account, address source) internal returns (uint256) {
@@ -62,9 +53,5 @@ library GroupCore {
         $storage().numberOfMembers--;
         delete $storage().memberships[account];
         return membershipId;
-    }
-
-    function _setExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
-        return $storage().extraData.set(extraDataToSet);
     }
 }

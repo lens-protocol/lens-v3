@@ -8,6 +8,7 @@ import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {KeyValue} from "./../../types/Types.sol";
 import {RuleBasedFeed} from "./RuleBasedFeed.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
+import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {
     RuleConfigurationParams,
     RuleChange,
@@ -18,7 +19,7 @@ import {
 import {Events} from "./../../types/Events.sol";
 import {ISource} from "./../../interfaces/ISource.sol";
 
-contract Feed is IFeed, RuleBasedFeed, AccessControlled {
+contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -99,6 +100,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
             sourceStamp.source
         );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            _setEntityExtraData(postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
             );
@@ -118,7 +120,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         // TODO: We can have this for moderators:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, "MSG_SENDER_NOT_AUTHOR");
-        bool[] memory wereExtraDataValuesSet = Core._editPost(postId, postParams, sourceStamp.source);
+
+        bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
+        for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            wereExtraDataValuesSet[i] = _setEntityExtraData(postId, postParams.extraData[i]);
+        }
+
         _processPostEditingOnFeed(postId, postParams, customParams, postRulesParams);
         uint256 rootPostId = Core.$storage().posts[postId].rootPostId;
         if (postId != rootPostId) {
@@ -139,15 +146,16 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         }
     }
 
+    // TODO: Decide how DELETE operation should work in Feed (soft vs. hard delete)
     function deletePost(
         uint256 postId,
-        bytes32[] calldata extraDataKeysToDelete,
+        bytes32[] calldata, /*extraDataKeysToDelete*/ // TODO: Consider moving this into customParams
         KeyValue[] calldata customParams,
         SourceStamp calldata sourceStamp
     ) external override {
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, DELETE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
-        Core._deletePost(postId, extraDataKeysToDelete);
+        Core._deletePost(postId);
         _processSourceStamp(sourceStamp);
         emit Lens_Feed_PostDeleted(postId, author, customParams, sourceStamp.source);
     }
@@ -155,7 +163,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -210,10 +218,11 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     }
 
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().posts[postId].extraData[key];
+        address postAuthor = Core.$storage().posts[postId].author;
+        return _getEntityExtraData(postAuthor, postId, key);
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().extraData[key];
+        return _getPrimitiveExtraData(key);
     }
 }

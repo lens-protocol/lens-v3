@@ -2,11 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import "./../../libraries/ExtraDataLib.sol";
-
 library UsernameCore {
-    using ExtraDataLib for mapping(bytes32 => bytes);
-
     // Storage
 
     struct Storage {
@@ -15,7 +11,6 @@ library UsernameCore {
         mapping(string => bool) usernameExists; // TODO: Should this store the owner instead???
         mapping(string => address) usernameToAccount;
         mapping(address => string) accountToUsername;
-        mapping(bytes32 => bytes) extraData;
     }
 
     // keccak256('lens.username.core.storage')
@@ -45,10 +40,6 @@ library UsernameCore {
         _unassignUsername(username);
     }
 
-    function setExtraData(KeyValue calldata extraDataToSet) external returns (bool) {
-        return _setExtraData(extraDataToSet);
-    }
-
     // Internal functions - Use these functions to be called as an inlined library
 
     function _createUsername(string memory username) internal {
@@ -76,9 +67,5 @@ library UsernameCore {
         require(account != address(0)); // Username must be assigned
         delete $storage().accountToUsername[account];
         delete $storage().usernameToAccount[username];
-    }
-
-    function _setExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
-        return $storage().extraData.set(extraDataToSet);
     }
 }

@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
-import "./../../libraries/ExtraDataLib.sol";
 
 struct PostStorage {
     address author;
@@ -17,19 +16,15 @@ struct PostStorage {
     address creationSource;
     uint80 lastUpdatedTimestamp;
     address lastUpdateSource;
-    mapping(bytes32 => bytes) extraData;
 }
 
 library FeedCore {
-    using ExtraDataLib for mapping(bytes32 => bytes);
-
     // Storage
 
     struct Storage {
         string metadataURI;
         uint256 postCount;
         mapping(uint256 => PostStorage) posts;
-        mapping(bytes32 => bytes) extraData;
     }
 
     // keccak256('lens.feed.core.storage')
@@ -41,36 +36,7 @@ library FeedCore {
         }
     }
 
-    // External functions - Use these functions to be called through DELEGATECALL
-
-    function createPost(
-        CreatePostParams calldata postParams,
-        address source
-    ) external returns (uint256, uint256, uint256) {
-        return _createPost(postParams, source);
-    }
-
-    function editPost(
-        uint256 postId,
-        EditPostParams calldata postParams,
-        address source
-    ) external returns (bool[] memory) {
-        return _editPost(postId, postParams, source);
-    }
-
-    function deletePost(uint256 postId, bytes32[] calldata extraDataKeysToDelete) external {
-        _deletePost(postId, extraDataKeysToDelete);
-    }
-
-    function setExtraData(KeyValue calldata extraDataToSet) external returns (bool) {
-        return _setExtraData(extraDataToSet);
-    }
-
     // Internal functions - Use these functions to be called as an inlined library
-
-    function _setExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
-        return $storage().extraData.set(extraDataToSet);
-    }
 
     function _generatePostId(uint256 localSequentialId) internal view returns (uint256) {
         return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), localSequentialId)));
@@ -110,15 +76,10 @@ library FeedCore {
         _newPost.creationSource = source;
         _newPost.lastUpdatedTimestamp = uint80(block.timestamp);
         _newPost.lastUpdateSource = source;
-        _newPost.extraData.set(postParams.extraData);
         return (postId, localSequentialId, rootPostId);
     }
 
-    function _editPost(
-        uint256 postId,
-        EditPostParams calldata postParams,
-        address source
-    ) internal returns (bool[] memory) {
+    function _editPost(uint256 postId, EditPostParams calldata postParams, address source) internal {
         PostStorage storage _post = $storage().posts[postId];
         require(_post.creationTimestamp != 0, "CANNOT_EDIT_NON_EXISTENT_POST"); // Post must exist
         if (_post.repostedPostId != 0) {
@@ -128,12 +89,9 @@ library FeedCore {
         }
         _post.lastUpdatedTimestamp = uint80(block.timestamp);
         _post.lastUpdateSource = source;
-        return _post.extraData.set(postParams.extraData);
     }
 
-    // TODO(by: @donosonaumczuk): We should do soft-delete (disable/enable post feature), keep the storage there.
-    function _deletePost(uint256 postId, bytes32[] calldata /* extraDataKeysToDelete */ ) internal {
-        // $storage().posts[postId].extraData.remove(extraDataKeysToDelete); // TODO: What do we do? What about ExtraData Deleted events?
+    function _deletePost(uint256 postId) internal {
         delete $storage().posts[postId];
     }
 
