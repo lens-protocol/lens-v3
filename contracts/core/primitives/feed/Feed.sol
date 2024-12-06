@@ -8,11 +8,18 @@ import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {KeyValue} from "./../../types/Types.sol";
 import {RuleBasedFeed} from "./RuleBasedFeed.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
-import {RuleConfiguration, RuleChange, RuleOperation, RuleExecutionData, SourceStamp} from "./../../types/Types.sol";
+import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
+import {
+    RuleConfigurationParams,
+    RuleChange,
+    RuleOperation,
+    RuleProcessingParams,
+    SourceStamp
+} from "./../../types/Types.sol";
 import {Events} from "./../../types/Events.sol";
 import {ISource} from "./../../interfaces/ISource.sol";
 
-contract Feed is IFeed, RuleBasedFeed, AccessControlled {
+contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -42,170 +49,121 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
-    function changeFeedRules(RuleChange[] calldata ruleChanges) external override {
+    function _beforeChangeFeedRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfiguration memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addFeedRule(ruleConfig);
-                emit Lens_Feed_RuleAdded(ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired);
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateFeedRule(ruleConfig);
-                emit Lens_Feed_RuleUpdated(ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired);
-            } else {
-                _removeFeedRule(ruleConfig.ruleAddress);
-                emit Lens_Feed_RuleRemoved(ruleConfig.ruleAddress);
-            }
-        }
-    }
-
-    // PostRules functions
-
-    function changePostRules(
-        uint256 postId,
-        RuleChange[] calldata ruleChanges,
-        RuleExecutionData calldata feedRulesData
-    ) external override {
-        address author = Core.$storage().posts[postId].author;
-        require(msg.sender == author, "MSG_SENDER_NOT_AUTHOR");
-        require(Core.$storage().posts[postId].rootPostId == postId, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfiguration memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addPostRule(postId, ruleConfig);
-                emit Lens_Feed_Post_RuleAdded(
-                    postId, author, ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updatePostRule(postId, ruleConfig);
-                emit Lens_Feed_Post_RuleUpdated(
-                    postId, author, ruleConfig.ruleAddress, ruleConfig.configData, ruleConfig.isRequired
-                );
-            } else {
-                _removePostRule(postId, ruleConfig.ruleAddress);
-                emit Lens_Feed_Post_RuleRemoved(postId, author, ruleConfig.ruleAddress);
-            }
-        }
-        // Check the feed rules if it accepts the new RuleConfiguration
-        _processChangesOnPostRules(postId, ruleChanges, feedRulesData);
     }
 
     // Public user functions
 
     function createPost(
-        CreatePostParams calldata createPostParams,
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams,
+        RuleProcessingParams[] calldata postRulesParams,
         SourceStamp calldata sourceStamp
     ) external override returns (uint256) {
-        require(msg.sender == createPostParams.author, "MSG_SENDER_NOT_AUTHOR");
-
+        require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) =
-            Core._createPost(createPostParams, sourceStamp.source);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
-        _processPostCreation(postId, createPostParams);
-
-        if (createPostParams.quotedPostId != 0) {
-            _processQuotedPostRules(createPostParams.quotedPostId, postId, createPostParams.quotedPostRulesData);
-        }
-
-        if (createPostParams.repliedPostId != 0) {
-            _processRepliedPostRules(createPostParams.repliedPostId, postId, createPostParams.repliedPostRulesData);
-        }
-
-        if (createPostParams.repostedPostId != 0) {
-            _processRepostedPostRules(createPostParams.repliedPostId, postId, createPostParams.repostedPostRulesData);
-        }
-
+            Core._createPost(postParams, sourceStamp.source);
+        _processSourceStamp(sourceStamp);
+        _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         if (postId != rootPostId) {
-            require(createPostParams.rules.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
+            require(postParams.rules.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
+            // TODO: We might need to call this on the root post of the quoted, replied, and/or reposted posts...
+            // Check how it was done before... we get the root from each of them, and process the rules on them
+            _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, postRulesParams);
         } else {
-            RuleChange[] memory ruleChanges = new RuleChange[](createPostParams.rules.length);
+            RuleChange[] memory ruleChanges = new RuleChange[](postParams.rules.length);
             // We can only add rules to the post on creation, or by calling dedicated functions after (not on editPost)
-            for (uint256 i = 0; i < createPostParams.rules.length; i++) {
-                _addPostRule(postId, createPostParams.rules[i]);
+            for (uint256 i = 0; i < postParams.rules.length; i++) {
+                _addPostRule(postId, postParams.rules[i]);
                 emit Lens_Feed_RuleAdded(
-                    createPostParams.rules[i].ruleAddress,
-                    createPostParams.rules[i].configData,
-                    createPostParams.rules[i].isRequired
+                    postParams.rules[i].ruleAddress,
+                    postParams.rules[i].configSalt,
+                    postParams.rules[i].ruleSelector,
+                    postParams.rules[i].customParams,
+                    postParams.rules[i].isRequired
                 );
-                ruleChanges[i] = RuleChange({operation: RuleOperation.ADD, configuration: createPostParams.rules[i]});
+                ruleChanges[i] = RuleChange({operation: RuleOperation.ADD, configuration: postParams.rules[i]});
             }
-
             // Check if Feed rules allows the given Post's rule configuration
-            _processChangesOnPostRules(postId, ruleChanges, createPostParams.feedRulesData);
+            _processPostRulesChanges(postId, ruleChanges, feedRulesParams);
         }
-
         emit Lens_Feed_PostCreated(
-            postId, createPostParams.author, localSequentialId, createPostParams, rootPostId, sourceStamp.source
+            postId,
+            postParams.author,
+            localSequentialId,
+            rootPostId,
+            postParams,
+            feedRulesParams,
+            postRulesParams,
+            sourceStamp.source
         );
-
-        for (uint256 i = 0; i < createPostParams.extraData.length; i++) {
+        for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            _setEntityExtraData(postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
-                postId,
-                createPostParams.extraData[i].key,
-                createPostParams.extraData[i].value,
-                createPostParams.extraData[i].value
+                postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
             );
         }
-
         return postId;
     }
 
     function editPost(
         uint256 postId,
-        EditPostParams calldata newPostParams,
-        RuleExecutionData calldata editPostFeedRulesData,
+        EditPostParams calldata postParams,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams,
+        RuleProcessingParams[] calldata postRulesParams,
         SourceStamp calldata sourceStamp
     ) external override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, "MSG_SENDER_NOT_AUTHOR");
-        _feedProcessEditPost(postId, newPostParams, editPostFeedRulesData);
-        bool[] memory wereExtraDataValuesSet = Core._editPost(postId, newPostParams, sourceStamp.source);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
+
+        bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
+        for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            wereExtraDataValuesSet[i] = _setEntityExtraData(postId, postParams.extraData[i]);
         }
-        emit Lens_Feed_PostEdited(postId, author, newPostParams, editPostFeedRulesData, sourceStamp.source);
-        for (uint256 i = 0; i < newPostParams.extraData.length; i++) {
+
+        _processPostEditingOnFeed(postId, postParams, customParams, postRulesParams);
+        uint256 rootPostId = Core.$storage().posts[postId].rootPostId;
+        if (postId != rootPostId) {
+            _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, postRulesParams);
+        }
+        _processSourceStamp(sourceStamp);
+        emit Lens_Feed_PostEdited(postId, author, postParams, feedRulesParams, postRulesParams, sourceStamp.source);
+        for (uint256 i = 0; i < postParams.extraData.length; i++) {
             if (wereExtraDataValuesSet[i]) {
                 emit Lens_Feed_Post_ExtraDataUpdated(
-                    postId,
-                    newPostParams.extraData[i].key,
-                    newPostParams.extraData[i].value,
-                    newPostParams.extraData[i].value
+                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
                 );
             } else {
                 emit Lens_Feed_Post_ExtraDataAdded(
-                    postId,
-                    newPostParams.extraData[i].key,
-                    newPostParams.extraData[i].value,
-                    newPostParams.extraData[i].value
+                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
                 );
             }
         }
     }
 
+    // TODO: Decide how DELETE operation should work in Feed (soft vs. hard delete)
     function deletePost(
         uint256 postId,
-        bytes32[] calldata extraDataKeysToDelete,
-        RuleExecutionData calldata feedRulesData,
+        bytes32[] calldata, /*extraDataKeysToDelete*/ // TODO: Consider moving this into customParams
+        KeyValue[] calldata customParams,
         SourceStamp calldata sourceStamp
     ) external override {
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, DELETE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
-        Core._deletePost(postId, extraDataKeysToDelete);
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
-        emit Lens_Feed_PostDeleted(postId, author, feedRulesData, sourceStamp.source);
+        Core._deletePost(postId);
+        _processSourceStamp(sourceStamp);
+        emit Lens_Feed_PostDeleted(postId, author, customParams, sourceStamp.source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -218,6 +176,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
             } else if (!isNewValueEmpty) {
                 emit Lens_Feed_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
             }
+        }
+    }
+
+    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
+        if (sourceStamp.source != address(0)) {
+            ISource(sourceStamp.source).validateSource(sourceStamp);
         }
     }
 
@@ -234,8 +198,6 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
             repostedPostId: Core.$storage().posts[postId].repostedPostId,
             quotedPostId: Core.$storage().posts[postId].quotedPostId,
             repliedPostId: Core.$storage().posts[postId].repliedPostId,
-            requiredRules: _getPostRules(postId, true),
-            anyOfRules: _getPostRules(postId, false),
             creationTimestamp: Core.$storage().posts[postId].creationTimestamp,
             creationSource: Core.$storage().posts[postId].creationSource,
             lastUpdatedTimestamp: Core.$storage().posts[postId].lastUpdatedTimestamp,
@@ -246,14 +208,6 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     function getPostAuthor(uint256 postId) external view override returns (address) {
         // TODO: Should fail if post doesn't exist?
         return Core.$storage().posts[postId].author;
-    }
-
-    function getFeedRules(bool isRequired) external view override returns (address[] memory) {
-        return _getFeedRules(isRequired);
-    }
-
-    function getPostRules(uint256 postId, bool isRequired) external view override returns (address[] memory) {
-        return _getPostRules(postId, isRequired);
     }
 
     function getPostCount() external view override returns (uint256) {
@@ -269,11 +223,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     }
 
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().posts[postId].extraData[key];
+        address postAuthor = Core.$storage().posts[postId].author;
+        return _getEntityExtraData(postAuthor, postId, key);
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().extraData[key];
+        return _getPrimitiveExtraData(key);
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {

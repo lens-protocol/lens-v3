@@ -4,9 +4,17 @@ pragma solidity ^0.8.0;
 
 import {IUsernameRule} from "./../../interfaces/IUsernameRule.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {RuleConfiguration, RuleExecutionData} from "./../../types/Types.sol";
+import {
+    Rule,
+    RuleChange,
+    RuleOperation,
+    RuleProcessingParams,
+    RuleConfigurationParams,
+    KeyValue
+} from "./../../types/Types.sol";
+import {IUsername} from "./../../interfaces/IUsername.sol";
 
-contract RuleBasedUsername {
+abstract contract RuleBasedUsername is IUsername {
     using RulesLib for RulesStorage;
 
     struct RuleBasedStorage {
@@ -27,75 +35,204 @@ contract RuleBasedUsername {
         return $ruleBasedStorage().usernameRulesStorage;
     }
 
+    // Public
+
+    function changeUsernameRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _beforeChangeUsernameRules(ruleChanges);
+        for (uint256 i = 0; i < ruleChanges.length; i++) {
+            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
+            if (ruleChanges[i].operation == RuleOperation.ADD) {
+                _addUsernameRule(ruleConfig);
+                emit IUsername.Lens_Username_RuleAdded(
+                    ruleConfig.ruleAddress,
+                    ruleConfig.configSalt,
+                    ruleConfig.ruleSelector,
+                    ruleConfig.customParams,
+                    ruleConfig.isRequired
+                );
+            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                _updateUsernameRule(ruleConfig);
+                emit IUsername.Lens_Username_RuleUpdated(
+                    ruleConfig.ruleAddress,
+                    ruleConfig.configSalt,
+                    ruleConfig.ruleSelector,
+                    ruleConfig.customParams,
+                    ruleConfig.isRequired
+                );
+            } else {
+                _removeUsernameRule(ruleConfig);
+                emit IUsername.Lens_Username_RuleRemoved(
+                    ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                );
+            }
+        }
+        require(
+            $usernameRulesStorage().anyOfRules[IUsernameRule.processCreation.selector].length != 1,
+            "Cannot have exactly one single any-of rule"
+        );
+        require(
+            $usernameRulesStorage().anyOfRules[IUsernameRule.processAssigning.selector].length != 1,
+            "Cannot have exactly one single any-of rule"
+        );
+    }
+
+    function getUsernameRules(
+        bytes4 ruleSelector,
+        bool isRequired
+    ) external view virtual override returns (Rule[] memory) {
+        return $usernameRulesStorage()._getRulesArray(ruleSelector, isRequired);
+    }
+
     // Internal
 
-    function _addUsernameRule(RuleConfiguration memory rule) internal {
-        $usernameRulesStorage().addRule(rule, abi.encodeCall(IUsernameRule.configure, (rule.configData)));
+    function _beforeChangeUsernameRules(RuleChange[] calldata ruleChanges) internal virtual {}
+
+    function _addUsernameRule(RuleConfigurationParams memory rule) internal {
+        $usernameRulesStorage().addRule(
+            rule, abi.encodeCall(IUsernameRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
+        );
     }
 
-    function _updateUsernameRule(RuleConfiguration memory rule) internal {
-        $usernameRulesStorage().updateRule(rule, abi.encodeCall(IUsernameRule.configure, (rule.configData)));
+    function _updateUsernameRule(RuleConfigurationParams memory rule) internal {
+        $usernameRulesStorage().updateRule(
+            rule, abi.encodeCall(IUsernameRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
+        );
     }
 
-    function _removeUsernameRule(address rule) internal {
+    function _removeUsernameRule(RuleConfigurationParams memory rule) internal {
         $usernameRulesStorage().removeRule(rule);
     }
 
-    function _internalProcessCreation(
+    function _encodeAndCallProcessCreation(
         address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
         address account,
         string calldata username,
-        bytes calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(abi.encodeCall(IUsernameRule.processCreation, (account, username, data)));
+        return rule.call(
+            abi.encodeCall(
+                IUsernameRule.processCreation,
+                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+            )
+        );
     }
 
-    function _processCreation(address account, string calldata username, RuleExecutionData calldata data) internal {
-        _processUsernameRule(_internalProcessCreation, account, username, data);
-    }
-
-    function _internalProcessAssigning(
-        address rule,
+    function _processCreation(
+        address originalMsgSender,
         address account,
         string calldata username,
-        bytes calldata data
-    ) internal returns (bool, bytes memory) {
-        return rule.call(abi.encodeCall(IUsernameRule.processAssigning, (account, username, data)));
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        _processUsernameRule(
+            _encodeAndCallProcessCreation,
+            IUsernameRule.processCreation.selector,
+            originalMsgSender,
+            account,
+            username,
+            primitiveCustomParams,
+            rulesProcessingParams
+        );
     }
 
-    function _processAssigning(address account, string calldata username, RuleExecutionData calldata data) internal {
-        _processUsernameRule(_internalProcessAssigning, account, username, data);
+    function _encodeAndCallProcessAssigning(
+        address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        string calldata username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IUsernameRule.processAssigning,
+                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processAssigning(
+        address originalMsgSender,
+        address account,
+        string calldata username,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        _processUsernameRule(
+            _encodeAndCallProcessAssigning,
+            IUsernameRule.processAssigning.selector,
+            originalMsgSender,
+            account,
+            username,
+            primitiveCustomParams,
+            rulesProcessingParams
+        );
     }
 
     function _processUsernameRule(
-        function(address,address,string calldata,bytes calldata) internal returns(bool, bytes memory) func,
+        function(address,bytes32,address,address,string calldata,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
+            encodeAndCall,
+        bytes4 ruleSelector,
+        address originalMsgSender,
         address account,
         string calldata username,
-        RuleExecutionData calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
     ) private {
         // Check required rules (AND-combined rules)
-        for (uint256 i = 0; i < $usernameRulesStorage().requiredRules.length; i++) {
-            (bool callNotReverted,) =
-                func($usernameRulesStorage().anyOfRules[i], account, username, data.dataForRequiredRules[i]);
-            require(callNotReverted, "Some required rule failed");
-        }
-        // Check any-of rules (OR-combined rules)
-        if ($usernameRulesStorage().anyOfRules.length == 0) {
-            return; // If there are no OR-combined rules, we can return
-        }
-        for (uint256 i = 0; i < $usernameRulesStorage().anyOfRules.length; i++) {
-            (bool callNotReverted, bytes memory returnData) =
-                func($usernameRulesStorage().anyOfRules[i], account, username, data.dataForAnyOfRules[i]);
-
-            if (callNotReverted && abi.decode(returnData, (bool))) {
-                // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
-                return; // If any of the OR-combined rules passed, it means they succeed and we can return
+        for (uint256 i = 0; i < $usernameRulesStorage().requiredRules[ruleSelector].length; i++) {
+            Rule memory rule = $usernameRulesStorage().requiredRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = encodeAndCall(
+                    rule.addr,
+                    rule.configSalt,
+                    originalMsgSender,
+                    account,
+                    username,
+                    primitiveCustomParams,
+                    ruleCustomParams
+                );
+                require(callNotReverted, "Some required rule failed");
             }
         }
-        revert("All of the any-of rules failed");
-    }
-
-    function _getUsernameRules(bool isRequired) internal view returns (address[] memory) {
-        return $usernameRulesStorage().getRulesArray(isRequired);
+        // Check any-of rules (OR-combined rules)
+        for (uint256 i = 0; i < $usernameRulesStorage().anyOfRules[ruleSelector].length; i++) {
+            Rule memory rule = $usernameRulesStorage().anyOfRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                    rule.addr,
+                    rule.configSalt,
+                    originalMsgSender,
+                    account,
+                    username,
+                    primitiveCustomParams,
+                    ruleCustomParams
+                );
+                if (callNotReverted && abi.decode(returnData, (bool))) {
+                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
+            }
+        }
+        // If there are any-of rules and it reached this point, it means all of them failed.
+        require($usernameRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
     }
 }

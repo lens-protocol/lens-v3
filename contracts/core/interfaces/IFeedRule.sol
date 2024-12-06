@@ -3,26 +3,31 @@
 pragma solidity ^0.8.0;
 
 import {CreatePostParams, EditPostParams} from "./IFeed.sol";
-import {RuleChange} from "./../types/Types.sol";
+import {KeyValue, RuleChange} from "./../types/Types.sol";
 
 interface IFeedRule {
-    function configure(bytes calldata data) external;
+    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external;
 
     function processCreatePost(
+        bytes32 configSalt,
         uint256 postId,
         CreatePostParams calldata postParams,
-        bytes calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
     function processEditPost(
+        bytes32 configSalt,
         uint256 postId,
-        EditPostParams calldata editPostParams,
-        bytes calldata data
+        EditPostParams calldata postParams,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
     function processPostRuleChanges(
+        bytes32 configSalt,
         uint256 postId,
         RuleChange[] calldata ruleChanges,
-        bytes calldata data
+        KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 }

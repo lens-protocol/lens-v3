@@ -3,10 +3,18 @@
 pragma solidity ^0.8.0;
 
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
+import {IGroup} from "./../../interfaces/IGroup.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {RuleConfiguration, RuleExecutionData} from "./../../types/Types.sol";
+import {
+    RuleChange,
+    RuleProcessingParams,
+    RuleConfigurationParams,
+    Rule,
+    RuleOperation,
+    KeyValue
+} from "./../../types/Types.sol";
 
-contract RuleBasedGroup {
+abstract contract RuleBasedGroup is IGroup {
     using RulesLib for RulesStorage;
 
     struct RuleBasedStorage {
@@ -26,71 +34,260 @@ contract RuleBasedGroup {
         return $ruleBasedStorage().groupRulesStorage;
     }
 
+    // Public
+
+    function changeGroupRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _beforeChangeGroupRules(ruleChanges);
+        for (uint256 i = 0; i < ruleChanges.length; i++) {
+            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
+            if (ruleChanges[i].operation == RuleOperation.ADD) {
+                _addGroupRule(ruleConfig);
+                emit IGroup.Lens_Group_RuleAdded(
+                    ruleConfig.ruleAddress,
+                    ruleConfig.configSalt,
+                    ruleConfig.ruleSelector,
+                    ruleConfig.customParams,
+                    ruleConfig.isRequired
+                );
+            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                _updateGroupRule(ruleConfig);
+                emit IGroup.Lens_Group_RuleUpdated(
+                    ruleConfig.ruleAddress,
+                    ruleConfig.configSalt,
+                    ruleConfig.ruleSelector,
+                    ruleConfig.customParams,
+                    ruleConfig.isRequired
+                );
+            } else {
+                _removeGroupRule(ruleConfig);
+                emit IGroup.Lens_Group_RuleRemoved(
+                    ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                );
+            }
+        }
+        require(
+            $groupRulesStorage().anyOfRules[IGroupRule.processMemberAddition.selector].length != 1,
+            "Cannot have exactly one single any-of rule"
+        );
+        require(
+            $groupRulesStorage().anyOfRules[IGroupRule.processMemberRemoval.selector].length != 1,
+            "Cannot have exactly one single any-of rule"
+        );
+        require(
+            $groupRulesStorage().anyOfRules[IGroupRule.processMemberJoining.selector].length != 1,
+            "Cannot have exactly one single any-of rule"
+        );
+        require(
+            $groupRulesStorage().anyOfRules[IGroupRule.processMemberLeaving.selector].length != 1,
+            "Cannot have exactly one single any-of rule"
+        );
+    }
+
+    function getGroupRules(
+        bytes4 ruleSelector,
+        bool isRequired
+    ) external view virtual override returns (Rule[] memory) {
+        return $groupRulesStorage()._getRulesArray(ruleSelector, isRequired);
+    }
+
     // Internal
 
-    function _addGroupRule(RuleConfiguration memory rule) internal {
-        $groupRulesStorage().addRule(rule, abi.encodeCall(IGroupRule.configure, (rule.configData)));
+    function _beforeChangeGroupRules(RuleChange[] calldata ruleChanges) internal virtual {}
+
+    function _addGroupRule(RuleConfigurationParams memory rule) internal {
+        $groupRulesStorage().addRule(
+            rule, abi.encodeCall(IGroupRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
+        );
     }
 
-    function _updateGroupRule(RuleConfiguration memory rule) internal {
-        $groupRulesStorage().updateRule(rule, abi.encodeCall(IGroupRule.configure, (rule.configData)));
+    function _updateGroupRule(RuleConfigurationParams memory rule) internal {
+        $groupRulesStorage().updateRule(
+            rule, abi.encodeCall(IGroupRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
+        );
     }
 
-    function _removeGroupRule(address rule) internal {
+    function _removeGroupRule(RuleConfigurationParams memory rule) internal {
         $groupRulesStorage().removeRule(rule);
     }
 
-    function _internalProcessJoining(
+    function _encodeAndCallProcessMemberRemoval(
         address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
         address account,
-        bytes calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(abi.encodeCall(IGroupRule.processJoining, (account, data)));
+        return rule.call(
+            abi.encodeCall(
+                IGroupRule.processMemberRemoval,
+                (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
+            )
+        );
     }
 
-    function _processJoining(address account, RuleExecutionData calldata data) internal {
-        _processGroupRule(_internalProcessJoining, account, data);
+    function _processMemberRemoval(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) internal {
+        _processGroupRule(
+            _encodeAndCallProcessMemberRemoval,
+            IGroupRule.processMemberRemoval.selector,
+            originalMsgSender,
+            account,
+            primitiveCustomParams,
+            ruleProcessingParams
+        );
     }
 
-    function _internalProcessRemoval(
+    function _encodeAndCallProcessMemberAddition(
         address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
         address account,
-        bytes calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(abi.encodeCall(IGroupRule.processRemoval, (account, data)));
+        return rule.call(
+            abi.encodeCall(
+                IGroupRule.processMemberAddition,
+                (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
+            )
+        );
     }
 
-    function _processRemoval(address account, RuleExecutionData calldata data) internal {
-        _processGroupRule(_internalProcessRemoval, account, data);
+    function _processMemberAddition(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) internal {
+        _processGroupRule(
+            _encodeAndCallProcessMemberAddition,
+            IGroupRule.processMemberAddition.selector,
+            originalMsgSender,
+            account,
+            primitiveCustomParams,
+            ruleProcessingParams
+        );
+    }
+
+    function _encodeAndCallProcessMemberJoining(
+        address rule,
+        bytes32 configSalt,
+        address, /* originalMsgSender */
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IGroupRule.processMemberJoining, (configSalt, account, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processMemberJoining(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) internal {
+        _processGroupRule(
+            _encodeAndCallProcessMemberJoining,
+            IGroupRule.processMemberJoining.selector,
+            originalMsgSender,
+            account,
+            primitiveCustomParams,
+            ruleProcessingParams
+        );
+    }
+
+    function _encodeAndCallProcessMemberLeaving(
+        address rule,
+        bytes32 configSalt,
+        address, /* originalMsgSender */
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IGroupRule.processMemberLeaving, (configSalt, account, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processMemberLeaving(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) internal {
+        _processGroupRule(
+            _encodeAndCallProcessMemberLeaving,
+            IGroupRule.processMemberLeaving.selector,
+            originalMsgSender,
+            account,
+            primitiveCustomParams,
+            ruleProcessingParams
+        );
     }
 
     function _processGroupRule(
-        function(address,address,bytes calldata) internal returns (bool,bytes memory) func,
+        function(address,bytes32,address,address,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
+            encodeAndCall,
+        bytes4 ruleSelector,
+        address originalMsgSender,
         address account,
-        RuleExecutionData calldata data
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
     ) private {
         // Check required rules (AND-combined rules)
-        for (uint256 i = 0; i < $groupRulesStorage().requiredRules.length; i++) {
-            (bool callNotReverted,) = func($groupRulesStorage().requiredRules[i], account, data.dataForRequiredRules[i]);
-            require(callNotReverted, "Some required rule failed");
-        }
-        // Check any-of rules (OR-combined rules)
-        if ($groupRulesStorage().anyOfRules.length == 0) {
-            return; // If there are no OR-combined rules, we can return
-        }
-        for (uint256 i = 0; i < $groupRulesStorage().anyOfRules.length; i++) {
-            (bool callNotReverted, bytes memory returnData) =
-                func($groupRulesStorage().anyOfRules[i], account, data.dataForAnyOfRules[i]);
-
-            if (callNotReverted && abi.decode(returnData, (bool))) {
-                // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
-                return; // If any of the OR-combined rules passed, it means they succeed and we can return
+        for (uint256 i = 0; i < $groupRulesStorage().requiredRules[ruleSelector].length; i++) {
+            Rule memory rule = $groupRulesStorage().requiredRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = encodeAndCall(
+                    rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams
+                );
+                require(callNotReverted, "Some required rule failed");
             }
         }
-        revert("All of the any-of rules failed");
+        // Check any-of rules (OR-combined rules)
+        for (uint256 i = 0; i < $groupRulesStorage().anyOfRules[ruleSelector].length; i++) {
+            Rule memory rule = $groupRulesStorage().anyOfRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                    rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams
+                );
+                if (callNotReverted && abi.decode(returnData, (bool))) {
+                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
+            }
+        }
+        // If there are any-of rules and it reached this point, it means all of them failed.
+        require($groupRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
     }
 
-    function _getGroupRules(bool isRequired) internal view returns (address[] memory) {
-        return $groupRulesStorage().getRulesArray(isRequired);
+    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
+        return $groupRulesStorage()._getRulesArray(ruleSelector, false).length
+            + $groupRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 }
