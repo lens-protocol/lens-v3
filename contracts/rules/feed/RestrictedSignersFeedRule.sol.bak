@@ -12,11 +12,11 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
         _configure(data);
     }
 
-    function processCreatePost(uint256 postId, CreatePostParams calldata postParams, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processCreatePost(
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        bytes calldata data
+    ) external override returns (bool) {
         _validateRestrictedSignerMessage({
             functionSelector: IFeedRule.processCreatePost.selector,
             abiEncodedFunctionParams: abi.encode(postId, postParams),
@@ -25,11 +25,11 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
         return true;
     }
 
-    function processEditPost(uint256 postId, EditPostParams calldata editPostParams, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processEditPost(
+        uint256 postId,
+        EditPostParams calldata editPostParams,
+        bytes calldata data
+    ) external override returns (bool) {
         _validateRestrictedSignerMessage({
             functionSelector: IFeedRule.processEditPost.selector,
             abiEncodedFunctionParams: abi.encode(postId, editPostParams),
@@ -38,11 +38,11 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
         return true;
     }
 
-    function processPostRuleChanges(uint256 postId, RuleChange[] calldata ruleChanges, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processPostRuleChanges(
+        uint256 postId,
+        RuleChange[] calldata ruleChanges,
+        bytes calldata data
+    ) external override returns (bool) {
         _validateRestrictedSignerMessage({
             functionSelector: IFeedRule.processPostRuleChanges.selector,
             abiEncodedFunctionParams: abi.encode(postId, ruleChanges),

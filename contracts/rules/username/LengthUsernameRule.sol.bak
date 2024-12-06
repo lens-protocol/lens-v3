@@ -41,11 +41,11 @@ contract LengthUsernameRule is IUsernameRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreation(address account, string calldata username, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processCreation(
+        address account,
+        string calldata username,
+        bytes calldata /* data */
+    ) external view returns (bool) {
         Configuration memory configuration = _configuration[msg.sender];
         uint256 usernameLength = bytes(username).length;
         if (
@@ -63,11 +63,11 @@ contract LengthUsernameRule is IUsernameRule {
         return true;
     }
 
-    function processAssigning(address, /* account */ string calldata, /* username */ bytes calldata /* data */ )
-        external
-        pure
-        returns (bool)
-    {
+    function processAssigning(
+        address, /* account */
+        string calldata, /* username */
+        bytes calldata /* data */
+    ) external pure returns (bool) {
         return false;
     }
 }

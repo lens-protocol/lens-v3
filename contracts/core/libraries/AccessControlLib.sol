@@ -17,11 +17,11 @@ library AccessControlLib {
         return hasAccess(IAccessControl(accessControl), account, permissionId);
     }
 
-    function hasAccess(IAccessControl accessControl, address account, uint256 permissionId)
-        internal
-        view
-        returns (bool)
-    {
+    function hasAccess(
+        IAccessControl accessControl,
+        address account,
+        uint256 permissionId
+    ) internal view returns (bool) {
         return accessControl.hasAccess({account: account, contractAddress: address(this), permissionId: permissionId});
     }
 

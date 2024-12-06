@@ -5,24 +5,23 @@ pragma solidity ^0.8.0;
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {RuleChange} from "./../../core/types/Types.sol";
-import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
+import {SimplePaymentRule} from "./../base/SimplePaymentRule.sol";
 
-contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
-    mapping(address => TokenGateConfiguration) internal _configuration;
+contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
+    mapping(address => PaymentConfiguration) internal _configuration;
 
     function configure(bytes calldata data) external override {
-        TokenGateConfiguration memory configuration = abi.decode(data, (TokenGateConfiguration));
-        _validateTokenGateConfiguration(configuration);
+        PaymentConfiguration memory configuration = abi.decode(data, (PaymentConfiguration));
+        _validatePaymentConfiguration(configuration);
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreatePost(uint256, /* postId */ CreatePostParams calldata postParams, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
-        _validateTokenBalance(_configuration[msg.sender], postParams.author);
+    function processCreatePost(
+        uint256, /* postId */
+        CreatePostParams calldata postParams,
+        bytes calldata data
+    ) external override returns (bool) {
+        _processPayment(_configuration[msg.sender], abi.decode(data, (PaymentConfiguration)), postParams.author);
         return true;
     }
 

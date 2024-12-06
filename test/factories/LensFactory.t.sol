@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
+// Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
@@ -13,6 +15,8 @@ import {RuleChange, DataElement, SourceStamp, RuleExecutionData} from "../../con
 import {AccountManagerPermissions} from "../../contracts/dashboard/account/Account.sol";
 import {AccessControlFactory} from "../../contracts/dashboard/factories/AccessControlFactory.sol";
 import {UserBlockingRule} from "../../contracts/rules/base/UserBlockingRule.sol";
+import {IGraph} from "../../contracts/core/interfaces/IGraph.sol";
+import "../helpers/TypeHelpers.sol";
 
 contract LensFactoryTest is Test {
     LensFactory lensFactory;
@@ -59,6 +63,30 @@ contract LensFactoryTest is Test {
             accountCreationSourceStamp: SourceStamp(address(0), 0, 0, ""),
             assignUsernameSourceStamp: SourceStamp(address(0), 0, 0, ""),
             createUsernameSourceStamp: SourceStamp(address(0), 0, 0, "")
+        });
+    }
+
+    function testGraphFollowWithFactorySetup() public {
+        IGraph graph = IGraph(
+            lensFactory.deployGraph({
+                metadataURI: "uri://any",
+                owner: address(this),
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyExtraData()
+            })
+        );
+        RuleExecutionData memory ruleExecutionDataArray = _emptyExecutionData();
+        // bytes array with single empty element
+        bytes[] memory singleElementByteArray = new bytes[](1);
+        ruleExecutionDataArray.dataForRequiredRules = singleElementByteArray;
+        graph.follow({
+            followerAccount: address(this),
+            targetAccount: address(0xc0ffee),
+            followId: 0,
+            graphRulesData: ruleExecutionDataArray,
+            followRulesData: _emptyExecutionData(),
+            sourceStamp: _emptySourceStamp()
         });
     }
 }
