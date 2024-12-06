@@ -6,20 +6,15 @@ import {Follow, IGraph} from "./../../interfaces/IGraph.sol";
 import {GraphCore as Core} from "./GraphCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {
-    RuleConfigurationParams,
-    RuleOperation,
-    RuleChange,
-    RuleProcessingParams,
-    KeyValue,
-    SourceStamp
+    RuleConfigurationParams, RuleOperation, RuleChange, RuleProcessingParams, KeyValue
 } from "./../../types/Types.sol";
 import {RuleBasedGraph} from "./RuleBasedGraph.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
-import {ISource} from "./../../interfaces/ISource.sol";
+import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
-contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased {
+contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, SourceStampBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -77,15 +72,14 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased {
     function follow(
         address followerAccount,
         address accountToFollow,
-        uint256 followId,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams,
-        RuleProcessingParams[] calldata followRulesProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata followRulesProcessingParams
     ) external override returns (uint256) {
         require(msg.sender == followerAccount);
-        uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, followId);
-        _processSourceStamp(sourceStamp);
+        // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
+        uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0);
+        address source = _processSourceStamp(assignedFollowId, customParams);
         _graphProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, graphRulesProcessingParams);
         _accountProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, followRulesProcessingParams);
         emit Lens_Graph_Followed(
@@ -95,7 +89,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased {
             customParams,
             graphRulesProcessingParams,
             followRulesProcessingParams,
-            sourceStamp.source
+            source
         );
         return assignedFollowId;
     }
@@ -104,22 +98,15 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased {
         address followerAccount,
         address accountToUnfollow,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata graphRulesProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external override returns (uint256) {
         require(msg.sender == followerAccount);
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
-        _processSourceStamp(sourceStamp);
+        address source = _processSourceStamp(followId, customParams);
         emit Lens_Graph_Unfollowed(
-            followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, sourceStamp.source
+            followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, source
         );
         return followId;
-    }
-
-    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
     }
 
     // Getters

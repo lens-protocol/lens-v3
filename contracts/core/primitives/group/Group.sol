@@ -6,21 +6,16 @@ import {IGroup} from "./../../interfaces/IGroup.sol";
 import {GroupCore as Core} from "./GroupCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {
-    RuleConfigurationParams,
-    RuleOperation,
-    RuleChange,
-    RuleProcessingParams,
-    KeyValue,
-    SourceStamp
+    RuleConfigurationParams, RuleOperation, RuleChange, RuleProcessingParams, KeyValue
 } from "./../../types/Types.sol";
 import {RuleBasedGroup} from "./RuleBasedGroup.sol";
 import {AccessControlled} from "./../../access//AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
-import {ISource} from "./../../interfaces/ISource.sol";
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
+import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
-contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased {
+contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, SourceStampBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -80,78 +75,53 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased {
     function addMember(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
+        uint256 membershipId = Core._grantMembership(account);
         if (_amountOfRules(IGroupRule.processMemberAddition.selector) != 0) {
             _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         } else {
             _requireAccess(msg.sender, ADD_MEMBER_PID);
         }
-        _processSourceStamp(sourceStamp);
-        emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
+        address source = _processSourceStamp(membershipId, customParams);
+        emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
     function removeMember(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         _requireAccess(msg.sender, REMOVE_MEMBER_PID);
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
-        _processSourceStamp(sourceStamp);
-        emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
+        address source = _processSourceStamp(membershipId, customParams);
+        emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
     function joinGroup(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         require(msg.sender == account);
-        uint256 membershipId = Core._grantMembership(account, sourceStamp.source);
+        uint256 membershipId = Core._grantMembership(account);
         _processMemberJoining(msg.sender, account, customParams, ruleProcessingParams);
-        _processSourceStamp(sourceStamp);
-        emit Lens_Group_MemberJoined(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
+        address source = _processSourceStamp(membershipId, customParams);
+        emit Lens_Group_MemberJoined(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
     function leaveGroup(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         require(msg.sender == account);
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
-        _processSourceStamp(sourceStamp);
-        emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, sourceStamp.source);
+        address source = _processSourceStamp(membershipId, customParams);
+        emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, source);
     }
-
-    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
-    }
-
-    // bytes32 constant SOURCE_STAMP_CUSTOM_PARAM = keccak256("lens.core.sourceStamp");
-    // bytes32 constant SOURCE_EXTRA_DATA = keccak256("lens.core.source");
-    // function _processSourceStamp(KeyValue[] calldata customParams, bool storeSourceStamp) internal {
-    //     for (uint256 i = 0; i < customParams.length; i++) {
-    //         if (customParams[i].key == SOURCE_STAMP_CUSTOM_PARAM) {
-    //             SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
-    //             ISource(sourceStamp.source).validateSource(sourceStamp);
-    //             if (storeSourceStamp) {
-    //                 // TODO: Create a new library for "extra storage" / "extra data"
-    //                 _setExtraData(membershipId, KeyValue(SOURCE_EXTRA_DATA, abi.encode(sourceStamp.source)));
-    //             }
-    //         }
-    //     }
-    // }
 
     // Getters
 

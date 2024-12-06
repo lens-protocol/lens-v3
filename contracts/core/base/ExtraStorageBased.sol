@@ -43,7 +43,7 @@ abstract contract ExtraStorageBased {
         }
     }
 
-    function _setExtraData(address addr, uint256 entityId, KeyValue calldata extraDataToSet) internal returns (bool) {
+    function _setExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
         bool wasPreviousValueSet = $extraDataStorage().extraStorage[addr][entityId].set(extraDataToSet);
         emit Lens_ExtraDataSet(addr, entityId, extraDataToSet.key, extraDataToSet.value);
         return wasPreviousValueSet;
@@ -55,32 +55,29 @@ abstract contract ExtraStorageBased {
 
     // Helper functions to set different types of extra data
 
-    function _setPrimitiveInternalExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
+    function _setPrimitiveInternalExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
         return _setExtraData(address(0), 0, extraDataToSet);
     }
 
     function _setPrimitiveInternalExtraDataForEntity(
         uint256 entityId,
-        KeyValue calldata extraDataToSet
+        KeyValue memory extraDataToSet
     ) internal returns (bool) {
         return _setExtraData(address(0), entityId, extraDataToSet);
     }
 
     // TODO: rename to PrimitiveOwner?
-    function _setPrimitiveExtraData(KeyValue calldata extraDataToSet) internal returns (bool) {
+    function _setPrimitiveExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
         return _setExtraData(address(this), 0, extraDataToSet);
     }
 
     // TODO: rename to PrimitiveOwner?
-    function _setPrimitiveExtraDataForEntity(
-        uint256 entityId,
-        KeyValue calldata extraDataToSet
-    ) internal returns (bool) {
+    function _setPrimitiveExtraDataForEntity(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
         return _setExtraData(address(this), entityId, extraDataToSet);
     }
 
     // TODO: rename to accent it's user/author-set?
-    function _setEntityExtraData(uint256 entityId, KeyValue calldata extraDataToSet) internal returns (bool) {
+    function _setEntityExtraData(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
         return _setExtraData(msg.sender, entityId, extraDataToSet);
     }
 

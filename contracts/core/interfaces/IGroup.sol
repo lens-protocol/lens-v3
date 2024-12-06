@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleChange, RuleProcessingParams, Rule, SourceStamp} from "./../types/Types.sol";
+import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IGroup is IMetadataBased {
@@ -29,7 +29,7 @@ interface IGroup is IMetadataBased {
         uint256 indexed membershipId,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address source
+        address indexed source
     );
 
     event Lens_Group_MemberRemoved(
@@ -37,7 +37,7 @@ interface IGroup is IMetadataBased {
         uint256 indexed membershipId,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address source
+        address indexed source
     );
 
     event Lens_Group_MemberJoined(
@@ -45,7 +45,7 @@ interface IGroup is IMetadataBased {
         uint256 indexed membershipId,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address source
+        address indexed source
     );
 
     event Lens_Group_MemberLeft(
@@ -53,7 +53,7 @@ interface IGroup is IMetadataBased {
         uint256 indexed membershipId,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address source
+        address indexed source
     );
 
     event Lens_Group_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
@@ -67,29 +67,25 @@ interface IGroup is IMetadataBased {
     function addMember(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
     function removeMember(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
     function joinGroup(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
     function leaveGroup(
         address account,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
     function changeGroupRules(RuleChange[] calldata ruleChanges) external;
