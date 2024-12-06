@@ -7,6 +7,7 @@ import {ExtraDataLib} from "../libraries/ExtraDataLib.sol";
 abstract contract ExtraStorageBased {
     using ExtraDataLib for mapping(bytes32 => bytes);
 
+    // TODO: Consider supporting multi-entity primitives by adding "bytes32 entityType" in addition to existing keys
     event Lens_ExtraDataSet(address indexed addr, uint256 indexed entityId, bytes32 indexed key, bytes value);
 
     /*

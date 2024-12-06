@@ -146,6 +146,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
         }
     }
 
+    // TODO: Decide how DELETE operation should work in Feed (soft vs. hard delete)
     function deletePost(
         uint256 postId,
         bytes32[] calldata, /*extraDataKeysToDelete*/ // TODO: Consider moving this into customParams
