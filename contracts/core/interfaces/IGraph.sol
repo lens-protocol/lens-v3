@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleChange, RuleProcessingParams, KeyValue, Rule, SourceStamp} from "./../types/Types.sol";
+import {RuleChange, RuleProcessingParams, KeyValue, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 // TODO: Might worth to add extraData to the follow entity
@@ -60,7 +60,7 @@ interface IGraph is IMetadataBased {
         KeyValue[] customParams,
         RuleProcessingParams[] graphRulesProcessingParams,
         RuleProcessingParams[] followRulesProcessingParams,
-        address source
+        address indexed source
     );
 
     event Lens_Graph_Unfollowed(
@@ -69,7 +69,7 @@ interface IGraph is IMetadataBased {
         uint256 followId,
         KeyValue[] customParams,
         RuleProcessingParams[] graphRulesProcessingParams,
-        address source
+        address indexed source
     );
 
     event Lens_Graph_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
@@ -89,19 +89,16 @@ interface IGraph is IMetadataBased {
     function follow(
         address followerAccount,
         address targetAccount,
-        uint256 followId, // TODO: If we add `bytes data` to all core calls, we can remove this tokenized-ad-hoc param
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams,
-        RuleProcessingParams[] calldata followRulesProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata followRulesProcessingParams
     ) external returns (uint256);
 
     function unfollow(
         address followerAccount,
         address targetAccount,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata graphRulesProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external returns (uint256);
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;

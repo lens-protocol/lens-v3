@@ -91,6 +91,7 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         return _accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
     }
 
+    // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setPrimitiveExtraDataByUser case
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
             require(_accountManagerPermissions[msg.sender].canSetMetadataURI, "No permissions to set metadata URI");

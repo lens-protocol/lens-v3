@@ -9,17 +9,11 @@ import {KeyValue} from "./../../types/Types.sol";
 import {RuleBasedFeed} from "./RuleBasedFeed.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
-import {
-    RuleConfigurationParams,
-    RuleChange,
-    RuleOperation,
-    RuleProcessingParams,
-    SourceStamp
-} from "./../../types/Types.sol";
+import {RuleConfigurationParams, RuleChange, RuleOperation, RuleProcessingParams} from "./../../types/Types.sol";
 import {Events} from "./../../types/Events.sol";
-import {ISource} from "./../../interfaces/ISource.sol";
+import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
-contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
+contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -59,13 +53,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
         CreatePostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata postRulesParams
     ) external override returns (uint256) {
         require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
-        (uint256 postId, uint256 localSequentialId, uint256 rootPostId) =
-            Core._createPost(postParams, sourceStamp.source);
-        _processSourceStamp(sourceStamp);
+        (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        address source = _processSourceStamp(postId, customParams);
+        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(LAST_UPDATED_SOURCE_EXTRA_DATA, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         if (postId != rootPostId) {
             require(postParams.rules.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
@@ -95,9 +88,10 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
             localSequentialId,
             rootPostId,
             postParams,
+            customParams,
             feedRulesParams,
             postRulesParams,
-            sourceStamp.source
+            source
         );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
             _setEntityExtraData(postId, postParams.extraData[i]);
@@ -113,8 +107,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
         EditPostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata postRulesParams
     ) external override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
@@ -131,8 +124,13 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
         if (postId != rootPostId) {
             _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, postRulesParams);
         }
-        _processSourceStamp(sourceStamp);
-        emit Lens_Feed_PostEdited(postId, author, postParams, feedRulesParams, postRulesParams, sourceStamp.source);
+        address source = _processSourceStamp({
+            entityId: postId,
+            customParams: customParams,
+            storeSource: true,
+            lastUpdatedSourceType: true
+        });
+        emit Lens_Feed_PostEdited(postId, author, postParams, customParams, feedRulesParams, postRulesParams, source);
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
             if (wereExtraDataValuesSet[i]) {
                 emit Lens_Feed_Post_ExtraDataUpdated(
@@ -150,14 +148,13 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
     function deletePost(
         uint256 postId,
         bytes32[] calldata, /*extraDataKeysToDelete*/ // TODO: Consider moving this into customParams
-        KeyValue[] calldata customParams,
-        SourceStamp calldata sourceStamp
+        KeyValue[] calldata customParams
     ) external override {
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, DELETE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
         Core._deletePost(postId);
-        _processSourceStamp(sourceStamp);
-        emit Lens_Feed_PostDeleted(postId, author, customParams, sourceStamp.source);
+        address source = _processSourceStamp(postId, customParams);
+        emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -179,12 +176,6 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
         }
     }
 
-    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
-    }
-
     // Getters
 
     function getPost(uint256 postId) external view override returns (Post memory) {
@@ -199,9 +190,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
             quotedPostId: Core.$storage().posts[postId].quotedPostId,
             repliedPostId: Core.$storage().posts[postId].repliedPostId,
             creationTimestamp: Core.$storage().posts[postId].creationTimestamp,
-            creationSource: Core.$storage().posts[postId].creationSource,
+            creationSource: _getSource(postId),
             lastUpdatedTimestamp: Core.$storage().posts[postId].lastUpdatedTimestamp,
-            lastUpdateSource: Core.$storage().posts[postId].lastUpdateSource
+            lastUpdateSource: _getLastUpdateSource(postId)
         });
     }
 

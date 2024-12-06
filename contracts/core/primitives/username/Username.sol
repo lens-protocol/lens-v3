@@ -6,12 +6,7 @@ import {UsernameCore as Core} from "./UsernameCore.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {
-    KeyValue,
-    RuleProcessingParams,
-    RuleOperation,
-    RuleChange,
-    RuleConfigurationParams,
-    SourceStamp
+    KeyValue, RuleProcessingParams, RuleOperation, RuleChange, RuleConfigurationParams
 } from "./../../types/Types.sol";
 import {RuleBasedUsername} from "./RuleBasedUsername.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
@@ -20,9 +15,9 @@ import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {Events} from "./../../types/Events.sol";
 import {LensERC721} from "./../../base/LensERC721.sol";
 import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
-import {ISource} from "./../../interfaces/ISource.sol";
+import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
-contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled, ExtraStorageBased {
+contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled, ExtraStorageBased, SourceStampBased {
     event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     // TODO: Do we want more granular resources here? Like add/update/remove PIDs? Or are we OK with the multi-purpose?
@@ -80,29 +75,27 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata creationProcessingParams,
-        RuleProcessingParams[] calldata assigningProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata assigningProcessingParams
     ) external {
         require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);
         _safeMint(account, id);
         _idToUsername[id] = username;
         Core._createUsername(username);
-        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, sourceStamp.source);
-        _unassignIfAssigned(account, sourceStamp.source);
+        address source = _processSourceStamp(id, customParams);
+        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source);
+        _unassignIfAssigned(account, source);
         Core._assignUsername(account, username);
-        emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, sourceStamp.source);
+        emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
         _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
         _processAssigning(msg.sender, account, username, customParams, assigningProcessingParams);
-        _processSourceStamp(sourceStamp);
     }
 
     function createUsername(
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);
@@ -110,44 +103,45 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         _idToUsername[id] = username;
         Core._createUsername(username);
         _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
-        emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, sourceStamp.source);
-        _processSourceStamp(sourceStamp);
+        address source = _processSourceStamp(id, customParams);
+        emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source);
     }
 
-    function removeUsername(string calldata username, SourceStamp calldata sourceStamp) external override {
+    function removeUsername(string calldata username, KeyValue[] calldata customParams) external override {
         uint256 id = _computeId(username);
         address owner = _ownerOf(id);
         require(msg.sender == owner); // msg.sender must be the owner of the username
-        _unassignIfAssigned(username, sourceStamp.source);
+        address source = _processSourceStamp(id, customParams);
+        _unassignIfAssigned(username, source);
         _burn(id);
         Core._removeUsername(username);
-        emit Lens_Username_Removed(username, owner, sourceStamp.source);
-        _processSourceStamp(sourceStamp);
+        emit Lens_Username_Removed(username, owner, source);
     }
 
     function assignUsername(
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         require(msg.sender == account); // msg.sender must be the account
-        require(account == _ownerOf(_computeId(username))); // account should own the tokenized username
-        _unassignIfAssigned(account, sourceStamp.source);
-        _unassignIfAssigned(username, sourceStamp.source);
+        uint256 id = _computeId(username);
+        require(account == _ownerOf(id)); // account should own the tokenized username
+        address source = _processSourceStamp(id, customParams);
+        _unassignIfAssigned(account, source);
+        _unassignIfAssigned(username, source);
         Core._assignUsername(account, username);
         _processAssigning(msg.sender, account, username, customParams, ruleProcessingParams);
-        emit Lens_Username_Assigned(username, account, customParams, ruleProcessingParams, sourceStamp.source);
-        _processSourceStamp(sourceStamp);
+        emit Lens_Username_Assigned(username, account, customParams, ruleProcessingParams, source);
     }
 
-    function unassignUsername(string calldata username, SourceStamp calldata sourceStamp) external override {
+    function unassignUsername(string calldata username, KeyValue[] calldata customParams) external override {
         address account = Core.$storage().usernameToAccount[username];
-        require(msg.sender == account || msg.sender == _ownerOf(_computeId(username)));
+        uint256 id = _computeId(username);
+        require(msg.sender == account || msg.sender == _ownerOf(id));
         Core._unassignUsername(username);
-        emit Lens_Username_Unassigned(username, account, sourceStamp.source);
-        _processSourceStamp(sourceStamp);
+        address source = _processSourceStamp(id, customParams);
+        emit Lens_Username_Unassigned(username, account, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -172,12 +166,6 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
     }
 
     // Internal
-
-    function _processSourceStamp(SourceStamp calldata sourceStamp) internal {
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
-    }
 
     function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
         emit Lens_Username_Transfer(from, to, tokenId);
