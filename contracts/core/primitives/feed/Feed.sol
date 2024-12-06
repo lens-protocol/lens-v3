@@ -191,7 +191,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
         // TODO: Should fail if post doesn't exist
         return Post({
             author: Core.$storage().posts[postId].author,
-            localSequentialId: Core.$storage().posts[postId].localSequentialId,
+            authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
+            postSequentialId: Core.$storage().posts[postId].postSequentialId,
             contentURI: Core.$storage().posts[postId].contentURI,
             rootPostId: Core.$storage().posts[postId].rootPostId,
             repostedPostId: Core.$storage().posts[postId].repostedPostId,
@@ -205,12 +206,16 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
     }
 
     function getPostAuthor(uint256 postId) external view override returns (address) {
-        // TODO: Should fail if post doesn't exist
+        // TODO: Should fail if post doesn't exist?
         return Core.$storage().posts[postId].author;
     }
 
     function getPostCount() external view override returns (uint256) {
         return Core.$storage().postCount;
+    }
+
+    function getPostCount(address author) external view override returns (uint256) {
+        return Core.$storage().authorPostCount[author];
     }
 
     function getMetadataURI() external view override returns (string memory) {
@@ -224,5 +229,17 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased {
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
+    }
+
+    function getPostSequentialId(uint256 postId) external view override returns (uint256) {
+        return Core.$storage().posts[postId].postSequentialId;
+    }
+
+    function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
+        return Core.$storage().posts[postId].authorPostSequentialId;
+    }
+
+    function getNextPostId(address author) external view returns (uint256) {
+        return Core._generatePostId(author, Core.$storage().authorPostCount[author] + 1);
     }
 }

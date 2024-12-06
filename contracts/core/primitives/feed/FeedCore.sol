@@ -6,7 +6,8 @@ import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
 
 struct PostStorage {
     address author;
-    uint256 localSequentialId;
+    uint256 authorPostSequentialId;
+    uint256 postSequentialId;
     string contentURI;
     uint256 rootPostId;
     uint256 repostedPostId;
@@ -24,6 +25,7 @@ library FeedCore {
     struct Storage {
         string metadataURI;
         uint256 postCount;
+        mapping(address => uint256) authorPostCount;
         mapping(uint256 => PostStorage) posts;
     }
 
@@ -38,19 +40,21 @@ library FeedCore {
 
     // Internal functions - Use these functions to be called as an inlined library
 
-    function _generatePostId(uint256 localSequentialId) internal view returns (uint256) {
-        return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), localSequentialId)));
+    function _generatePostId(address author, uint256 authorPostSequentialId) internal view returns (uint256) {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), author, authorPostSequentialId)));
     }
 
     function _createPost(
         CreatePostParams calldata postParams,
         address source
     ) internal returns (uint256, uint256, uint256) {
-        uint256 localSequentialId = ++$storage().postCount;
-        uint256 postId = _generatePostId(localSequentialId);
+        uint256 postSequentialId = ++$storage().postCount;
+        uint256 authorPostSequentialId = ++$storage().authorPostCount[postParams.author];
+        uint256 postId = _generatePostId(postParams.author, authorPostSequentialId);
         PostStorage storage _newPost = $storage().posts[postId];
         _newPost.author = postParams.author;
-        _newPost.localSequentialId = localSequentialId;
+        _newPost.authorPostSequentialId = authorPostSequentialId;
+        _newPost.postSequentialId = postSequentialId;
         _newPost.contentURI = postParams.contentURI;
         uint256 rootPostId = postId;
         if (postParams.quotedPostId != 0) {
@@ -76,7 +80,7 @@ library FeedCore {
         _newPost.creationSource = source;
         _newPost.lastUpdatedTimestamp = uint80(block.timestamp);
         _newPost.lastUpdateSource = source;
-        return (postId, localSequentialId, rootPostId);
+        return (postId, postSequentialId, rootPostId);
     }
 
     function _editPost(uint256 postId, EditPostParams calldata postParams, address source) internal {
