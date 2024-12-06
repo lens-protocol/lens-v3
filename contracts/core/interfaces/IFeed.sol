@@ -142,5 +142,7 @@ interface IFeed is IMetadataBased {
 
     function getAuthorPostSequentialId(uint256 postId) external view returns (uint256);
 
+    function getNextPostId(address author) external view returns (uint256);
+
     // TODO: Should we have getPostBySequentialId and getPostByAuthorSequentialId ?
 }

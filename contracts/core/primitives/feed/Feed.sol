@@ -283,4 +283,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
         return Core.$storage().posts[postId].authorPostSequentialId;
     }
+
+    function getNextPostId(address author) external view returns (uint256) {
+        return Core._generatePostId(author, Core.$storage().authorPostCount[author] + 1);
+    }
 }
