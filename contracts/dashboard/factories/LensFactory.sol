@@ -27,7 +27,7 @@ import {IUsername} from "./../../core/interfaces/IUsername.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "./../../core/primitives/username/LensUsernameTokenURIProvider.sol";
 
-// TODO: Move this some place else or remove
+// TODO: Move this someplace else or remove
 interface IOwnable {
     function transferOwnership(address newOwner) external;
     function owner() external view returns (address);
