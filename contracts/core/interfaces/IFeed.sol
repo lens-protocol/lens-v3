@@ -28,7 +28,8 @@ struct CreatePostParams {
 // This is a return type (for getters)
 struct Post {
     address author;
-    uint256 localSequentialId;
+    uint256 authorPostSequentialId;
+    uint256 postSequentialId;
     string contentURI;
     uint256 rootPostId;
     uint256 repostedPostId;
@@ -131,7 +132,17 @@ interface IFeed is IMetadataBased {
 
     function getPostCount() external view returns (uint256);
 
+    function getPostCount(address author) external view returns (uint256);
+
     function getPostExtraData(uint256 postId, bytes32 key) external view returns (bytes memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
+
+    function getPostSequentialId(uint256 postId) external view returns (uint256);
+
+    function getAuthorPostSequentialId(uint256 postId) external view returns (uint256);
+
+    function getNextPostId(address author) external view returns (uint256);
+
+    // TODO: Should we have getPostBySequentialId and getPostByAuthorSequentialId ?
 }

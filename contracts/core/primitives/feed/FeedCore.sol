@@ -7,7 +7,8 @@ import "./../../libraries/ExtraDataLib.sol";
 
 struct PostStorage {
     address author;
-    uint256 localSequentialId;
+    uint256 authorPostSequentialId;
+    uint256 postSequentialId;
     string contentURI;
     uint256 rootPostId;
     uint256 repostedPostId;
@@ -28,6 +29,7 @@ library FeedCore {
     struct Storage {
         string metadataURI;
         uint256 postCount;
+        mapping(address => uint256) authorPostCount;
         mapping(uint256 => PostStorage) posts;
         mapping(bytes32 => bytes) extraData;
     }
@@ -72,19 +74,21 @@ library FeedCore {
         return $storage().extraData.set(extraDataToSet);
     }
 
-    function _generatePostId(uint256 localSequentialId) internal view returns (uint256) {
-        return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), localSequentialId)));
+    function _generatePostId(address author, uint256 authorPostSequentialId) internal view returns (uint256) {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), author, authorPostSequentialId)));
     }
 
     function _createPost(
         CreatePostParams calldata postParams,
         address source
     ) internal returns (uint256, uint256, uint256) {
-        uint256 localSequentialId = ++$storage().postCount;
-        uint256 postId = _generatePostId(localSequentialId);
+        uint256 postSequentialId = ++$storage().postCount;
+        uint256 authorPostSequentialId = ++$storage().authorPostCount[postParams.author];
+        uint256 postId = _generatePostId(postParams.author, authorPostSequentialId);
         PostStorage storage _newPost = $storage().posts[postId];
         _newPost.author = postParams.author;
-        _newPost.localSequentialId = localSequentialId;
+        _newPost.authorPostSequentialId = authorPostSequentialId;
+        _newPost.postSequentialId = postSequentialId;
         _newPost.contentURI = postParams.contentURI;
         uint256 rootPostId = postId;
         if (postParams.quotedPostId != 0) {
@@ -111,7 +115,7 @@ library FeedCore {
         _newPost.lastUpdatedTimestamp = uint80(block.timestamp);
         _newPost.lastUpdateSource = source;
         _newPost.extraData.set(postParams.extraData);
-        return (postId, localSequentialId, rootPostId);
+        return (postId, postSequentialId, rootPostId); // TODO: We are returning postSequentialId, not author's one
     }
 
     function _editPost(
@@ -132,7 +136,7 @@ library FeedCore {
     }
 
     // TODO(by: @donosonaumczuk): We should do soft-delete (disable/enable post feature), keep the storage there.
-    function _deletePost(uint256 postId, bytes32[] calldata extraDataKeysToDelete) internal {
+    function _deletePost(uint256 postId, bytes32[] calldata /* extraDataKeysToDelete */ ) internal {
         // $storage().posts[postId].extraData.remove(extraDataKeysToDelete); // TODO: What do we do? What about ExtraData Deleted events?
         delete $storage().posts[postId];
     }

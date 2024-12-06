@@ -159,7 +159,7 @@ contract LensFactory {
         );
     }
 
-    function _prependUserBlocking(RuleChange[] calldata rules) internal returns (RuleChange[] memory) {
+    function _prependUserBlocking(RuleChange[] calldata rules) internal view returns (RuleChange[] memory) {
         RuleChange[] memory rulesPrependedWithUserBlocking = new RuleChange[](rules.length + 1);
         rulesPrependedWithUserBlocking[0] = RuleChange({
             configuration: RuleConfiguration({ruleAddress: _userBlockingRule, configData: "", isRequired: true}),
