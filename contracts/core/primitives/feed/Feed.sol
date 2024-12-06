@@ -227,7 +227,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         // TODO: Should fail if post doesn't exist
         return Post({
             author: Core.$storage().posts[postId].author,
-            localSequentialId: Core.$storage().posts[postId].localSequentialId,
+            authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
+            postSequentialId: Core.$storage().posts[postId].postSequentialId,
             contentURI: Core.$storage().posts[postId].contentURI,
             rootPostId: Core.$storage().posts[postId].rootPostId,
             repostedPostId: Core.$storage().posts[postId].repostedPostId,
@@ -243,7 +244,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
     }
 
     function getPostAuthor(uint256 postId) external view override returns (address) {
-        // TODO: Should fail if post doesn't exist
+        // TODO: Should fail if post doesn't exist?
         return Core.$storage().posts[postId].author;
     }
 
@@ -259,6 +260,10 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         return Core.$storage().postCount;
     }
 
+    function getPostCount(address author) external view override returns (uint256) {
+        return Core.$storage().authorPostCount[author];
+    }
+
     function getMetadataURI() external view override returns (string memory) {
         return Core.$storage().metadataURI;
     }
@@ -271,7 +276,11 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled {
         return Core.$storage().extraData[key];
     }
 
-    function getAuthorPostId(address author, uint256 localSequentialId) external view returns (uint256) {
-        return Core._generatePostId(author, localSequentialId);
+    function getPostSequentialId(uint256 postId) external view override returns (uint256) {
+        return Core.$storage().posts[postId].postSequentialId;
+    }
+
+    function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
+        return Core.$storage().posts[postId].authorPostSequentialId;
     }
 }
