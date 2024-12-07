@@ -15,7 +15,7 @@ library AppCore {
     // Storage
 
     struct Storage {
-        string metadataURI; // Name, description, logo, other attribiutes like category/topic, etc.
+        string metadataURI; // Name, description, logo, other attributes like category/topic, etc.
         bool sourceStampVerificationEnabled;
         address treasury; // Can also be defined as a permission in the AC... and allow multiple revenue recipients!
         mapping(address => ArrayStorageHelper) signerStorageHelper;

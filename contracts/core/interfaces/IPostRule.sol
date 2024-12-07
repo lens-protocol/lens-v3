@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-// TODO: We do not have native referrals here, shoud we add them?
+// TODO: We do not have native referrals here, should we add them?
 interface IPostRule {
     function configure(uint256 postId, bytes calldata data) external;
 
