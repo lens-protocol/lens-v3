@@ -146,7 +146,8 @@ interface IFeed is IMetadataBased {
     function removePost(
         uint256 postId,
         bytes32[] calldata extraDataKeysToRemove,
-        KeyValue[] calldata customParams
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams
     ) external;
 
     function changePostRules(

@@ -163,11 +163,13 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     function removePost(
         uint256 postId,
         bytes32[] calldata, /*extraDataKeysToRemove*/ // TODO: Consider moving this into customParams
-        KeyValue[] calldata customParams
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams
     ) external override {
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, REMOVE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
         Core._removePost(postId);
+        _processPostRemoval(postId, customParams, feedRulesParams);
         address source = _processSourceStamp(postId, customParams);
         emit Lens_Feed_PostRemoved(postId, author, customParams, source);
     }
