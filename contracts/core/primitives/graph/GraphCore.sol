@@ -24,16 +24,6 @@ library GraphCore {
         }
     }
 
-    // External functions - Use these functions to be called through DELEGATECALL
-
-    function follow(address followerAccount, address accountToFollow, uint256 followId) external returns (uint256) {
-        return _follow(followerAccount, accountToFollow, followId);
-    }
-
-    function unfollow(address followerAccount, address accountToUnfollow) external returns (uint256) {
-        return _unfollow(followerAccount, accountToUnfollow);
-    }
-
     // Internal functions - Use these functions to be called as an inlined library
 
     function _follow(address followerAccount, address accountToFollow, uint256 followId) internal returns (uint256) {

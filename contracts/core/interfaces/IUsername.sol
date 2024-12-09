@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleChange, Rule, RuleProcessingParams, SourceStamp} from "./../types/Types.sol";
+import {KeyValue, RuleChange, Rule, RuleProcessingParams} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IUsername is IMetadataBased {
@@ -29,20 +29,20 @@ interface IUsername is IMetadataBased {
         address indexed account,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address source
+        address indexed source
     );
 
-    event Lens_Username_Removed(string username, address indexed account, address source);
+    event Lens_Username_Removed(string username, address indexed account, address indexed source);
 
     event Lens_Username_Assigned(
         string username,
         address indexed account,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address source
+        address indexed source
     );
 
-    event Lens_Username_Unassigned(string username, address indexed previousAccount, address source);
+    event Lens_Username_Unassigned(string username, address indexed previousAccount, address indexed source);
 
     event Lens_Username_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
@@ -58,21 +58,19 @@ interface IUsername is IMetadataBased {
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
-    function removeUsername(string calldata username, SourceStamp calldata sourceStamp) external;
+    function removeUsername(string calldata username, KeyValue[] calldata customParams) external;
 
     function assignUsername(
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams,
-        SourceStamp calldata sourceStamp
+        RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
-    function unassignUsername(string calldata username, SourceStamp calldata sourceStamp) external;
+    function unassignUsername(string calldata username, KeyValue[] calldata customParams) external;
 
     function usernameOf(address user) external view returns (string memory);
 

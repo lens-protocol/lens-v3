@@ -14,9 +14,7 @@ struct PostStorage {
     uint256 quotedPostId;
     uint256 repliedPostId;
     uint80 creationTimestamp;
-    address creationSource;
     uint80 lastUpdatedTimestamp;
-    address lastUpdateSource;
 }
 
 library FeedCore {
@@ -44,10 +42,7 @@ library FeedCore {
         return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), author, authorPostSequentialId)));
     }
 
-    function _createPost(
-        CreatePostParams calldata postParams,
-        address source
-    ) internal returns (uint256, uint256, uint256) {
+    function _createPost(CreatePostParams calldata postParams) internal returns (uint256, uint256, uint256) {
         uint256 postSequentialId = ++$storage().postCount;
         uint256 authorPostSequentialId = ++$storage().authorPostCount[postParams.author];
         uint256 postId = _generatePostId(postParams.author, authorPostSequentialId);
@@ -77,13 +72,11 @@ library FeedCore {
         }
         _newPost.rootPostId = rootPostId;
         _newPost.creationTimestamp = uint80(block.timestamp);
-        _newPost.creationSource = source;
         _newPost.lastUpdatedTimestamp = uint80(block.timestamp);
-        _newPost.lastUpdateSource = source;
         return (postId, postSequentialId, rootPostId);
     }
 
-    function _editPost(uint256 postId, EditPostParams calldata postParams, address source) internal {
+    function _editPost(uint256 postId, EditPostParams calldata postParams) internal {
         PostStorage storage _post = $storage().posts[postId];
         require(_post.creationTimestamp != 0, "CANNOT_EDIT_NON_EXISTENT_POST"); // Post must exist
         if (_post.repostedPostId != 0) {
@@ -92,7 +85,6 @@ library FeedCore {
             _post.contentURI = postParams.contentURI;
         }
         _post.lastUpdatedTimestamp = uint80(block.timestamp);
-        _post.lastUpdateSource = source;
     }
 
     function _deletePost(uint256 postId) internal {
