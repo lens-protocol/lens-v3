@@ -44,8 +44,9 @@ interface IFeed is IMetadataBased {
         uint256 rootPostId,
         CreatePostParams postParams,
         KeyValue[] customParams,
-        RuleProcessingParams[] feedRulesData,
-        RuleProcessingParams[] postRulesData,
+        RuleProcessingParams[] feedRulesParams,
+        RuleProcessingParams[] rootPostRulesParams,
+        RuleProcessingParams[] quotedPostRulesParams,
         address indexed source
     );
 
@@ -54,8 +55,9 @@ interface IFeed is IMetadataBased {
         address indexed author,
         EditPostParams newPostParams,
         KeyValue[] customParams,
-        RuleProcessingParams[] feedRulesData,
-        RuleProcessingParams[] postRulesData,
+        RuleProcessingParams[] feedRulesParams,
+        RuleProcessingParams[] rootPostRulesParams,
+        RuleProcessingParams[] quotedPostRulesParams,
         address indexed source
     );
 
@@ -125,7 +127,8 @@ interface IFeed is IMetadataBased {
         CreatePostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams
+        RuleProcessingParams[] calldata rootPostRulesParams,
+        RuleProcessingParams[] calldata quotedPostRulesParams
     ) external returns (uint256);
 
     function editPost(
@@ -133,7 +136,8 @@ interface IFeed is IMetadataBased {
         EditPostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams
+        RuleProcessingParams[] calldata rootPostRulesParams,
+        RuleProcessingParams[] calldata quotedPostRulesParams
     ) external;
 
     // "Delete" - u know u cannot delete stuff from the internet, right? :]

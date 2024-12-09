@@ -53,18 +53,24 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         CreatePostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams
+        RuleProcessingParams[] calldata rootPostRulesParams,
+        RuleProcessingParams[] calldata quotedPostRulesParams
     ) external override returns (uint256) {
         require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         address source = _processSourceStamp(postId, customParams);
         _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(LAST_UPDATED_SOURCE_EXTRA_DATA, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
+        // Process rules of the Quote (if quoting)
+        if (postParams.quotedPostId != 0) {
+            // TODO: Maybe quotes shouldn't be limited by rules... Just a brave thought. Like quotations in real life.
+            uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
+            _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+        }
         if (postId != rootPostId) {
             require(postParams.rules.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
-            // TODO: We might need to call this on the root post of the quoted, replied, and/or reposted posts...
-            // Check how it was done before... we get the root from each of them, and process the rules on them
-            _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, postRulesParams);
+            // This covers the Reply or Repost cases
+            _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         } else {
             RuleChange[] memory ruleChanges = new RuleChange[](postParams.rules.length);
             // We can only add rules to the post on creation, or by calling dedicated functions after (not on editPost)
@@ -90,7 +96,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
             postParams,
             customParams,
             feedRulesParams,
-            postRulesParams,
+            rootPostRulesParams,
+            quotedPostRulesParams,
             source
         );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
@@ -107,7 +114,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         EditPostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams
+        RuleProcessingParams[] calldata rootPostRulesParams,
+        RuleProcessingParams[] calldata quotedPostRulesParams
     ) external override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
@@ -119,10 +127,15 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
             wereExtraDataValuesSet[i] = _setEntityExtraData(postId, postParams.extraData[i]);
         }
 
-        _processPostEditingOnFeed(postId, postParams, customParams, postRulesParams);
+        _processPostEditingOnFeed(postId, postParams, customParams, rootPostRulesParams);
+        uint256 quotedPostId = Core.$storage().posts[postId].quotedPostId;
+        if (quotedPostId != 0) {
+            uint256 rootOfQuotedPost = Core.$storage().posts[quotedPostId].rootPostId;
+            _processPostEditingOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+        }
         uint256 rootPostId = Core.$storage().posts[postId].rootPostId;
         if (postId != rootPostId) {
-            _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, postRulesParams);
+            _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         }
         address source = _processSourceStamp({
             entityId: postId,
@@ -130,7 +143,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
             storeSource: true,
             lastUpdatedSourceType: true
         });
-        emit Lens_Feed_PostEdited(postId, author, postParams, customParams, feedRulesParams, postRulesParams, source);
+        emit Lens_Feed_PostEdited(
+            postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
+        );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
             if (wereExtraDataValuesSet[i]) {
                 emit Lens_Feed_Post_ExtraDataUpdated(
