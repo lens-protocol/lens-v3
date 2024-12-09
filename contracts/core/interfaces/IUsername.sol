@@ -32,7 +32,13 @@ interface IUsername is IMetadataBased {
         address indexed source
     );
 
-    event Lens_Username_Removed(string username, address indexed account, address indexed source);
+    event Lens_Username_Removed(
+        string username,
+        address indexed account,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
 
     event Lens_Username_Assigned(
         string username,
@@ -42,7 +48,13 @@ interface IUsername is IMetadataBased {
         address indexed source
     );
 
-    event Lens_Username_Unassigned(string username, address indexed previousAccount, address indexed source);
+    event Lens_Username_Unassigned(
+        string username,
+        address indexed previousAccount,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
 
     event Lens_Username_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
@@ -61,16 +73,27 @@ interface IUsername is IMetadataBased {
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
-    function removeUsername(string calldata username, KeyValue[] calldata customParams) external;
+    function removeUsername(
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata unassigningRuleProcessingParams,
+        RuleProcessingParams[] calldata removalRuleProcessingParams
+    ) external;
 
     function assignUsername(
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
+        RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
+        RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external;
 
-    function unassignUsername(string calldata username, KeyValue[] calldata customParams) external;
+    function unassignUsername(
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) external;
 
     function usernameOf(address user) external view returns (string memory);
 
