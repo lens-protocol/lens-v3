@@ -19,7 +19,7 @@ interface IGraphRule {
     function processUnfollow(
         bytes32 configSalt,
         address originalMsgSender,
-        address unfollowerAccount,
+        address followerAccount,
         address accountToUnfollow,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams

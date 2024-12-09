@@ -103,6 +103,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         require(msg.sender == followerAccount);
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(followId, customParams);
+        _graphProcessUnfollow(msg.sender, followerAccount, accountToUnfollow, customParams, graphRulesProcessingParams);
         emit Lens_Graph_Unfollowed(
             followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, source
         );
