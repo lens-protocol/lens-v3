@@ -39,11 +39,11 @@ contract CharsetUsernameRule is IUsernameRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processCreation(address account, string calldata username, bytes calldata /* data*/ )
-        external
-        view
-        returns (bool)
-    {
+    function processCreation(
+        address account,
+        string calldata username,
+        bytes calldata /* data*/
+    ) external view returns (bool) {
         Configuration memory configuration = _configuration[msg.sender];
         if (!configuration.accessControl.hasAccess(account, SKIP_CHARSET_PID)) {
             _processRestrictions(username, configuration.charsetRestrictions);
@@ -51,10 +51,10 @@ contract CharsetUsernameRule is IUsernameRule {
         return true;
     }
 
-    function _processRestrictions(string calldata username, CharsetRestrictions memory charsetRestrictions)
-        internal
-        pure
-    {
+    function _processRestrictions(
+        string calldata username,
+        CharsetRestrictions memory charsetRestrictions
+    ) internal pure {
         // Cannot start with a character in the cannotStartWith charset
         require(
             !_isInCharset(bytes(username)[0], charsetRestrictions.cannotStartWith),
@@ -125,11 +125,11 @@ contract CharsetUsernameRule is IUsernameRule {
         return false;
     }
 
-    function processAssigning(address, /* account */ string calldata, /* username */ bytes calldata /* data */ )
-        external
-        pure
-        returns (bool)
-    {
+    function processAssigning(
+        address, /* account */
+        string calldata, /* username */
+        bytes calldata /* data */
+    ) external pure returns (bool) {
         return false;
     }
 }

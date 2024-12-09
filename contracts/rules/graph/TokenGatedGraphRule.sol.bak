@@ -15,11 +15,11 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         _configuration[msg.sender] = configuration;
     }
 
-    function processFollow(address followerAccount, address accountToFollow, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processFollow(
+        address followerAccount,
+        address accountToFollow,
+        bytes calldata /* data */
+    ) external view returns (bool) {
         TokenGateConfiguration memory configuration = _configuration[msg.sender];
         /**
          * Both ends of the follow connection must comply with the token-gate restriction, then the graph is purely

@@ -11,11 +11,11 @@ contract RestrictedSignersGraphRule is RestrictedSignersRule, IGraphRule {
         _configure(data);
     }
 
-    function processFollow(address followerAccount, address accountToFollow, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processFollow(
+        address followerAccount,
+        address accountToFollow,
+        bytes calldata data
+    ) external override returns (bool) {
         _validateRestrictedSignerMessage({
             functionSelector: IGraphRule.processFollow.selector,
             abiEncodedFunctionParams: abi.encode(followerAccount, accountToFollow),
@@ -24,11 +24,11 @@ contract RestrictedSignersGraphRule is RestrictedSignersRule, IGraphRule {
         return true;
     }
 
-    function processFollowRuleChanges(address account, RuleChange[] calldata ruleChanges, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processFollowRuleChanges(
+        address account,
+        RuleChange[] calldata ruleChanges,
+        bytes calldata data
+    ) external override returns (bool) {
         _validateRestrictedSignerMessage({
             functionSelector: IGraphRule.processFollowRuleChanges.selector,
             abiEncodedFunctionParams: abi.encode(account, ruleChanges),

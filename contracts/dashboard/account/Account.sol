@@ -51,11 +51,10 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         emit Lens_Account_AllowNonOwnerSpending(allow, allow ? block.timestamp : 0);
     }
 
-    function addAccountManager(address accountManager, AccountManagerPermissions calldata accountManagerPermissions)
-        external
-        override
-        onlyOwner
-    {
+    function addAccountManager(
+        address accountManager,
+        AccountManagerPermissions calldata accountManagerPermissions
+    ) external override onlyOwner {
         require(!_accountManagerPermissions[accountManager].canExecuteTransactions, "Account manager already exists");
         require(accountManager != owner(), "Cannot add owner as account manager");
         require(accountManager != address(0), "Cannot add zero address as account manager");
@@ -92,6 +91,7 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         return _accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
     }
 
+    // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setPrimitiveExtraDataByUser case
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
             require(_accountManagerPermissions[msg.sender].canSetMetadataURI, "No permissions to set metadata URI");
@@ -107,12 +107,11 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         return _metadataURI[source];
     }
 
-    function executeTransaction(address to, uint256 value, bytes calldata data)
-        external
-        payable
-        override
-        returns (bytes memory)
-    {
+    function executeTransaction(
+        address to,
+        uint256 value,
+        bytes calldata data
+    ) external payable override returns (bytes memory) {
         if (msg.sender != owner()) {
             require(
                 _accountManagerPermissions[msg.sender].canExecuteTransactions, "No permissions to execute transactions"
