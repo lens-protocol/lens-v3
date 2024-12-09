@@ -87,7 +87,7 @@ library FeedCore {
         _post.lastUpdatedTimestamp = uint80(block.timestamp);
     }
 
-    function _deletePost(uint256 postId) internal {
+    function _removePost(uint256 postId) internal {
         delete $storage().posts[postId];
     }
 

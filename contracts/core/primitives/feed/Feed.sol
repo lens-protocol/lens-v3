@@ -9,7 +9,7 @@ import {KeyValue} from "./../../types/Types.sol";
 import {RuleBasedFeed} from "./RuleBasedFeed.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
-import {RuleConfigurationParams, RuleChange, RuleOperation, RuleProcessingParams} from "./../../types/Types.sol";
+import {RuleChange, RuleOperation, RuleProcessingParams} from "./../../types/Types.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
@@ -18,7 +18,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
     uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
-    uint256 constant DELETE_POST_PID = uint256(keccak256("DELETE_POST"));
+    uint256 constant REMOVE_POST_PID = uint256(keccak256("REMOVE_POST"));
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
         Core.$storage().metadataURI = metadataURI;
@@ -32,7 +32,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Events.Lens_PermissionId_Available(SET_RULES_PID, "SET_RULES");
         emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
         emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
-        emit Events.Lens_PermissionId_Available(DELETE_POST_PID, "DELETE_POST");
+        emit Events.Lens_PermissionId_Available(REMOVE_POST_PID, "REMOVE_POST");
     }
 
     // Access Controlled functions
@@ -145,16 +145,16 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     }
 
     // TODO: Decide how DELETE operation should work in Feed (soft vs. hard delete)
-    function deletePost(
+    function removePost(
         uint256 postId,
-        bytes32[] calldata, /*extraDataKeysToDelete*/ // TODO: Consider moving this into customParams
+        bytes32[] calldata, /*extraDataKeysToRemove*/ // TODO: Consider moving this into customParams
         KeyValue[] calldata customParams
     ) external override {
         address author = Core.$storage().posts[postId].author;
-        require(msg.sender == author || _hasAccess(msg.sender, DELETE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
-        Core._deletePost(postId);
+        require(msg.sender == author || _hasAccess(msg.sender, REMOVE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
+        Core._removePost(postId);
         address source = _processSourceStamp(postId, customParams);
-        emit Lens_Feed_PostDeleted(postId, author, customParams, source);
+        emit Lens_Feed_PostRemoved(postId, author, customParams, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {

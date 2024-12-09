@@ -59,7 +59,7 @@ interface IFeed is IMetadataBased {
         address indexed source
     );
 
-    event Lens_Feed_PostDeleted(
+    event Lens_Feed_PostRemoved(
         uint256 indexed postId, address indexed author, KeyValue[] customParams, address indexed source
     );
 
@@ -139,9 +139,9 @@ interface IFeed is IMetadataBased {
     // "Delete" - u know u cannot delete stuff from the internet, right? :]
     // But this will at least remove it from the current state, so contracts accessing it will know.
     // TODO: Debate post deletion, soft vs. hard delete, extra data deletion, etc.
-    function deletePost(
+    function removePost(
         uint256 postId,
-        bytes32[] calldata extraDataKeysToDelete,
+        bytes32[] calldata extraDataKeysToRemove,
         KeyValue[] calldata customParams
     ) external;
 

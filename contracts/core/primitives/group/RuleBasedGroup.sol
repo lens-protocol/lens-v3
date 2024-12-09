@@ -66,19 +66,19 @@ abstract contract RuleBasedGroup is IGroup {
             }
         }
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberAddition.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processAddition.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberRemoval.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processRemoval.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberJoining.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processJoining.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberLeaving.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processLeaving.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
     }
@@ -120,7 +120,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IGroupRule.processMemberRemoval,
+                IGroupRule.processRemoval,
                 (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -134,7 +134,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberRemoval,
-            IGroupRule.processMemberRemoval.selector,
+            IGroupRule.processRemoval.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -152,7 +152,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IGroupRule.processMemberAddition,
+                IGroupRule.processAddition,
                 (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -166,7 +166,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberAddition,
-            IGroupRule.processMemberAddition.selector,
+            IGroupRule.processAddition.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -183,9 +183,7 @@ abstract contract RuleBasedGroup is IGroup {
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
         return rule.call(
-            abi.encodeCall(
-                IGroupRule.processMemberJoining, (configSalt, account, primitiveCustomParams, ruleCustomParams)
-            )
+            abi.encodeCall(IGroupRule.processJoining, (configSalt, account, primitiveCustomParams, ruleCustomParams))
         );
     }
 
@@ -197,7 +195,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberJoining,
-            IGroupRule.processMemberJoining.selector,
+            IGroupRule.processJoining.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -214,9 +212,7 @@ abstract contract RuleBasedGroup is IGroup {
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
         return rule.call(
-            abi.encodeCall(
-                IGroupRule.processMemberLeaving, (configSalt, account, primitiveCustomParams, ruleCustomParams)
-            )
+            abi.encodeCall(IGroupRule.processLeaving, (configSalt, account, primitiveCustomParams, ruleCustomParams))
         );
     }
 
@@ -228,7 +224,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberLeaving,
-            IGroupRule.processMemberLeaving.selector,
+            IGroupRule.processLeaving.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,

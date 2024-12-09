@@ -7,7 +7,7 @@ import {KeyValue} from "./../types/Types.sol";
 interface IGroupRule {
     function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external;
 
-    function processMemberAddition(
+    function processAddition(
         bytes32 configSalt,
         address originalMsgSender,
         address account,
@@ -15,7 +15,7 @@ interface IGroupRule {
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
-    function processMemberRemoval(
+    function processRemoval(
         bytes32 configSalt,
         address originalMsgSender,
         address account,
@@ -23,14 +23,14 @@ interface IGroupRule {
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
-    function processMemberJoining(
+    function processJoining(
         bytes32 configSalt,
         address account,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
-    function processMemberLeaving(
+    function processLeaving(
         bytes32 configSalt,
         address account,
         KeyValue[] calldata primitiveCustomParams,
