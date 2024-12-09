@@ -78,7 +78,7 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         uint256 membershipId = Core._grantMembership(account);
-        if (_amountOfRules(IGroupRule.processMemberAddition.selector) != 0) {
+        if (_amountOfRules(IGroupRule.processAddition.selector) != 0) {
             _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         } else {
             _requireAccess(msg.sender, ADD_MEMBER_PID);

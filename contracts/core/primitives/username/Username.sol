@@ -74,6 +74,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata unassigningProcessingParams,
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams
     ) external {
@@ -84,7 +85,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         Core._createUsername(username);
         address source = _processSourceStamp(id, customParams);
         emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source);
-        _unassignIfAssigned(account, source);
+        _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
         Core._assignUsername(account, username);
         emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
         _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
@@ -107,41 +108,54 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source);
     }
 
-    function removeUsername(string calldata username, KeyValue[] calldata customParams) external override {
+    function removeUsername(
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata unassigningRuleProcessingParams,
+        RuleProcessingParams[] calldata removalRuleProcessingParams
+    ) external override {
         uint256 id = _computeId(username);
         address owner = _ownerOf(id);
         require(msg.sender == owner); // msg.sender must be the owner of the username
+        _processRemoval(msg.sender, username, customParams, removalRuleProcessingParams);
         address source = _processSourceStamp(id, customParams);
-        _unassignIfAssigned(username, source);
+        _unassignIfAssigned(username, customParams, unassigningRuleProcessingParams, source);
         _burn(id);
         Core._removeUsername(username);
-        emit Lens_Username_Removed(username, owner, source);
+        emit Lens_Username_Removed(username, owner, customParams, removalRuleProcessingParams, source);
     }
 
     function assignUsername(
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
+        RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
+        RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external override {
         require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);
         require(account == _ownerOf(id)); // account should own the tokenized username
         address source = _processSourceStamp(id, customParams);
-        _unassignIfAssigned(account, source);
-        _unassignIfAssigned(username, source);
+        _unassignIfAssigned(account, customParams, unassignAccountRuleProcessingParams, source);
+        _unassignIfAssigned(username, customParams, unassignUsernameRuleProcessingParams, source);
         Core._assignUsername(account, username);
-        _processAssigning(msg.sender, account, username, customParams, ruleProcessingParams);
-        emit Lens_Username_Assigned(username, account, customParams, ruleProcessingParams, source);
+        _processAssigning(msg.sender, account, username, customParams, assignRuleProcessingParams);
+        emit Lens_Username_Assigned(username, account, customParams, assignRuleProcessingParams, source);
     }
 
-    function unassignUsername(string calldata username, KeyValue[] calldata customParams) external override {
+    function unassignUsername(
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) external override {
         address account = Core.$storage().usernameToAccount[username];
         uint256 id = _computeId(username);
         require(msg.sender == account || msg.sender == _ownerOf(id));
         Core._unassignUsername(username);
+        _processUnassigning(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
-        emit Lens_Username_Unassigned(username, account, source);
+        emit Lens_Username_Unassigned(username, account, customParams, ruleProcessingParams, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -175,19 +189,31 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         return uint256(keccak256(bytes(username)));
     }
 
-    function _unassignIfAssigned(string memory username, address source) internal virtual {
+    function _unassignIfAssigned(
+        string memory username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        address source
+    ) internal virtual {
         address assignedAccount = Core.$storage().usernameToAccount[username];
         if (assignedAccount != address(0)) {
             Core._unassignUsername(username);
-            emit Lens_Username_Unassigned(username, assignedAccount, source);
+            _processUnassigning(msg.sender, assignedAccount, username, customParams, ruleProcessingParams);
+            emit Lens_Username_Unassigned(username, assignedAccount, customParams, ruleProcessingParams, source);
         }
     }
 
-    function _unassignIfAssigned(address account, address source) internal virtual {
+    function _unassignIfAssigned(
+        address account,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        address source
+    ) internal virtual {
         string memory assignedUsername = Core.$storage().accountToUsername[account];
         if (bytes(assignedUsername).length != 0) {
             Core._unassignUsername(assignedUsername);
-            emit Lens_Username_Unassigned(assignedUsername, account, source);
+            _processUnassigning(msg.sender, account, assignedUsername, customParams, ruleProcessingParams);
+            emit Lens_Username_Unassigned(assignedUsername, account, customParams, ruleProcessingParams, source);
         }
     }
 

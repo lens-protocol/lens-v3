@@ -108,7 +108,7 @@ abstract contract RuleBasedUsername is IUsername {
         bytes32 configSalt,
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
@@ -123,7 +123,7 @@ abstract contract RuleBasedUsername is IUsername {
     function _processCreation(
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
@@ -138,12 +138,46 @@ abstract contract RuleBasedUsername is IUsername {
         );
     }
 
+    function _encodeAndCallProcessRemoval(
+        address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IUsernameRule.processRemoval,
+                (configSalt, originalMsgSender, username, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processRemoval(
+        address originalMsgSender,
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        _processUsernameRule(
+            _encodeAndCallProcessRemoval,
+            IUsernameRule.processRemoval.selector,
+            originalMsgSender,
+            address(0),
+            username,
+            primitiveCustomParams,
+            rulesProcessingParams
+        );
+    }
+
     function _encodeAndCallProcessAssigning(
         address rule,
         bytes32 configSalt,
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
@@ -158,7 +192,7 @@ abstract contract RuleBasedUsername is IUsername {
     function _processAssigning(
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
@@ -173,13 +207,48 @@ abstract contract RuleBasedUsername is IUsername {
         );
     }
 
+    function _encodeAndCallProcessUnassigning(
+        address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IUsernameRule.processUnassigning,
+                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processUnassigning(
+        address originalMsgSender,
+        address account,
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        _processUsernameRule(
+            _encodeAndCallProcessUnassigning,
+            IUsernameRule.processUnassigning.selector,
+            originalMsgSender,
+            account,
+            username,
+            primitiveCustomParams,
+            rulesProcessingParams
+        );
+    }
+
     function _processUsernameRule(
-        function(address,bytes32,address,address,string calldata,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
+        function(address,bytes32,address,address,string memory,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
             encodeAndCall,
         bytes4 ruleSelector,
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) private {

@@ -415,6 +415,57 @@ abstract contract RuleBasedFeed is IFeed {
         require(_rulesStorage.anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
     }
 
+    function _processPostRemoval(
+        uint256 postId,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        bytes4 ruleSelector = IFeedRule.processRemovePost.selector;
+        // Check required rules (AND-combined rules)
+        for (uint256 i = 0; i < $feedRulesStorage().requiredRules[ruleSelector].length; i++) {
+            Rule memory rule = $feedRulesStorage().requiredRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = rule.addr.call(
+                    abi.encodeCall(
+                        IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
+                    )
+                );
+                require(callNotReverted, "Some required rule failed");
+            }
+        }
+        // Check any-of rules (OR-combined rules)
+        for (uint256 i = 0; i < $feedRulesStorage().anyOfRules[ruleSelector].length; i++) {
+            Rule memory rule = $feedRulesStorage().anyOfRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted, bytes memory returnData) = rule.addr.call(
+                    abi.encodeCall(
+                        IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
+                    )
+                );
+                if (callNotReverted && abi.decode(returnData, (bool))) {
+                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
+            }
+        }
+        // If there are any-of rules and it reached this point, it means all of them failed.
+        require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+    }
+
     function _processPostRulesChanges(
         uint256 postId,
         RuleChange[] memory ruleChanges,

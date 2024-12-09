@@ -24,6 +24,13 @@ interface IFeedRule {
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
+    function processRemovePost(
+        bytes32 configSalt,
+        uint256 postId,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
+
     function processPostRuleChanges(
         bytes32 configSalt,
         uint256 postId,
