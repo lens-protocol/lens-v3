@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import {UsernameCore as Core} from "./UsernameCore.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {
-    KeyValue, RuleProcessingParams, RuleOperation, RuleChange, RuleConfigurationParams
-} from "./../../types/Types.sol";
+import {KeyValue, RuleProcessingParams, RuleChange} from "./../../types/Types.sol";
 import {RuleBasedUsername} from "./RuleBasedUsername.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
