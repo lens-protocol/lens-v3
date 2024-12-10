@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {Username} from "./../../core/primitives/username/Username.sol";
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
-import {RuleChange, DataElement} from "./../../core/types/Types.sol";
+import {RuleChange, KeyValue} from "./../../core/types/Types.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
 
 contract UsernameFactory {
@@ -22,7 +22,7 @@ contract UsernameFactory {
         string memory metadataURI,
         IAccessControl accessControl,
         RuleChange[] calldata rules,
-        DataElement[] calldata extraData,
+        KeyValue[] calldata extraData,
         string memory nftName,
         string memory nftSymbol,
         ITokenURIProvider tokenURIProvider
