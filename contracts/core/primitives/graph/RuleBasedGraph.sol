@@ -9,6 +9,7 @@ import {
     RuleChange,
     RuleProcessingParams,
     RuleConfigurationParams,
+    RuleConfigurationParams_Multiselector,
     Rule,
     RuleOperation,
     KeyValue
@@ -43,28 +44,38 @@ abstract contract RuleBasedGraph is IGraph {
     function changeGraphRules(RuleChange[] calldata ruleChanges) external override {
         _beforeChangeGraphRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addGraphRule(ruleConfig);
-                emit Lens_Graph_RuleAdded(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateGraphRule(ruleConfig);
-                emit Lens_Graph_RuleUpdated(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeGraphRule(ruleConfig);
-                emit Lens_Graph_RuleRemoved(ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector);
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addGraphRule(ruleConfig);
+                    emit Lens_Graph_RuleAdded(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateGraphRule(ruleConfig);
+                    emit Lens_Graph_RuleUpdated(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeGraphRule(ruleConfig);
+                    emit Lens_Graph_RuleRemoved(ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector);
+                }
             }
         }
         require(
@@ -86,32 +97,42 @@ abstract contract RuleBasedGraph is IGraph {
         // require(msg.sender == account || _hasAccess(SKIP_FOLLOW_RULES_CHECKS_PID));
         require(msg.sender == account);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addFollowRule(account, ruleConfig);
-                emit Lens_Graph_Follow_RuleAdded(
-                    account,
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateFollowRule(account, ruleConfig);
-                emit Lens_Graph_Follow_RuleUpdated(
-                    account,
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeFollowRule(account, ruleConfig);
-                emit Lens_Graph_Follow_RuleRemoved(
-                    account, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                );
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addFollowRule(account, ruleConfig);
+                    emit Lens_Graph_Follow_RuleAdded(
+                        account,
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateFollowRule(account, ruleConfig);
+                    emit Lens_Graph_Follow_RuleUpdated(
+                        account,
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeFollowRule(account, ruleConfig);
+                    emit Lens_Graph_Follow_RuleRemoved(
+                        account, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                    );
+                }
             }
         }
 

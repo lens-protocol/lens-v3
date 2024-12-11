@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import {IGroup} from "./../../interfaces/IGroup.sol";
 import {GroupCore as Core} from "./GroupCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {
-    RuleConfigurationParams, RuleOperation, RuleChange, RuleProcessingParams, KeyValue
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {RuleBasedGroup} from "./RuleBasedGroup.sol";
 import {AccessControlled} from "./../../access//AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
