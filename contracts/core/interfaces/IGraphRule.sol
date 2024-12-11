@@ -16,6 +16,15 @@ interface IGraphRule {
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
+    function processUnfollow(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
+
     function processFollowRuleChanges(
         bytes32 configSalt,
         address account,

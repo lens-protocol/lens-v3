@@ -16,13 +16,13 @@ interface IUsernameRule {
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
-    // function processRemoval(
-    //     bytes32 configSalt,
-    //     address originalMsgSender,
-    //     string calldata username,
-    //     KeyValue[] calldata primitiveCustomParams,
-    //     KeyValue[] calldata ruleExecutionParams
-    // ) external returns (bool);
+    function processRemoval(
+        bytes32 configSalt,
+        address originalMsgSender,
+        string calldata username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
 
     function processAssigning(
         bytes32 configSalt,
@@ -33,12 +33,12 @@ interface IUsernameRule {
         KeyValue[] calldata ruleExecutionParams
     ) external returns (bool);
 
-    // function processUnassigning(
-    //     bytes32 configSalt,
-    //     address originalMsgSender,
-    //     address account,
-    //     string calldata username,
-    //     KeyValue[] calldata primitiveCustomParams,
-    //     KeyValue[] calldata ruleExecutionParams
-    // ) external returns (bool);
+    function processUnassigning(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        string calldata username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] calldata ruleExecutionParams
+    ) external returns (bool);
 }

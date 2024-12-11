@@ -19,12 +19,20 @@ struct RuleProcessingParams {
 }
 
 struct RuleChange {
-    RuleConfigurationParams configuration;
+    RuleConfigurationParams_Multiselector configuration;
     RuleOperation operation;
 }
 
 struct RuleConfigurationParams {
     bytes4 ruleSelector;
+    address ruleAddress;
+    bool isRequired;
+    bytes32 configSalt;
+    KeyValue[] customParams;
+}
+
+struct RuleConfigurationParams_Multiselector {
+    bytes4[] ruleSelectors;
     address ruleAddress;
     bool isRequired;
     bytes32 configSalt;
