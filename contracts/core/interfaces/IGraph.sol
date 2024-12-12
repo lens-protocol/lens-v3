@@ -113,6 +113,8 @@ interface IGraph is IMetadataBased {
 
     function getFollowersCount(address account) external view returns (uint256);
 
+    function getFollowingCount(address account) external view returns (uint256);
+
     function getGraphRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
     function getFollowRules(
