@@ -17,8 +17,8 @@ contract CharsetUsernameRule is IUsernameRule {
     // uint256(keccak256("SKIP_CHARSET"))
     uint256 immutable SKIP_CHARSET_PID = uint256(0xdcdf9b745e3f53451b2b79d265c8b66498f6483b3ef60fb5eb21c88e5f071211);
 
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x2222c6c0b49dcb35e5dd29d0bf1655ccbfd7ef7cd81f43a18768802d640c91b4;
+    // keccak256("lens.param.key.accessControl");
+    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
     // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowNumeric");
     bytes32 immutable ALLOW_NUMERIC_PARAM_KEY = 0x99d79d7e6786d3f6700df19cf91a74d5ed8a7432315a6bd2c8e4b2f31d3ac48a;
     // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowLatinLowercase");
@@ -50,7 +50,7 @@ contract CharsetUsernameRule is IUsernameRule {
         CharsetRestrictions charsetRestrictions;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_CHARSET_PID, "SKIP_CHARSET");
@@ -64,7 +64,7 @@ contract CharsetUsernameRule is IUsernameRule {
         require(ruleSelector == this.processCreation.selector);
         Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
         configuration.accessControl.verifyHasAccessFunction();
-        _configuration[msg.sender][salt] = configuration;
+        _configuration[msg.sender][ruleSelector][salt] = configuration;
     }
 
     function processCreation(
@@ -75,7 +75,7 @@ contract CharsetUsernameRule is IUsernameRule {
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external view override returns (bool) {
-        Configuration memory configuration = _configuration[msg.sender][configSalt];
+        Configuration memory configuration = _configuration[msg.sender][this.processCreation.selector][configSalt];
         if (!configuration.accessControl.hasAccess(originalMsgSender, SKIP_CHARSET_PID)) {
             _processRestrictions(username, configuration.charsetRestrictions);
         }

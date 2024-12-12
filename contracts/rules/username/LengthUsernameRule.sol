@@ -15,8 +15,8 @@ contract LengthUsernameRule is IUsernameRule {
     uint256 constant SKIP_MIN_LENGTH_PID = uint256(keccak256("SKIP_MIN_LENGTH"));
     uint256 constant SKIP_MAX_LENGTH_PID = uint256(keccak256("SKIP_MAX_LENGTH"));
 
-    // keccak256("lens.rules.username.LengthUsernameRule.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0xcb74f3bf68b3b8b4e8d9acc2031cb2cea7104460cf027809e2d557241970cf2f;
+    // keccak256("lens.param.key.accessControl");
+    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
     // keccak256("lens.rules.username.LengthUsernameRule.param.key.LengthRestrictions.min");
     bytes32 immutable MIN_LENGTH_PARAM_KEY = 0x422f1cf00b1079acacf4b218aeed45c02143aca53f622b7ab03d6960ab052fc3;
     // keccak256("lens.rules.username.LengthUsernameRule.param.key.LengthRestrictions.max");
@@ -32,7 +32,7 @@ contract LengthUsernameRule is IUsernameRule {
         LengthRestrictions lengthRestrictions;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_MIN_LENGTH_PID, "SKIP_MIN_LENGTH");
@@ -51,7 +51,7 @@ contract LengthUsernameRule is IUsernameRule {
             configuration.lengthRestrictions.max == 0
                 || configuration.lengthRestrictions.min <= configuration.lengthRestrictions.max
         ); // Min length cannot be greater than max length
-        _configuration[msg.sender][salt] = configuration;
+        _configuration[msg.sender][ruleSelector][salt] = configuration;
     }
 
     function processCreation(
@@ -62,7 +62,7 @@ contract LengthUsernameRule is IUsernameRule {
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external view override returns (bool) {
-        Configuration memory configuration = _configuration[msg.sender][configSalt];
+        Configuration memory configuration = _configuration[msg.sender][this.processCreation.selector][configSalt];
         uint256 usernameLength = bytes(username).length;
         if (
             configuration.lengthRestrictions.min != 0
