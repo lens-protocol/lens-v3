@@ -20,7 +20,7 @@ interface IPostRule {
         CreatePostParams calldata postParams,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 
     function processEditPost(
         bytes32 configSalt,
@@ -29,5 +29,5 @@ interface IPostRule {
         EditPostParams calldata postParams,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 }

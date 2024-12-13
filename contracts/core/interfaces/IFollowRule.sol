@@ -19,5 +19,5 @@ interface IFollowRule {
         address accountToFollow,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 }

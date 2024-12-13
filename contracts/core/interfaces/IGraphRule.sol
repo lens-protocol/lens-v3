@@ -14,7 +14,7 @@ interface IGraphRule {
         address accountToFollow,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 
     function processUnfollow(
         bytes32 configSalt,
@@ -23,12 +23,12 @@ interface IGraphRule {
         address accountToUnfollow,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 
     function processFollowRuleChanges(
         bytes32 configSalt,
         address account,
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 }
