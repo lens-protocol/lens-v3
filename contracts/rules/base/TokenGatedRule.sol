@@ -16,6 +16,9 @@ abstract contract TokenGatedRule {
     uint256 internal constant ERC721 = 721;
     uint256 internal constant ERC1155 = 1155;
 
+    // keccak256("lens.rules.TokenGatedRule.param.key.tokenGate");
+    bytes32 internal immutable TOKEN_GATE_PARAM_KEY = 0x5b35354681265fb29cacc9eee788924889b95a232ef90388f970779780c3ce3b;
+
     struct TokenGateConfiguration {
         uint256 tokenStandard;
         address token;
