@@ -40,12 +40,19 @@ abstract contract TokenGatedRule {
     }
 
     function _validateTokenBalance(TokenGateConfiguration memory configuration, address owner) internal view {
+        require(_checkTokenBalance(configuration, owner), "Errors.InsufficientTokenBalance()");
+    }
+
+    function _checkTokenBalance(
+        TokenGateConfiguration memory configuration,
+        address owner
+    ) internal view returns (bool) {
         uint256 balance;
         if (configuration.tokenStandard == ERC20 || configuration.tokenStandard == ERC721) {
             balance = IToken(configuration.token).balanceOf(owner);
         } else {
             balance = IERC1155(configuration.token).balanceOf(owner, configuration.typeId);
         }
-        require(balance >= configuration.amount, "Errors.InsufficientTokenBalance()");
+        return balance >= configuration.amount;
     }
 }
