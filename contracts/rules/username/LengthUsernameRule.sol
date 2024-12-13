@@ -61,7 +61,7 @@ contract LengthUsernameRule is IUsernameRule {
         string calldata username,
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external view override returns (bool) {
+    ) external view override {
         Configuration memory configuration = _configuration[msg.sender][this.processCreation.selector][configSalt];
         uint256 usernameLength = bytes(username).length;
         if (
@@ -76,7 +76,6 @@ contract LengthUsernameRule is IUsernameRule {
         ) {
             require(usernameLength <= configuration.lengthRestrictions.max, "Username: too long");
         }
-        return true;
     }
 
     function processRemoval(
@@ -85,8 +84,8 @@ contract LengthUsernameRule is IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure override returns (bool) {
-        return false;
+    ) external pure override {
+        revert();
     }
 
     function processAssigning(
@@ -96,8 +95,8 @@ contract LengthUsernameRule is IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure override returns (bool) {
-        return false;
+    ) external pure override {
+        revert();
     }
 
     function processUnassigning(
@@ -107,8 +106,8 @@ contract LengthUsernameRule is IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure override returns (bool) {
-        return false;
+    ) external pure override {
+        revert();
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

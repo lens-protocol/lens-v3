@@ -74,12 +74,11 @@ contract CharsetUsernameRule is IUsernameRule {
         string calldata username,
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external view override returns (bool) {
+    ) external view override {
         Configuration memory configuration = _configuration[msg.sender][this.processCreation.selector][configSalt];
         if (!configuration.accessControl.hasAccess(originalMsgSender, SKIP_CHARSET_PID)) {
             _processRestrictions(username, configuration.charsetRestrictions);
         }
-        return true;
     }
 
     function processRemoval(
@@ -88,8 +87,8 @@ contract CharsetUsernameRule is IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure override returns (bool) {
-        return false;
+    ) external pure override {
+        revert();
     }
 
     function processAssigning(
@@ -99,8 +98,8 @@ contract CharsetUsernameRule is IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure override returns (bool) {
-        return false;
+    ) external pure override {
+        revert();
     }
 
     function processUnassigning(
@@ -110,8 +109,8 @@ contract CharsetUsernameRule is IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure override returns (bool) {
-        return false;
+    ) external pure override {
+        revert();
     }
 
     function _processRestrictions(

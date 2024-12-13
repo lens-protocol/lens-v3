@@ -44,8 +44,8 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool) {
-        return _processPayment(
+    ) external {
+        _processPayment(
             _configuration[msg.sender][this.processCreation.selector][configSalt].accessControl,
             _configuration[msg.sender][this.processCreation.selector][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleExecutionParams),
@@ -59,8 +59,8 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool) {
-        return _processPayment(
+    ) external {
+        _processPayment(
             _configuration[msg.sender][this.processRemoval.selector][configSalt].accessControl,
             _configuration[msg.sender][this.processRemoval.selector][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleExecutionParams),
@@ -75,8 +75,8 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool) {
-        return _processPayment(
+    ) external {
+        _processPayment(
             _configuration[msg.sender][this.processAssigning.selector][configSalt].accessControl,
             _configuration[msg.sender][this.processAssigning.selector][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleExecutionParams),
@@ -91,8 +91,8 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool) {
-        return _processPayment(
+    ) external {
+        _processPayment(
             _configuration[msg.sender][this.processUnassigning.selector][configSalt].accessControl,
             _configuration[msg.sender][this.processUnassigning.selector][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleExecutionParams),
@@ -105,11 +105,10 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         PaymentConfiguration memory paymentConfiguration,
         PaymentConfiguration memory expectedPaymentConfiguration,
         address payer
-    ) internal returns (bool) {
+    ) internal {
         if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
             _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
-        return true;
     }
 
     function _validateSelector(bytes4 ruleSelector) internal pure {
@@ -124,9 +123,24 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
+            } else if (params[i].key == PAYMENT_CONFIG_PARAM_KEY) {
+                configuration.paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
             }
         }
-        configuration.paymentConfiguration = _extractPaymentConfigurationFromParams(params);
         return configuration;
+    }
+
+    function _extractPaymentConfigurationFromParams(KeyValue[] calldata params)
+        internal
+        pure
+        returns (PaymentConfiguration memory)
+    {
+        PaymentConfiguration memory paymentConfiguration;
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == PAYMENT_CONFIG_PARAM_KEY) {
+                paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
+            }
+        }
+        return paymentConfiguration;
     }
 }
