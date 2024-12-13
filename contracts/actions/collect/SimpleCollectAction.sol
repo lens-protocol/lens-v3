@@ -55,7 +55,7 @@ contract SimpleCollectAction is ISimpleCollectAction {
      * @param recipient Recipient of collect fees.
      */
     struct CollectActionConfigureParams {
-        uint160 amount; ///////////// (Optional) Default: 0
+        uint160 amount; ///////////// (Optional) Default: 0 // TODO: Should {amount,currency,recipient} be a struct?
         uint96 collectLimit; //////// (Optional) Default: 0
         address currency; /////////// (Optional, but required if amount > 0) Default: address(0)
         uint72 endTimestamp; //////// (Optional) Default: 0
