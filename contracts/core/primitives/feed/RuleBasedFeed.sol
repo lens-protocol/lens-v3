@@ -270,11 +270,10 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -425,11 +424,10 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -474,13 +472,12 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = rule.addr.call(
+                (bool callNotReverted,) = rule.addr.call(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -525,13 +522,12 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = rule.addr.call(
+                (bool callNotReverted,) = rule.addr.call(
                     abi.encodeCall(
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }

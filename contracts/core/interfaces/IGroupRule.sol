@@ -13,7 +13,7 @@ interface IGroupRule {
         address account,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 
     function processRemoval(
         bytes32 configSalt,
@@ -21,19 +21,19 @@ interface IGroupRule {
         address account,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 
     function processJoining(
         bytes32 configSalt,
         address account,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 
     function processLeaving(
         bytes32 configSalt,
         address account,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] calldata ruleExecutionParams
-    ) external returns (bool);
+    ) external;
 }

@@ -71,7 +71,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         if (postParams.quotedPostId != 0) {
             // TODO: Maybe quotes shouldn't be limited by rules... Just a brave thought. Like quotations in real life.
             uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
-            _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            if (rootOfQuotedPost != rootPostId) {
+                _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            }
         }
         if (postId != rootPostId) {
             require(postParams.rules.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");

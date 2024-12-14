@@ -228,13 +228,12 @@ abstract contract RuleBasedGraph is IGraph {
                 ) {
                     ruleCustomParams = graphRulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = rule.addr.call(
+                (bool callNotReverted,) = rule.addr.call(
                     abi.encodeCall(
                         IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -416,7 +415,7 @@ abstract contract RuleBasedGraph is IGraph {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr,
                     rule.configSalt,
                     originalMsgSender,
@@ -425,8 +424,7 @@ abstract contract RuleBasedGraph is IGraph {
                     primitiveCustomParams,
                     ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -480,7 +478,7 @@ abstract contract RuleBasedGraph is IGraph {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr,
                     rule.configSalt,
                     originalMsgSender,
@@ -489,8 +487,7 @@ abstract contract RuleBasedGraph is IGraph {
                     primitiveCustomParams,
                     ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }

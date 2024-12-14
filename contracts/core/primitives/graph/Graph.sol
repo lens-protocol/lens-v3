@@ -126,6 +126,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         return Core.$storage().followersCount[account];
     }
 
+    function getFollowingCount(address account) external view override returns (uint256) {
+        return Core.$storage().followingCount[account];
+    }
+
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
     }

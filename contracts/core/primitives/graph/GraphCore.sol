@@ -13,6 +13,7 @@ library GraphCore {
         mapping(address => mapping(address => Follow)) follows;
         mapping(address => mapping(uint256 => address)) followers;
         mapping(address => uint256) followersCount;
+        mapping(address => uint256) followingCount;
     }
 
     // keccak256('lens.graph.core.storage')
@@ -38,6 +39,7 @@ library GraphCore {
         $storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: block.timestamp});
         $storage().followers[accountToFollow][followId] = followerAccount;
         $storage().followersCount[accountToFollow]++;
+        $storage().followingCount[followerAccount]++;
         return followId;
     }
 
@@ -45,6 +47,7 @@ library GraphCore {
         uint256 followId = $storage().follows[followerAccount][accountToUnfollow].id;
         require(followId != 0); // Must be following
         $storage().followersCount[accountToUnfollow]--;
+        $storage().followingCount[followerAccount]--;
         delete $storage().followers[accountToUnfollow][followId];
         delete $storage().follows[followerAccount][accountToUnfollow];
         return followId;
