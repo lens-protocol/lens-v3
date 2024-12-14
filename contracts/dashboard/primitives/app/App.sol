@@ -70,7 +70,7 @@ contract App is IApp, BaseSource, AccessControlled {
 
     function _validateSource(SourceStamp calldata sourceStamp) internal virtual override {
         // If source stamp verification is disabled, we don't need to verify the source stamp
-        if (!Core.$storage().sourceStampVerificationEnabled) {
+        if (Core.$storage().sourceStampVerificationEnabled) {
             super._validateSource(sourceStamp);
         }
     }
