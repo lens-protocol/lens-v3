@@ -8,6 +8,7 @@ struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;
     mapping(bytes4 => Rule[]) anyOfRules;
     mapping(bytes4 => mapping(address => mapping(bytes32 => RuleState))) ruleStates;
+    uint256 lastConfigSaltGenerated;
 }
 
 struct RuleState {
@@ -17,6 +18,18 @@ struct RuleState {
 }
 
 library RulesLib {
+    function generateOrValidateConfigSalt(
+        RulesStorage storage ruleStorage,
+        bytes32 providedConfigSalt
+    ) internal returns (bytes32) {
+        if (uint256(providedConfigSalt) == 0) {
+            return bytes32(++ruleStorage.lastConfigSaltGenerated);
+        } else {
+            require(uint256(providedConfigSalt) <= ruleStorage.lastConfigSaltGenerated);
+            return providedConfigSalt;
+        }
+    }
+
     function addRule(
         RulesStorage storage ruleStorage,
         RuleConfigurationParams memory ruleConfig,

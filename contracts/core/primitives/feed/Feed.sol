@@ -80,33 +80,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
             // This covers the Reply or Repost cases
             _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         } else {
-            RuleChange[] memory ruleChanges = new RuleChange[](postParams.rules.length);
-            // We can only add rules to the post on creation, or by calling dedicated functions after (not on editPost)
-            for (uint256 i = 0; i < postParams.rules.length; i++) {
-                RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = postParams.rules[i];
-                for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
-                    RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
-                        ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
-                        ruleAddress: ruleConfig_Multiselector.ruleAddress,
-                        isRequired: ruleConfig_Multiselector.isRequired,
-                        configSalt: ruleConfig_Multiselector.configSalt,
-                        customParams: ruleConfig_Multiselector.customParams
-                    });
-
-                    _addPostRule(postId, ruleConfig);
-                    emit Lens_Feed_RuleAdded(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                }
-                ruleChanges[i] = RuleChange({operation: RuleOperation.ADD, configuration: ruleConfig_Multiselector});
-            }
-            // Check if Feed rules allows the given Post's rule configuration
-            _processPostRulesChanges(postId, ruleChanges, feedRulesParams);
-            // TODO: We don't check for the number of ANY-OF rules here to be non-eq to 1
+            _addPostRulesAtCreation(postId, postParams, feedRulesParams);
         }
         emit Lens_Feed_PostCreated(
             postId,

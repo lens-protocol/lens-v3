@@ -42,6 +42,8 @@ abstract contract RuleBasedUsername is IUsername {
         _beforeChangeUsernameRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
             RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            ruleConfig_Multiselector.configSalt =
+                $usernameRulesStorage().generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
             for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
                 RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
                     ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],

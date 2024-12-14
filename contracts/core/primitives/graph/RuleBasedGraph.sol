@@ -45,6 +45,8 @@ abstract contract RuleBasedGraph is IGraph {
         _beforeChangeGraphRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
             RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            ruleConfig_Multiselector.configSalt =
+                $graphRulesStorage().generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
             for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
                 RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
                     ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
@@ -53,7 +55,6 @@ abstract contract RuleBasedGraph is IGraph {
                     configSalt: ruleConfig_Multiselector.configSalt,
                     customParams: ruleConfig_Multiselector.customParams
                 });
-
                 if (ruleChanges[i].operation == RuleOperation.ADD) {
                     _addGraphRule(ruleConfig);
                     emit Lens_Graph_RuleAdded(
@@ -98,6 +99,8 @@ abstract contract RuleBasedGraph is IGraph {
         require(msg.sender == account);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
             RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            ruleConfig_Multiselector.configSalt =
+                $followRulesStorage(account).generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
             for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
                 RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
                     ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
@@ -106,7 +109,6 @@ abstract contract RuleBasedGraph is IGraph {
                     configSalt: ruleConfig_Multiselector.configSalt,
                     customParams: ruleConfig_Multiselector.customParams
                 });
-
                 if (ruleChanges[i].operation == RuleOperation.ADD) {
                     _addFollowRule(account, ruleConfig);
                     emit Lens_Graph_Follow_RuleAdded(
