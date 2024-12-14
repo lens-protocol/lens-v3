@@ -94,10 +94,16 @@ contract LensFactory {
         RuleProcessingParams[] calldata createUsernameRuleProcessingParams,
         KeyValue[] calldata assignUsernameCustomParams,
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
-        RuleProcessingParams[] calldata assignRuleProcessingParams
+        RuleProcessingParams[] calldata assignRuleProcessingParams,
+        KeyValue[] calldata accountExtraData
     ) external returns (address) {
         address account = ACCOUNT_FACTORY.deployAccount(
-            address(this), metadataURI, accountManagers, accountManagersPermissions, accountCreationSourceStamp
+            address(this),
+            metadataURI,
+            accountManagers,
+            accountManagersPermissions,
+            accountCreationSourceStamp,
+            accountExtraData
         );
         IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
         bytes memory txData = abi.encodeCall(
@@ -126,10 +132,12 @@ contract LensFactory {
         address owner,
         address[] calldata accountManagers,
         AccountManagerPermissions[] calldata accountManagersPermissions,
-        SourceStamp calldata sourceStamp
+        SourceStamp calldata sourceStamp,
+        KeyValue[] calldata extraData
     ) external returns (address) {
-        return
-            ACCOUNT_FACTORY.deployAccount(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp);
+        return ACCOUNT_FACTORY.deployAccount(
+            owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData
+        );
     }
 
     function deployApp(
