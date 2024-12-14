@@ -9,8 +9,8 @@ import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
 import {
     RuleChange,
-    RuleExecutionData,
-    RuleConfiguration,
+    RuleProcessingParams,
+    RuleConfigurationParams_Multiselector,
     RuleOperation,
     KeyValue,
     SourceStamp
@@ -26,6 +26,8 @@ import {IAccount, AccountManagerPermissions} from "./../account/IAccount.sol";
 import {IUsername} from "./../../core/interfaces/IUsername.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "./../../core/primitives/username/LensUsernameTokenURIProvider.sol";
+import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
+import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
@@ -87,22 +89,32 @@ contract LensFactory {
         AccountManagerPermissions[] calldata accountManagersPermissions,
         address usernamePrimitiveAddress,
         string calldata username,
-        RuleExecutionData calldata createUsernameData,
-        RuleExecutionData calldata assignUsernameData,
         SourceStamp calldata accountCreationSourceStamp,
-        SourceStamp calldata createUsernameSourceStamp,
-        SourceStamp calldata assignUsernameSourceStamp
+        KeyValue[] calldata createUsernameCustomParams,
+        RuleProcessingParams[] calldata createUsernameRuleProcessingParams,
+        KeyValue[] calldata assignUsernameCustomParams,
+        RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
+        RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external returns (address) {
         address account = ACCOUNT_FACTORY.deployAccount(
             address(this), metadataURI, accountManagers, accountManagersPermissions, accountCreationSourceStamp
         );
         IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
         bytes memory txData = abi.encodeCall(
-            usernamePrimitive.createUsername, (account, username, createUsernameData, createUsernameSourceStamp)
+            usernamePrimitive.createUsername,
+            (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams)
         );
         IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
         txData = abi.encodeCall(
-            usernamePrimitive.assignUsername, (account, username, assignUsernameData, assignUsernameSourceStamp)
+            usernamePrimitive.assignUsername,
+            (
+                account,
+                username,
+                assignUsernameCustomParams,
+                unassignAccountRuleProcessingParams,
+                new RuleProcessingParams[](0),
+                assignRuleProcessingParams
+            )
         );
         IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(owner);
@@ -154,15 +166,26 @@ contract LensFactory {
         RuleChange[] calldata rules,
         KeyValue[] calldata extraData
     ) external returns (address) {
+        bytes4[] memory ruleSelectors = new bytes4[](1);
+        ruleSelectors[0] = IFeedRule.processCreatePost.selector;
         return FEED_FACTORY.deployFeed(
-            metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules), extraData
+            metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules, ruleSelectors), extraData
         );
     }
 
-    function _prependUserBlocking(RuleChange[] calldata rules) internal view returns (RuleChange[] memory) {
+    function _prependUserBlocking(
+        RuleChange[] calldata rules,
+        bytes4[] memory ruleSelectors
+    ) internal view returns (RuleChange[] memory) {
         RuleChange[] memory rulesPrependedWithUserBlocking = new RuleChange[](rules.length + 1);
         rulesPrependedWithUserBlocking[0] = RuleChange({
-            configuration: RuleConfiguration({ruleAddress: _userBlockingRule, configData: "", isRequired: true}),
+            configuration: RuleConfigurationParams_Multiselector({
+                ruleSelectors: ruleSelectors,
+                ruleAddress: _userBlockingRule,
+                isRequired: true,
+                configSalt: bytes32(0),
+                customParams: new KeyValue[](0)
+            }),
             operation: RuleOperation.ADD
         });
         for (uint256 i = 0; i < rules.length; i++) {
@@ -178,8 +201,10 @@ contract LensFactory {
         RuleChange[] calldata rules,
         KeyValue[] calldata extraData
     ) external returns (address) {
+        bytes4[] memory ruleSelectors = new bytes4[](1);
+        ruleSelectors[0] = IGraphRule.processFollow.selector;
         return GRAPH_FACTORY.deployGraph(
-            metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules), extraData
+            metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules, ruleSelectors), extraData
         );
     }
 
