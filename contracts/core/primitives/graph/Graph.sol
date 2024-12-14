@@ -72,7 +72,8 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         address accountToFollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams,
-        RuleProcessingParams[] calldata followRulesProcessingParams
+        RuleProcessingParams[] calldata followRulesProcessingParams,
+        KeyValue[] calldata extraData
     ) external override returns (uint256) {
         require(msg.sender == followerAccount);
         // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
@@ -87,7 +88,8 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
             customParams,
             graphRulesProcessingParams,
             followRulesProcessingParams,
-            source
+            source,
+            extraData
         );
         return assignedFollowId;
     }
