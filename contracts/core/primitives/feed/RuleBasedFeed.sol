@@ -11,6 +11,7 @@ import {
     RuleChange,
     RuleProcessingParams,
     RuleConfigurationParams,
+    RuleConfigurationParams_Multiselector,
     Rule,
     RuleOperation,
     KeyValue
@@ -47,28 +48,40 @@ abstract contract RuleBasedFeed is IFeed {
     function changeFeedRules(RuleChange[] calldata ruleChanges) external override {
         _beforeChangeFeedRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addFeedRule(ruleConfig);
-                emit IFeed.Lens_Feed_RuleAdded(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateFeedRule(ruleConfig);
-                emit IFeed.Lens_Feed_RuleUpdated(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeFeedRule(ruleConfig);
-                emit IFeed.Lens_Feed_RuleRemoved(ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector);
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addFeedRule(ruleConfig);
+                    emit IFeed.Lens_Feed_RuleAdded(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateFeedRule(ruleConfig);
+                    emit IFeed.Lens_Feed_RuleUpdated(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeFeedRule(ruleConfig);
+                    emit IFeed.Lens_Feed_RuleRemoved(
+                        ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                    );
+                }
             }
         }
         require(
@@ -95,34 +108,44 @@ abstract contract RuleBasedFeed is IFeed {
         require(msg.sender == author, "MSG_SENDER_NOT_AUTHOR");
         require(Core.$storage().posts[postId].rootPostId == postId, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addFeedRule(ruleConfig);
-                emit IFeed.Lens_Feed_Post_RuleAdded(
-                    postId,
-                    author,
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateFeedRule(ruleConfig);
-                emit IFeed.Lens_Feed_Post_RuleUpdated(
-                    postId,
-                    author,
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeFeedRule(ruleConfig);
-                emit IFeed.Lens_Feed_Post_RuleRemoved(
-                    postId, author, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                );
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addFeedRule(ruleConfig);
+                    emit IFeed.Lens_Feed_Post_RuleAdded(
+                        postId,
+                        author,
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateFeedRule(ruleConfig);
+                    emit IFeed.Lens_Feed_Post_RuleUpdated(
+                        postId,
+                        author,
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeFeedRule(ruleConfig);
+                    emit IFeed.Lens_Feed_Post_RuleRemoved(
+                        postId, author, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                    );
+                }
             }
         }
         require(
@@ -247,11 +270,10 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -402,17 +424,66 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
         require(_rulesStorage.anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+    }
+
+    function _processPostRemoval(
+        uint256 postId,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        bytes4 ruleSelector = IFeedRule.processRemovePost.selector;
+        // Check required rules (AND-combined rules)
+        for (uint256 i = 0; i < $feedRulesStorage().requiredRules[ruleSelector].length; i++) {
+            Rule memory rule = $feedRulesStorage().requiredRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = rule.addr.call(
+                    abi.encodeCall(
+                        IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
+                    )
+                );
+                require(callNotReverted, "Some required rule failed");
+            }
+        }
+        // Check any-of rules (OR-combined rules)
+        for (uint256 i = 0; i < $feedRulesStorage().anyOfRules[ruleSelector].length; i++) {
+            Rule memory rule = $feedRulesStorage().anyOfRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = rule.addr.call(
+                    abi.encodeCall(
+                        IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
+                    )
+                );
+                if (callNotReverted) {
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
+            }
+        }
+        // If there are any-of rules and it reached this point, it means all of them failed.
+        require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
     }
 
     function _processPostRulesChanges(
@@ -451,13 +522,12 @@ abstract contract RuleBasedFeed is IFeed {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = rule.addr.call(
+                (bool callNotReverted,) = rule.addr.call(
                     abi.encodeCall(
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }

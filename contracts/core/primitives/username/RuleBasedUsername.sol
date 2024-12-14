@@ -10,6 +10,7 @@ import {
     RuleOperation,
     RuleProcessingParams,
     RuleConfigurationParams,
+    RuleConfigurationParams_Multiselector,
     KeyValue
 } from "./../../types/Types.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
@@ -40,30 +41,39 @@ abstract contract RuleBasedUsername is IUsername {
     function changeUsernameRules(RuleChange[] calldata ruleChanges) external virtual override {
         _beforeChangeUsernameRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addUsernameRule(ruleConfig);
-                emit IUsername.Lens_Username_RuleAdded(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateUsernameRule(ruleConfig);
-                emit IUsername.Lens_Username_RuleUpdated(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeUsernameRule(ruleConfig);
-                emit IUsername.Lens_Username_RuleRemoved(
-                    ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                );
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addUsernameRule(ruleConfig);
+                    emit IUsername.Lens_Username_RuleAdded(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateUsernameRule(ruleConfig);
+                    emit IUsername.Lens_Username_RuleUpdated(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeUsernameRule(ruleConfig);
+                    emit IUsername.Lens_Username_RuleRemoved(
+                        ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                    );
+                }
             }
         }
         require(
@@ -108,7 +118,7 @@ abstract contract RuleBasedUsername is IUsername {
         bytes32 configSalt,
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
@@ -123,7 +133,7 @@ abstract contract RuleBasedUsername is IUsername {
     function _processCreation(
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
@@ -138,12 +148,46 @@ abstract contract RuleBasedUsername is IUsername {
         );
     }
 
+    function _encodeAndCallProcessRemoval(
+        address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IUsernameRule.processRemoval,
+                (configSalt, originalMsgSender, username, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processRemoval(
+        address originalMsgSender,
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        _processUsernameRule(
+            _encodeAndCallProcessRemoval,
+            IUsernameRule.processRemoval.selector,
+            originalMsgSender,
+            address(0),
+            username,
+            primitiveCustomParams,
+            rulesProcessingParams
+        );
+    }
+
     function _encodeAndCallProcessAssigning(
         address rule,
         bytes32 configSalt,
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
@@ -158,7 +202,7 @@ abstract contract RuleBasedUsername is IUsername {
     function _processAssigning(
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
@@ -173,13 +217,48 @@ abstract contract RuleBasedUsername is IUsername {
         );
     }
 
+    function _encodeAndCallProcessUnassigning(
+        address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IUsernameRule.processUnassigning,
+                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+            )
+        );
+    }
+
+    function _processUnassigning(
+        address originalMsgSender,
+        address account,
+        string memory username,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        _processUsernameRule(
+            _encodeAndCallProcessUnassigning,
+            IUsernameRule.processUnassigning.selector,
+            originalMsgSender,
+            account,
+            username,
+            primitiveCustomParams,
+            rulesProcessingParams
+        );
+    }
+
     function _processUsernameRule(
-        function(address,bytes32,address,address,string calldata,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
+        function(address,bytes32,address,address,string memory,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
             encodeAndCall,
         bytes4 ruleSelector,
         address originalMsgSender,
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) private {
@@ -217,7 +296,7 @@ abstract contract RuleBasedUsername is IUsername {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr,
                     rule.configSalt,
                     originalMsgSender,
@@ -226,8 +305,7 @@ abstract contract RuleBasedUsername is IUsername {
                     primitiveCustomParams,
                     ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }

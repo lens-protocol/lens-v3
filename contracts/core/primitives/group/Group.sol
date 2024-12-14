@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import {IGroup} from "./../../interfaces/IGroup.sol";
 import {GroupCore as Core} from "./GroupCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {
-    RuleConfigurationParams, RuleOperation, RuleChange, RuleProcessingParams, KeyValue
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {RuleBasedGroup} from "./RuleBasedGroup.sol";
 import {AccessControlled} from "./../../access//AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
@@ -78,7 +76,7 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         uint256 membershipId = Core._grantMembership(account);
-        if (_amountOfRules(IGroupRule.processMemberAddition.selector) != 0) {
+        if (_amountOfRules(IGroupRule.processAddition.selector) != 0) {
             _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         } else {
             _requireAccess(msg.sender, ADD_MEMBER_PID);

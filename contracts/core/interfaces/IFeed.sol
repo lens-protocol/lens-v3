@@ -2,7 +2,13 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleConfigurationParams, Rule, RuleChange, RuleProcessingParams} from "./../types/Types.sol";
+import {
+    KeyValue,
+    RuleConfigurationParams_Multiselector,
+    Rule,
+    RuleChange,
+    RuleProcessingParams
+} from "./../types/Types.sol";
 import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
 
 struct EditPostParams {
@@ -16,7 +22,7 @@ struct CreatePostParams {
     uint256 repostedPostId;
     uint256 quotedPostId;
     uint256 repliedPostId;
-    RuleConfigurationParams[] rules;
+    RuleConfigurationParams_Multiselector[] rules;
     KeyValue[] extraData;
 }
 
@@ -44,8 +50,9 @@ interface IFeed is IMetadataBased {
         uint256 rootPostId,
         CreatePostParams postParams,
         KeyValue[] customParams,
-        RuleProcessingParams[] feedRulesData,
-        RuleProcessingParams[] postRulesData,
+        RuleProcessingParams[] feedRulesParams,
+        RuleProcessingParams[] rootPostRulesParams,
+        RuleProcessingParams[] quotedPostRulesParams,
         address indexed source
     );
 
@@ -54,12 +61,13 @@ interface IFeed is IMetadataBased {
         address indexed author,
         EditPostParams newPostParams,
         KeyValue[] customParams,
-        RuleProcessingParams[] feedRulesData,
-        RuleProcessingParams[] postRulesData,
+        RuleProcessingParams[] feedRulesParams,
+        RuleProcessingParams[] rootPostRulesParams,
+        RuleProcessingParams[] quotedPostRulesParams,
         address indexed source
     );
 
-    event Lens_Feed_PostDeleted(
+    event Lens_Feed_PostRemoved(
         uint256 indexed postId, address indexed author, KeyValue[] customParams, address indexed source
     );
 
@@ -125,7 +133,8 @@ interface IFeed is IMetadataBased {
         CreatePostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams
+        RuleProcessingParams[] calldata rootPostRulesParams,
+        RuleProcessingParams[] calldata quotedPostRulesParams
     ) external returns (uint256);
 
     function editPost(
@@ -133,16 +142,18 @@ interface IFeed is IMetadataBased {
         EditPostParams calldata postParams,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata postRulesParams
+        RuleProcessingParams[] calldata rootPostRulesParams,
+        RuleProcessingParams[] calldata quotedPostRulesParams
     ) external;
 
     // "Delete" - u know u cannot delete stuff from the internet, right? :]
     // But this will at least remove it from the current state, so contracts accessing it will know.
     // TODO: Debate post deletion, soft vs. hard delete, extra data deletion, etc.
-    function deletePost(
+    function removePost(
         uint256 postId,
-        bytes32[] calldata extraDataKeysToDelete,
-        KeyValue[] calldata customParams
+        bytes32[] calldata extraDataKeysToRemove,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams
     ) external;
 
     function changePostRules(

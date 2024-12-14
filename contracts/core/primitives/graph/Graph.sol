@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import {Follow, IGraph} from "./../../interfaces/IGraph.sol";
 import {GraphCore as Core} from "./GraphCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {
-    RuleConfigurationParams, RuleOperation, RuleChange, RuleProcessingParams, KeyValue
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {RuleBasedGraph} from "./RuleBasedGraph.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
@@ -103,6 +101,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         require(msg.sender == followerAccount);
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(followId, customParams);
+        _graphProcessUnfollow(msg.sender, followerAccount, accountToUnfollow, customParams, graphRulesProcessingParams);
         emit Lens_Graph_Unfollowed(
             followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, source
         );
@@ -125,6 +124,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     function getFollowersCount(address account) external view override returns (uint256) {
         return Core.$storage().followersCount[account];
+    }
+
+    function getFollowingCount(address account) external view override returns (uint256) {
+        return Core.$storage().followingCount[account];
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {

@@ -9,6 +9,7 @@ import {
     RuleChange,
     RuleProcessingParams,
     RuleConfigurationParams,
+    RuleConfigurationParams_Multiselector,
     Rule,
     RuleOperation,
     KeyValue
@@ -43,28 +44,38 @@ abstract contract RuleBasedGraph is IGraph {
     function changeGraphRules(RuleChange[] calldata ruleChanges) external override {
         _beforeChangeGraphRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addGraphRule(ruleConfig);
-                emit Lens_Graph_RuleAdded(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateGraphRule(ruleConfig);
-                emit Lens_Graph_RuleUpdated(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeGraphRule(ruleConfig);
-                emit Lens_Graph_RuleRemoved(ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector);
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addGraphRule(ruleConfig);
+                    emit Lens_Graph_RuleAdded(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateGraphRule(ruleConfig);
+                    emit Lens_Graph_RuleUpdated(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeGraphRule(ruleConfig);
+                    emit Lens_Graph_RuleRemoved(ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector);
+                }
             }
         }
         require(
@@ -86,32 +97,42 @@ abstract contract RuleBasedGraph is IGraph {
         // require(msg.sender == account || _hasAccess(SKIP_FOLLOW_RULES_CHECKS_PID));
         require(msg.sender == account);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addFollowRule(account, ruleConfig);
-                emit Lens_Graph_Follow_RuleAdded(
-                    account,
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateFollowRule(account, ruleConfig);
-                emit Lens_Graph_Follow_RuleUpdated(
-                    account,
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeFollowRule(account, ruleConfig);
-                emit Lens_Graph_Follow_RuleRemoved(
-                    account, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                );
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addFollowRule(account, ruleConfig);
+                    emit Lens_Graph_Follow_RuleAdded(
+                        account,
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateFollowRule(account, ruleConfig);
+                    emit Lens_Graph_Follow_RuleUpdated(
+                        account,
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeFollowRule(account, ruleConfig);
+                    emit Lens_Graph_Follow_RuleRemoved(
+                        account, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                    );
+                }
             }
         }
 
@@ -207,13 +228,12 @@ abstract contract RuleBasedGraph is IGraph {
                 ) {
                     ruleCustomParams = graphRulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = rule.addr.call(
+                (bool callNotReverted,) = rule.addr.call(
                     abi.encodeCall(
                         IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
@@ -265,6 +285,48 @@ abstract contract RuleBasedGraph is IGraph {
         );
     }
 
+    function _encodeAndCallGraphProcessUnfollow(
+        address rule,
+        bytes32 configSalt,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory ruleCustomParams
+    ) internal returns (bool, bytes memory) {
+        return rule.call(
+            abi.encodeCall(
+                IGraphRule.processUnfollow,
+                (
+                    configSalt,
+                    originalMsgSender,
+                    followerAccount,
+                    accountToUnfollow,
+                    primitiveCustomParams,
+                    ruleCustomParams
+                )
+            )
+        );
+    }
+
+    function _graphProcessUnfollow(
+        address originalMsgSender,
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) internal {
+        _processUnfollow(
+            $graphRulesStorage(),
+            _encodeAndCallGraphProcessUnfollow,
+            originalMsgSender,
+            followerAccount,
+            accountToUnfollow,
+            primitiveCustomParams,
+            ruleProcessingParams
+        );
+    }
+
     function _encodeAndCallAccountProcessFollow(
         address rule,
         bytes32 configSalt,
@@ -306,6 +368,69 @@ abstract contract RuleBasedGraph is IGraph {
             primitiveCustomParams,
             ruleProcessingParams
         );
+    }
+
+    function _processUnfollow(
+        RulesStorage storage rulesStorage,
+        function(address,bytes32,address,address,address,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
+            encodeAndCall,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata primitiveCustomParams,
+        RuleProcessingParams[] calldata rulesProcessingParams
+    ) internal {
+        bytes4 ruleSelector = IGraphRule.processUnfollow.selector;
+        // Check required rules (AND-combined rules)
+        for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
+            Rule memory rule = rulesStorage.requiredRules[ruleSelector][i];
+            // TODO: Think how to put this loop into a library (all the rules use it)
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = encodeAndCall(
+                    rule.addr,
+                    rule.configSalt,
+                    originalMsgSender,
+                    followerAccount,
+                    accountToUnfollow,
+                    primitiveCustomParams,
+                    ruleCustomParams
+                );
+                require(callNotReverted, "Some required rule failed");
+            }
+        }
+        for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
+            Rule memory rule = rulesStorage.anyOfRules[ruleSelector][i];
+            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                if (
+                    rulesProcessingParams[j].ruleAddress == rule.addr
+                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                ) {
+                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                }
+                (bool callNotReverted,) = encodeAndCall(
+                    rule.addr,
+                    rule.configSalt,
+                    originalMsgSender,
+                    followerAccount,
+                    accountToUnfollow,
+                    primitiveCustomParams,
+                    ruleCustomParams
+                );
+                if (callNotReverted) {
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
+            }
+        }
+        // If there are any-of rules and it reached this point, it means all of them failed.
+        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
     }
 
     function _processFollow(
@@ -353,7 +478,7 @@ abstract contract RuleBasedGraph is IGraph {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr,
                     rule.configSalt,
                     originalMsgSender,
@@ -362,8 +487,7 @@ abstract contract RuleBasedGraph is IGraph {
                     primitiveCustomParams,
                     ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }

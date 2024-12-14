@@ -9,6 +9,7 @@ import {
     RuleChange,
     RuleProcessingParams,
     RuleConfigurationParams,
+    RuleConfigurationParams_Multiselector,
     Rule,
     RuleOperation,
     KeyValue
@@ -39,46 +40,55 @@ abstract contract RuleBasedGroup is IGroup {
     function changeGroupRules(RuleChange[] calldata ruleChanges) external virtual override {
         _beforeChangeGroupRules(ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams memory ruleConfig = ruleChanges[i].configuration;
-            if (ruleChanges[i].operation == RuleOperation.ADD) {
-                _addGroupRule(ruleConfig);
-                emit IGroup.Lens_Group_RuleAdded(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                _updateGroupRule(ruleConfig);
-                emit IGroup.Lens_Group_RuleUpdated(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            } else {
-                _removeGroupRule(ruleConfig);
-                emit IGroup.Lens_Group_RuleRemoved(
-                    ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                );
+            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
+            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
+                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
+                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
+                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
+                    isRequired: ruleConfig_Multiselector.isRequired,
+                    configSalt: ruleConfig_Multiselector.configSalt,
+                    customParams: ruleConfig_Multiselector.customParams
+                });
+                if (ruleChanges[i].operation == RuleOperation.ADD) {
+                    _addGroupRule(ruleConfig);
+                    emit IGroup.Lens_Group_RuleAdded(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
+                    _updateGroupRule(ruleConfig);
+                    emit IGroup.Lens_Group_RuleUpdated(
+                        ruleConfig.ruleAddress,
+                        ruleConfig.configSalt,
+                        ruleConfig.ruleSelector,
+                        ruleConfig.customParams,
+                        ruleConfig.isRequired
+                    );
+                } else {
+                    _removeGroupRule(ruleConfig);
+                    emit IGroup.Lens_Group_RuleRemoved(
+                        ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
+                    );
+                }
             }
         }
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberAddition.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processAddition.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberRemoval.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processRemoval.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberJoining.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processJoining.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
         require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processMemberLeaving.selector].length != 1,
+            $groupRulesStorage().anyOfRules[IGroupRule.processLeaving.selector].length != 1,
             "Cannot have exactly one single any-of rule"
         );
     }
@@ -120,7 +130,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IGroupRule.processMemberRemoval,
+                IGroupRule.processRemoval,
                 (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -134,7 +144,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberRemoval,
-            IGroupRule.processMemberRemoval.selector,
+            IGroupRule.processRemoval.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -152,7 +162,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IGroupRule.processMemberAddition,
+                IGroupRule.processAddition,
                 (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -166,7 +176,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberAddition,
-            IGroupRule.processMemberAddition.selector,
+            IGroupRule.processAddition.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -183,9 +193,7 @@ abstract contract RuleBasedGroup is IGroup {
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
         return rule.call(
-            abi.encodeCall(
-                IGroupRule.processMemberJoining, (configSalt, account, primitiveCustomParams, ruleCustomParams)
-            )
+            abi.encodeCall(IGroupRule.processJoining, (configSalt, account, primitiveCustomParams, ruleCustomParams))
         );
     }
 
@@ -197,7 +205,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberJoining,
-            IGroupRule.processMemberJoining.selector,
+            IGroupRule.processJoining.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -214,9 +222,7 @@ abstract contract RuleBasedGroup is IGroup {
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
         return rule.call(
-            abi.encodeCall(
-                IGroupRule.processMemberLeaving, (configSalt, account, primitiveCustomParams, ruleCustomParams)
-            )
+            abi.encodeCall(IGroupRule.processLeaving, (configSalt, account, primitiveCustomParams, ruleCustomParams))
         );
     }
 
@@ -228,7 +234,7 @@ abstract contract RuleBasedGroup is IGroup {
     ) internal {
         _processGroupRule(
             _encodeAndCallProcessMemberLeaving,
-            IGroupRule.processMemberLeaving.selector,
+            IGroupRule.processLeaving.selector,
             originalMsgSender,
             account,
             primitiveCustomParams,
@@ -273,11 +279,10 @@ abstract contract RuleBasedGroup is IGroup {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].customParams;
                 }
-                (bool callNotReverted, bytes memory returnData) = encodeAndCall(
+                (bool callNotReverted,) = encodeAndCall(
                     rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams
                 );
-                if (callNotReverted && abi.decode(returnData, (bool))) {
-                    // Note: abi.decode would fail if call reverted, so don't put this out of the brackets!
+                if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
                 }
             }
