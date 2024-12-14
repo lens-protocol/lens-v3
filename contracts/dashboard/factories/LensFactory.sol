@@ -95,7 +95,8 @@ contract LensFactory {
         KeyValue[] calldata assignUsernameCustomParams,
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams,
-        KeyValue[] calldata accountExtraData
+        KeyValue[] calldata accountExtraData,
+        KeyValue[] calldata usernameExtraData
     ) external returns (address) {
         address account = ACCOUNT_FACTORY.deployAccount(
             address(this),
@@ -108,7 +109,7 @@ contract LensFactory {
         IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
         bytes memory txData = abi.encodeCall(
             usernamePrimitive.createUsername,
-            (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams)
+            (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams, usernameExtraData)
         );
         IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
         txData = abi.encodeCall(

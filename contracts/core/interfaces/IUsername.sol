@@ -29,7 +29,8 @@ interface IUsername is IMetadataBased {
         address indexed account,
         KeyValue[] customParams,
         RuleProcessingParams[] ruleProcessingParams,
-        address indexed source
+        address indexed source,
+        KeyValue[] extraData
     );
 
     event Lens_Username_Removed(
@@ -56,6 +57,9 @@ interface IUsername is IMetadataBased {
         address indexed source
     );
 
+    event Lens_Namespace_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+    event Lens_Namespace_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+    event Lens_Namespace_ExtraDataRemoved(bytes32 indexed key);
     event Lens_Username_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
@@ -70,7 +74,8 @@ interface IUsername is IMetadataBased {
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        KeyValue[] calldata extraData
     ) external;
 
     function removeUsername(
@@ -95,6 +100,8 @@ interface IUsername is IMetadataBased {
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
+    function setExtraData(string memory username, KeyValue[] calldata extraDataToSet) external;
+
     function usernameOf(address user) external view returns (string memory);
 
     function accountOf(string calldata name) external view returns (address);
@@ -104,4 +111,6 @@ interface IUsername is IMetadataBased {
     function getUsernameRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
+
+    function getExtraData(string calldata username, bytes32 key) external view returns (bytes memory);
 }
