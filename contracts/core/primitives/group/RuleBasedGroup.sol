@@ -36,14 +36,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         RuleConfigurationChange[] calldata configChanges,
         RuleSelectorChange[] calldata selectorChanges
     ) external virtual override {
-        _changePrimitiveRules(
-            $groupRulesStorage(),
-            configChanges,
-            selectorChanges,
-            _encodeConfigureCall,
-            _emitGroupRuleConfiguredEvent,
-            _emitGroupRuleSelectorEvent
-        );
+        _changePrimitiveRules($groupRulesStorage(), configChanges, selectorChanges);
     }
 
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
@@ -53,6 +46,40 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         selectors[2] = IGroupRule.processJoining.selector;
         selectors[3] = IGroupRule.processLeaving.selector;
         return selectors;
+    }
+
+    function _encodePrimitiveConfigureCall(
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal pure override returns (bytes memory) {
+        return abi.encodeCall(IGroupRule.configure, (configSalt, ruleParams));
+    }
+
+    function _emitPrimitiveRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal override {
+        if (wasAlreadyConfigured) {
+            emit IGroup.Lens_Group_RuleReconfigured(ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IGroup.Lens_Group_RuleConfigured(ruleAddress, configSalt, ruleParams);
+        }
+    }
+
+    function _emitPrimitiveRuleSelectorEvent(
+        bool enabled,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 ruleSelector
+    ) internal override {
+        if (enabled) {
+            emit Lens_Group_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        } else {
+            emit Lens_Group_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        }
     }
 
     function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
@@ -65,43 +92,6 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         bool isRequired
     ) external view virtual override returns (Rule[] memory) {
         return $groupRulesStorage()._getRulesArray(ruleSelector, isRequired);
-    }
-
-    function _encodeConfigureCall(
-        uint256, /* entityId */
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure returns (bytes memory) {
-        return abi.encodeCall(IGroupRule.configure, (configSalt, ruleParams));
-    }
-
-    function _emitGroupRuleConfiguredEvent(
-        bool wasAlreadyConfigured,
-        uint256, /* entityId */
-        address ruleAddress,
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal {
-        if (wasAlreadyConfigured) {
-            emit IGroup.Lens_Group_RuleReconfigured(ruleAddress, configSalt, ruleParams);
-        } else {
-            emit IGroup.Lens_Group_RuleConfigured(ruleAddress, configSalt, ruleParams);
-        }
-    }
-
-    function _emitGroupRuleSelectorEvent(
-        bool enabled,
-        uint256, /* entityId */
-        address ruleAddress,
-        bytes32 configSalt,
-        bool isRequired,
-        bytes4 ruleSelector
-    ) internal {
-        if (enabled) {
-            emit Lens_Group_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
-        } else {
-            emit Lens_Group_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
-        }
     }
 
     ////////////////////////////  PROCESSING FUNCTIONS  ////////////////////////////
