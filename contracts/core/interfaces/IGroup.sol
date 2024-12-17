@@ -2,27 +2,21 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
+import {KeyValue, RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IGroup is IMetadataBased {
-    event Lens_Group_RuleAdded(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Group_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Group_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Group_RuleSelectorEnabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
-    event Lens_Group_RuleUpdated(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Group_RuleSelectorDisabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
-
-    event Lens_Group_RuleRemoved(address indexed rule, bytes32 indexed configSalt, bytes4 indexed ruleSelector);
 
     event Lens_Group_MemberAdded(
         address indexed account,
@@ -88,7 +82,10 @@ interface IGroup is IMetadataBased {
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
-    function changeGroupRules(RuleChange[] calldata ruleChanges) external;
+    function changeGroupRules(
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges
+    ) external;
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 

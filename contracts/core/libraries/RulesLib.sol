@@ -2,134 +2,150 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleConfigurationParams, Rule} from "./../types/Types.sol";
+import {Rule, RuleSelectorChange} from "./../types/Types.sol";
 
 struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;
     mapping(bytes4 => Rule[]) anyOfRules;
     mapping(bytes4 => mapping(address => mapping(bytes32 => RuleState))) ruleStates;
+    mapping(address => mapping(bytes32 => bool)) isConfigured;
     uint256 lastConfigSaltGenerated;
 }
 
 struct RuleState {
     uint8 index;
     bool isRequired;
-    bool isSet;
+    bool isEnabled;
 }
 
 library RulesLib {
+    uint256 constant MAX_AMOUNT_OF_RULES = 20;
+
     function generateOrValidateConfigSalt(
-        RulesStorage storage ruleStorage,
+        RulesStorage storage rulesStorage,
+        address ruleAddress,
         bytes32 providedConfigSalt
     ) internal returns (bytes32) {
-        if (uint256(providedConfigSalt) == 0) {
-            return bytes32(++ruleStorage.lastConfigSaltGenerated);
+        if (providedConfigSalt == 0x00) {
+            return bytes32(++rulesStorage.lastConfigSaltGenerated); // TODO: We can choose another generation procedure
         } else {
-            require(uint256(providedConfigSalt) <= ruleStorage.lastConfigSaltGenerated);
+            require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt]);
             return providedConfigSalt;
         }
     }
 
-    function addRule(
-        RulesStorage storage ruleStorage,
-        RuleConfigurationParams memory ruleConfig,
+    function configureRule(
+        RulesStorage storage rulesStorage,
+        Rule memory rule,
         bytes memory encodedConfigureCall
-    ) internal {
-        require(
-            !_ruleAlreadySet(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt),
-            "AddRule: Same rule was already added"
-        );
-        _addRuleToStorage(
-            ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.isRequired
-        );
-        (bool success,) = ruleConfig.ruleAddress.call(encodedConfigureCall);
-        require(success, "AddRule: Rule configuration failed");
+    ) internal returns (bool) {
+        bool wasAlreadyConfigured = rulesStorage.isConfigured[rule.addr][rule.configSalt];
+        rulesStorage.isConfigured[rule.addr][rule.configSalt] = true;
+        (bool success,) = rule.addr.call(encodedConfigureCall);
+        require(success);
+        return wasAlreadyConfigured;
     }
 
-    function updateRule(
-        RulesStorage storage ruleStorage,
-        RuleConfigurationParams memory ruleConfig,
-        bytes memory encodedConfigureCall
+    function enableRuleSelector(
+        RulesStorage storage rulesStorage,
+        bool isRequired,
+        address ruleAddress,
+        bytes32 configSalt,
+        bytes4 ruleSelector
     ) internal {
-        require(
-            _ruleAlreadySet(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt),
-            "ConfigureRule: Rule doesn't exist"
-        );
-        if (
-            ruleStorage.ruleStates[ruleConfig.ruleSelector][ruleConfig.ruleAddress][ruleConfig.configSalt].isRequired
-                != ruleConfig.isRequired
-        ) {
-            _removeRuleFromStorage(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt);
-            _addRuleToStorage(
-                ruleStorage,
-                ruleConfig.ruleSelector,
-                ruleConfig.ruleAddress,
-                ruleConfig.configSalt,
-                ruleConfig.isRequired
-            );
-        }
-        (bool success,) = ruleConfig.ruleAddress.call(encodedConfigureCall);
-        require(success, "AddRule: Rule configuration failed");
+        require(rulesStorage.isConfigured[ruleAddress][configSalt]);
+        require(!_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt));
+        _addRuleSelectorToStorage(rulesStorage, ruleSelector, ruleAddress, configSalt, isRequired);
     }
 
-    function removeRule(RulesStorage storage ruleStorage, RuleConfigurationParams memory ruleConfig) internal {
-        require(
-            _ruleAlreadySet(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt),
-            "RuleNotSet"
-        );
-        _removeRuleFromStorage(ruleStorage, ruleConfig.ruleSelector, ruleConfig.ruleAddress, ruleConfig.configSalt);
+    function disableRuleSelector(
+        RulesStorage storage rulesStorage,
+        bool, /* isRequired */
+        address ruleAddress,
+        bytes32 configSalt,
+        bytes4 ruleSelector
+    ) internal {
+        require(_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt));
+        _removeRuleSelectorFromStorage(rulesStorage, ruleSelector, ruleAddress, configSalt);
     }
 
     function _getRulesArray(
-        RulesStorage storage ruleStorage,
+        RulesStorage storage rulesStorage,
         bytes4 ruleSelector,
         bool requiredRules
     ) internal view returns (Rule[] storage) {
-        return requiredRules ? ruleStorage.requiredRules[ruleSelector] : ruleStorage.anyOfRules[ruleSelector];
+        return requiredRules ? rulesStorage.requiredRules[ruleSelector] : rulesStorage.anyOfRules[ruleSelector];
+    }
+
+    function _changeRulesSelectors(
+        RulesStorage storage rulesStorage,
+        uint256 entityId,
+        RuleSelectorChange calldata selectorChange,
+        function(bool,uint256,address,bytes32,bool,bytes4) internal fn_emitEvent
+    ) internal {
+        function(RulesStorage storage, bool, address, bytes32, bytes4) internal fn_changeRuleSelector =
+            selectorChange.enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
+        for (uint256 i = 0; i < selectorChange.ruleSelectors.length; i++) {
+            fn_changeRuleSelector(
+                rulesStorage,
+                selectorChange.isRequired,
+                selectorChange.ruleAddress,
+                selectorChange.configSalt,
+                selectorChange.ruleSelectors[i]
+            );
+            fn_emitEvent(
+                selectorChange.enabled,
+                entityId,
+                selectorChange.ruleAddress,
+                selectorChange.configSalt,
+                selectorChange.isRequired,
+                selectorChange.ruleSelectors[i]
+            );
+        }
     }
 
     // Private
 
-    function _addRuleToStorage(
-        RulesStorage storage ruleStorage,
+    function _addRuleSelectorToStorage(
+        RulesStorage storage rulesStorage,
         bytes4 ruleSelector,
         address ruleAddress,
         bytes32 configSalt,
-        bool requiredRule
+        bool isRequired
     ) private {
-        Rule[] storage rules = _getRulesArray(ruleStorage, ruleSelector, requiredRule);
-        uint8 index = uint8(rules.length); // TODO: Add a check if needed
+        Rule[] storage rules = _getRulesArray(rulesStorage, ruleSelector, isRequired);
+        uint8 index = uint8(rules.length);
         rules.push(Rule(ruleAddress, configSalt));
-        ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt] =
-            RuleState({index: index, isRequired: requiredRule, isSet: true});
+        rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt] =
+            RuleState({index: index, isRequired: isRequired, isEnabled: true});
     }
 
-    function _removeRuleFromStorage(
-        RulesStorage storage ruleStorage,
+    function _removeRuleSelectorFromStorage(
+        RulesStorage storage rulesStorage,
         bytes4 ruleSelector,
         address ruleAddress,
         bytes32 configSalt
     ) private {
-        uint8 index = ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt].index;
+        uint8 index = rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].index;
         Rule[] storage rules = _getRulesArray(
-            ruleStorage, ruleSelector, ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired
+            rulesStorage, ruleSelector, rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired
         );
         if (rules.length > 1) {
             // Copy the last element in the array into the index of the rule to delete
             rules[index] = rules[rules.length - 1];
             // Set the proper index for the swapped rule
-            ruleStorage.ruleStates[ruleSelector][rules[index].addr][rules[index].configSalt].index = index;
+            rulesStorage.ruleStates[ruleSelector][rules[index].addr][rules[index].configSalt].index = index;
         }
         rules.pop();
-        delete ruleStorage.ruleStates[ruleSelector][ruleAddress][configSalt];
+        delete rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt];
     }
 
-    function _ruleAlreadySet(
-        RulesStorage storage ruleStorage,
+    function _isSelectorAlreadyEnabled(
+        RulesStorage storage rulesStorage,
         bytes4 ruleSelector,
-        address rule,
+        address ruleAddress,
         bytes32 configSalt
     ) private view returns (bool) {
-        return ruleStorage.ruleStates[ruleSelector][rule][configSalt].isSet;
+        return rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled;
     }
 }

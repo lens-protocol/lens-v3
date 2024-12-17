@@ -12,37 +12,24 @@ struct Rule {
     bytes32 configSalt;
 }
 
+struct RuleConfigurationChange {
+    address ruleAddress;
+    bytes32 configSalt;
+    KeyValue[] ruleParams;
+}
+
+struct RuleSelectorChange {
+    address ruleAddress;
+    bytes32 configSalt;
+    bool isRequired;
+    bytes4[] ruleSelectors;
+    bool enabled;
+}
+
 struct RuleProcessingParams {
     address ruleAddress;
     bytes32 configSalt;
-    KeyValue[] customParams;
-}
-
-struct RuleChange {
-    RuleConfigurationParams_Multiselector configuration;
-    RuleOperation operation;
-}
-
-struct RuleConfigurationParams {
-    bytes4 ruleSelector;
-    address ruleAddress;
-    bool isRequired;
-    bytes32 configSalt;
-    KeyValue[] customParams;
-}
-
-struct RuleConfigurationParams_Multiselector {
-    bytes4[] ruleSelectors;
-    address ruleAddress;
-    bool isRequired;
-    bytes32 configSalt;
-    KeyValue[] customParams;
-}
-
-enum RuleOperation {
-    ADD,
-    UPDATE,
-    REMOVE
+    KeyValue[] ruleParams;
 }
 
 struct SourceStamp {
