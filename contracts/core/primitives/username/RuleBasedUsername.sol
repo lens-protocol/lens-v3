@@ -5,17 +5,12 @@ pragma solidity ^0.8.0;
 import {IUsernameRule} from "./../../interfaces/IUsernameRule.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
 import {
-    Rule,
-    RuleChange,
-    RuleOperation,
-    RuleProcessingParams,
-    RuleConfigurationParams,
-    RuleConfigurationParams_Multiselector,
-    KeyValue
+    RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, Rule, KeyValue
 } from "./../../types/Types.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
+import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
-abstract contract RuleBasedUsername is IUsername {
+abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
 
     struct RuleBasedStorage {
@@ -36,56 +31,61 @@ abstract contract RuleBasedUsername is IUsername {
         return $ruleBasedStorage().usernameRulesStorage;
     }
 
-    // Public
+    ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeUsernameRules(RuleChange[] calldata ruleChanges) external virtual override {
-        _beforeChangeUsernameRules(ruleChanges);
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
-            ruleConfig_Multiselector.configSalt =
-                $usernameRulesStorage().generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
-            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
-                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
-                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
-                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
-                    isRequired: ruleConfig_Multiselector.isRequired,
-                    configSalt: ruleConfig_Multiselector.configSalt,
-                    customParams: ruleConfig_Multiselector.customParams
-                });
-                if (ruleChanges[i].operation == RuleOperation.ADD) {
-                    _addUsernameRule(ruleConfig);
-                    emit IUsername.Lens_Username_RuleAdded(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                    _updateUsernameRule(ruleConfig);
-                    emit IUsername.Lens_Username_RuleUpdated(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else {
-                    _removeUsernameRule(ruleConfig);
-                    emit IUsername.Lens_Username_RuleRemoved(
-                        ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                    );
-                }
-            }
+    function changeUsernameRules(
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges
+    ) external virtual override {
+        _changePrimitiveRules($usernameRulesStorage(), configChanges, selectorChanges);
+    }
+
+    function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IUsernameRule.processCreation.selector;
+        selectors[1] = IUsernameRule.processRemoval.selector;
+        selectors[2] = IUsernameRule.processAssigning.selector;
+        selectors[3] = IUsernameRule.processUnassigning.selector;
+        return selectors;
+    }
+
+    function _encodePrimitiveConfigureCall(
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal pure override returns (bytes memory) {
+        return abi.encodeCall(IUsernameRule.configure, (configSalt, ruleParams));
+    }
+
+    function _emitPrimitiveRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal override {
+        if (wasAlreadyConfigured) {
+            emit IUsername.Lens_Username_RuleReconfigured(ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IUsername.Lens_Username_RuleConfigured(ruleAddress, configSalt, ruleParams);
         }
-        require(
-            $usernameRulesStorage().anyOfRules[IUsernameRule.processCreation.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $usernameRulesStorage().anyOfRules[IUsernameRule.processAssigning.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
+    }
+
+    function _emitPrimitiveRuleSelectorEvent(
+        bool enabled,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 ruleSelector
+    ) internal override {
+        if (enabled) {
+            emit Lens_Username_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        } else {
+            emit Lens_Username_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        }
+    }
+
+    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
+        return $usernameRulesStorage()._getRulesArray(ruleSelector, false).length
+            + $usernameRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
     function getUsernameRules(
@@ -95,25 +95,7 @@ abstract contract RuleBasedUsername is IUsername {
         return $usernameRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
-    // Internal
-
-    function _beforeChangeUsernameRules(RuleChange[] calldata ruleChanges) internal virtual {}
-
-    function _addUsernameRule(RuleConfigurationParams memory rule) internal {
-        $usernameRulesStorage().addRule(
-            rule, abi.encodeCall(IUsernameRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _updateUsernameRule(RuleConfigurationParams memory rule) internal {
-        $usernameRulesStorage().updateRule(
-            rule, abi.encodeCall(IUsernameRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _removeUsernameRule(RuleConfigurationParams memory rule) internal {
-        $usernameRulesStorage().removeRule(rule);
-    }
+    ////////////////////////////  PROCESSING FUNCTIONS  ////////////////////////////
 
     function _encodeAndCallProcessCreation(
         address rule,
@@ -268,21 +250,15 @@ abstract contract RuleBasedUsername is IUsername {
         for (uint256 i = 0; i < $usernameRulesStorage().requiredRules[ruleSelector].length; i++) {
             Rule memory rule = $usernameRulesStorage().requiredRules[ruleSelector][i];
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
                     rulesProcessingParams[j].ruleAddress == rule.addr
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr,
-                    rule.configSalt,
-                    originalMsgSender,
-                    account,
-                    username,
-                    primitiveCustomParams,
-                    ruleCustomParams
+                    rule.addr, rule.configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -291,21 +267,15 @@ abstract contract RuleBasedUsername is IUsername {
         for (uint256 i = 0; i < $usernameRulesStorage().anyOfRules[ruleSelector].length; i++) {
             Rule memory rule = $usernameRulesStorage().anyOfRules[ruleSelector][i];
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
                     rulesProcessingParams[j].ruleAddress == rule.addr
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr,
-                    rule.configSalt,
-                    originalMsgSender,
-                    account,
-                    username,
-                    primitiveCustomParams,
-                    ruleCustomParams
+                    rule.addr, rule.configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return

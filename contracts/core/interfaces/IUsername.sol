@@ -2,27 +2,21 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleChange, Rule, RuleProcessingParams} from "./../types/Types.sol";
+import {KeyValue, RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IUsername is IMetadataBased {
-    event Lens_Username_RuleAdded(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Username_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Username_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Username_RuleSelectorEnabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
-    event Lens_Username_RuleUpdated(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Username_RuleSelectorDisabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
-
-    event Lens_Username_RuleRemoved(address indexed rule, bytes32 indexed configSalt, bytes4 indexed ruleSelector);
 
     event Lens_Username_Created(
         string username,
@@ -64,7 +58,10 @@ interface IUsername is IMetadataBased {
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
-    function changeUsernameRules(RuleChange[] calldata ruleChanges) external;
+    function changeUsernameRules(
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges
+    ) external;
 
     function createUsername(
         address account,
