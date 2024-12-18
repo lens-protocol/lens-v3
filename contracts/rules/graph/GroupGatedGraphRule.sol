@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleConfigurationChange, RuleSelectorChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
@@ -25,18 +25,17 @@ contract GroupGatedGraphRule is IGraphRule {
         address groupGate;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         IGroup(configuration.groupGate).getMembershipId(address(this));
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processFollow(
@@ -44,21 +43,21 @@ contract GroupGatedGraphRule is IGraphRule {
         address, /* originalMsgSender */
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view override {
         /**
          * Both ends of the follow connection must comply with the group-gate restriction, then the graph is purely
          * conformed by group members.
          */
         _validateGroupMembership(
-            _configuration[msg.sender][this.processFollow.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processFollow.selector][configSalt].groupGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].groupGate,
             followerAccount
         );
         _validateGroupMembership(
-            _configuration[msg.sender][this.processFollow.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processFollow.selector][configSalt].groupGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].groupGate,
             accountToFollow
         );
     }
@@ -68,8 +67,8 @@ contract GroupGatedGraphRule is IGraphRule {
         address, /* originalMsgSender */
         address, /* followerAccount */
         address, /* accountToUnfollow */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
@@ -77,8 +76,9 @@ contract GroupGatedGraphRule is IGraphRule {
     function processFollowRuleChanges(
         bytes32, /* configSalt */
         address, /* account */
-        RuleChange[] calldata, /* ruleChanges */
-        KeyValue[] calldata /* ruleExecutionParams */
+        RuleConfigurationChange[] calldata, /* configChanges */
+        RuleSelectorChange[] calldata, /* selectorChanges */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
@@ -87,10 +87,6 @@ contract GroupGatedGraphRule is IGraphRule {
         if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
             require(IGroup(group).getMembershipId(account) != 0, "NotAMember()");
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processFollow.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

@@ -12,8 +12,8 @@ interface IGraphRule {
         address originalMsgSender,
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processUnfollow(
@@ -21,8 +21,8 @@ interface IGraphRule {
         address originalMsgSender,
         address followerAccount,
         address accountToUnfollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processFollowRuleChanges(
@@ -30,6 +30,6 @@ interface IGraphRule {
         address account,
         RuleConfigurationChange[] calldata configChanges,
         RuleSelectorChange[] calldata selectorChanges,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata ruleParams
     ) external;
 }
