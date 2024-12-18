@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleChange, RuleProcessingParams, KeyValue, Rule} from "./../types/Types.sol";
+import {RuleProcessingParams, KeyValue, RuleSelectorChange, RuleConfigurationChange, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 // TODO: Might worth to add extraData to the follow entity
@@ -16,41 +16,32 @@ struct Follow {
 }
 
 interface IGraph is IMetadataBased {
-    event Lens_Graph_RuleAdded(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
-    );
-    event Lens_Graph_RuleUpdated(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
-    );
-    event Lens_Graph_RuleRemoved(address indexed rule, bytes32 indexed configSalt, bytes4 indexed ruleSelector);
+    event Lens_Graph_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
-    // TODO: Decide which info we want in these events and make them consistent across entities
-    event Lens_Graph_Follow_RuleAdded(
-        address indexed account,
-        address indexed rule,
-        bytes32 configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Graph_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Graph_RuleSelectorEnabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
-    event Lens_Graph_Follow_RuleUpdated(
-        address indexed account,
-        address indexed rule,
-        bytes32 configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+
+    event Lens_Graph_RuleSelectorDisabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
-    event Lens_Graph_Follow_RuleRemoved(
-        address indexed account, address indexed rule, bytes32 configSalt, bytes4 indexed ruleSelector
+
+    event Lens_Graph_Follow_RuleConfigured(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams
+    );
+
+    event Lens_Graph_Follow_RuleReconfigured(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams
+    );
+
+    event Lens_Graph_Follow_RuleSelectorEnabled(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
+    );
+
+    event Lens_Graph_Follow_RuleSelectorDisabled(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
     event Lens_Graph_Followed(
@@ -78,11 +69,15 @@ interface IGraph is IMetadataBased {
 
     event Lens_Graph_MetadataURISet(string metadataURI);
 
-    function changeGraphRules(RuleChange[] calldata ruleChanges) external;
+    function changeGraphRules(
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges
+    ) external;
 
     function changeFollowRules(
         address account,
-        RuleChange[] calldata ruleChanges,
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges,
         RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external;
 
