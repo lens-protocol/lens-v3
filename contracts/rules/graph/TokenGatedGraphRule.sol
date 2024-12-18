@@ -6,7 +6,7 @@ import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleConfigurationChange, RuleSelectorChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 
 contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
@@ -74,8 +74,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
     function processFollowRuleChanges(
         bytes32, /* configSalt */
         address, /* account */
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata, /* selectorChanges */
+        RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();

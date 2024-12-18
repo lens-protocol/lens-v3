@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
 import {IGroup} from "./../../interfaces/IGroup.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {
-    RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, Rule, KeyValue
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "./../../types/Types.sol";
 import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
 abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
@@ -32,11 +30,8 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeGroupRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external virtual override {
-        _changePrimitiveRules($groupRulesStorage(), configChanges, selectorChanges);
+    function changeGroupRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _changePrimitiveRules($groupRulesStorage(), ruleChanges);
     }
 
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
@@ -233,13 +228,13 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
+                    rule.ruleAddress, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -250,13 +245,13 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
+                    rule.ruleAddress, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return

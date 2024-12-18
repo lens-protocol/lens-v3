@@ -7,9 +7,7 @@ import {IFeedRule} from "./../../interfaces/IFeedRule.sol";
 import {IFeed} from "./../../interfaces/IFeed.sol";
 import {FeedCore as Core} from "./FeedCore.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {
-    RuleProcessingParams, Rule, RuleConfigurationChange, RuleSelectorChange, KeyValue
-} from "./../../types/Types.sol";
+import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "./../../types/Types.sol";
 import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
 import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
@@ -40,24 +38,18 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeFeedRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external virtual override {
-        _changePrimitiveRules($feedRulesStorage(), configChanges, selectorChanges);
+    function changeFeedRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _changePrimitiveRules($feedRulesStorage(), ruleChanges);
     }
 
     function changePostRules(
         uint256 postId,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata ruleChangesProcessingParams
     ) external virtual override {
         // TODO: msg.sender must be author
         // TODO: Post must exist before we allow changing its rules
-        _changeEntityRules(
-            $postRulesStorage(postId), postId, configChanges, selectorChanges, ruleChangesProcessingParams
-        );
+        _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, ruleChangesProcessingParams);
     }
 
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
@@ -134,9 +126,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         CreatePostParams calldata postParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) internal {
-        _changeEntityRules(
-            $postRulesStorage(postId), postId, postParams.configChanges, postParams.selectorChanges, feedRulesParams
-        );
+        _changeEntityRules($postRulesStorage(postId), postId, postParams.ruleChanges, feedRulesParams);
     }
 
     // Internal
@@ -191,13 +181,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -208,13 +198,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
@@ -345,13 +335,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -362,13 +352,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
@@ -391,12 +381,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
@@ -410,12 +400,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
@@ -431,8 +421,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     function _processPostRulesChanges(
         uint256 postId,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IFeedRule.processPostRuleChanges.selector;
@@ -442,15 +431,14 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
-                        IFeedRule.processPostRuleChanges,
-                        (rule.configSalt, postId, configChanges, selectorChanges, ruleCustomParams)
+                        IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
                 );
                 require(callNotReverted, "Some required rule failed");
@@ -462,15 +450,14 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
-                        IFeedRule.processPostRuleChanges,
-                        (rule.configSalt, postId, configChanges, selectorChanges, ruleCustomParams)
+                        IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
                 );
                 if (callNotReverted) {

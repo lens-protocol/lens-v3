@@ -8,21 +8,25 @@ struct KeyValue {
 }
 
 struct Rule {
-    address addr;
+    address ruleAddress;
     bytes32 configSalt;
 }
 
-struct RuleConfigurationChange {
+struct RuleChange {
     address ruleAddress;
     bytes32 configSalt;
+    RuleConfigurationChange configurationChanges;
+    RuleSelectorChange[] selectorChanges;
+}
+
+struct RuleConfigurationChange {
+    bool configure;
     KeyValue[] ruleParams;
 }
 
 struct RuleSelectorChange {
-    address ruleAddress;
-    bytes32 configSalt;
+    bytes4 ruleSelector;
     bool isRequired;
-    bytes4[] ruleSelectors;
     bool enabled;
 }
 

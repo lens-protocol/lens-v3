@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
+import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IGroup is IMetadataBased {
@@ -82,10 +82,7 @@ interface IGroup is IMetadataBased {
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
-    function changeGroupRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external;
+    function changeGroupRules(RuleChange[] calldata ruleChanges) external;
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 

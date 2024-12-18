@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {KeyValue, RuleConfigurationChange, RuleSelectorChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
 
 contract UserBlockingRule is IFeedRule, IGraphRule {
@@ -96,8 +96,7 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
     function processPostRuleChanges(
         bytes32, /* configSalt */
         uint256, /* postId */
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata, /* selectorChanges */
+        RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
         revert();
@@ -117,8 +116,7 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
     function processFollowRuleChanges(
         bytes32, /* configSalt */
         address, /* account */
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata, /* selectorChanges */
+        RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
         revert();

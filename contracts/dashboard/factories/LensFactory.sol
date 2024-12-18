@@ -7,9 +7,10 @@ import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {Group} from "./../../core/primitives/group/Group.sol";
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
 import {
-    RuleConfigurationChange,
-    RuleSelectorChange,
+    RuleChange,
     RuleProcessingParams,
+    RuleSelectorChange,
+    RuleConfigurationChange,
     KeyValue,
     SourceStamp
 } from "./../../core/types/Types.sol";
@@ -146,81 +147,61 @@ contract LensFactory {
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        return GROUP_FACTORY.deployGroup(
-            metadataURI, _deployAccessControl(owner, admins), configChanges, selectorChanges, extraData
-        );
+        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), ruleChanges, extraData);
     }
 
     function deployFeed(
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        bytes4[] memory ruleSelectors = new bytes4[](1);
-        ruleSelectors[0] = IFeedRule.processCreatePost.selector;
-
-        (RuleConfigurationChange[] memory modifiedConfigChanges, RuleSelectorChange[] memory modifiedSelectorChanges) =
-            _prependUserBlocking(configChanges, selectorChanges, ruleSelectors);
-
         return FEED_FACTORY.deployFeed(
-            metadataURI, _deployAccessControl(owner, admins), modifiedConfigChanges, modifiedSelectorChanges, extraData
+            metadataURI,
+            _deployAccessControl(owner, admins),
+            _prependUserBlocking(ruleChanges, IFeedRule.processCreatePost.selector),
+            extraData
         );
     }
 
     function _prependUserBlocking(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
-        bytes4[] memory ruleSelectors
-    ) internal view returns (RuleConfigurationChange[] memory, RuleSelectorChange[] memory) {
-        RuleConfigurationChange[] memory modifiedConfigChanges = new RuleConfigurationChange[](configChanges.length + 1);
-        RuleSelectorChange[] memory modifiedSelectorChanges = new RuleSelectorChange[](selectorChanges.length + 1);
+        RuleChange[] calldata ruleChanges,
+        bytes4 ruleSelector
+    ) internal view returns (RuleChange[] memory) {
+        RuleChange[] memory modifiedRuleChanges = new RuleChange[](ruleChanges.length + 1);
 
-        modifiedConfigChanges[0] = RuleConfigurationChange({
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        selectorChanges[0] = RuleSelectorChange({ruleSelector: ruleSelector, isRequired: true, enabled: true});
+
+        modifiedRuleChanges[0] = RuleChange({
             ruleAddress: _userBlockingRule,
-            configSalt: bytes32(uint256(1)),
-            ruleParams: new KeyValue[](0)
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: selectorChanges
         });
-        for (uint256 i = 0; i < configChanges.length; i++) {
-            modifiedConfigChanges[i + 1] = modifiedConfigChanges[i];
+        for (uint256 i = 0; i < ruleChanges.length; i++) {
+            modifiedRuleChanges[i + 1] = modifiedRuleChanges[i];
         }
 
-        modifiedSelectorChanges[0] = RuleSelectorChange({
-            ruleAddress: _userBlockingRule,
-            configSalt: bytes32(uint256(1)),
-            isRequired: true,
-            ruleSelectors: ruleSelectors,
-            enabled: true
-        });
-        for (uint256 i = 0; i < selectorChanges.length; i++) {
-            modifiedSelectorChanges[i + 1] = modifiedSelectorChanges[i];
-        }
-
-        return (modifiedConfigChanges, modifiedSelectorChanges);
+        return modifiedRuleChanges;
     }
 
     function deployGraph(
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        bytes4[] memory ruleSelectors = new bytes4[](1);
-        ruleSelectors[0] = IGraphRule.processFollow.selector;
-
-        (RuleConfigurationChange[] memory modifiedConfigChanges, RuleSelectorChange[] memory modifiedSelectorChanges) =
-            _prependUserBlocking(configChanges, selectorChanges, ruleSelectors);
-
         return GRAPH_FACTORY.deployGraph(
-            metadataURI, _deployAccessControl(owner, admins), modifiedConfigChanges, modifiedSelectorChanges, extraData
+            metadataURI,
+            _deployAccessControl(owner, admins),
+            _prependUserBlocking(ruleChanges, IGraphRule.processFollow.selector),
+            extraData
         );
     }
 
@@ -229,8 +210,7 @@ contract LensFactory {
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData,
         string calldata nftName,
         string calldata nftSymbol
@@ -240,8 +220,7 @@ contract LensFactory {
             namespace,
             metadataURI,
             _deployAccessControl(owner, admins),
-            configChanges,
-            selectorChanges,
+            ruleChanges,
             extraData,
             nftName,
             nftSymbol,

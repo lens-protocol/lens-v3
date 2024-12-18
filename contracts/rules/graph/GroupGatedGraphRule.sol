@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleConfigurationChange, RuleSelectorChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
@@ -76,8 +76,7 @@ contract GroupGatedGraphRule is IGraphRule {
     function processFollowRuleChanges(
         bytes32, /* configSalt */
         address, /* account */
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata, /* selectorChanges */
+        RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();

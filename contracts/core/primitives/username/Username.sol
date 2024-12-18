@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {UsernameCore as Core} from "./UsernameCore.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {RuleBasedUsername} from "./RuleBasedUsername.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
@@ -62,10 +62,7 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         emit Lens_Username_MetadataURISet(metadataURI);
     }
 
-    function _beforeChangePrimitiveRules(
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata /* selectorChanges */
-    ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
     // Permissionless functions

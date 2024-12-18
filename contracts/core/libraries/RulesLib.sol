@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {Rule, RuleSelectorChange} from "./../types/Types.sol";
+import {Rule} from "./../types/Types.sol";
 
 struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;
@@ -36,12 +36,13 @@ library RulesLib {
 
     function configureRule(
         RulesStorage storage rulesStorage,
-        Rule memory rule,
+        address ruleAddress,
+        bytes32 configSalt,
         bytes memory encodedConfigureCall
     ) internal returns (bool) {
-        bool wasAlreadyConfigured = rulesStorage.isConfigured[rule.addr][rule.configSalt];
-        rulesStorage.isConfigured[rule.addr][rule.configSalt] = true;
-        (bool success,) = rule.addr.call(encodedConfigureCall);
+        bool wasAlreadyConfigured = rulesStorage.isConfigured[ruleAddress][configSalt];
+        rulesStorage.isConfigured[ruleAddress][configSalt] = true;
+        (bool success,) = ruleAddress.call(encodedConfigureCall);
         require(success);
         return wasAlreadyConfigured;
     }
@@ -79,29 +80,18 @@ library RulesLib {
 
     function _changeRulesSelectors(
         RulesStorage storage rulesStorage,
+        address ruleAddress,
+        bytes32 configSalt,
         uint256 entityId,
-        RuleSelectorChange calldata selectorChange,
+        bytes4 ruleSelector,
+        bool isRequired,
+        bool enabled,
         function(bool,uint256,address,bytes32,bool,bytes4) internal fn_emitEvent
     ) internal {
         function(RulesStorage storage, bool, address, bytes32, bytes4) internal fn_changeRuleSelector =
-            selectorChange.enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
-        for (uint256 i = 0; i < selectorChange.ruleSelectors.length; i++) {
-            fn_changeRuleSelector(
-                rulesStorage,
-                selectorChange.isRequired,
-                selectorChange.ruleAddress,
-                selectorChange.configSalt,
-                selectorChange.ruleSelectors[i]
-            );
-            fn_emitEvent(
-                selectorChange.enabled,
-                entityId,
-                selectorChange.ruleAddress,
-                selectorChange.configSalt,
-                selectorChange.isRequired,
-                selectorChange.ruleSelectors[i]
-            );
-        }
+            enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
+        fn_changeRuleSelector(rulesStorage, isRequired, ruleAddress, configSalt, ruleSelector);
+        fn_emitEvent(enabled, entityId, ruleAddress, configSalt, isRequired, ruleSelector);
     }
 
     // Private
@@ -134,7 +124,7 @@ library RulesLib {
             // Copy the last element in the array into the index of the rule to delete
             rules[index] = rules[rules.length - 1];
             // Set the proper index for the swapped rule
-            rulesStorage.ruleStates[ruleSelector][rules[index].addr][rules[index].configSalt].index = index;
+            rulesStorage.ruleStates[ruleSelector][rules[index].ruleAddress][rules[index].configSalt].index = index;
         }
         rules.pop();
         delete rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt];

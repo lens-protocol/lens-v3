@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import {IFollowRule} from "./../../interfaces/IFollowRule.sol";
 import {IGraphRule} from "./../../interfaces/IGraphRule.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {
-    RuleProcessingParams, RuleConfigurationChange, RuleSelectorChange, Rule, KeyValue
-} from "./../../types/Types.sol";
+import {RuleProcessingParams, RuleChange, Rule, KeyValue} from "./../../types/Types.sol";
 import {IGraph} from "./../../interfaces/IGraph.sol";
 import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
@@ -38,25 +36,17 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeGraphRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external virtual override {
-        _changePrimitiveRules($graphRulesStorage(), configChanges, selectorChanges);
+    function changeGraphRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _changePrimitiveRules($graphRulesStorage(), ruleChanges);
     }
 
     function changeFollowRules(
         address account,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata ruleChangesProcessingParams
     ) external virtual override {
         _changeEntityRules(
-            $followRulesStorage(account),
-            uint256(uint160(account)),
-            configChanges,
-            selectorChanges,
-            ruleChangesProcessingParams
+            $followRulesStorage(account), uint256(uint160(account)), ruleChanges, ruleChangesProcessingParams
         );
     }
 
@@ -132,8 +122,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     function _graphProcessFollowRuleChanges(
         address account,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata graphRulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IGraphRule.processFollowRuleChanges.selector;
@@ -143,15 +132,14 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             for (uint256 j = 0; j < graphRulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    graphRulesProcessingParams[j].ruleAddress == rule.addr
+                    graphRulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && graphRulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
-                        IGraphRule.processFollowRuleChanges,
-                        (rule.configSalt, account, configChanges, selectorChanges, ruleCustomParams)
+                        IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
                 );
                 require(callNotReverted, "Some required rule failed");
@@ -163,15 +151,14 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             for (uint256 j = 0; j < graphRulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    graphRulesProcessingParams[j].ruleAddress == rule.addr
+                    graphRulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && graphRulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
-                        IGraphRule.processFollowRuleChanges,
-                        (rule.configSalt, account, configChanges, selectorChanges, ruleCustomParams)
+                        IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
                 );
                 if (callNotReverted) {
@@ -329,13 +316,13 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr,
+                    rule.ruleAddress,
                     rule.configSalt,
                     originalMsgSender,
                     followerAccount,
@@ -351,13 +338,13 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr,
+                    rule.ruleAddress,
                     rule.configSalt,
                     originalMsgSender,
                     followerAccount,
@@ -392,13 +379,13 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr,
+                    rule.ruleAddress,
                     rule.configSalt,
                     originalMsgSender,
                     followerAccount,
@@ -414,13 +401,13 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr,
+                    rule.ruleAddress,
                     rule.configSalt,
                     originalMsgSender,
                     followerAccount,

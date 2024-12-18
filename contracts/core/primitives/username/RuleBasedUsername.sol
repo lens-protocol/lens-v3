@@ -4,9 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IUsernameRule} from "./../../interfaces/IUsernameRule.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {
-    RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, Rule, KeyValue
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "./../../types/Types.sol";
 import {IUsername} from "./../../interfaces/IUsername.sol";
 import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
@@ -33,11 +31,8 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeUsernameRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external virtual override {
-        _changePrimitiveRules($usernameRulesStorage(), configChanges, selectorChanges);
+    function changeUsernameRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _changePrimitiveRules($usernameRulesStorage(), ruleChanges);
     }
 
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
@@ -252,13 +247,19 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleParams
+                    rule.ruleAddress,
+                    rule.configSalt,
+                    originalMsgSender,
+                    account,
+                    username,
+                    primitiveCustomParams,
+                    ruleParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -269,13 +270,19 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
                     ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleParams
+                    rule.ruleAddress,
+                    rule.configSalt,
+                    originalMsgSender,
+                    account,
+                    username,
+                    primitiveCustomParams,
+                    ruleParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return

@@ -7,7 +7,7 @@ import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {SimplePaymentRule} from "./../base/SimplePaymentRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {KeyValue, RuleConfigurationChange, RuleSelectorChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 
 contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
@@ -74,8 +74,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
     function processPostRuleChanges(
         bytes32, /* configSalt */
         uint256, /* postId */
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata, /* selectorChanges */
+        RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();

@@ -7,7 +7,7 @@ import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleConfigurationChange, RuleSelectorChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 
 contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
@@ -73,8 +73,7 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
     function processPostRuleChanges(
         bytes32, /* configSalt */
         uint256, /* postId */
-        RuleConfigurationChange[] calldata, /* configChanges */
-        RuleSelectorChange[] calldata, /* selectorChanges */
+        RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();

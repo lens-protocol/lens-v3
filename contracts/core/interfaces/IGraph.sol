@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleProcessingParams, KeyValue, RuleSelectorChange, RuleConfigurationChange, Rule} from "./../types/Types.sol";
+import {RuleProcessingParams, KeyValue, RuleChange, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 // TODO: Might worth to add extraData to the follow entity
@@ -69,15 +69,11 @@ interface IGraph is IMetadataBased {
 
     event Lens_Graph_MetadataURISet(string metadataURI);
 
-    function changeGraphRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external;
+    function changeGraphRules(RuleChange[] calldata ruleChanges) external;
 
     function changeFollowRules(
         address account,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external;
 

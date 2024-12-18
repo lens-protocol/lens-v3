@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, Rule, RuleProcessingParams, RuleSelectorChange, RuleConfigurationChange} from "./../types/Types.sol";
+import {KeyValue, Rule, RuleProcessingParams, RuleChange} from "./../types/Types.sol";
 import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
 
 struct EditPostParams {
@@ -16,8 +16,7 @@ struct CreatePostParams {
     uint256 repostedPostId;
     uint256 quotedPostId;
     uint256 repliedPostId;
-    RuleConfigurationChange[] configChanges;
-    RuleSelectorChange[] selectorChanges;
+    RuleChange[] ruleChanges;
     KeyValue[] extraData;
 }
 
@@ -118,10 +117,7 @@ interface IFeed is IMetadataBased {
 
     event Lens_Feed_MetadataURISet(string metadataURI);
 
-    function changeFeedRules(
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
-    ) external;
+    function changeFeedRules(RuleChange[] calldata ruleChanges) external;
 
     function createPost(
         CreatePostParams calldata postParams,
@@ -152,8 +148,7 @@ interface IFeed is IMetadataBased {
 
     function changePostRules(
         uint256 postId,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata feedRulesParams
     ) external;
 
