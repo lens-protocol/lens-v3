@@ -53,7 +53,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         uint256 entityId,
         RuleConfigurationChange[] calldata configChanges,
         RuleSelectorChange[] calldata selectorChanges
-    ) internal virtual {
+    ) internal virtual override {
         // TODO: What should we validate here?
     }
 

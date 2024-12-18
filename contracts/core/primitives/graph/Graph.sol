@@ -47,7 +47,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         uint256 entityId,
         RuleConfigurationChange[] calldata configChanges,
         RuleSelectorChange[] calldata selectorChanges
-    ) internal virtual {
+    ) internal virtual override {
         address account = address(uint160(entityId));
         // TODO: What should we validate here?
     }
