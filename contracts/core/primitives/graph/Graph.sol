@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Follow, IGraph} from "./../../interfaces/IGraph.sol";
 import {GraphCore as Core} from "./GraphCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
+import {RuleConfigurationChange, RuleSelectorChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {RuleBasedGraph} from "./RuleBasedGraph.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
@@ -36,7 +36,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     // Access Controlled functions
 
-    function _beforeChangeGraphRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(
+        RuleConfigurationChange[] calldata, /* configChanges */
+        RuleSelectorChange[] calldata /* selectorChanges */
+    ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
