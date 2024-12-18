@@ -23,26 +23,25 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         TokenGateConfiguration tokenGate;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processAddition(
         bytes32, /* configSalt */
         address, /* originalMsgSender */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure {
         revert();
     }
@@ -51,24 +50,22 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         bytes32 configSalt,
         address, /* originalMsgSender */
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view {
         // Anyone can kick out member of the group if they no longer hold the required token balance:
-        require(
-            !_checkTokenBalance(_configuration[msg.sender][this.processRemoval.selector][configSalt].tokenGate, account)
-        );
+        require(!_checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account));
     }
 
     function processJoining(
         bytes32 configSalt,
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view {
         _validateTokenBalance(
-            _configuration[msg.sender][this.processJoining.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processJoining.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             account
         );
     }
@@ -76,8 +73,8 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
     function processLeaving(
         bytes32, /* configSalt */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure {
         revert();
     }
@@ -90,10 +87,6 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processJoining.selector || ruleSelector == this.processRemoval.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
