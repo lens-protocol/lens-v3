@@ -23,18 +23,17 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         TokenGateConfiguration tokenGate;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreation(
@@ -42,12 +41,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view override {
         _validateTokenBalance(
-            _configuration[msg.sender][this.processCreation.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processCreation.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             originalMsgSender
         );
     }
@@ -56,12 +55,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         bytes32 configSalt,
         address originalMsgSender,
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view override {
         _validateTokenBalance(
-            _configuration[msg.sender][this.processRemoval.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processRemoval.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             originalMsgSender
         );
     }
@@ -71,12 +70,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view override {
         _validateTokenBalance(
-            _configuration[msg.sender][this.processAssigning.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processAssigning.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             originalMsgSender
         );
     }
@@ -86,12 +85,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view override {
         _validateTokenBalance(
-            _configuration[msg.sender][this.processUnassigning.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processUnassigning.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             originalMsgSender
         );
     }
@@ -104,13 +103,6 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(
-            ruleSelector == this.processCreation.selector || ruleSelector == this.processAssigning.selector
-                || ruleSelector == this.processRemoval.selector || ruleSelector == this.processUnassigning.selector
-        );
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

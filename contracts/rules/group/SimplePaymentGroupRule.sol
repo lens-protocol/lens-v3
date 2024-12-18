@@ -23,26 +23,25 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         PaymentConfiguration paymentConfiguration;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processAddition(
         bytes32, /* configSalt */
         address, /* originalMsgSender */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure {
         revert();
     }
@@ -51,8 +50,8 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         bytes32, /* configSalt */
         address, /* originalMsgSender */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure {
         revert();
     }
@@ -60,13 +59,13 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
     function processJoining(
         bytes32 configSalt,
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
     ) external {
         _processPayment(
-            _configuration[msg.sender][this.processJoining.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processJoining.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             account
         );
     }
@@ -74,8 +73,8 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
     function processLeaving(
         bytes32, /* configSalt */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure {
         revert();
     }
@@ -89,10 +88,6 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
             _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processJoining.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

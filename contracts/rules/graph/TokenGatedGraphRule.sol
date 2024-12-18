@@ -23,18 +23,17 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         TokenGateConfiguration tokenGate;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processFollow(
@@ -42,21 +41,21 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address, /* originalMsgSender */
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view {
         /**
          * Both ends of the follow connection must comply with the token-gate restriction, then the graph is purely
          * conformed by token holders.
          */
         _validateTokenBalance(
-            _configuration[msg.sender][this.processFollow.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processFollow.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             followerAccount
         );
         _validateTokenBalance(
-            _configuration[msg.sender][this.processFollow.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processFollow.selector][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
             accountToFollow
         );
     }
@@ -66,8 +65,8 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address, /* originalMsgSender */
         address, /* followerAccount */
         address, /* accountToUnfollow */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure {
         revert();
     }
@@ -76,8 +75,8 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         bytes32, /* configSalt */
         address, /* account */
         RuleChange[] calldata, /* ruleChanges */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure {
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
         revert();
     }
 
@@ -89,10 +88,6 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processFollow.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

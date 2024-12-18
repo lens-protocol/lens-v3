@@ -2,13 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {
-    KeyValue,
-    RuleConfigurationParams_Multiselector,
-    Rule,
-    RuleChange,
-    RuleProcessingParams
-} from "./../types/Types.sol";
+import {KeyValue, Rule, RuleProcessingParams, RuleChange} from "./../types/Types.sol";
 import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
 
 struct EditPostParams {
@@ -22,7 +16,7 @@ struct CreatePostParams {
     uint256 repostedPostId;
     uint256 quotedPostId;
     uint256 repliedPostId;
-    RuleConfigurationParams_Multiselector[] rules;
+    RuleChange[] ruleChanges;
     KeyValue[] extraData;
 }
 
@@ -75,46 +69,42 @@ interface IFeed is IMetadataBased {
     event Lens_Feed_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Feed_ExtraDataRemoved(bytes32 indexed key);
 
-    event Lens_Feed_RuleAdded(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Feed_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Feed_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Feed_RuleSelectorEnabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
-    event Lens_Feed_RuleUpdated(
-        address indexed rule,
-        bytes32 indexed configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+    event Lens_Feed_RuleSelectorDisabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
-    event Lens_Feed_RuleRemoved(address indexed rule, bytes32 indexed configSalt, bytes4 indexed ruleSelector);
+    event Lens_Feed_Post_RuleConfigured(
+        uint256 indexed postId, address author, address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams
+    );
 
-    event Lens_Feed_Post_RuleAdded(
+    event Lens_Feed_Post_RuleReconfigured(
+        uint256 indexed postId, address author, address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams
+    );
+
+    event Lens_Feed_Post_RuleSelectorEnabled(
         uint256 indexed postId,
         address author,
         address indexed rule,
-        bytes32 configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
+        bytes32 indexed configSalt,
+        bool isRequired,
+        bytes4 ruleSelector
     );
 
-    event Lens_Feed_Post_RuleUpdated(
+    event Lens_Feed_Post_RuleSelectorDisabled(
         uint256 indexed postId,
         address author,
         address indexed rule,
-        bytes32 configSalt,
-        bytes4 indexed ruleSelector,
-        KeyValue[] configParams,
-        bool isRequired
-    );
-
-    event Lens_Feed_Post_RuleRemoved(
-        uint256 indexed postId, address author, address indexed rule, bytes32 configSalt, bytes4 indexed ruleSelector
+        bytes32 indexed configSalt,
+        bool isRequired,
+        bytes4 ruleSelector
     );
 
     event Lens_Feed_Post_ExtraDataAdded(

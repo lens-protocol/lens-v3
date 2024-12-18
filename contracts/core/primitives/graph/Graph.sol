@@ -36,8 +36,16 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     // Access Controlled functions
 
-    function _beforeChangeGraphRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
+    }
+
+    function _beforeChangeEntityRules(
+        uint256 entityId,
+        RuleChange[] calldata /* ruleChanges */
+    ) internal virtual override {
+        address account = address(uint160(entityId));
+        // TODO: What should we validate here?
     }
 
     function setMetadataURI(string calldata metadataURI) external override {
@@ -72,7 +80,8 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         address accountToFollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams,
-        RuleProcessingParams[] calldata followRulesProcessingParams
+        RuleProcessingParams[] calldata followRulesProcessingParams,
+        KeyValue[] calldata extraData
     ) external override returns (uint256) {
         require(msg.sender == followerAccount);
         // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
@@ -87,7 +96,8 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
             customParams,
             graphRulesProcessingParams,
             followRulesProcessingParams,
-            source
+            source,
+            extraData
         );
         return assignedFollowId;
     }

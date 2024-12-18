@@ -6,20 +6,15 @@ import {CreatePostParams, EditPostParams} from "./IFeed.sol";
 import {KeyValue} from "./../types/Types.sol";
 
 interface IPostRule {
-    function configure(
-        uint256 postId,
-        bytes4 ruleSelector,
-        bytes32 salt,
-        KeyValue[] calldata ruleConfigurationParams
-    ) external;
+    function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external;
 
     function processCreatePost(
         bytes32 configSalt,
         uint256 rootPostId,
         uint256 postId,
         CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processEditPost(
@@ -27,7 +22,7 @@ interface IPostRule {
         uint256 rootPostId,
         uint256 postId,
         EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 }

@@ -50,21 +50,16 @@ contract CharsetUsernameRule is IUsernameRule {
         CharsetRestrictions charsetRestrictions;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_CHARSET_PID, "SKIP_CHARSET");
     }
 
-    function configure(
-        bytes4 ruleSelector,
-        bytes32 salt,
-        KeyValue[] calldata ruleConfigurationParams
-    ) external override {
-        require(ruleSelector == this.processCreation.selector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreation(
@@ -72,10 +67,10 @@ contract CharsetUsernameRule is IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata username,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external view override {
-        Configuration memory configuration = _configuration[msg.sender][this.processCreation.selector][configSalt];
+        Configuration memory configuration = _configuration[msg.sender][configSalt];
         if (!configuration.accessControl.hasAccess(originalMsgSender, SKIP_CHARSET_PID)) {
             _processRestrictions(username, configuration.charsetRestrictions);
         }
@@ -85,8 +80,8 @@ contract CharsetUsernameRule is IUsernameRule {
         bytes32, /* configSalt */
         address, /* originalMsgSender */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
@@ -96,8 +91,8 @@ contract CharsetUsernameRule is IUsernameRule {
         address, /* originalMsgSender */
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
@@ -107,8 +102,8 @@ contract CharsetUsernameRule is IUsernameRule {
         address, /* originalMsgSender */
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }

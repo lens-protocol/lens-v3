@@ -21,7 +21,7 @@ contract UsernameFactory {
         string memory namespace,
         string memory metadataURI,
         IAccessControl accessControl,
-        RuleChange[] calldata rules,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData,
         string memory nftName,
         string memory nftSymbol,
@@ -29,7 +29,7 @@ contract UsernameFactory {
     ) external returns (address) {
         Username username =
             new Username(namespace, metadataURI, _factoryOwnedAccessControl, nftName, nftSymbol, tokenURIProvider);
-        username.changeUsernameRules(rules);
+        username.changeUsernameRules(ruleChanges);
         username.setExtraData(extraData);
         username.setAccessControl(accessControl);
         emit Lens_UsernameFactory_Deployment(address(username), namespace, metadataURI);

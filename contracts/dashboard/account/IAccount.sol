@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {SourceStamp} from "./../../core/types/Types.sol";
+import {SourceStamp, KeyValue} from "./../../core/types/Types.sol";
 
 struct AccountManagerPermissions {
     bool canExecuteTransactions;
@@ -19,6 +19,9 @@ interface IAccount {
     event Lens_Account_AccountManagerRemoved(address accountManager);
     event Lens_Account_AccountManagerUpdated(address accountManager, AccountManagerPermissions permissions);
     event Lens_Account_AllowNonOwnerSpending(bool allow, uint256 timestamp);
+    event Lens_Account_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+    event Lens_Account_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+    event Lens_Account_ExtraDataRemoved(bytes32 indexed key);
 
     function addAccountManager(
         address _accountManager,
@@ -34,6 +37,8 @@ interface IAccount {
 
     function setMetadataURI(string calldata _metadataURI, SourceStamp calldata sourceStamp) external;
 
+    function setExtraData(KeyValue[] calldata extraDataToSet) external;
+
     function executeTransaction(
         address to,
         uint256 value,
@@ -46,6 +51,8 @@ interface IAccount {
         external
         view
         returns (AccountManagerPermissions memory);
+
+    function getExtraData(bytes32 key) external view returns (bytes memory);
 
     function canExecuteTransactions(address executor) external view returns (bool);
 

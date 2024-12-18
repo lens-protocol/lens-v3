@@ -39,7 +39,7 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
 
     // Access Controlled functions
 
-    function _beforeChangeGroupRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 

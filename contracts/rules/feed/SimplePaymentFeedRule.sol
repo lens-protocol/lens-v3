@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {RuleChange} from "./../../core/types/Types.sol";
 import {SimplePaymentRule} from "./../base/SimplePaymentRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {KeyValue} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 
 contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
@@ -25,31 +24,30 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         PaymentConfiguration paymentConfiguration;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreatePost(
         bytes32 configSalt,
         uint256, /* postId */
         CreatePostParams calldata postParams,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
-    ) external {
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
+    ) external override {
         _processPayment(
-            _configuration[msg.sender][this.processCreatePost.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processCreatePost.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             postParams.author
         );
     }
@@ -58,18 +56,18 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         bytes32, /* configSalt */
         uint256, /* postId */
         EditPostParams calldata, /* postParams */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure {
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
         revert();
     }
 
     function processRemovePost(
         bytes32, /* configSalt */
         uint256, /* postId */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure {
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
         revert();
     }
 
@@ -77,8 +75,8 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         bytes32, /* configSalt */
         uint256, /* postId */
         RuleChange[] calldata, /* ruleChanges */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure {
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
         revert();
     }
 
@@ -91,10 +89,6 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
             _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processCreatePost.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

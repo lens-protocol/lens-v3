@@ -5,15 +5,15 @@ pragma solidity ^0.8.0;
 import {KeyValue, RuleChange} from "./../types/Types.sol";
 
 interface IGraphRule {
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external;
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
 
     function processFollow(
         bytes32 configSalt,
         address originalMsgSender,
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processUnfollow(
@@ -21,14 +21,14 @@ interface IGraphRule {
         address originalMsgSender,
         address followerAccount,
         address accountToUnfollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processFollowRuleChanges(
         bytes32 configSalt,
         address account,
         RuleChange[] calldata ruleChanges,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata ruleParams
     ) external;
 }

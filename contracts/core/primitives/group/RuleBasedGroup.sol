@@ -5,17 +5,10 @@ pragma solidity ^0.8.0;
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
 import {IGroup} from "./../../interfaces/IGroup.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {
-    RuleChange,
-    RuleProcessingParams,
-    RuleConfigurationParams,
-    RuleConfigurationParams_Multiselector,
-    Rule,
-    RuleOperation,
-    KeyValue
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "./../../types/Types.sol";
+import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
-abstract contract RuleBasedGroup is IGroup {
+abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
 
     struct RuleBasedStorage {
@@ -35,64 +28,58 @@ abstract contract RuleBasedGroup is IGroup {
         return $ruleBasedStorage().groupRulesStorage;
     }
 
-    // Public
+    ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
     function changeGroupRules(RuleChange[] calldata ruleChanges) external virtual override {
-        _beforeChangeGroupRules(ruleChanges);
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
-            ruleConfig_Multiselector.configSalt =
-                $groupRulesStorage().generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
-            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
-                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
-                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
-                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
-                    isRequired: ruleConfig_Multiselector.isRequired,
-                    configSalt: ruleConfig_Multiselector.configSalt,
-                    customParams: ruleConfig_Multiselector.customParams
-                });
-                if (ruleChanges[i].operation == RuleOperation.ADD) {
-                    _addGroupRule(ruleConfig);
-                    emit IGroup.Lens_Group_RuleAdded(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                    _updateGroupRule(ruleConfig);
-                    emit IGroup.Lens_Group_RuleUpdated(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else {
-                    _removeGroupRule(ruleConfig);
-                    emit IGroup.Lens_Group_RuleRemoved(
-                        ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                    );
-                }
-            }
+        _changePrimitiveRules($groupRulesStorage(), ruleChanges);
+    }
+
+    function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IGroupRule.processAddition.selector;
+        selectors[1] = IGroupRule.processRemoval.selector;
+        selectors[2] = IGroupRule.processJoining.selector;
+        selectors[3] = IGroupRule.processLeaving.selector;
+        return selectors;
+    }
+
+    function _encodePrimitiveConfigureCall(
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal pure override returns (bytes memory) {
+        return abi.encodeCall(IGroupRule.configure, (configSalt, ruleParams));
+    }
+
+    function _emitPrimitiveRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal override {
+        if (wasAlreadyConfigured) {
+            emit IGroup.Lens_Group_RuleReconfigured(ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IGroup.Lens_Group_RuleConfigured(ruleAddress, configSalt, ruleParams);
         }
-        require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processAddition.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processRemoval.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processJoining.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $groupRulesStorage().anyOfRules[IGroupRule.processLeaving.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
+    }
+
+    function _emitPrimitiveRuleSelectorEvent(
+        bool enabled,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 ruleSelector
+    ) internal override {
+        if (enabled) {
+            emit Lens_Group_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        } else {
+            emit Lens_Group_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        }
+    }
+
+    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
+        return $groupRulesStorage()._getRulesArray(ruleSelector, false).length
+            + $groupRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
     function getGroupRules(
@@ -102,25 +89,7 @@ abstract contract RuleBasedGroup is IGroup {
         return $groupRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
-    // Internal
-
-    function _beforeChangeGroupRules(RuleChange[] calldata ruleChanges) internal virtual {}
-
-    function _addGroupRule(RuleConfigurationParams memory rule) internal {
-        $groupRulesStorage().addRule(
-            rule, abi.encodeCall(IGroupRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _updateGroupRule(RuleConfigurationParams memory rule) internal {
-        $groupRulesStorage().updateRule(
-            rule, abi.encodeCall(IGroupRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _removeGroupRule(RuleConfigurationParams memory rule) internal {
-        $groupRulesStorage().removeRule(rule);
-    }
+    ////////////////////////////  PROCESSING FUNCTIONS  ////////////////////////////
 
     function _encodeAndCallProcessMemberRemoval(
         address rule,
@@ -257,15 +226,15 @@ abstract contract RuleBasedGroup is IGroup {
         for (uint256 i = 0; i < $groupRulesStorage().requiredRules[ruleSelector].length; i++) {
             Rule memory rule = $groupRulesStorage().requiredRules[ruleSelector][i];
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -274,15 +243,15 @@ abstract contract RuleBasedGroup is IGroup {
         for (uint256 i = 0; i < $groupRulesStorage().anyOfRules[ruleSelector].length; i++) {
             Rule memory rule = $groupRulesStorage().anyOfRules[ruleSelector][i];
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
+                KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
@@ -291,10 +260,5 @@ abstract contract RuleBasedGroup is IGroup {
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
         require($groupRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
-    }
-
-    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
-        return $groupRulesStorage()._getRulesArray(ruleSelector, false).length
-            + $groupRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 }
