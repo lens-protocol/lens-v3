@@ -130,8 +130,6 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     // Internal
 
-    // TODO: Unfortunately we had to copy-paste this code because we couldn't think of a better solution for encoding yet.
-
     function _graphProcessFollowRuleChanges(
         address account,
         RuleConfigurationChange[] calldata configChanges,
