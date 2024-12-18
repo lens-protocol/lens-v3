@@ -15,6 +15,7 @@ import {LensERC721} from "./../../base/LensERC721.sol";
 import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
+// TODO: Rename to Namespace (cause "Username" is an entity of the primitive "Namespace", like "Post" of "Feed")
 contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled, ExtraStorageBased, SourceStampBased {
     event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
@@ -73,7 +74,8 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningProcessingParams,
         RuleProcessingParams[] calldata creationProcessingParams,
-        RuleProcessingParams[] calldata assigningProcessingParams
+        RuleProcessingParams[] calldata assigningProcessingParams,
+        KeyValue[] calldata extraData
     ) external {
         require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);
@@ -81,7 +83,8 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         _idToUsername[id] = username;
         Core._createUsername(username);
         address source = _processSourceStamp(id, customParams);
-        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source);
+        _decodeAndSetUsernameExtraData(id, extraData);
+        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source, extraData);
         _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
         Core._assignUsername(account, username);
         emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
@@ -93,7 +96,8 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         address account,
         string calldata username,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        KeyValue[] calldata extraData
     ) external override {
         require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);
@@ -102,7 +106,8 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         Core._createUsername(username);
         _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
-        emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source);
+        _decodeAndSetUsernameExtraData(id, extraData);
+        emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source, extraData);
     }
 
     function removeUsername(
@@ -155,10 +160,41 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         emit Lens_Username_Unassigned(username, account, customParams, ruleProcessingParams, source);
     }
 
+    // TODO: Rename this to setNamespaceExtraData/setPrimitiveExtraData?
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
+            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
+            if (hadAValueSetBefore) {
+                if (isNewValueEmpty) {
+                    emit Lens_Namespace_ExtraDataRemoved(extraDataToSet[i].key);
+                } else {
+                    emit Lens_Namespace_ExtraDataUpdated(
+                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
+                    );
+                }
+            } else if (!isNewValueEmpty) {
+                emit Lens_Namespace_ExtraDataAdded(
+                    extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
+                );
+            }
+        }
+    }
+
+    // TODO: Rename this to setUsernameExtraData?
+    function setExtraData(string calldata username, KeyValue[] calldata extraDataToSet) external {
+        uint256 id = _computeId(username);
+        address owner = _ownerOf(id);
+        require(msg.sender == owner);
+        _decodeAndSetUsernameExtraData(id, extraDataToSet);
+    }
+
+    // Internal
+
+    function _decodeAndSetUsernameExtraData(uint256 tokenId, KeyValue[] memory extraDataToSet) internal {
+        for (uint256 i = 0; i < extraDataToSet.length; i++) {
+            bool hadAValueSetBefore = _setEntityExtraData(tokenId, extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -175,8 +211,6 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
             }
         }
     }
-
-    // Internal
 
     function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
         emit Lens_Username_Transfer(from, to, tokenId);
@@ -230,6 +264,12 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
+    }
+
+    function getExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
+        uint256 tokenId = _computeId(username);
+        address owner = _ownerOf(tokenId);
+        return _getEntityExtraData(owner, tokenId, key);
     }
 
     function getMetadataURI() external view override returns (string memory) {

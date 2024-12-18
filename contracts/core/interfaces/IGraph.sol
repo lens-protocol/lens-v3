@@ -51,7 +51,8 @@ interface IGraph is IMetadataBased {
         KeyValue[] customParams,
         RuleProcessingParams[] graphRulesProcessingParams,
         RuleProcessingParams[] followRulesProcessingParams,
-        address indexed source
+        address indexed source,
+        KeyValue[] extraData
     );
 
     event Lens_Graph_Unfollowed(
