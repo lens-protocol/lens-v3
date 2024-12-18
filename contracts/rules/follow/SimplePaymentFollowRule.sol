@@ -23,23 +23,17 @@ contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
         PaymentConfiguration paymentConfiguration;
     }
 
-    mapping(address => mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration)))) internal _configuration;
+    mapping(address => mapping(address => mapping(bytes32 => Configuration))) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
     }
 
-    function configure(
-        address account,
-        bytes4 ruleSelector,
-        bytes32 salt,
-        KeyValue[] calldata ruleConfigurationParams
-    ) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
-        _configuration[msg.sender][account][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][account][configSalt] = configuration;
     }
 
     function processFollow(
@@ -47,13 +41,13 @@ contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
         address, /* originalMsgSender */
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
-    ) external {
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
+    ) external override {
         _processPayment(
-            _configuration[msg.sender][accountToFollow][this.processFollow.selector][configSalt].accessControl,
-            _configuration[msg.sender][accountToFollow][this.processFollow.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][accountToFollow][configSalt].accessControl,
+            _configuration[msg.sender][accountToFollow][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             followerAccount
         );
     }
@@ -67,10 +61,6 @@ contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
         if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
             _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processFollow.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

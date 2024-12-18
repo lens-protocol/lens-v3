@@ -5,14 +5,14 @@ pragma solidity ^0.8.0;
 import {KeyValue} from "./../types/Types.sol";
 
 interface IFollowRule {
-    function configure(address account, bytes32 configSalt, KeyValue[] calldata ruleParams) external;
+    function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external;
 
     function processFollow(
         bytes32 configSalt,
         address originalMsgSender,
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 }
