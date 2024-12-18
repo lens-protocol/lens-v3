@@ -7,10 +7,11 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 
 import {Events} from "./../../core/types/Events.sol";
 import {IAccount, AccountManagerPermissions} from "./IAccount.sol";
-import {SourceStamp} from "./../../core/types/Types.sol";
+import {SourceStamp, KeyValue} from "./../../core/types/Types.sol";
 import {ISource} from "./../../core/interfaces/ISource.sol";
+import {ExtraStorageBased} from "./../../core/base/ExtraStorageBased.sol";
 
-contract Account is IAccount, Ownable, IERC721Receiver {
+contract Account is IAccount, Ownable, IERC721Receiver, ExtraStorageBased {
     // TODO: Think how long the timelock should be and should it be configurable
     uint256 constant SPENDING_TIMELOCK = 1 hours;
 
@@ -23,7 +24,8 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         string memory metadataURI,
         address[] memory accountManagers,
         AccountManagerPermissions[] memory accountManagerPermissions,
-        SourceStamp memory sourceStamp
+        SourceStamp memory sourceStamp,
+        KeyValue[] memory extraData
     ) Ownable() {
         _metadataURI[sourceStamp.source] = metadataURI;
         if (sourceStamp.source != address(0)) {
@@ -33,6 +35,7 @@ contract Account is IAccount, Ownable, IERC721Receiver {
             _accountManagerPermissions[accountManagers[i]] = accountManagerPermissions[i];
             emit Lens_Account_AccountManagerAdded(accountManagers[i], accountManagerPermissions[i]);
         }
+        _decodeAndSetExtraData(extraData);
         _transferOwnership(owner);
         emit Lens_Account_MetadataURISet(metadataURI, sourceStamp.source);
         emit Events.Lens_Contract_Deployed("account", "lens.account", "account", "lens.account");
@@ -51,11 +54,10 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         emit Lens_Account_AllowNonOwnerSpending(allow, allow ? block.timestamp : 0);
     }
 
-    function addAccountManager(address accountManager, AccountManagerPermissions calldata accountManagerPermissions)
-        external
-        override
-        onlyOwner
-    {
+    function addAccountManager(
+        address accountManager,
+        AccountManagerPermissions calldata accountManagerPermissions
+    ) external override onlyOwner {
         require(!_accountManagerPermissions[accountManager].canExecuteTransactions, "Account manager already exists");
         require(accountManager != owner(), "Cannot add owner as account manager");
         require(accountManager != address(0), "Cannot add zero address as account manager");
@@ -79,19 +81,11 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
 
-    function getAccountManagerPermissions(address accountManager)
-        external
-        view
-        override
-        returns (AccountManagerPermissions memory)
-    {
-        return _accountManagerPermissions[accountManager];
+    function setExtraData(KeyValue[] calldata extraDataToSet) external onlyOwner {
+        _decodeAndSetExtraData(extraDataToSet);
     }
 
-    function canExecuteTransactions(address executor) external view override returns (bool) {
-        return _accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
-    }
-
+    // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setPrimitiveExtraDataByUser case
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
             require(_accountManagerPermissions[msg.sender].canSetMetadataURI, "No permissions to set metadata URI");
@@ -103,16 +97,11 @@ contract Account is IAccount, Ownable, IERC721Receiver {
         emit Lens_Account_MetadataURISet(metadataURI, sourceStamp.source);
     }
 
-    function getMetadataURI(address source) external view override returns (string memory) {
-        return _metadataURI[source];
-    }
-
-    function executeTransaction(address to, uint256 value, bytes calldata data)
-        external
-        payable
-        override
-        returns (bytes memory)
-    {
+    function executeTransaction(
+        address to,
+        uint256 value,
+        bytes calldata data
+    ) external payable override returns (bytes memory) {
         if (msg.sender != owner()) {
             require(
                 _accountManagerPermissions[msg.sender].canExecuteTransactions, "No permissions to execute transactions"
@@ -144,6 +133,45 @@ contract Account is IAccount, Ownable, IERC721Receiver {
     }
 
     receive() external payable override {}
+
+    function canExecuteTransactions(address executor) external view override returns (bool) {
+        return _accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
+    }
+
+    function getMetadataURI(address source) external view override returns (string memory) {
+        return _metadataURI[source];
+    }
+
+    function getAccountManagerPermissions(address accountManager)
+        external
+        view
+        override
+        returns (AccountManagerPermissions memory)
+    {
+        return _accountManagerPermissions[accountManager];
+    }
+
+    function getExtraData(bytes32 key) external view override returns (bytes memory) {
+        return _getPrimitiveExtraData(key);
+    }
+
+    function _decodeAndSetExtraData(KeyValue[] memory extraDataToSet) internal {
+        for (uint256 i = 0; i < extraDataToSet.length; i++) {
+            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
+            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
+            if (hadAValueSetBefore) {
+                if (isNewValueEmpty) {
+                    emit Lens_Account_ExtraDataRemoved(extraDataToSet[i].key);
+                } else {
+                    emit Lens_Account_ExtraDataUpdated(
+                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
+                    );
+                }
+            } else if (!isNewValueEmpty) {
+                emit Lens_Account_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
+            }
+        }
+    }
 
     function _isTransferRelatedSelector(bytes4 selector) internal pure returns (bool) {
         // Checking only for ERC20, ERC721, ERC1155 selectors for now

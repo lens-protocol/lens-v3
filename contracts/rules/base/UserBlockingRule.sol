@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {RuleChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
 
 contract UserBlockingRule is IFeedRule, IGraphRule {
@@ -14,7 +14,10 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
 
     mapping(address => mapping(address => uint256)) public userBlocks;
 
-    function configure(bytes calldata /*data*/ ) external pure override(IFeedRule, IGraphRule) {}
+    function configure(
+        bytes32, /* salt */
+        KeyValue[] calldata /* ruleConfigurationParams */
+    ) external pure override(IFeedRule, IGraphRule) {}
 
     function blockUser(address source, address target) external {
         require(msg.sender == source, "Only the source can block a user");
@@ -27,11 +30,13 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
         userBlocks[msg.sender][target] = 0;
     }
 
-    function processCreatePost(uint256 postId, CreatePostParams calldata postParams, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
+    function processCreatePost(
+        bytes32, /* configSalt */
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata, /* primitiveCustomParams */
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external view {
         if (postParams.repliedPostId != 0) {
             address author = postParams.author;
             address repliedToAuthor = IFeed(msg.sender).getPostAuthor(postParams.repliedPostId);
@@ -44,18 +49,19 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
                 revert("User is blocked from commenting on this author's posts");
             }
         }
-        return true;
     }
 
-    function processFollow(address followerAcount, address accountToFollow, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
-        if (_isBlocked({source: accountToFollow, blockTarget: followerAcount})) {
+    function processFollow(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address followerAccount,
+        address accountToFollow,
+        KeyValue[] calldata, /* primitiveCustomParams */
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external view {
+        if (_isBlocked({source: accountToFollow, blockTarget: followerAccount})) {
             revert("User is blocked from following this user");
         }
-        return true;
     }
 
     function isBlocked(address source, address blockTarget) external view returns (bool) {
@@ -69,26 +75,50 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
     // Unimplemented functions
 
     function processEditPost(
+        bytes32, /* configSalt */
         uint256, /* postId */
-        EditPostParams calldata, /* editPostParams */
-        bytes calldata /* data */
-    ) external pure returns (bool) {
-        return false;
+        EditPostParams calldata, /* postParams */
+        KeyValue[] calldata, /* primitiveCustomParams */
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external pure {
+        revert();
+    }
+
+    function processRemovePost(
+        bytes32, /* configSalt */
+        uint256, /* postId */
+        KeyValue[] calldata, /* primitiveCustomParams */
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external pure {
+        revert();
     }
 
     function processPostRuleChanges(
+        bytes32, /* configSalt */
         uint256, /* postId */
         RuleChange[] calldata, /* ruleChanges */
-        bytes calldata /* data */
-    ) external pure returns (bool) {
-        return false;
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external pure {
+        revert();
+    }
+
+    function processUnfollow(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* followerAccount */
+        address, /* accountToUnfollow */
+        KeyValue[] calldata, /* primitiveCustomParams */
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external pure {
+        revert();
     }
 
     function processFollowRuleChanges(
+        bytes32, /* configSalt */
         address, /* account */
         RuleChange[] calldata, /* ruleChanges */
-        bytes calldata /* data */
-    ) external pure returns (bool) {
-        return false;
+        KeyValue[] calldata /* ruleExecutionParams */
+    ) external pure {
+        revert();
     }
 }

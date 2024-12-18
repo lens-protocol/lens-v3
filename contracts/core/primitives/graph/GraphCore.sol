@@ -3,11 +3,8 @@
 pragma solidity ^0.8.17;
 
 import {Follow} from "./../../interfaces/IGraph.sol";
-import "./../../libraries/ExtraDataLib.sol";
 
 library GraphCore {
-    using ExtraDataLib for mapping(bytes32 => bytes);
-
     // Storage
 
     struct Storage {
@@ -16,7 +13,7 @@ library GraphCore {
         mapping(address => mapping(address => Follow)) follows;
         mapping(address => mapping(uint256 => address)) followers;
         mapping(address => uint256) followersCount;
-        mapping(bytes32 => bytes) extraData;
+        mapping(address => uint256) followingCount;
     }
 
     // keccak256('lens.graph.core.storage')
@@ -26,20 +23,6 @@ library GraphCore {
         assembly {
             _storage.slot := CORE_STORAGE_SLOT
         }
-    }
-
-    // External functions - Use these functions to be called through DELEGATECALL
-
-    function follow(address followerAccount, address accountToFollow, uint256 followId) external returns (uint256) {
-        return _follow(followerAccount, accountToFollow, followId);
-    }
-
-    function unfollow(address followerAccount, address accountToUnfollow) external returns (uint256) {
-        return _unfollow(followerAccount, accountToUnfollow);
-    }
-
-    function setExtraData(DataElement calldata extraDataToSet) external returns (bool) {
-        return _setExtraData(extraDataToSet);
     }
 
     // Internal functions - Use these functions to be called as an inlined library
@@ -56,6 +39,7 @@ library GraphCore {
         $storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: block.timestamp});
         $storage().followers[accountToFollow][followId] = followerAccount;
         $storage().followersCount[accountToFollow]++;
+        $storage().followingCount[followerAccount]++;
         return followId;
     }
 
@@ -63,12 +47,9 @@ library GraphCore {
         uint256 followId = $storage().follows[followerAccount][accountToUnfollow].id;
         require(followId != 0); // Must be following
         $storage().followersCount[accountToUnfollow]--;
+        $storage().followingCount[followerAccount]--;
         delete $storage().followers[accountToUnfollow][followId];
         delete $storage().follows[followerAccount][accountToUnfollow];
         return followId;
-    }
-
-    function _setExtraData(DataElement calldata extraDataToSet) internal returns (bool) {
-        return $storage().extraData.set(extraDataToSet);
     }
 }

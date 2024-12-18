@@ -3,16 +3,17 @@
 pragma solidity ^0.8.0;
 
 import {Account, AccountManagerPermissions} from "./../account/Account.sol";
-import {SourceStamp} from "./../../core/types/Types.sol";
+import {KeyValue, SourceStamp} from "./../../core/types/Types.sol";
 
 contract AccountFactory {
-    event Lens_AccountFactory_Deployment(
+    event Lens_Account_Created(
         address indexed account,
         address indexed owner,
         string metadataURI,
         address[] accountManagers,
         AccountManagerPermissions[] accountManagersPermissions,
-        address source
+        address indexed source,
+        KeyValue[] extraData
     );
 
     function deployAccount(
@@ -20,12 +21,20 @@ contract AccountFactory {
         string calldata metadataURI,
         address[] calldata accountManagers,
         AccountManagerPermissions[] calldata accountManagersPermissions,
-        SourceStamp calldata sourceStamp
+        SourceStamp calldata sourceStamp,
+        KeyValue[] calldata extraData
     ) external returns (address) {
         // TODO: Make it a proxy
-        Account account = new Account(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp);
-        emit Lens_AccountFactory_Deployment(
-            address(account), owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp.source
+        Account account =
+            new Account(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
+        emit Lens_Account_Created(
+            address(account),
+            owner,
+            metadataURI,
+            accountManagers,
+            accountManagersPermissions,
+            sourceStamp.source,
+            extraData
         );
         return address(account);
     }

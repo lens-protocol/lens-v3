@@ -2,59 +2,109 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {DataElement, RuleChange, RuleExecutionData, SourceStamp} from "./../types/Types.sol";
+import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 interface IUsername is IMetadataBased {
-    event Lens_Username_RuleAdded(address indexed ruleAddress, bytes configData, bool indexed isRequired);
+    event Lens_Username_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
-    event Lens_Username_RuleUpdated(address indexed ruleAddress, bytes configData, bool indexed isRequired);
+    event Lens_Username_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
-    event Lens_Username_RuleRemoved(address indexed ruleAddress);
+    event Lens_Username_RuleSelectorEnabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
+    );
 
-    event Lens_Username_Created(string username, address indexed account, RuleExecutionData data, address source);
+    event Lens_Username_RuleSelectorDisabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
+    );
 
-    event Lens_Username_Removed(string username, address indexed account, address source);
+    event Lens_Username_Created(
+        string username,
+        address indexed account,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source,
+        KeyValue[] extraData
+    );
 
-    event Lens_Username_Assigned(string username, address indexed account, RuleExecutionData data, address source);
+    event Lens_Username_Removed(
+        string username,
+        address indexed account,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
 
-    event Lens_Username_Unassigned(string username, address indexed previousAccount, address source);
+    event Lens_Username_Assigned(
+        string username,
+        address indexed account,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
 
+    event Lens_Username_Unassigned(
+        string username,
+        address indexed previousAccount,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Namespace_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+    event Lens_Namespace_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
+    event Lens_Namespace_ExtraDataRemoved(bytes32 indexed key);
     event Lens_Username_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
 
     event Lens_Username_MetadataURISet(string metadataURI);
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external;
+    function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
     function changeUsernameRules(RuleChange[] calldata ruleChanges) external;
 
     function createUsername(
         address account,
-        string memory username,
-        RuleExecutionData calldata data,
-        SourceStamp calldata sourceStamp
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        KeyValue[] calldata extraData
     ) external;
 
-    function removeUsername(string memory username, SourceStamp calldata sourceStamp) external;
+    function removeUsername(
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata unassigningRuleProcessingParams,
+        RuleProcessingParams[] calldata removalRuleProcessingParams
+    ) external;
 
     function assignUsername(
         address account,
-        string memory username,
-        RuleExecutionData calldata data,
-        SourceStamp calldata sourceStamp
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
+        RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
+        RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external;
 
-    function unassignUsername(string memory username, SourceStamp calldata sourceStamp) external;
+    function unassignUsername(
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) external;
+
+    function setExtraData(string memory username, KeyValue[] calldata extraDataToSet) external;
 
     function usernameOf(address user) external view returns (string memory);
 
-    function accountOf(string memory name) external view returns (address);
+    function accountOf(string calldata name) external view returns (address);
 
     function getNamespace() external view returns (string memory);
 
-    function getUsernameRules(bool isRequired) external view returns (address[] memory);
+    function getUsernameRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
+
+    function getExtraData(string calldata username, bytes32 key) external view returns (bytes memory);
 }

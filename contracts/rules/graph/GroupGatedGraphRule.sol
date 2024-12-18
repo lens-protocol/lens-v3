@@ -2,15 +2,14 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
+import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
+import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
-contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
+contract GroupGatedGraphRule is IGraphRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -18,10 +17,12 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
 
     // keccak256("lens.param.key.accessControl");
     bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
+    // keccak256("lens.param.key.group");
+    bytes32 immutable GROUP_PARAM_KEY = 0xe556a4384e8a110aab4ea745eff2c09de81f87f56e4ecba2205982230d3bd4f4;
 
     struct Configuration {
         address accessControl;
-        TokenGateConfiguration tokenGate;
+        address groupGate;
     }
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
@@ -30,62 +31,60 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
-        _validateTokenGateConfiguration(configuration.tokenGate);
+        IGroup(configuration.groupGate).getMembershipId(address(this));
         _configuration[msg.sender][configSalt] = configuration;
     }
 
-    function processCreatePost(
+    function processFollow(
         bytes32 configSalt,
-        uint256, /* postId */
-        CreatePostParams calldata postParams,
+        address, /* originalMsgSender */
+        address followerAccount,
+        address accountToFollow,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        _validateTokenBalance(
+        /**
+         * Both ends of the follow connection must comply with the group-gate restriction, then the graph is purely
+         * conformed by group members.
+         */
+        _validateGroupMembership(
             _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].tokenGate,
-            postParams.author
+            _configuration[msg.sender][configSalt].groupGate,
+            followerAccount
+        );
+        _validateGroupMembership(
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].groupGate,
+            accountToFollow
         );
     }
 
-    function processEditPost(
+    function processUnfollow(
         bytes32, /* configSalt */
-        uint256, /* postId */
-        EditPostParams calldata, /* postParams */
+        address, /* originalMsgSender */
+        address, /* followerAccount */
+        address, /* accountToUnfollow */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
 
-    function processRemovePost(
+    function processFollowRuleChanges(
         bytes32, /* configSalt */
-        uint256, /* postId */
-        KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
-    ) external pure override {
-        revert();
-    }
-
-    function processPostRuleChanges(
-        bytes32, /* configSalt */
-        uint256, /* postId */
+        address, /* account */
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
 
-    function _validateTokenBalance(
-        address accessControl,
-        TokenGateConfiguration memory tokenGateConfiguration,
-        address account
-    ) internal view {
+    function _validateGroupMembership(address accessControl, address group, address account) internal view {
         if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
-            _validateTokenBalance(tokenGateConfiguration, account);
+            require(IGroup(group).getMembershipId(account) != 0, "NotAMember()");
         }
     }
 
@@ -94,8 +93,8 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
-            } else if (params[i].key == TOKEN_GATE_PARAM_KEY) {
-                configuration.tokenGate = abi.decode(params[i].value, (TokenGateConfiguration));
+            } else if (params[i].key == GROUP_PARAM_KEY) {
+                configuration.groupGate = abi.decode(params[i].value, (address));
             }
         }
         return configuration;

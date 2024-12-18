@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IAccessControl} from "./../../../core/interfaces/IAccessControl.sol";
 import {IApp} from "./IApp.sol";
 import {AppCore as Core} from "./AppCore.sol";
-import {DataElement, SourceStamp} from "./../../../core/types/Types.sol";
+import {KeyValue, SourceStamp} from "./../../../core/types/Types.sol";
 import {AccessControlled} from "./../../../core/access/AccessControlled.sol";
 import {Events} from "./../../../core/types/Events.sol";
 import {BaseSource} from "./../../../core/base/BaseSource.sol";
@@ -38,7 +38,7 @@ contract App is IApp, BaseSource, AccessControlled {
         bool isSourceStampVerificationEnabled,
         IAccessControl accessControl,
         AppInitialProperties memory initialProps,
-        DataElement[] memory extraData
+        KeyValue[] memory extraData
     ) AccessControlled(accessControl) {
         _setMetadataURI(metadataURI);
         _setSourceStampVerification(isSourceStampVerificationEnabled);
@@ -70,7 +70,7 @@ contract App is IApp, BaseSource, AccessControlled {
 
     function _validateSource(SourceStamp calldata sourceStamp) internal virtual override {
         // If source stamp verification is disabled, we don't need to verify the source stamp
-        if (!Core.$storage().sourceStampVerificationEnabled) {
+        if (Core.$storage().sourceStampVerificationEnabled) {
             super._validateSource(sourceStamp);
         }
     }
@@ -278,12 +278,12 @@ contract App is IApp, BaseSource, AccessControlled {
 
     ///////////////// Extra Data
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external override {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         _setExtraData(extraDataToSet);
     }
 
-    function _setExtraData(DataElement[] memory extraDataToSet) internal {
+    function _setExtraData(KeyValue[] memory extraDataToSet) internal {
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
