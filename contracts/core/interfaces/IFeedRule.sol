@@ -12,23 +12,23 @@ interface IFeedRule {
         bytes32 configSalt,
         uint256 postId,
         CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processEditPost(
         bytes32 configSalt,
         uint256 postId,
         EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processRemovePost(
         bytes32 configSalt,
         uint256 postId,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processPostRuleChanges(
@@ -36,6 +36,6 @@ interface IFeedRule {
         uint256 postId,
         RuleConfigurationChange[] calldata configChanges,
         RuleSelectorChange[] calldata selectorChanges,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata ruleParams
     ) external;
 }
