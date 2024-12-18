@@ -45,8 +45,8 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     function _beforeChangeEntityRules(
         uint256 entityId,
-        RuleConfigurationChange[] calldata configChanges,
-        RuleSelectorChange[] calldata selectorChanges
+        RuleConfigurationChange[] calldata, /* configChanges */
+        RuleSelectorChange[] calldata /* selectorChanges */
     ) internal virtual override {
         address account = address(uint160(entityId));
         // TODO: What should we validate here?

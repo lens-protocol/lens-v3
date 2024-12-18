@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {Graph} from "./../../core/primitives/graph/Graph.sol";
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
-import {RuleChange, KeyValue} from "./../../core/types/Types.sol";
+import {RuleConfigurationChange, RuleSelectorChange, KeyValue} from "./../../core/types/Types.sol";
 
 contract GraphFactory {
     event Lens_GraphFactory_Deployment(address indexed graph, string metadataURI);
@@ -19,11 +19,12 @@ contract GraphFactory {
     function deployGraph(
         string memory metadataURI,
         IAccessControl accessControl,
-        RuleChange[] calldata rules,
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
         Graph graph = new Graph(metadataURI, _factoryOwnedAccessControl);
-        graph.changeGraphRules(rules);
+        graph.changeGraphRules(configChanges, selectorChanges);
         graph.setExtraData(extraData);
         graph.setAccessControl(accessControl);
         emit Lens_GraphFactory_Deployment(address(graph), metadataURI);
