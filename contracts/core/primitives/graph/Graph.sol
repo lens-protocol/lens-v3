@@ -43,6 +43,15 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
+    function _beforeChangeEntityRules(
+        uint256 entityId,
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges
+    ) internal virtual {
+        address account = address(uint160(entityId));
+        // TODO: What should we validate here?
+    }
+
     function setMetadataURI(string calldata metadataURI) external override {
         _requireAccess(msg.sender, SET_METADATA_PID);
         Core.$storage().metadataURI = metadataURI;

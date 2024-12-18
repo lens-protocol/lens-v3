@@ -49,6 +49,14 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
+    function _beforeChangeEntityRules(
+        uint256 entityId,
+        RuleConfigurationChange[] calldata configChanges,
+        RuleSelectorChange[] calldata selectorChanges
+    ) internal virtual {
+        // TODO: What should we validate here?
+    }
+
     // Public user functions
 
     function createPost(
