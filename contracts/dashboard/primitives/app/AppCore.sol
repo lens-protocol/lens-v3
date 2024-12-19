@@ -47,9 +47,11 @@ library AppCore {
         }
     }
 
-    function _add(address element, address[] storage array, mapping(address => ArrayStorageHelper) storage arrayHelper)
-        internal
-    {
+    function _add(
+        address element,
+        address[] storage array,
+        mapping(address => ArrayStorageHelper) storage arrayHelper
+    ) internal {
         require(!arrayHelper[element].isSet, "ALREADY_ADDED");
         array.push(element);
         arrayHelper[element] = ArrayStorageHelper({index: uint8(array.length - 1), isSet: true});
@@ -184,11 +186,11 @@ library AppCore {
 
     ////////////// Extra Data
 
-    function setExtraData(DataElement memory extraDataToSet) external returns (bool) {
+    function setExtraData(KeyValue memory extraDataToSet) external returns (bool) {
         return _setExtraData(extraDataToSet);
     }
 
-    function _setExtraData(DataElement memory extraDataToSet) internal returns (bool) {
+    function _setExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
         return $storage().extraData.set(extraDataToSet);
     }
 }

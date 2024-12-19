@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleConfiguration, RuleChange, RuleExecutionData, DataElement, SourceStamp} from "./../types/Types.sol";
+import {RuleProcessingParams, KeyValue, RuleChange, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
 // TODO: Might worth to add extraData to the follow entity
@@ -16,34 +16,52 @@ struct Follow {
 }
 
 interface IGraph is IMetadataBased {
-    event Lens_Graph_RuleAdded(address indexed ruleAddress, bytes configData, bool indexed isRequired);
-    event Lens_Graph_RuleUpdated(address indexed ruleAddress, bytes configData, bool indexed isRequired);
-    event Lens_Graph_RuleRemoved(address indexed ruleAddress);
+    event Lens_Graph_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
-    // TODO: Decide which info we want in these events and make them consistent across entities
-    event Lens_Graph_Follow_RuleAdded(
-        address indexed account, address indexed ruleAddress, RuleConfiguration ruleConfiguration
+    event Lens_Graph_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+
+    event Lens_Graph_RuleSelectorEnabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
-    event Lens_Graph_Follow_RuleUpdated(
-        address indexed account, address indexed ruleAddress, RuleConfiguration ruleConfiguration
+
+    event Lens_Graph_RuleSelectorDisabled(
+        address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
-    event Lens_Graph_Follow_RuleRemoved(address indexed account, address indexed ruleAddress);
+
+    event Lens_Graph_Follow_RuleConfigured(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams
+    );
+
+    event Lens_Graph_Follow_RuleReconfigured(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams
+    );
+
+    event Lens_Graph_Follow_RuleSelectorEnabled(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
+    );
+
+    event Lens_Graph_Follow_RuleSelectorDisabled(
+        address indexed account, address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
+    );
 
     event Lens_Graph_Followed(
         address indexed followerAccount,
         address indexed accountToFollow,
         uint256 followId,
-        RuleExecutionData graphRulesData,
-        RuleExecutionData followRulesData,
-        address source
+        KeyValue[] customParams,
+        RuleProcessingParams[] graphRulesProcessingParams,
+        RuleProcessingParams[] followRulesProcessingParams,
+        address indexed source,
+        KeyValue[] extraData
     );
 
     event Lens_Graph_Unfollowed(
         address indexed followerAccount,
         address indexed accountToUnfollow,
         uint256 followId,
-        RuleExecutionData graphRulesData,
-        address source
+        KeyValue[] customParams,
+        RuleProcessingParams[] graphRulesProcessingParams,
+        address indexed source
     );
 
     event Lens_Graph_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
@@ -57,26 +75,26 @@ interface IGraph is IMetadataBased {
     function changeFollowRules(
         address account,
         RuleChange[] calldata ruleChanges,
-        RuleExecutionData calldata graphRulesData
+        RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external;
 
     function follow(
         address followerAccount,
         address targetAccount,
-        uint256 followId, // TODO: If we add `bytes data` to all core calls, we can remove this tokenized-ad-hoc param
-        RuleExecutionData calldata graphRulesData,
-        RuleExecutionData calldata followRulesData,
-        SourceStamp calldata sourceStamp
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata graphRulesProcessingParams,
+        RuleProcessingParams[] calldata followRulesProcessingParams,
+        KeyValue[] calldata extraData
     ) external returns (uint256);
 
     function unfollow(
         address followerAccount,
         address targetAccount,
-        RuleExecutionData calldata graphRulesData,
-        SourceStamp calldata sourceStamp
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external returns (uint256);
 
-    function setExtraData(DataElement[] calldata extraDataToSet) external;
+    function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
     // Getters
 
@@ -88,9 +106,15 @@ interface IGraph is IMetadataBased {
 
     function getFollowersCount(address account) external view returns (uint256);
 
-    function getGraphRules(bool isRequired) external view returns (address[] memory);
+    function getFollowingCount(address account) external view returns (uint256);
 
-    function getFollowRules(address account, bool isRequired) external view returns (address[] memory);
+    function getGraphRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
+
+    function getFollowRules(
+        address account,
+        bytes4 ruleSelector,
+        bool isRequired
+    ) external view returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
 }

@@ -2,16 +2,33 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RuleChange} from "./../types/Types.sol";
+import {KeyValue, RuleChange} from "./../types/Types.sol";
 
 interface IGraphRule {
-    function configure(bytes calldata data) external;
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
 
-    function processFollow(address followerAccount, address accountToFollow, bytes calldata data)
-        external
-        returns (bool);
+    function processFollow(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToFollow,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external;
 
-    function processFollowRuleChanges(address account, RuleChange[] calldata ruleChanges, bytes calldata data)
-        external
-        returns (bool);
+    function processUnfollow(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external;
+
+    function processFollowRuleChanges(
+        bytes32 configSalt,
+        address account,
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata ruleParams
+    ) external;
 }

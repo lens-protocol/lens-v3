@@ -11,6 +11,10 @@ abstract contract SimplePaymentRule {
     event Lens_SimplePaymentRule_Trusted(address indexed payer, address indexed trusted);
     event Lens_SimplePaymentRule_Untrusted(address indexed payer, address indexed untrusted);
 
+    // keccak256("lens.rules.SimplePaymentRule.param.key.paymentConfiguration");
+    bytes32 internal immutable PAYMENT_CONFIG_PARAM_KEY =
+        0x91813a72876e8e72632a605170833caa3bcd468944917f7e9f54ddb630a3a4b9;
+
     struct PaymentConfiguration {
         address token;
         uint256 amount;
