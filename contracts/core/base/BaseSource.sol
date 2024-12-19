@@ -17,7 +17,7 @@ abstract contract BaseSource is ISource {
         _validateSource(sourceStamp);
     }
 
-    // Signature Standard: EIP-191 - Version Byte: 0x45
+    // Signature Standard: EIP-191 - Version Byte: 0x00
     function _validateSource(
         SourceStamp calldata sourceStamp
     ) internal virtual {
