@@ -15,7 +15,6 @@ contract UserBlockingRule is IFeedRule, IGraphRule {
     mapping(address => mapping(address => uint256)) public userBlocks;
 
     function configure(
-        bytes4, /* ruleSelector */
         bytes32, /* salt */
         KeyValue[] calldata /* ruleConfigurationParams */
     ) external pure override(IFeedRule, IGraphRule) {}

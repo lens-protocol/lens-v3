@@ -5,17 +5,10 @@ pragma solidity ^0.8.0;
 import {IFeed, Post, EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
 import {FeedCore as Core} from "./FeedCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {KeyValue} from "./../../types/Types.sol";
 import {RuleBasedFeed} from "./RuleBasedFeed.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
-import {
-    RuleChange,
-    RuleOperation,
-    RuleProcessingParams,
-    RuleConfigurationParams,
-    RuleConfigurationParams_Multiselector
-} from "./../../types/Types.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 
@@ -49,8 +42,15 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
-    function _beforeChangeFeedRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
+    }
+
+    function _beforeChangeEntityRules(
+        uint256 entityId,
+        RuleChange[] calldata /* ruleChanges */
+    ) internal virtual override {
+        // TODO: What should we validate here?
     }
 
     // Public user functions
@@ -76,7 +76,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
             }
         }
         if (postId != rootPostId) {
-            require(postParams.rules.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
+            require(postParams.ruleChanges.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
             // This covers the Reply or Repost cases
             _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         } else {

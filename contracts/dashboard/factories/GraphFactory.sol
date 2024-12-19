@@ -19,11 +19,11 @@ contract GraphFactory {
     function deployGraph(
         string memory metadataURI,
         IAccessControl accessControl,
-        RuleChange[] calldata rules,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
         Graph graph = new Graph(metadataURI, _factoryOwnedAccessControl);
-        graph.changeGraphRules(rules);
+        graph.changeGraphRules(ruleChanges);
         graph.setExtraData(extraData);
         graph.setAccessControl(accessControl);
         emit Lens_GraphFactory_Deployment(address(graph), metadataURI);

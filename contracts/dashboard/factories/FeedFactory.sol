@@ -19,11 +19,11 @@ contract FeedFactory {
     function deployFeed(
         string memory metadataURI,
         IAccessControl accessControl,
-        RuleChange[] calldata rules,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
         Feed feed = new Feed(metadataURI, _factoryOwnedAccessControl);
-        feed.changeFeedRules(rules);
+        feed.changeFeedRules(ruleChanges);
         feed.setExtraData(extraData);
         feed.setAccessControl(accessControl);
         emit Lens_FeedFactory_Deployment(address(feed), metadataURI);

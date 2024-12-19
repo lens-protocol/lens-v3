@@ -7,18 +7,11 @@ import {IFeedRule} from "./../../interfaces/IFeedRule.sol";
 import {IFeed} from "./../../interfaces/IFeed.sol";
 import {FeedCore as Core} from "./FeedCore.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {
-    RuleChange,
-    RuleProcessingParams,
-    RuleConfigurationParams,
-    RuleConfigurationParams_Multiselector,
-    Rule,
-    RuleOperation,
-    KeyValue
-} from "./../../types/Types.sol";
+import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "./../../types/Types.sol";
 import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
+import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
-abstract contract RuleBasedFeed is IFeed {
+abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
 
     struct RuleBasedStorage {
@@ -43,207 +36,100 @@ abstract contract RuleBasedFeed is IFeed {
         return $ruleBasedStorage().postRulesStorage[postId];
     }
 
-    // Public
+    ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeFeedRules(RuleChange[] calldata ruleChanges) external override {
-        _beforeChangeFeedRules(ruleChanges);
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
-            ruleConfig_Multiselector.configSalt =
-                $feedRulesStorage().generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
-            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
-                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
-                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
-                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
-                    isRequired: ruleConfig_Multiselector.isRequired,
-                    configSalt: ruleConfig_Multiselector.configSalt,
-                    customParams: ruleConfig_Multiselector.customParams
-                });
-
-                if (ruleChanges[i].operation == RuleOperation.ADD) {
-                    _addFeedRule(ruleConfig);
-                    emit IFeed.Lens_Feed_RuleAdded(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                    _updateFeedRule(ruleConfig);
-                    emit IFeed.Lens_Feed_RuleUpdated(
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else {
-                    _removeFeedRule(ruleConfig);
-                    emit IFeed.Lens_Feed_RuleRemoved(
-                        ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                    );
-                }
-            }
-        }
-        require(
-            $feedRulesStorage().anyOfRules[IFeedRule.processCreatePost.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $feedRulesStorage().anyOfRules[IFeedRule.processEditPost.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $feedRulesStorage().anyOfRules[IFeedRule.processPostRuleChanges.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
+    function changeFeedRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _changePrimitiveRules($feedRulesStorage(), ruleChanges);
     }
+
+    function changePostRules(
+        uint256 postId,
+        RuleChange[] calldata ruleChanges,
+        RuleProcessingParams[] calldata ruleChangesProcessingParams
+    ) external virtual override {
+        // TODO: msg.sender must be author
+        // TODO: Post must exist before we allow changing its rules
+        _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, ruleChangesProcessingParams);
+    }
+
+    function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IFeedRule.processCreatePost.selector;
+        selectors[1] = IFeedRule.processEditPost.selector;
+        selectors[2] = IFeedRule.processRemovePost.selector;
+        selectors[3] = IFeedRule.processPostRuleChanges.selector;
+        return selectors;
+    }
+
+    function _supportedEntityRuleSelectors() internal view virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](2);
+        selectors[0] = IPostRule.processCreatePost.selector;
+        selectors[1] = IPostRule.processEditPost.selector;
+        return selectors;
+    }
+
+    function _encodePrimitiveConfigureCall(
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal pure override returns (bytes memory) {
+        return abi.encodeCall(IFeedRule.configure, (configSalt, ruleParams));
+    }
+
+    function _emitPrimitiveRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] calldata ruleParams
+    ) internal override {
+        if (wasAlreadyConfigured) {
+            emit IFeed.Lens_Feed_RuleReconfigured(ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IFeed.Lens_Feed_RuleConfigured(ruleAddress, configSalt, ruleParams);
+        }
+    }
+
+    function _emitPrimitiveRuleSelectorEvent(
+        bool enabled,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 ruleSelector
+    ) internal override {
+        if (enabled) {
+            emit Lens_Feed_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        } else {
+            emit Lens_Feed_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        }
+    }
+
+    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
+        return $feedRulesStorage()._getRulesArray(ruleSelector, false).length
+            + $feedRulesStorage()._getRulesArray(ruleSelector, true).length;
+    }
+
+    function getFeedRules(bytes4 ruleSelector, bool isRequired) external view virtual override returns (Rule[] memory) {
+        return $feedRulesStorage()._getRulesArray(ruleSelector, isRequired);
+    }
+
+    function getPostRules(
+        bytes4 ruleSelector,
+        uint256 postId,
+        bool isRequired
+    ) external view virtual override returns (Rule[] memory) {
+        return $postRulesStorage(postId)._getRulesArray(ruleSelector, isRequired);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
 
     function _addPostRulesAtCreation(
         uint256 postId,
         CreatePostParams calldata postParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) internal {
-        // TODO: Review logic consistency between this function and `changePostRules`
-        RuleChange[] memory ruleChanges = new RuleChange[](postParams.rules.length);
-        // We can only add rules to the post on creation, or by calling dedicated functions after (not on editPost)
-        for (uint256 i = 0; i < postParams.rules.length; i++) {
-            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = postParams.rules[i];
-            ruleConfig_Multiselector.configSalt =
-                $postRulesStorage(postId).generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
-            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
-                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
-                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
-                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
-                    isRequired: ruleConfig_Multiselector.isRequired,
-                    configSalt: ruleConfig_Multiselector.configSalt,
-                    customParams: ruleConfig_Multiselector.customParams
-                });
-
-                _addPostRule(postId, ruleConfig);
-                emit Lens_Feed_RuleAdded(
-                    ruleConfig.ruleAddress,
-                    ruleConfig.configSalt,
-                    ruleConfig.ruleSelector,
-                    ruleConfig.customParams,
-                    ruleConfig.isRequired
-                );
-            }
-            ruleChanges[i] = RuleChange({operation: RuleOperation.ADD, configuration: ruleConfig_Multiselector});
-        }
-        // Check if Feed rules allows the given Post's rule configuration
-        _processPostRulesChanges(postId, ruleChanges, feedRulesParams);
-        require(
-            $postRulesStorage(postId).anyOfRules[IPostRule.processCreatePost.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $postRulesStorage(postId).anyOfRules[IPostRule.processEditPost.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-    }
-
-    function changePostRules(
-        uint256 postId,
-        RuleChange[] calldata ruleChanges,
-        RuleProcessingParams[] calldata feedRulesData
-    ) external override {
-        _beforeChangePostRules(postId, ruleChanges);
-        address author = Core.$storage().posts[postId].author;
-        require(msg.sender == author, "MSG_SENDER_NOT_AUTHOR");
-        require(Core.$storage().posts[postId].rootPostId == postId, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            RuleConfigurationParams_Multiselector memory ruleConfig_Multiselector = ruleChanges[i].configuration;
-            ruleConfig_Multiselector.configSalt =
-                $postRulesStorage(postId).generateOrValidateConfigSalt(ruleConfig_Multiselector.configSalt);
-            for (uint256 j = 0; j < ruleConfig_Multiselector.ruleSelectors.length; j++) {
-                RuleConfigurationParams memory ruleConfig = RuleConfigurationParams({
-                    ruleSelector: ruleConfig_Multiselector.ruleSelectors[j],
-                    ruleAddress: ruleConfig_Multiselector.ruleAddress,
-                    isRequired: ruleConfig_Multiselector.isRequired,
-                    configSalt: ruleConfig_Multiselector.configSalt,
-                    customParams: ruleConfig_Multiselector.customParams
-                });
-                if (ruleChanges[i].operation == RuleOperation.ADD) {
-                    _addFeedRule(ruleConfig);
-                    emit IFeed.Lens_Feed_Post_RuleAdded(
-                        postId,
-                        author,
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else if (ruleChanges[i].operation == RuleOperation.UPDATE) {
-                    _updateFeedRule(ruleConfig);
-                    emit IFeed.Lens_Feed_Post_RuleUpdated(
-                        postId,
-                        author,
-                        ruleConfig.ruleAddress,
-                        ruleConfig.configSalt,
-                        ruleConfig.ruleSelector,
-                        ruleConfig.customParams,
-                        ruleConfig.isRequired
-                    );
-                } else {
-                    _removeFeedRule(ruleConfig);
-                    emit IFeed.Lens_Feed_Post_RuleRemoved(
-                        postId, author, ruleConfig.ruleAddress, ruleConfig.configSalt, ruleConfig.ruleSelector
-                    );
-                }
-            }
-        }
-        require(
-            $postRulesStorage(postId).anyOfRules[IPostRule.processCreatePost.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        require(
-            $postRulesStorage(postId).anyOfRules[IPostRule.processEditPost.selector].length != 1,
-            "Cannot have exactly one single any-of rule"
-        );
-        // Check the feed rules if it accepts the new RuleConfiguration
-        _processPostRulesChanges(postId, ruleChanges, feedRulesData);
+        _changeEntityRules($postRulesStorage(postId), postId, postParams.ruleChanges, feedRulesParams);
     }
 
     // Internal
-
-    function _beforeChangeFeedRules(RuleChange[] calldata ruleChanges) internal virtual {}
-
-    function _beforeChangePostRules(uint256 postId, RuleChange[] calldata ruleChanges) internal virtual {}
-
-    function _addFeedRule(RuleConfigurationParams memory rule) internal {
-        $feedRulesStorage().addRule(
-            rule, abi.encodeCall(IFeedRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _updateFeedRule(RuleConfigurationParams memory rule) internal {
-        $feedRulesStorage().updateRule(
-            rule, abi.encodeCall(IFeedRule.configure, (rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _removeFeedRule(RuleConfigurationParams memory rule) internal {
-        $feedRulesStorage().removeRule(rule);
-    }
-
-    function _addPostRule(uint256 postId, RuleConfigurationParams memory rule) internal {
-        $postRulesStorage(postId).addRule(
-            rule, abi.encodeCall(IPostRule.configure, (postId, rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _updatePostRule(uint256 postId, RuleConfigurationParams memory rule) internal {
-        $postRulesStorage(postId).updateRule(
-            rule, abi.encodeCall(IPostRule.configure, (postId, rule.ruleSelector, rule.configSalt, rule.customParams))
-        );
-    }
-
-    function _removePostRule(uint256 postId, RuleConfigurationParams memory rule) internal {
-        $postRulesStorage(postId).removeRule(rule);
-    }
 
     function _encodeAndCallProcessCreatePostOnFeed(
         address rule,
@@ -295,13 +181,13 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -312,13 +198,13 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
@@ -449,13 +335,13 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 require(callNotReverted, "Some required rule failed");
             }
@@ -466,13 +352,13 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
                 (bool callNotReverted,) = encodeAndCall(
-                    rule.addr, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
                 if (callNotReverted) {
                     return; // If any of the OR-combined rules passed, it means they succeed and we can return
@@ -495,12 +381,12 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
@@ -514,12 +400,12 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
@@ -535,7 +421,7 @@ abstract contract RuleBasedFeed is IFeed {
 
     function _processPostRulesChanges(
         uint256 postId,
-        RuleChange[] memory ruleChanges,
+        RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IFeedRule.processPostRuleChanges.selector;
@@ -545,12 +431,12 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
@@ -564,12 +450,12 @@ abstract contract RuleBasedFeed is IFeed {
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.addr
+                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
                         && rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].customParams;
+                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.addr.call(
+                (bool callNotReverted,) = rule.ruleAddress.call(
                     abi.encodeCall(
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
@@ -581,13 +467,5 @@ abstract contract RuleBasedFeed is IFeed {
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
         require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
-    }
-
-    function getFeedRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory) {
-        return $feedRulesStorage()._getRulesArray(ruleSelector, isRequired);
-    }
-
-    function getPostRules(bytes4 ruleSelector, uint256 postId, bool isRequired) external view returns (Rule[] memory) {
-        return $postRulesStorage(postId)._getRulesArray(ruleSelector, isRequired);
     }
 }

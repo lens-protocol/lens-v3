@@ -19,11 +19,11 @@ contract GroupFactory {
     function deployGroup(
         string memory metadataURI,
         IAccessControl accessControl,
-        RuleChange[] calldata rules,
+        RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
         Group group = new Group(metadataURI, _factoryOwnedAccessControl);
-        group.changeGroupRules(rules);
+        group.changeGroupRules(ruleChanges);
         group.setExtraData(extraData);
         group.setAccessControl(accessControl);
         emit Lens_GroupFactory_Deployment(address(group), metadataURI);

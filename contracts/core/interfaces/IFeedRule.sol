@@ -6,35 +6,35 @@ import {CreatePostParams, EditPostParams} from "./IFeed.sol";
 import {KeyValue, RuleChange} from "./../types/Types.sol";
 
 interface IFeedRule {
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external;
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
 
     function processCreatePost(
         bytes32 configSalt,
         uint256 postId,
         CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processEditPost(
         bytes32 configSalt,
         uint256 postId,
         EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processRemovePost(
         bytes32 configSalt,
         uint256 postId,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
     ) external;
 
     function processPostRuleChanges(
         bytes32 configSalt,
         uint256 postId,
         RuleChange[] calldata ruleChanges,
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata ruleParams
     ) external;
 }

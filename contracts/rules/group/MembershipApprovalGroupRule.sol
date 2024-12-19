@@ -29,7 +29,7 @@ contract MembershipApprovalGroupRule is IGroupRule {
         bool isApproved;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => address))) internal _accessControl; // TODO: Should this use bytes4 selector as key or not?
+    mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(address => mapping(bytes32 => MembershipRequest))) internal _membershipRequests;
 
     constructor() {
@@ -57,41 +57,30 @@ contract MembershipApprovalGroupRule is IGroupRule {
             delete _membershipRequests[group][account][configSalt];
             emit Lens_ApprovalGroupRule_MembershipRejected(group, account, msg.sender);
         }
-        require(
-            _accessControl[group][this.processJoining.selector][configSalt].hasAccess(msg.sender, APPROVE_MEMBER_PID)
-        );
+        require(_accessControl[group][configSalt].hasAccess(msg.sender, APPROVE_MEMBER_PID));
     }
 
-    function configure(
-        bytes4 ruleSelector,
-        bytes32 salt,
-        KeyValue[] calldata ruleConfigurationParams
-    ) external override {
-        _validateSelector(ruleSelector);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address accessControl;
-        for (uint256 i = 0; i < ruleConfigurationParams.length; i++) {
-            if (ruleConfigurationParams[i].key == ACCESS_CONTROL_PARAM_KEY) {
-                accessControl = abi.decode(ruleConfigurationParams[i].value, (address));
+        for (uint256 i = 0; i < ruleParams.length; i++) {
+            if (ruleParams[i].key == ACCESS_CONTROL_PARAM_KEY) {
+                accessControl = abi.decode(ruleParams[i].value, (address));
                 break;
             }
         }
         accessControl.verifyHasAccessFunction();
-        _accessControl[msg.sender][ruleSelector][salt] = accessControl;
+        _accessControl[msg.sender][configSalt] = accessControl;
     }
 
     function processAddition(
         bytes32 configSalt,
         address originalMsgSender,
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external override {
         if (!_membershipRequests[msg.sender][account][configSalt].isApproved) {
-            require(
-                _accessControl[msg.sender][this.processAddition.selector][configSalt].hasAccess(
-                    originalMsgSender, APPROVE_MEMBER_PID
-                )
-            );
+            require(_accessControl[msg.sender][configSalt].hasAccess(originalMsgSender, APPROVE_MEMBER_PID));
             emit Lens_ApprovalGroupRule_MembershipApproved(msg.sender, account, originalMsgSender);
         }
         delete _membershipRequests[msg.sender][account][configSalt];
@@ -101,8 +90,8 @@ contract MembershipApprovalGroupRule is IGroupRule {
     function processJoining(
         bytes32 configSalt,
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external override {
         require(_membershipRequests[msg.sender][account][configSalt].isApproved);
         delete _membershipRequests[msg.sender][account][configSalt];
@@ -113,8 +102,8 @@ contract MembershipApprovalGroupRule is IGroupRule {
         bytes32, /* configSalt */
         address, /* originalMsgSender */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
     }
@@ -122,13 +111,9 @@ contract MembershipApprovalGroupRule is IGroupRule {
     function processLeaving(
         bytes32, /* configSalt */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processAddition.selector || ruleSelector == this.processJoining.selector);
     }
 }

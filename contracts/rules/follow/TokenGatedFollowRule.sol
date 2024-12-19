@@ -6,7 +6,7 @@ import {IFollowRule} from "./../../core/interfaces/IFollowRule.sol";
 import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
+import {KeyValue} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 
 contract TokenGatedFollowRule is TokenGatedRule, IFollowRule {
@@ -23,23 +23,17 @@ contract TokenGatedFollowRule is TokenGatedRule, IFollowRule {
         TokenGateConfiguration tokenGate;
     }
 
-    mapping(address => mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration)))) internal _configuration;
+    mapping(address => mapping(address => mapping(bytes32 => Configuration))) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(
-        address account,
-        bytes4 ruleSelector,
-        bytes32 salt,
-        KeyValue[] calldata ruleConfigurationParams
-    ) external {
-        _validateSelector(ruleSelector);
-        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
+    function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
-        _configuration[msg.sender][account][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][account][configSalt] = configuration;
     }
 
     function processFollow(
@@ -47,34 +41,14 @@ contract TokenGatedFollowRule is TokenGatedRule, IFollowRule {
         address, /* originalMsgSender */
         address followerAccount,
         address accountToFollow,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external view {
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
         _validateTokenBalance(
-            _configuration[msg.sender][accountToFollow][this.processFollow.selector][configSalt].accessControl,
-            _configuration[msg.sender][accountToFollow][this.processFollow.selector][configSalt].tokenGate,
+            _configuration[msg.sender][accountToFollow][configSalt].accessControl,
+            _configuration[msg.sender][accountToFollow][configSalt].tokenGate,
             followerAccount
         );
-    }
-
-    function processUnfollow(
-        bytes32, /* configSalt */
-        address, /* originalMsgSender */
-        address, /* followerAccount */
-        address, /* accountToUnfollow */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure {
-        revert();
-    }
-
-    function processFollowRuleChanges(
-        bytes32, /* configSalt */
-        address, /* account */
-        RuleChange[] calldata, /* ruleChanges */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external pure {
-        revert();
     }
 
     function _validateTokenBalance(
@@ -85,10 +59,6 @@ contract TokenGatedFollowRule is TokenGatedRule, IFollowRule {
         if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(ruleSelector == this.processFollow.selector);
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

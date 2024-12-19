@@ -76,6 +76,8 @@ abstract contract ExtraStorageBased {
         return _setExtraData(address(this), entityId, extraDataToSet);
     }
 
+    // TODO: Currently we don't have a entityBased extraData that doesn't change if the owner is changed. Should we?
+
     // TODO: rename to accent it's user/author-set?
     function _setEntityExtraData(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
         return _setExtraData(msg.sender, entityId, extraDataToSet);

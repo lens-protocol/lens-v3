@@ -23,18 +23,17 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         PaymentConfiguration paymentConfiguration;
     }
 
-    mapping(address => mapping(bytes4 => mapping(bytes32 => Configuration))) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
     }
 
-    function configure(bytes4 ruleSelector, bytes32 salt, KeyValue[] calldata ruleConfigurationParams) external {
-        _validateSelector(ruleSelector);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external {
         Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
-        _configuration[msg.sender][ruleSelector][salt] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreation(
@@ -42,13 +41,13 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
     ) external {
         _processPayment(
-            _configuration[msg.sender][this.processCreation.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processCreation.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -57,13 +56,13 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         bytes32 configSalt,
         address originalMsgSender,
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
     ) external {
         _processPayment(
-            _configuration[msg.sender][this.processRemoval.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processRemoval.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -73,13 +72,13 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
     ) external {
         _processPayment(
-            _configuration[msg.sender][this.processAssigning.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processAssigning.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -89,13 +88,13 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         address originalMsgSender,
         address, /* account */
         string calldata, /* username */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
     ) external {
         _processPayment(
-            _configuration[msg.sender][this.processUnassigning.selector][configSalt].accessControl,
-            _configuration[msg.sender][this.processUnassigning.selector][configSalt].paymentConfiguration,
-            _extractPaymentConfigurationFromParams(ruleExecutionParams),
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -109,13 +108,6 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
         if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
             _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(
-            ruleSelector == this.processCreation.selector || ruleSelector == this.processAssigning.selector
-                || ruleSelector == this.processRemoval.selector || ruleSelector == this.processUnassigning.selector
-        );
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
