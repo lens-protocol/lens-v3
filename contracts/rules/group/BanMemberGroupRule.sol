@@ -20,19 +20,15 @@ contract BanMemberGroupRule is IGroupRule {
     // keccak256("lens.param.key.banMember");
     bytes32 immutable BAN_MEMBER_PARAM_KEY = 0xbb2ac1c157eaec4f8d53724664c35e575e75b44cc292e3d6dc6ff5c60a2b36a1;
 
-    event Lens_BanMemberGroupRule_MemberBanned(address indexed group, address indexed account);
-    event Lens_BanMemberGroupRule_MemberUnbanned(address indexed group, address indexed account);
+    event Lens_BanMemberGroupRule_MemberBanned(
+        address indexed group, bytes32 indexed configSalt, address indexed bannedAccount, address bannedBy
+    );
+    event Lens_BanMemberGroupRule_MemberUnbanned(
+        address indexed group, bytes32 indexed configSalt, address indexed unbannedAccount, address unbannedBy
+    );
 
-    struct Storage {
-        address accessControl;
-        mapping(address => bool) isMemberBanned;
-        mapping(bytes4 => bool) someShitBySelector;
-    }
-
-    // mapping(address => mapping(bytes4 => mapping(bytes32 => address))) internal _accessControl;
-    // mapping(address => mapping(bytes32 => mapping(address => bool))) internal _isMemberBanned;
-
-    mapping(address => mapping(bytes32 => Storage)) internal _storage;
+    mapping(address => mapping(bytes32 => address)) internal _accessControl;
+    mapping(address => mapping(bytes32 => mapping(address => bool))) internal _isMemberBanned;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(BAN_MEMBER_PID, "BAN_MEMBER");
@@ -42,85 +38,83 @@ contract BanMemberGroupRule is IGroupRule {
     function ban(bytes32 configSalt, address group, address account) external {
         _accessControl[group][configSalt].requireAccess(msg.sender, BAN_MEMBER_PID);
         _isMemberBanned[group][configSalt][account] = true;
-        emit Lens_BanMemberGroupRule_MemberBanned(group, account);
+        emit Lens_BanMemberGroupRule_MemberBanned(group, configSalt, account, msg.sender);
     }
 
     function unban(bytes32 configSalt, address group, address account) external {
         _accessControl[group][configSalt].requireAccess(msg.sender, UNBAN_MEMBER_PID);
         _isMemberBanned[group][configSalt][account] = false;
-        emit Lens_BanMemberGroupRule_MemberUnbanned(group, account);
+        emit Lens_BanMemberGroupRule_MemberUnbanned(group, configSalt, account, msg.sender);
     }
 
-    function configure(
-        bytes4 ruleSelector, // = IGroupRule.processAddition.selector
-        bytes32 salt, // = 0xC0FFEE
-        KeyValue[] calldata ruleConfigurationParams
-    ) external override {
-        _validateSelector(ruleSelector);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address accessControl;
-        for (uint256 i = 0; i < ruleConfigurationParams.length; i++) {
-            if (ruleConfigurationParams[i].key == ACCESS_CONTROL_PARAM_KEY) {
-                accessControl = abi.decode(ruleConfigurationParams[i].value, (address));
+        for (uint256 i = 0; i < ruleParams.length; i++) {
+            if (ruleParams[i].key == ACCESS_CONTROL_PARAM_KEY) {
+                accessControl = abi.decode(ruleParams[i].value, (address));
                 break;
             }
         }
         accessControl.verifyHasAccessFunction();
-        _accessControl[msg.sender][ruleSelector][salt] = accessControl;
+        _accessControl[msg.sender][configSalt] = accessControl;
     }
 
     function processAddition(
         bytes32 configSalt,
-        address, /* originalMsgSender */
+        address originalMsgSender,
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
     ) external override {
-        require(!_isMemberBanned[msg.sender][configSalt][account]);
-    }
-
-    function processJoining(
-        bytes32 configSalt,
-        address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
-    ) external override {
-        require(!_isMemberBanned[msg.sender][configSalt][account]);
+        if (_isMemberBanned[msg.sender][configSalt][account]) {
+            for (uint256 i = 0; i < ruleParams.length; i++) {
+                if (ruleParams[i].key == BAN_MEMBER_PARAM_KEY) {
+                    require(!abi.decode(ruleParams[i].value, (bool)));
+                    _isMemberBanned[msg.sender][configSalt][account] = false;
+                    _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, UNBAN_MEMBER_PID);
+                    emit Lens_BanMemberGroupRule_MemberUnbanned(msg.sender, configSalt, account, originalMsgSender);
+                    return;
+                }
+            }
+            // If member is banned and the param to unban was not passed, revert.
+            revert();
+        }
     }
 
     function processRemoval(
         bytes32 configSalt,
         address originalMsgSender,
         address account,
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata ruleExecutionParams
-    ) external pure override {
-        for (uint256 i = 0; i < ruleExecutionParams.length; i++) {
-            if (ruleExecutionParams[i].key == BAN_MEMBER_PARAM_KEY) {
-                if (abi.decode(ruleExecutionParams[i].value, (bool))) {
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata ruleParams
+    ) external override {
+        for (uint256 i = 0; i < ruleParams.length; i++) {
+            if (ruleParams[i].key == BAN_MEMBER_PARAM_KEY) {
+                if (abi.decode(ruleParams[i].value, (bool))) {
                     _isMemberBanned[msg.sender][configSalt][account] = true;
-                    _accessControl[msg.sender][this.processRemoval.selector][configSalt].requireAccess(
-                        originalMsgSender, BAN_MEMBER_PID
-                    );
-                    emit Lens_BanMemberGroupRule_MemberBanned(msg.sender, account);
+                    _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, BAN_MEMBER_PID);
+                    emit Lens_BanMemberGroupRule_MemberBanned(msg.sender, configSalt, account, originalMsgSender);
                 }
                 return;
             }
         }
     }
 
+    function processJoining(
+        bytes32 configSalt,
+        address account,
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        require(!_isMemberBanned[msg.sender][configSalt][account]);
+    }
+
     function processLeaving(
         bytes32, /* configSalt */
         address, /* account */
-        KeyValue[] calldata, /* primitiveCustomParams */
-        KeyValue[] calldata /* ruleExecutionParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert();
-    }
-
-    function _validateSelector(bytes4 ruleSelector) internal pure {
-        require(
-            ruleSelector == this.processAddition.selector || ruleSelector == this.processJoining.selector
-                || ruleSelector == this.processRemoval.selector
-        );
     }
 }
