@@ -102,7 +102,7 @@ interface IFeed is IMetadataBased {
     ) external;
 
     // "Delete" - u know u cannot delete stuff from the internet, right? :]
-    // But this will at least remove it from the current state, so contracts accesing it will know.
+    // But this will at least remove it from the current state, so contracts accessing it will know.
     // TODO: Debate post deletion, soft vs. hard delete, extra data deletion, etc.
     function deletePost(
         uint256 postId,
