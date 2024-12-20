@@ -69,7 +69,7 @@ contract BanMemberGroupRule is IGroupRule {
         if (_isMemberBanned[msg.sender][configSalt][account]) {
             for (uint256 i = 0; i < ruleParams.length; i++) {
                 if (ruleParams[i].key == BAN_MEMBER_PARAM_KEY) {
-                    require(!abi.decode(ruleParams[i].value, (bool)));
+                    require(!abi.decode(ruleParams[i].value, (bool))); // Cannot ban while adding to the group.
                     _isMemberBanned[msg.sender][configSalt][account] = false;
                     _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, UNBAN_MEMBER_PID);
                     emit Lens_BanMemberGroupRule_MemberUnbanned(msg.sender, configSalt, account, originalMsgSender);
@@ -94,6 +94,9 @@ contract BanMemberGroupRule is IGroupRule {
                     _isMemberBanned[msg.sender][configSalt][account] = true;
                     _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, BAN_MEMBER_PID);
                     emit Lens_BanMemberGroupRule_MemberBanned(msg.sender, configSalt, account, originalMsgSender);
+                } else {
+                    // Cannot unban while kicking from the group.
+                    require(!_isMemberBanned[msg.sender][configSalt][account]);
                 }
                 return;
             }
