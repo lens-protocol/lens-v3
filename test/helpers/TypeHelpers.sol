@@ -1,10 +1,21 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+// Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.13;
 
-import {RuleExecutionData, SourceStamp, RuleConfiguration, DataElement} from "../../contracts/core/types/Types.sol";
+import {
+    RuleExecutionData,
+    RuleChange,
+    SourceStamp,
+    RuleConfiguration,
+    DataElement
+} from "../../contracts/core/types/Types.sol";
 
 function _emptyExtraData() pure returns (DataElement[] memory) {
     return new DataElement[](0);
+}
+
+function _emptyRuleChangeArray() pure returns (RuleChange[] memory) {
+    return new RuleChange[](0);
 }
 
 function _emptyRuleConfigurationArray() pure returns (RuleConfiguration[] memory) {

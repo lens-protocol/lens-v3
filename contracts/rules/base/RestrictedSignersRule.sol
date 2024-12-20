@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import {KeyValue} from "./../../core/types/Types.sol";
 
 // Move to types
 struct EIP712Signature {
@@ -27,8 +28,8 @@ abstract contract RestrictedSignersRule {
     event Lens_RestrictedSignersRule_SignerRemoved(address indexed signer);
     event Lens_RestrictedSignersRule_SignerNonceUsed(address indexed signer, uint256 indexed nonce);
 
-    struct RuleStorage {
-        mapping(address => InnerStorage) ruleStorage;
+    struct RulesStorage {
+        mapping(address => mapping(bytes32 => InnerStorage)) rulesStorage;
     }
 
     struct InnerStorage {
@@ -39,15 +40,19 @@ abstract contract RestrictedSignersRule {
     // keccak256('lens.rule.restricted.storage')
     bytes32 constant RESTRICTED_RULE_STORAGE_SLOT = 0xcf6ecf8730d498cbf6701bc1140f2b12e988e1c416a85799d241dcfbb3ed90df;
 
-    function $ruleStorage() private pure returns (mapping(address => InnerStorage) storage _storage) {
+    function $rulesStorage()
+        private
+        pure
+        returns (mapping(address => mapping(bytes32 => InnerStorage)) storage _storage)
+    {
         assembly {
             _storage.slot := RESTRICTED_RULE_STORAGE_SLOT
         }
     }
 
-    function $ruleStorage(address primitiveAddress) private view returns (InnerStorage storage) {
-        mapping(address => InnerStorage) storage _ruleStorage = $ruleStorage();
-        return _ruleStorage[primitiveAddress];
+    function $rulesStorage(address primitiveAddress, bytes32 configSalt) private view returns (InnerStorage storage) {
+        mapping(address => mapping(bytes32 => InnerStorage)) storage _rulesStorage = $rulesStorage();
+        return _rulesStorage[primitiveAddress][configSalt];
     }
 
     bytes4 constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
@@ -59,13 +64,15 @@ abstract contract RestrictedSignersRule {
         "RestrictedSignerMessage(bytes4 functionSelector,bytes abiEncodedParams,uint256 nonce,uint256 deadline)"
     );
 
-    function _configure(bytes calldata data) internal virtual {
+    function _configure(bytes32 configSalt, KeyValue[] calldata ruleParams) internal virtual {
+        require(ruleParams.length > 0);
+        require(ruleParams[0].key == "restrictedSigners"); // TODO: Use proper constant
         (address[] memory signers, string[] memory labels, bool[] memory isWhitelisted) =
-            abi.decode(data, (address[], string[], bool[]));
+            abi.decode(ruleParams[0].value, (address[], string[], bool[]));
         require(signers.length == isWhitelisted.length);
         require(signers.length == labels.length);
         for (uint256 i = 0; i < signers.length; i++) {
-            bool wasWhitelisted = $ruleStorage(msg.sender).isWhitelistedSigner[signers[i]];
+            bool wasWhitelisted = $rulesStorage(msg.sender, configSalt).isWhitelistedSigner[signers[i]];
             if (wasWhitelisted == isWhitelisted[i]) {
                 if (isWhitelisted[i]) {
                     // Signal removal and re-addition in order to update the label
@@ -73,7 +80,7 @@ abstract contract RestrictedSignersRule {
                     emit Lens_RestrictedSignersRule_SignerAdded(signers[i], labels[i]);
                 }
             } else {
-                $ruleStorage(msg.sender).isWhitelistedSigner[signers[i]] = isWhitelisted[i];
+                $rulesStorage(msg.sender, configSalt).isWhitelistedSigner[signers[i]] = isWhitelisted[i];
                 if (isWhitelisted[i]) {
                     emit Lens_RestrictedSignersRule_SignerAdded(signers[i], labels[i]);
                 } else {
@@ -84,6 +91,7 @@ abstract contract RestrictedSignersRule {
     }
 
     function _validateRestrictedSignerMessage(
+        bytes32 configSalt,
         bytes4 functionSelector,
         bytes memory abiEncodedFunctionParams,
         EIP712Signature memory signature
@@ -93,12 +101,12 @@ abstract contract RestrictedSignersRule {
         if (block.timestamp > signature.deadline) {
             revert("Errors.SignatureExpired()");
         }
-        if ($ruleStorage(msg.sender).wasSignerNonceUsed[signature.signer][signature.nonce]) {
+        if ($rulesStorage(msg.sender, configSalt).wasSignerNonceUsed[signature.signer][signature.nonce]) {
             revert("Errors.SignatureNonceUsed()");
         }
-        $ruleStorage(msg.sender).wasSignerNonceUsed[signature.signer][signature.nonce] = true;
+        $rulesStorage(msg.sender, configSalt).wasSignerNonceUsed[signature.signer][signature.nonce] = true;
         emit Lens_RestrictedSignersRule_SignerNonceUsed(signature.signer, signature.nonce);
-        if (!$ruleStorage(msg.sender).isWhitelistedSigner[signature.signer]) {
+        if (!$rulesStorage(msg.sender, configSalt).isWhitelistedSigner[signature.signer]) {
             revert("Errors.SignerNotWhitelisted()");
         }
         bytes32 hashStruct = _calculateMessageHashStruct(message);

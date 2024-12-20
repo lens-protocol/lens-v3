@@ -6,13 +6,12 @@ import {IRoleBasedAccessControl} from "./../../core/interfaces/IRoleBasedAccessC
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {Group} from "./../../core/primitives/group/Group.sol";
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
-import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
 import {
     RuleChange,
-    RuleExecutionData,
-    RuleConfiguration,
-    RuleOperation,
-    DataElement,
+    RuleProcessingParams,
+    RuleSelectorChange,
+    RuleConfigurationChange,
+    KeyValue,
     SourceStamp
 } from "./../../core/types/Types.sol";
 import {GroupFactory} from "./GroupFactory.sol";
@@ -26,17 +25,14 @@ import {IAccount, AccountManagerPermissions} from "./../account/IAccount.sol";
 import {IUsername} from "./../../core/interfaces/IUsername.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "./../../core/primitives/username/LensUsernameTokenURIProvider.sol";
+import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
+import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
     function transferOwnership(address newOwner) external;
     function owner() external view returns (address);
 }
-
-// struct RoleConfiguration {
-//     uint256 roleId;
-//     address[] accounts;
-// }
 
 // struct AccessConfiguration {
 //     uint256 permissionId;
@@ -87,22 +83,39 @@ contract LensFactory {
         AccountManagerPermissions[] calldata accountManagersPermissions,
         address usernamePrimitiveAddress,
         string calldata username,
-        RuleExecutionData calldata createUsernameData,
-        RuleExecutionData calldata assignUsernameData,
         SourceStamp calldata accountCreationSourceStamp,
-        SourceStamp calldata createUsernameSourceStamp,
-        SourceStamp calldata assignUsernameSourceStamp
+        KeyValue[] calldata createUsernameCustomParams,
+        RuleProcessingParams[] calldata createUsernameRuleProcessingParams,
+        KeyValue[] calldata assignUsernameCustomParams,
+        RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
+        RuleProcessingParams[] calldata assignRuleProcessingParams,
+        KeyValue[] calldata accountExtraData,
+        KeyValue[] calldata usernameExtraData
     ) external returns (address) {
         address account = ACCOUNT_FACTORY.deployAccount(
-            address(this), metadataURI, accountManagers, accountManagersPermissions, accountCreationSourceStamp
+            address(this),
+            metadataURI,
+            accountManagers,
+            accountManagersPermissions,
+            accountCreationSourceStamp,
+            accountExtraData
         );
         IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
         bytes memory txData = abi.encodeCall(
-            usernamePrimitive.createUsername, (account, username, createUsernameData, createUsernameSourceStamp)
+            usernamePrimitive.createUsername,
+            (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams, usernameExtraData)
         );
         IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
         txData = abi.encodeCall(
-            usernamePrimitive.assignUsername, (account, username, assignUsernameData, assignUsernameSourceStamp)
+            usernamePrimitive.assignUsername,
+            (
+                account,
+                username,
+                assignUsernameCustomParams,
+                unassignAccountRuleProcessingParams,
+                new RuleProcessingParams[](0),
+                assignRuleProcessingParams
+            )
         );
         IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(owner);
@@ -114,10 +127,12 @@ contract LensFactory {
         address owner,
         address[] calldata accountManagers,
         AccountManagerPermissions[] calldata accountManagersPermissions,
-        SourceStamp calldata sourceStamp
+        SourceStamp calldata sourceStamp,
+        KeyValue[] calldata extraData
     ) external returns (address) {
-        return
-            ACCOUNT_FACTORY.deployAccount(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp);
+        return ACCOUNT_FACTORY.deployAccount(
+            owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData
+        );
     }
 
     function deployApp(
@@ -126,7 +141,7 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         AppInitialProperties calldata initialProperties,
-        DataElement[] calldata extraData
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return APP_FACTORY.deployApp(
             metadataURI,
@@ -141,45 +156,61 @@ contract LensFactory {
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata extraData
     ) external returns (address) {
-        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
+        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), ruleChanges, extraData);
     }
 
     function deployFeed(
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return FEED_FACTORY.deployFeed(
-            metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules), extraData
+            metadataURI,
+            _deployAccessControl(owner, admins),
+            _prependUserBlocking(ruleChanges, IFeedRule.processCreatePost.selector),
+            extraData
         );
     }
 
-    function _prependUserBlocking(RuleChange[] calldata rules) internal returns (RuleChange[] memory) {
-        RuleChange[] memory rulesPrependedWithUserBlocking = new RuleChange[](rules.length + 1);
-        rulesPrependedWithUserBlocking[0] = RuleChange({
-            configuration: RuleConfiguration({ruleAddress: _userBlockingRule, configData: "", isRequired: true}),
-            operation: RuleOperation.ADD
+    function _prependUserBlocking(
+        RuleChange[] calldata ruleChanges,
+        bytes4 ruleSelector
+    ) internal view returns (RuleChange[] memory) {
+        RuleChange[] memory modifiedRuleChanges = new RuleChange[](ruleChanges.length + 1);
+
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        selectorChanges[0] = RuleSelectorChange({ruleSelector: ruleSelector, isRequired: true, enabled: true});
+
+        modifiedRuleChanges[0] = RuleChange({
+            ruleAddress: _userBlockingRule,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: selectorChanges
         });
-        for (uint256 i = 0; i < rules.length; i++) {
-            rulesPrependedWithUserBlocking[i + 1] = rules[i];
+        for (uint256 i = 0; i < ruleChanges.length; i++) {
+            modifiedRuleChanges[i + 1] = modifiedRuleChanges[i];
         }
-        return rulesPrependedWithUserBlocking;
+
+        return modifiedRuleChanges;
     }
 
     function deployGraph(
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata extraData
     ) external returns (address) {
         return GRAPH_FACTORY.deployGraph(
-            metadataURI, _deployAccessControl(owner, admins), _prependUserBlocking(rules), extraData
+            metadataURI,
+            _deployAccessControl(owner, admins),
+            _prependUserBlocking(ruleChanges, IGraphRule.processFollow.selector),
+            extraData
         );
     }
 
@@ -188,8 +219,8 @@ contract LensFactory {
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata rules,
-        DataElement[] calldata extraData,
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata extraData,
         string calldata nftName,
         string calldata nftSymbol
     ) external returns (address) {
@@ -198,7 +229,7 @@ contract LensFactory {
             namespace,
             metadataURI,
             _deployAccessControl(owner, admins),
-            rules,
+            ruleChanges,
             extraData,
             nftName,
             nftSymbol,
@@ -206,10 +237,7 @@ contract LensFactory {
         );
     }
 
-    function _deployAccessControl(address owner, address[] calldata admins)
-        internal
-        returns (IRoleBasedAccessControl)
-    {
+    function _deployAccessControl(address owner, address[] calldata admins) internal returns (IRoleBasedAccessControl) {
         return ACCESS_CONTROL_FACTORY.deployOwnerAdminOnlyAccessControl(owner, admins);
     }
 }

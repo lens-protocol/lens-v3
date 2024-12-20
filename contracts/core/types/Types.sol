@@ -2,31 +2,38 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-struct DataElement {
+struct KeyValue {
     bytes32 key;
     bytes value;
 }
 
-struct RuleConfiguration {
+struct Rule {
     address ruleAddress;
-    bytes configData;
-    bool isRequired;
-}
-
-enum RuleOperation {
-    ADD,
-    UPDATE,
-    REMOVE
+    bytes32 configSalt;
 }
 
 struct RuleChange {
-    RuleConfiguration configuration;
-    RuleOperation operation;
+    address ruleAddress;
+    bytes32 configSalt;
+    RuleConfigurationChange configurationChanges;
+    RuleSelectorChange[] selectorChanges;
 }
 
-struct RuleExecutionData {
-    bytes[] dataForRequiredRules;
-    bytes[] dataForAnyOfRules;
+struct RuleConfigurationChange {
+    bool configure;
+    KeyValue[] ruleParams;
+}
+
+struct RuleSelectorChange {
+    bytes4 ruleSelector;
+    bool isRequired;
+    bool enabled;
+}
+
+struct RuleProcessingParams {
+    address ruleAddress;
+    bytes32 configSalt;
+    KeyValue[] ruleParams;
 }
 
 struct SourceStamp {

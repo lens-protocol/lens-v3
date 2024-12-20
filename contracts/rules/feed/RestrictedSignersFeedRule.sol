@@ -5,49 +5,73 @@ pragma solidity ^0.8.0;
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {RestrictedSignersRule, EIP712Signature} from "./../base/RestrictedSignersRule.sol";
-import {RuleChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
+import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
 
 contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
-    function configure(bytes calldata data) external override {
-        _configure(data);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        _configure(configSalt, ruleParams);
     }
 
-    function processCreatePost(uint256 postId, CreatePostParams calldata postParams, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processCreatePost(
+        bytes32 configSalt,
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external override {
         _validateRestrictedSignerMessage({
+            configSalt: configSalt,
             functionSelector: IFeedRule.processCreatePost.selector,
-            abiEncodedFunctionParams: abi.encode(postId, postParams),
-            signature: abi.decode(data, (EIP712Signature))
+            abiEncodedFunctionParams: abi.encode(
+                postId, EIP712EncodingLib.encodeForEIP712(postParams), EIP712EncodingLib.encodeForEIP712(primitiveParams)
+            ),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });
-        return true;
     }
 
-    function processEditPost(uint256 postId, EditPostParams calldata editPostParams, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processEditPost(
+        bytes32 configSalt,
+        uint256 postId,
+        EditPostParams calldata postParams,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external override {
         _validateRestrictedSignerMessage({
+            configSalt: configSalt,
             functionSelector: IFeedRule.processEditPost.selector,
-            abiEncodedFunctionParams: abi.encode(postId, editPostParams),
-            signature: abi.decode(data, (EIP712Signature))
+            abiEncodedFunctionParams: abi.encode(
+                postId, EIP712EncodingLib.encodeForEIP712(postParams), EIP712EncodingLib.encodeForEIP712(primitiveParams)
+            ),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });
-        return true;
     }
 
-    function processPostRuleChanges(uint256 postId, RuleChange[] calldata ruleChanges, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processRemovePost(
+        bytes32 configSalt,
+        uint256 postId,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external override {
         _validateRestrictedSignerMessage({
-            functionSelector: IFeedRule.processPostRuleChanges.selector,
-            abiEncodedFunctionParams: abi.encode(postId, ruleChanges),
-            signature: abi.decode(data, (EIP712Signature))
+            configSalt: configSalt,
+            functionSelector: IFeedRule.processRemovePost.selector,
+            abiEncodedFunctionParams: abi.encode(postId, EIP712EncodingLib.encodeForEIP712(primitiveParams)),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });
-        return true;
+    }
+
+    function processPostRuleChanges(
+        bytes32 configSalt,
+        uint256 postId,
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata ruleParams
+    ) external override {
+        _validateRestrictedSignerMessage({
+            configSalt: configSalt,
+            functionSelector: IFeedRule.processPostRuleChanges.selector,
+            abiEncodedFunctionParams: abi.encode(postId, EIP712EncodingLib.encodeForEIP712(ruleChanges)),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
+        });
     }
 }

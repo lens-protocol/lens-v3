@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {Group} from "./../../core/primitives/group/Group.sol";
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
-import {RuleChange, DataElement} from "./../../core/types/Types.sol";
+import {RuleChange, KeyValue} from "./../../core/types/Types.sol";
 
 contract GroupFactory {
     event Lens_GroupFactory_Deployment(address indexed group, string metadataURI);
@@ -19,11 +19,11 @@ contract GroupFactory {
     function deployGroup(
         string memory metadataURI,
         IAccessControl accessControl,
-        RuleChange[] calldata rules,
-        DataElement[] calldata extraData
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata extraData
     ) external returns (address) {
         Group group = new Group(metadataURI, _factoryOwnedAccessControl);
-        group.changeGroupRules(rules);
+        group.changeGroupRules(ruleChanges);
         group.setExtraData(extraData);
         group.setAccessControl(accessControl);
         emit Lens_GroupFactory_Deployment(address(group), metadataURI);

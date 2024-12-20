@@ -6,20 +6,43 @@ import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
+import {KeyValue} from "./../../core/types/Types.sol";
 
 contract CharsetUsernameRule is IUsernameRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    uint256 constant SKIP_CHARSET_PID = uint256(keccak256("SKIP_CHARSET"));
+    string constant UNRESTRICTED = "";
+
+    // uint256(keccak256("SKIP_CHARSET"))
+    uint256 immutable SKIP_CHARSET_PID = uint256(0xdcdf9b745e3f53451b2b79d265c8b66498f6483b3ef60fb5eb21c88e5f071211);
+
+    // keccak256("lens.param.key.accessControl");
+    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
+    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowNumeric");
+    bytes32 immutable ALLOW_NUMERIC_PARAM_KEY = 0x99d79d7e6786d3f6700df19cf91a74d5ed8a7432315a6bd2c8e4b2f31d3ac48a;
+    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowLatinLowercase");
+    bytes32 immutable ALLOW_LATIN_LOWERCASE_PARAM_KEY =
+        0xa735991047ce9edafbd39838f3238bb614995aa5c14aa6166b56c77068c0a7ed;
+    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowLatinUppercase");
+    bytes32 immutable ALLOW_LATIN_UPPERCASE_PARAM_KEY =
+        0xfd3b4bccd5e9e72fc05f6dc6ad82a080cd57364c3c3af686f0cffb6659e06d21;
+    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.customAllowedCharset");
+    bytes32 immutable CUSTOM_ALLOWED_CHARSET_PARAM_KEY =
+        0x6fb6492ecde426d67006445c3c9e467922fc363ab49b27688217c25c7ae5333d;
+    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.customDisallowedCharset");
+    bytes32 immutable CUSTOM_DISALLOWED_CHARSET_PARAM_KEY =
+        0xae29c55eda70ddcd46fe4555b4ce2e9ef13ab1e67b6c2ab4e5b1473b5784c08e;
+    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.cannotStartWith");
+    bytes32 immutable CANNOT_START_WITH_PARAM_KEY = 0x9fe6896d61f7ebd0eb7ed29f076cbca24254a8736ee3d3b38389dc0c9e9893f2;
 
     struct CharsetRestrictions {
-        bool allowNumeric;
-        bool allowLatinLowercase;
-        bool allowLatinUppercase;
-        string customAllowedCharset; // Optional (pass empty string if not needed)
-        string customDisallowedCharset; // Optional (pass empty string if not needed)
-        string cannotStartWith; // Optional (pass empty string if not needed)
+        bool allowNumeric; /////////////// Default: true
+        bool allowLatinLowercase; //////// Default: true
+        bool allowLatinUppercase; //////// Default: true
+        string customAllowedCharset; ///// Default: empty string (unrestricted)
+        string customDisallowedCharset; // Default: empty string (unrestricted)
+        string cannotStartWith; ////////// Default: empty string (unrestricted)
     }
 
     struct Configuration {
@@ -27,34 +50,68 @@ contract CharsetUsernameRule is IUsernameRule {
         CharsetRestrictions charsetRestrictions;
     }
 
-    mapping(address => Configuration) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_CHARSET_PID, "SKIP_CHARSET");
     }
 
-    function configure(bytes calldata data) external {
-        Configuration memory configuration = abi.decode(data, (Configuration));
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
-        _configuration[msg.sender] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
-    function processCreation(address account, string calldata username, bytes calldata /* data*/ )
-        external
-        view
-        returns (bool)
-    {
-        Configuration memory configuration = _configuration[msg.sender];
-        if (!configuration.accessControl.hasAccess(account, SKIP_CHARSET_PID)) {
+    function processCreation(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string calldata username,
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        Configuration memory configuration = _configuration[msg.sender][configSalt];
+        if (!configuration.accessControl.hasAccess(originalMsgSender, SKIP_CHARSET_PID)) {
             _processRestrictions(username, configuration.charsetRestrictions);
         }
-        return true;
     }
 
-    function _processRestrictions(string calldata username, CharsetRestrictions memory charsetRestrictions)
-        internal
-        pure
-    {
+    function processRemoval(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function processAssigning(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function processUnassigning(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function _processRestrictions(
+        string calldata username,
+        CharsetRestrictions memory charsetRestrictions
+    ) internal pure {
         // Cannot start with a character in the cannotStartWith charset
         require(
             !_isInCharset(bytes(username)[0], charsetRestrictions.cannotStartWith),
@@ -125,11 +182,35 @@ contract CharsetUsernameRule is IUsernameRule {
         return false;
     }
 
-    function processAssigning(address, /* account */ string calldata, /* username */ bytes calldata /* data */ )
-        external
-        pure
-        returns (bool)
-    {
-        return false;
+    function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
+        Configuration memory configuration;
+        // Initialize configuration with default values
+        configuration.charsetRestrictions = CharsetRestrictions({
+            allowNumeric: true,
+            allowLatinLowercase: true,
+            allowLatinUppercase: true,
+            customAllowedCharset: UNRESTRICTED,
+            customDisallowedCharset: UNRESTRICTED,
+            cannotStartWith: UNRESTRICTED
+        });
+        // Extract configuration from params
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == ALLOW_NUMERIC_PARAM_KEY) {
+                configuration.charsetRestrictions.allowNumeric = abi.decode(params[i].value, (bool));
+            } else if (params[i].key == ALLOW_LATIN_LOWERCASE_PARAM_KEY) {
+                configuration.charsetRestrictions.allowLatinLowercase = abi.decode(params[i].value, (bool));
+            } else if (params[i].key == ALLOW_LATIN_UPPERCASE_PARAM_KEY) {
+                configuration.charsetRestrictions.allowLatinUppercase = abi.decode(params[i].value, (bool));
+            } else if (params[i].key == CUSTOM_ALLOWED_CHARSET_PARAM_KEY) {
+                configuration.charsetRestrictions.customAllowedCharset = abi.decode(params[i].value, (string));
+            } else if (params[i].key == CUSTOM_DISALLOWED_CHARSET_PARAM_KEY) {
+                configuration.charsetRestrictions.customDisallowedCharset = abi.decode(params[i].value, (string));
+            } else if (params[i].key == CANNOT_START_WITH_PARAM_KEY) {
+                configuration.charsetRestrictions.cannotStartWith = abi.decode(params[i].value, (string));
+            } else if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+                configuration.accessControl = abi.decode(params[i].value, (address));
+            }
+        }
+        return configuration;
     }
 }

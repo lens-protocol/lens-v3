@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import {IPostRule} from "./../../core/interfaces/IPostRule.sol";
 import {IGraph} from "./../../core/interfaces/IGraph.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
+import {KeyValue} from "./../../core/types/Types.sol";
+import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
 
 contract FollowersOnlyPostRule is IPostRule {
     struct Configuration {
@@ -14,70 +16,89 @@ contract FollowersOnlyPostRule is IPostRule {
         bool quotesRestricted;
     }
 
-    mapping(address => mapping(uint256 => Configuration)) internal _configuration;
+    // keccak256("lens.param.key.graph");
+    bytes32 immutable GRAPH_PARAM_KEY = 0x628a4bca9db11e5f912854a55e24d0941ed8a7ef363805062e4742b80ebd87d3;
+    // keccak256("lens.param.key.repliesRestricted");
+    bytes32 immutable REPLIES_RESTRICTED_PARAM_KEY = 0x95bbd2e4311bcbf9c65ad79e6a70b63a8d50c9d6a0f746285b582b19d9c60cab;
+    // keccak256("lens.param.key.repostsRestricted");
+    bytes32 immutable REPOSTS_RESTRICTED_PARAM_KEY = 0x7be144f8221b98a59a886bdac9502f9e8311a283b170b902fa01d25cf68b9bb9;
+    // keccak256("lens.param.key.quotesRestricted");
+    bytes32 immutable QUOTES_RESTRICTED_PARAM_KEY = 0xaa67cc93791051d4b576cfc397a1494d5f4baf59f14681843bfef453034cd9fa;
 
-    function configure(uint256 postId, bytes calldata data) external override {
-        Configuration memory configuration = abi.decode(data, (Configuration));
-        _configuration[msg.sender][postId] = configuration;
-    }
+    mapping(address => mapping(bytes32 => mapping(uint256 => Configuration))) internal _configuration;
 
-    function processQuote(uint256 rootPostId, uint256, /* quotedPostId */ uint256 postId, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
-        return _processRestriction({
-            isRestrictionEnabled: _configuration[msg.sender][rootPostId].quotesRestricted,
-            feed: msg.sender,
-            graph: _configuration[msg.sender][rootPostId].graph,
-            rootPostId: rootPostId,
-            newPostId: postId
-        });
-    }
-
-    function processReply(uint256 rootPostId, uint256, /* repliedPostId */ uint256 postId, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
-        return _processRestriction({
-            isRestrictionEnabled: _configuration[msg.sender][rootPostId].repliesRestricted,
-            feed: msg.sender,
-            graph: _configuration[msg.sender][rootPostId].graph,
-            rootPostId: rootPostId,
-            newPostId: postId
-        });
-    }
-
-    function processRepost(uint256 rootPostId, uint256, /* repostedPostId */ uint256 postId, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
-        return _processRestriction({
-            isRestrictionEnabled: _configuration[msg.sender][rootPostId].repostsRestricted,
-            feed: msg.sender,
-            graph: _configuration[msg.sender][rootPostId].graph,
-            rootPostId: rootPostId,
-            newPostId: postId
-        });
-    }
-
-    function _processRestriction(
-        bool isRestrictionEnabled,
-        address feed,
-        address graph,
-        uint256 rootPostId,
-        uint256 newPostId
-    ) internal view returns (bool) {
-        if (isRestrictionEnabled) {
-            address rootPostAuthor = IFeed(feed).getPostAuthor(rootPostId);
-            address newPostAuthor = IFeed(feed).getPostAuthor(newPostId);
-            require(IGraph(graph).isFollowing({followerAccount: newPostAuthor, targetAccount: rootPostAuthor}));
+    function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration;
+        for (uint256 i = 0; i < ruleParams.length; i++) {
+            if (ruleParams[i].key == GRAPH_PARAM_KEY) {
+                configuration.graph = abi.decode(ruleParams[i].value, (address));
+            } else if (ruleParams[i].key == REPLIES_RESTRICTED_PARAM_KEY) {
+                configuration.repliesRestricted = abi.decode(ruleParams[i].value, (bool));
+            } else if (ruleParams[i].key == REPOSTS_RESTRICTED_PARAM_KEY) {
+                configuration.repostsRestricted = abi.decode(ruleParams[i].value, (bool));
+            } else if (ruleParams[i].key == QUOTES_RESTRICTED_PARAM_KEY) {
+                configuration.quotesRestricted = abi.decode(ruleParams[i].value, (bool));
+            }
         }
-        return isRestrictionEnabled;
+        IGraph(configuration.graph).getFollowersCount(address(this)); // Aims to verify the given address is a IGraph
+        require(configuration.repliesRestricted || configuration.repostsRestricted || configuration.quotesRestricted);
+        _configuration[msg.sender][configSalt][postId] = configuration;
+    }
+
+    function processCreatePost(
+        bytes32 configSalt,
+        uint256 rootPostId,
+        uint256 postId,
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        Configuration memory configuration = _configuration[msg.sender][configSalt][rootPostId];
+        if (_shouldRestrictionBeApplied(configuration, rootPostId, postParams)) {
+            IFeed feed = IFeed(msg.sender);
+            IGraph graph = IGraph(configuration.graph);
+            address rootPostAuthor = feed.getPostAuthor(rootPostId);
+            address newPostAuthor = feed.getPostAuthor(postId);
+            require(graph.isFollowing({followerAccount: newPostAuthor, targetAccount: rootPostAuthor}));
+        }
+    }
+
+    function processEditPost(
+        bytes32, /* configSalt */
+        uint256, /* rootPostId */
+        uint256, /* postId */
+        EditPostParams calldata, /* postParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    // TODO: This function smells weird, we should reconsider going back to the processQuote/Reply/Repost selectors...
+    function _shouldRestrictionBeApplied(
+        Configuration memory configuration,
+        uint256 rootPostId,
+        CreatePostParams calldata postParams
+    ) internal view returns (bool) {
+        IFeed feed = IFeed(msg.sender);
+        if (configuration.repliesRestricted && postParams.repliedPostId != 0) {
+            uint256 repliedPostRootId = feed.getPost(postParams.repliedPostId).rootPostId;
+            if (repliedPostRootId == rootPostId) {
+                return true;
+            }
+        }
+        if (configuration.repostsRestricted && postParams.repostedPostId != 0) {
+            uint256 repostedPostRootId = feed.getPost(postParams.repostedPostId).rootPostId;
+            if (repostedPostRootId == rootPostId) {
+                return true;
+            }
+        }
+        if (configuration.quotesRestricted && postParams.quotedPostId != 0) {
+            uint256 quotedPostRootId = feed.getPost(postParams.quotedPostId).rootPostId;
+            if (quotedPostRootId == rootPostId) {
+                return true;
+            }
+        }
+        return false;
     }
 }

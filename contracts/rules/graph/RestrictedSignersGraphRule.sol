@@ -4,36 +4,61 @@ pragma solidity ^0.8.0;
 
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {RestrictedSignersRule, EIP712Signature} from "./../base/RestrictedSignersRule.sol";
-import {RuleChange} from "./../../core/types/Types.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
+import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
 
 contract RestrictedSignersGraphRule is RestrictedSignersRule, IGraphRule {
-    function configure(bytes calldata data) external override {
-        _configure(data);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        _configure(configSalt, ruleParams);
     }
 
-    function processFollow(address followerAccount, address accountToFollow, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processFollow(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToFollow,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external override {
         _validateRestrictedSignerMessage({
+            configSalt: configSalt,
             functionSelector: IGraphRule.processFollow.selector,
-            abiEncodedFunctionParams: abi.encode(followerAccount, accountToFollow),
-            signature: abi.decode(data, (EIP712Signature))
+            abiEncodedFunctionParams: abi.encode(
+                originalMsgSender, followerAccount, accountToFollow, EIP712EncodingLib.encodeForEIP712(primitiveParams)
+            ),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });
-        return true;
     }
 
-    function processFollowRuleChanges(address account, RuleChange[] calldata ruleChanges, bytes calldata data)
-        external
-        override
-        returns (bool)
-    {
+    function processUnfollow(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata primitiveParams,
+        KeyValue[] calldata ruleParams
+    ) external override {
         _validateRestrictedSignerMessage({
-            functionSelector: IGraphRule.processFollowRuleChanges.selector,
-            abiEncodedFunctionParams: abi.encode(account, ruleChanges),
-            signature: abi.decode(data, (EIP712Signature))
+            configSalt: configSalt,
+            functionSelector: IGraphRule.processUnfollow.selector,
+            abiEncodedFunctionParams: abi.encode(
+                originalMsgSender, followerAccount, accountToUnfollow, EIP712EncodingLib.encodeForEIP712(primitiveParams)
+            ),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });
-        return true;
+    }
+
+    function processFollowRuleChanges(
+        bytes32 configSalt,
+        address account,
+        RuleChange[] calldata ruleChanges,
+        KeyValue[] calldata ruleParams
+    ) external override {
+        _validateRestrictedSignerMessage({
+            configSalt: configSalt,
+            functionSelector: IGraphRule.processFollowRuleChanges.selector,
+            abiEncodedFunctionParams: abi.encode(account, EIP712EncodingLib.encodeForEIP712(ruleChanges)),
+            signature: abi.decode(ruleParams[0].value, (EIP712Signature))
+        });
     }
 }

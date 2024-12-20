@@ -7,6 +7,7 @@ import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
+import {KeyValue} from "./../../core/types/Types.sol";
 
 contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
     using AccessControlLib for IAccessControl;
@@ -14,69 +15,105 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
 
     uint256 constant SKIP_TOKEN_GATE_PID = uint256(keccak256("SKIP_TOKEN_GATE"));
 
-    struct RestrictionConfiguration {
-        bool restrictCreation;
-        bool restrictAssigning;
-    }
+    // keccak256("lens.param.key.accessControl");
+    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
 
     struct Configuration {
         address accessControl;
-        RestrictionConfiguration restrictions;
         TokenGateConfiguration tokenGate;
     }
 
-    mapping(address => Configuration) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 
-    function configure(bytes calldata data) external {
-        Configuration memory configuration = abi.decode(data, (Configuration));
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
-        require(
-            configuration.restrictions.restrictCreation || configuration.restrictions.restrictAssigning,
-            "Username: no restrictions"
-        );
-        _configuration[msg.sender] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
-    function processCreation(address account, string calldata, /* username */ bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
-        return _validateTokenBalance(
-            _configuration[msg.sender].restrictions.restrictCreation,
-            _configuration[msg.sender].accessControl,
-            _configuration[msg.sender].tokenGate,
-            account
+    function processCreation(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        _validateTokenBalance(
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
+            originalMsgSender
         );
     }
 
-    function processAssigning(address account, string calldata, /* username */ bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
-        return _validateTokenBalance(
-            _configuration[msg.sender].restrictions.restrictAssigning,
-            _configuration[msg.sender].accessControl,
-            _configuration[msg.sender].tokenGate,
-            account
+    function processRemoval(
+        bytes32 configSalt,
+        address originalMsgSender,
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        _validateTokenBalance(
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
+            originalMsgSender
+        );
+    }
+
+    function processAssigning(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        _validateTokenBalance(
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
+            originalMsgSender
+        );
+    }
+
+    function processUnassigning(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        _validateTokenBalance(
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].tokenGate,
+            originalMsgSender
         );
     }
 
     function _validateTokenBalance(
-        bool isRestricted,
         address accessControl,
         TokenGateConfiguration memory tokenGateConfiguration,
         address account
-    ) internal view returns (bool) {
-        if (isRestricted && !accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
+    ) internal view {
+        if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
-        return isRestricted;
+    }
+
+    function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
+        Configuration memory configuration;
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+                configuration.accessControl = abi.decode(params[i].value, (address));
+            } else if (params[i].key == TOKEN_GATE_PARAM_KEY) {
+                configuration.tokenGate = abi.decode(params[i].value, (TokenGateConfiguration));
+            }
+        }
+        return configuration;
     }
 }

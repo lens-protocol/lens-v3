@@ -4,39 +4,61 @@ pragma solidity ^0.8.0;
 
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {RuleChange} from "./../../core/types/Types.sol";
 import {IGroup} from "./../../core/interfaces/IGroup.sol";
+import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 
 contract GroupGatedFeedRule is IFeedRule {
-    mapping(address => address) internal _groupGate;
+    // keccak256("lens.param.key.group");
+    bytes32 immutable GROUP_PARAM_KEY = 0xe556a4384e8a110aab4ea745eff2c09de81f87f56e4ecba2205982230d3bd4f4;
 
-    function configure(bytes calldata data) external override {
-        _groupGate[msg.sender] = abi.decode(data, (address));
+    mapping(address => mapping(bytes32 => address)) internal _groupGate;
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        address groupGate;
+        for (uint256 i = 0; i < ruleParams.length; i++) {
+            if (ruleParams[i].key == GROUP_PARAM_KEY) {
+                groupGate = abi.decode(ruleParams[i].value, (address));
+            }
+        }
+        _groupGate[msg.sender][configSalt] = groupGate;
+        IGroup(groupGate).getMembershipId(address(this));
     }
 
-    function processCreatePost(uint256, /* postId */ CreatePostParams calldata postParams, bytes calldata /* data */ )
-        external
-        view
-        override
-        returns (bool)
-    {
-        require(IGroup(_groupGate[msg.sender]).getMembershipId(postParams.author) != 0, "NotAMember()");
-        return true;
+    function processCreatePost(
+        bytes32 configSalt,
+        uint256, /* postId */
+        CreatePostParams calldata postParams,
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        require(IGroup(_groupGate[msg.sender][configSalt]).getMembershipId(postParams.author) != 0, "NotAMember()");
     }
 
     function processEditPost(
+        bytes32, /* configSalt */
         uint256, /* postId */
-        EditPostParams calldata, /* editPostParams */
-        bytes calldata /* data */
-    ) external pure override returns (bool) {
-        return false;
+        EditPostParams calldata, /* postParams */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function processRemovePost(
+        bytes32, /* configSalt */
+        uint256, /* postId */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
     }
 
     function processPostRuleChanges(
+        bytes32, /* configSalt */
         uint256, /* postId */
         RuleChange[] calldata, /* ruleChanges */
-        bytes calldata /* data */
-    ) external pure override returns (bool) {
-        return false;
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
     }
 }

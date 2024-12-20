@@ -16,6 +16,9 @@ abstract contract TokenGatedRule {
     uint256 internal constant ERC721 = 721;
     uint256 internal constant ERC1155 = 1155;
 
+    // keccak256("lens.rules.TokenGatedRule.param.key.tokenGate");
+    bytes32 internal immutable TOKEN_GATE_PARAM_KEY = 0x5b35354681265fb29cacc9eee788924889b95a232ef90388f970779780c3ce3b;
+
     struct TokenGateConfiguration {
         uint256 tokenStandard;
         address token;
@@ -37,12 +40,19 @@ abstract contract TokenGatedRule {
     }
 
     function _validateTokenBalance(TokenGateConfiguration memory configuration, address owner) internal view {
+        require(_checkTokenBalance(configuration, owner), "Errors.InsufficientTokenBalance()");
+    }
+
+    function _checkTokenBalance(
+        TokenGateConfiguration memory configuration,
+        address owner
+    ) internal view returns (bool) {
         uint256 balance;
         if (configuration.tokenStandard == ERC20 || configuration.tokenStandard == ERC721) {
             balance = IToken(configuration.token).balanceOf(owner);
         } else {
             balance = IERC1155(configuration.token).balanceOf(owner, configuration.typeId);
         }
-        require(balance >= configuration.amount, "Errors.InsufficientTokenBalance()");
+        return balance >= configuration.amount;
     }
 }

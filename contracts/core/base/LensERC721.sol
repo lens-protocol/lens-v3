@@ -384,10 +384,12 @@ contract LensERC721 is IERC721 {
      * @param data bytes optional data to send along with the call
      * @return bool whether the call correctly returned the expected magic value
      */
-    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data)
-        private
-        returns (bool)
-    {
+    function _checkOnERC721Received(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) private returns (bool) {
         if (to.isContract()) {
             try IERC721ReceiverUpgradeable(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval)
             {

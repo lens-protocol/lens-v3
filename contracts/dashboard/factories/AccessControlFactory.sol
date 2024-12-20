@@ -10,10 +10,10 @@ contract AccessControlFactory {
 
     event Lens_AccessControlFactory_OwnerAdminDeployment(address indexed accessControl, address owner);
 
-    function deployOwnerAdminOnlyAccessControl(address owner, address[] calldata admins)
-        external
-        returns (IRoleBasedAccessControl)
-    {
+    function deployOwnerAdminOnlyAccessControl(
+        address owner,
+        address[] calldata admins
+    ) external returns (IRoleBasedAccessControl) {
         OwnerAdminOnlyAccessControl accessControl = new OwnerAdminOnlyAccessControl({owner: address(this)});
         emit Lens_AccessControlFactory_OwnerAdminDeployment(address(accessControl), owner);
         for (uint256 i = 0; i < admins.length; i++) {

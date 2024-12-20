@@ -6,6 +6,7 @@ import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
+import {KeyValue} from "./../../core/types/Types.sol";
 
 contract LengthUsernameRule is IUsernameRule {
     using AccessControlLib for IAccessControl;
@@ -13,6 +14,13 @@ contract LengthUsernameRule is IUsernameRule {
 
     uint256 constant SKIP_MIN_LENGTH_PID = uint256(keccak256("SKIP_MIN_LENGTH"));
     uint256 constant SKIP_MAX_LENGTH_PID = uint256(keccak256("SKIP_MAX_LENGTH"));
+
+    // keccak256("lens.param.key.accessControl");
+    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
+    // keccak256("lens.rules.username.LengthUsernameRule.param.key.LengthRestrictions.min");
+    bytes32 immutable MIN_LENGTH_PARAM_KEY = 0x422f1cf00b1079acacf4b218aeed45c02143aca53f622b7ab03d6960ab052fc3;
+    // keccak256("lens.rules.username.LengthUsernameRule.param.key.LengthRestrictions.max");
+    bytes32 immutable MAX_LENGTH_PARAM_KEY = 0x07014494232a11e71c003affb5e107b669a9b2b4c523a50097f41c6b95916081;
 
     struct LengthRestrictions {
         uint8 min;
@@ -24,50 +32,90 @@ contract LengthUsernameRule is IUsernameRule {
         LengthRestrictions lengthRestrictions;
     }
 
-    mapping(address => Configuration) internal _configuration;
+    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
         emit Events.Lens_PermissionId_Available(SKIP_MIN_LENGTH_PID, "SKIP_MIN_LENGTH");
         emit Events.Lens_PermissionId_Available(SKIP_MAX_LENGTH_PID, "SKIP_MAX_LENGTH");
     }
 
-    function configure(bytes calldata data) external {
-        Configuration memory configuration = abi.decode(data, (Configuration));
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         require(
             configuration.lengthRestrictions.max == 0
                 || configuration.lengthRestrictions.min <= configuration.lengthRestrictions.max
         ); // Min length cannot be greater than max length
-        _configuration[msg.sender] = configuration;
+        _configuration[msg.sender][configSalt] = configuration;
     }
 
-    function processCreation(address account, string calldata username, bytes calldata /* data */ )
-        external
-        view
-        returns (bool)
-    {
-        Configuration memory configuration = _configuration[msg.sender];
+    function processCreation(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address, /* account */
+        string calldata username,
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view override {
+        Configuration memory configuration = _configuration[msg.sender][configSalt];
         uint256 usernameLength = bytes(username).length;
         if (
             configuration.lengthRestrictions.min != 0
-                && !configuration.accessControl.hasAccess(account, SKIP_MIN_LENGTH_PID)
+                && !configuration.accessControl.hasAccess(originalMsgSender, SKIP_MIN_LENGTH_PID)
         ) {
             require(usernameLength >= configuration.lengthRestrictions.min, "Username: too short");
         }
         if (
             configuration.lengthRestrictions.max != 0
-                && !configuration.accessControl.hasAccess(account, SKIP_MAX_LENGTH_PID)
+                && !configuration.accessControl.hasAccess(originalMsgSender, SKIP_MAX_LENGTH_PID)
         ) {
             require(usernameLength <= configuration.lengthRestrictions.max, "Username: too long");
         }
-        return true;
     }
 
-    function processAssigning(address, /* account */ string calldata, /* username */ bytes calldata /* data */ )
-        external
-        pure
-        returns (bool)
-    {
-        return false;
+    function processRemoval(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function processAssigning(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function processUnassigning(
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* account */
+        string calldata, /* username */
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
+        revert();
+    }
+
+    function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
+        Configuration memory configuration;
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+                configuration.accessControl = abi.decode(params[i].value, (address));
+            } else if (params[i].key == MIN_LENGTH_PARAM_KEY) {
+                configuration.lengthRestrictions.min = abi.decode(params[i].value, (uint8));
+            } else if (params[i].key == MAX_LENGTH_PARAM_KEY) {
+                configuration.lengthRestrictions.max = abi.decode(params[i].value, (uint8));
+            }
+        }
+        return configuration;
     }
 }
