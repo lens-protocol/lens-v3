@@ -11,6 +11,8 @@ zkout/
 # Docs
 docs/
 
+.idea
+
 # Dotenv file
 .env
 
