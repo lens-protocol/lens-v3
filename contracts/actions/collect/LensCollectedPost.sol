@@ -24,7 +24,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     string internal _contractURI;
     address internal immutable _feed;
     uint256 internal immutable _postId;
-    bool internal immutable _isImmutable; // TODO:"" This can be replaced with bytes(_contentURISnapshot).length
+    bool internal immutable _isImmutable; // TODO: This can be replaced with bytes(_contentURISnapshot).length
     address internal immutable _collectAction;
 
     constructor(address feed, uint256 postId, bool isImmutable)
