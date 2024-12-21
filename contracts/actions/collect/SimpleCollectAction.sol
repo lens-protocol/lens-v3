@@ -6,7 +6,6 @@ import {
     ISimpleCollectAction,
     CollectActionConfigureParams,
     CollectActionExecutionParams,
-    CollectActionData,
     CollectActionData
 } from "./ISimpleCollectAction.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
