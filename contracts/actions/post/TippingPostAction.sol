@@ -20,15 +20,6 @@ contract TippingPostAction is BasePostAction {
         address actionHub
     ) BasePostAction(actionHub) {}
 
-    function _configure(
-        address, /* originalMsgSender */
-        address, /* feed */
-        uint256, /* postId */
-        KeyValue[] calldata /* params */
-    ) internal pure override returns (bytes memory) {
-        revert(); // Configuration not needed for tipping.
-    }
-
     function _execute(
         address originalMsgSender,
         address feed,

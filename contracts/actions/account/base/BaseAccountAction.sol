@@ -29,9 +29,11 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
 
     function _configure(
         address originalMsgSender,
-        address account,
-        KeyValue[] calldata params
-    ) internal virtual returns (bytes memory);
+        address, /* account */
+        KeyValue[] calldata /* params */
+    ) internal virtual returns (bytes memory) {
+        return _configureUniversalAction(originalMsgSender);
+    }
 
     function _execute(
         address originalMsgSender,

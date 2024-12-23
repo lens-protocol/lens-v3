@@ -19,14 +19,6 @@ contract TippingAccountAction is BaseAccountAction {
         address actionHub
     ) BaseAccountAction(actionHub) {}
 
-    function _configure(
-        address, /* originalMsgSender */
-        address, /* account */
-        KeyValue[] calldata /* params */
-    ) internal pure override returns (bytes memory) {
-        revert(); // Configuration not needed for tipping.
-    }
-
     function _execute(
         address originalMsgSender,
         address account,

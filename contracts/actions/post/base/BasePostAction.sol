@@ -31,10 +31,12 @@ abstract contract BasePostAction is BaseAction, IPostAction {
 
     function _configure(
         address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) internal virtual returns (bytes memory);
+        address, /* feed */
+        uint256, /* postId */
+        KeyValue[] calldata /* params */
+    ) internal virtual returns (bytes memory) {
+        return _configureUniversalAction(originalMsgSender);
+    }
 
     function _execute(
         address originalMsgSender,
