@@ -25,12 +25,13 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
         return _execute(originalMsgSender, account, params);
     }
 
-    function disable(
+    function setDisabled(
         address originalMsgSender,
         address account,
+        bool isDisabled,
         KeyValue[] calldata params
     ) external override onlyActionHub returns (bytes memory) {
-        return _disable(originalMsgSender, account, params);
+        return _setDisabled(originalMsgSender, account, isDisabled, params);
     }
 
     function _configure(
@@ -47,9 +48,10 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
         KeyValue[] calldata params
     ) internal virtual returns (bytes memory);
 
-    function _disable(
+    function _setDisabled(
         address, /* originalMsgSender */
         address, /* account */
+        bool, /* isDisabled */
         KeyValue[] calldata /* params */
     ) internal virtual returns (bytes memory) {
         revert();

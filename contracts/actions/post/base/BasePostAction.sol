@@ -27,13 +27,14 @@ abstract contract BasePostAction is BaseAction, IPostAction {
         return _execute(originalMsgSender, feed, postId, params);
     }
 
-    function disable(
+    function setDisabled(
         address originalMsgSender,
         address feed,
         uint256 postId,
+        bool isDisabled,
         KeyValue[] calldata params
     ) external override onlyActionHub returns (bytes memory) {
-        return _disable(originalMsgSender, feed, postId, params);
+        return _setDisabled(originalMsgSender, feed, postId, isDisabled, params);
     }
 
     function _configure(
@@ -52,10 +53,11 @@ abstract contract BasePostAction is BaseAction, IPostAction {
         KeyValue[] calldata params
     ) internal virtual returns (bytes memory);
 
-    function _disable(
+    function _setDisabled(
         address, /* originalMsgSender */
         address, /* feed */
         uint256, /* postId */
+        bool, /* isDisabled */
         KeyValue[] calldata /* params */
     ) internal virtual returns (bytes memory) {
         revert();
