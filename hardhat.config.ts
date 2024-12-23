@@ -32,6 +32,10 @@ const config: HardhatUserConfig = {
     settings: {
       // find all available options in the official documentation
       // https://docs.zksync.io/build/tooling/hardhat/hardhat-zksync-solc#configuration
+      optimizer: {
+        enabled: true, // optional. True by default
+        mode: 'z', // optional. 3 by default, z to optimize bytecode size
+      }
     },
   },
   solidity: {
