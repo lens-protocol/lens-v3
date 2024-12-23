@@ -77,9 +77,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         address currency; // (Optional, but required if amount > 0) Default: address(0)
     }
 
-    constructor(
-        address actionHub
-    ) BasePostAction(actionHub) {}
+    constructor(address actionHub) BasePostAction(actionHub) {}
 
     function _configure(
         address originalMsgSender,
@@ -116,8 +114,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
                 // would figure out a way to trigger a switch in LensCollectedPost contract.
             }
         }
-        bytes memory encodedStoredData = abi.encode(storedData);
-        return encodedStoredData;
+        return abi.encode(storedData);
     }
 
     function _execute(
@@ -129,15 +126,33 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         CollectActionExecutionParams memory expectedParams = _extractCollectActionExecutionParams(params);
 
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
-        storedData.currentCollects++;
+        uint256 tokenId = ++storedData.currentCollects;
 
         _validateCollect(originalMsgSender, feed, postId, expectedParams);
 
         _processCollect(originalMsgSender, feed, postId);
 
         // TODO: Might want to move inside _processCollect?
-        LensCollectedPost(storedData.collectionAddress).mint(originalMsgSender, storedData.currentCollects);
-        return "";
+        LensCollectedPost(storedData.collectionAddress).mint(originalMsgSender, tokenId);
+
+        return abi.encode(tokenId);
+    }
+
+    function _setDisabled(
+        address originalMsgSender,
+        address feed,
+        uint256 postId,
+        bool isDisabled,
+        KeyValue[] calldata /* params */
+    ) internal override returns (bytes memory) {
+        _validateSenderIsAuthor(originalMsgSender, feed, postId);
+        CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
+        // We don't check for existence of collect before disabling, because it might be useful to disable it initially
+        // require(storedData.collectionAddress != address(0), "Collect not configured for this post");
+        require(!storedData.isImmutable, "Cannot modify immutable collect");
+        require(storedData.isDisabled != isDisabled, "Already in desired state");
+        storedData.isDisabled = isDisabled;
+        return abi.encode(isDisabled);
     }
 
     function getCollectActionData(address feed, uint256 postId) external view returns (CollectActionData memory) {
@@ -150,9 +165,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         }
     }
 
-    function _validateConfigureParams(
-        CollectActionConfigureParams memory configData
-    ) internal virtual {
+    function _validateConfigureParams(CollectActionConfigureParams memory configData) internal virtual {
         if (configData.amount == 0) {
             require(configData.currency == address(0), "Invalid currency");
         } else {
@@ -173,17 +186,15 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         CollectActionConfigureParams memory configData,
         address collectionAddress
     ) internal virtual {
-        $collectDataStorage().collectData[feed][postId] = CollectActionData({
-            amount: configData.amount,
-            collectLimit: configData.collectLimit,
-            currency: configData.currency,
-            currentCollects: 0,
-            recipient: configData.recipient,
-            endTimestamp: configData.endTimestamp,
-            followerOnlyGraph: configData.followerOnlyGraph,
-            collectionAddress: collectionAddress,
-            isImmutable: configData.isImmutable
-        });
+        CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
+        storedData.amount = configData.amount;
+        storedData.collectLimit = configData.collectLimit;
+        storedData.currency = configData.currency;
+        storedData.recipient = configData.recipient;
+        storedData.endTimestamp = configData.endTimestamp;
+        storedData.followerOnlyGraph = configData.followerOnlyGraph;
+        storedData.collectionAddress = collectionAddress;
+        storedData.isImmutable = configData.isImmutable;
     }
 
     function _validateCollect(
@@ -224,6 +235,10 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
                 "Invalid content URI"
             );
         }
+
+        if (data.isDisabled) {
+            revert("Collect is disabled");
+        }
     }
 
     function _processCollect(address originalMsgSender, address feed, uint256 postId) internal virtual {
@@ -238,9 +253,11 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         }
     }
 
-    function _extractConfigurationFromParams(
-        KeyValue[] calldata params
-    ) internal pure returns (CollectActionConfigureParams memory) {
+    function _extractConfigurationFromParams(KeyValue[] calldata params)
+        internal
+        pure
+        returns (CollectActionConfigureParams memory)
+    {
         CollectActionConfigureParams memory configData = CollectActionConfigureParams({
             amount: 0,
             collectLimit: 0,
@@ -271,9 +288,11 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         return configData;
     }
 
-    function _extractCollectActionExecutionParams(
-        KeyValue[] calldata params
-    ) internal pure returns (CollectActionExecutionParams memory) {
+    function _extractCollectActionExecutionParams(KeyValue[] calldata params)
+        internal
+        pure
+        returns (CollectActionExecutionParams memory)
+    {
         CollectActionExecutionParams memory executionParams =
             CollectActionExecutionParams({amount: 0, currency: address(0)});
 

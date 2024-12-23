@@ -25,6 +25,7 @@ struct CollectActionData {
     address followerOnlyGraph;
     address collectionAddress;
     bool isImmutable;
+    bool isDisabled;
 }
 
 interface ISimpleCollectAction is IPostAction {
