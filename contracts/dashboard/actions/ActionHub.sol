@@ -18,6 +18,13 @@ interface IPostAction {
         uint256 postId,
         KeyValue[] calldata params
     ) external returns (bytes memory);
+
+    function disable(
+        address originalMsgSender,
+        address feed,
+        uint256 postId,
+        KeyValue[] calldata params
+    ) external returns (bytes memory);
 }
 
 interface IAccountAction {
@@ -28,6 +35,12 @@ interface IAccountAction {
     ) external returns (bytes memory);
 
     function execute(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata params
+    ) external returns (bytes memory);
+
+    function disable(
         address originalMsgSender,
         address account,
         KeyValue[] calldata params
@@ -58,6 +71,15 @@ contract ActionHub {
         bytes returnData
     );
 
+    event Lens_ActionHub_PostAction_Disabled(
+        address indexed action,
+        address indexed msgSender,
+        address feed,
+        uint256 indexed postId,
+        KeyValue[] params,
+        bytes returnData
+    );
+
     event Lens_ActionHub_AccountAction_Universal(address indexed action);
 
     event Lens_ActionHub_AccountAction_Configured(
@@ -68,9 +90,11 @@ contract ActionHub {
         address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
     );
 
-    function signalUniversalPostAction(
-        address action
-    ) external {
+    event Lens_ActionHub_AccountAction_Disabled(
+        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+    );
+
+    function signalUniversalPostAction(address action) external {
         bytes memory returnData = IPostAction(action).configure(address(0), address(0), 0, new KeyValue[](0));
         require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE);
         emit Lens_ActionHub_PostAction_Universal(action);
@@ -98,9 +122,18 @@ contract ActionHub {
         return returnData;
     }
 
-    function signalUniversalAccountAction(
-        address action
-    ) external {
+    function disablePostAction(
+        address action,
+        address feed,
+        uint256 postId,
+        KeyValue[] calldata params
+    ) external payable returns (bytes memory) {
+        bytes memory returnData = IPostAction(action).disable(msg.sender, feed, postId, params);
+        emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, params, returnData);
+        return returnData;
+    }
+
+    function signalUniversalAccountAction(address action) external {
         bytes memory returnData = IAccountAction(action).configure(address(0), address(0), new KeyValue[](0));
         require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE);
         emit Lens_ActionHub_AccountAction_Universal(action);
@@ -123,6 +156,16 @@ contract ActionHub {
     ) external payable returns (bytes memory) {
         bytes memory returnData = IAccountAction(action).execute(msg.sender, account, params);
         emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, params, returnData);
+        return returnData;
+    }
+
+    function disableAccountAction(
+        address action,
+        address account,
+        KeyValue[] calldata params
+    ) external payable returns (bytes memory) {
+        bytes memory returnData = IAccountAction(action).disable(msg.sender, account, params);
+        emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, params, returnData);
         return returnData;
     }
 }

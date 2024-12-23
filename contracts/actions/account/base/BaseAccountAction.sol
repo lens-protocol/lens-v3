@@ -7,9 +7,7 @@ import {BaseAction} from "./../../base/BaseAction.sol";
 import {IAccountAction} from "./../../../dashboard/actions/ActionHub.sol";
 
 abstract contract BaseAccountAction is BaseAction, IAccountAction {
-    constructor(
-        address actionHub
-    ) BaseAction(actionHub) {}
+    constructor(address actionHub) BaseAction(actionHub) {}
 
     function configure(
         address originalMsgSender,
@@ -27,6 +25,14 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
         return _execute(originalMsgSender, account, params);
     }
 
+    function disable(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata params
+    ) external override onlyActionHub returns (bytes memory) {
+        return _disable(originalMsgSender, account, params);
+    }
+
     function _configure(
         address originalMsgSender,
         address, /* account */
@@ -40,4 +46,12 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
         address account,
         KeyValue[] calldata params
     ) internal virtual returns (bytes memory);
+
+    function _disable(
+        address, /* originalMsgSender */
+        address, /* account */
+        KeyValue[] calldata /* params */
+    ) internal virtual returns (bytes memory) {
+        revert();
+    }
 }
