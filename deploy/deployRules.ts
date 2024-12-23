@@ -37,7 +37,7 @@ export async function deployRules() {
     { contractName: 'SimplePaymentFollowRule', contractType: ContractType.FollowRule },
     { contractName: 'TokenGatedFollowRule', contractType: ContractType.FollowRule },
     // Group Rules
-    { contractName: 'ApprovalGroupRule', contractType: ContractType.GroupRule },
+    { contractName: 'MembershipApprovalGroupRule', contractType: ContractType.GroupRule },
     { contractName: 'SimplePaymentGroupRule', contractType: ContractType.GroupRule },
     { contractName: 'TokenGatedGroupRule', contractType: ContractType.GroupRule },
     // Username Rules

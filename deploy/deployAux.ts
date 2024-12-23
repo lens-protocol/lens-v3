@@ -82,7 +82,8 @@ async function deployAccount(lensFactory: ethers.Contract): Promise<string> {
     getWallet().address,
     [],
     [],
-    emptySourceStamp
+    emptySourceStamp,
+    []
   );
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
@@ -95,6 +96,7 @@ async function deployAccount(lensFactory: ethers.Contract): Promise<string> {
     [],
     [],
     emptySourceStamp,
+    []
   ]);
 
   return accountAddress;
