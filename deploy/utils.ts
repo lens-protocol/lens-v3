@@ -55,11 +55,11 @@ export const verifyContract = async (data: {
   constructorArguments: string;
   bytecode: string;
 }) => {
-  // const verificationRequestId: number = await hre.run('verify:verify', {
-  //   ...data,
-  //   noCompile: true,
-  // });
-  // return verificationRequestId;
+  const verificationRequestId: number = await hre.run('verify:verify', {
+    ...data,
+    noCompile: true,
+  });
+  return verificationRequestId;
 };
 
 export const verifyZkDeployedContract = async (data: {
