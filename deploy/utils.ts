@@ -55,11 +55,11 @@ export const verifyContract = async (data: {
   constructorArguments: string;
   bytecode: string;
 }) => {
-  const verificationRequestId: number = await hre.run('verify:verify', {
-    ...data,
-    noCompile: true,
-  });
-  return verificationRequestId;
+  // const verificationRequestId: number = await hre.run('verify:verify', {
+  //   ...data,
+  //   noCompile: true,
+  // });
+  // return verificationRequestId;
 };
 
 export const verifyZkDeployedContract = async (data: {
@@ -274,11 +274,16 @@ export const deployContract = async (
   });
 
   // Estimate contract deployment fee
-  const deploymentFee = await deployer.estimateDeployFee(artifact, constructorArguments || []);
-  log(`Estimated deployment cost: ${ethers.formatEther(deploymentFee)} ETH`);
+  const estimatedDeployGas = await deployer.estimateDeployGas(artifact, constructorArguments || []);
+  const estimatedDeployFee = await deployer.estimateDeployFee(artifact, constructorArguments || []);
+  const gasPrice = await wallet.provider.getGasPrice();
+  console.log(`Estimated deployment costs:`);
+  console.log(` - Estimated gas used: ${estimatedDeployGas.toString()}`);
+  console.log(` - Estimated gas price: ${ethers.formatUnits(gasPrice, 'gwei')} Gwei`);
+  console.log(` - Estimated deployment fee: ${ethers.formatEther(estimatedDeployFee)} ETH`);
 
   // Check if the wallet has enough balance
-  await verifyEnoughBalance(wallet, deploymentFee);
+  await verifyEnoughBalance(wallet, estimatedDeployFee);
 
   // Deploy the contract to ZKsync
   const contract = await deployer.deploy(artifact, constructorArguments);
