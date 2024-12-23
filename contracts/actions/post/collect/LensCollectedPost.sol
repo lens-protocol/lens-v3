@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import "./../../core/base/LensERC721.sol";
+import "./../../../core/base/LensERC721.sol";
 import {IERC7572} from "./IERC7572.sol";
-import {IFeed} from "./../../core/interfaces/IFeed.sol";
-import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
+import {IFeed} from "./../../../core/interfaces/IFeed.sol";
+import {ITokenURIProvider} from "./../../../core/interfaces/ITokenURIProvider.sol";
 
 /**
  * @notice A contract that represents a Lens Collected Post.
@@ -56,7 +56,9 @@ contract LensCollectedPost is LensERC721, IERC7572 {
         return _contractURI;
     }
 
-    function tokenURI(uint256 /*tokenId*/ ) public view override returns (string memory) {
+    function tokenURI(
+        uint256 /*tokenId*/
+    ) public view override returns (string memory) {
         if (_isImmutable) {
             return _contentURISnapshot;
         } else {
@@ -71,7 +73,9 @@ contract LensCollectedPost is LensERC721, IERC7572 {
 
     // Disabling integrated LensERC721 tokenURIProvider
     // TODO: Is this approach more favorable than deploying the LensCollectedPostTokenURIProvider over and over?
-    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal pure override {
+    function _beforeTokenURIProviderSet(
+        ITokenURIProvider /* tokenURIProvider */
+    ) internal pure override {
         revert();
     }
 }

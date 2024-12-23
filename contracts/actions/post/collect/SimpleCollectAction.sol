@@ -3,17 +3,18 @@
 pragma solidity ^0.8.0;
 
 import {ISimpleCollectAction, CollectActionData, CollectActionData} from "./ISimpleCollectAction.sol";
-import {IFeed} from "./../../core/interfaces/IFeed.sol";
-import {IGraph} from "./../../core/interfaces/IGraph.sol";
+import {IFeed} from "./../../../core/interfaces/IFeed.sol";
+import {IGraph} from "./../../../core/interfaces/IGraph.sol";
 
 import {LensCollectedPost} from "./LensCollectedPost.sol";
+import {BasePostAction} from "./../base/BasePostAction.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {KeyValue} from "./../../core/types/Types.sol";
+import {KeyValue} from "./../../../core/types/Types.sol";
 
-contract SimpleCollectAction is ISimpleCollectAction {
+contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
     using SafeERC20 for IERC20;
 
     struct CollectActionStorage {
@@ -76,12 +77,17 @@ contract SimpleCollectAction is ISimpleCollectAction {
         address currency; // (Optional, but required if amount > 0) Default: address(0)
     }
 
-    function configure(
+    constructor(
+        address actionHub
+    ) BasePostAction(actionHub) {}
+
+    function _configure(
+        address originalMsgSender,
         address feed,
         uint256 postId,
         KeyValue[] calldata params
-    ) external override returns (bytes memory) {
-        _validateSenderIsAuthor(msg.sender, feed, postId);
+    ) internal override returns (bytes memory) {
+        _validateSenderIsAuthor(originalMsgSender, feed, postId);
 
         CollectActionConfigureParams memory configData = _extractConfigurationFromParams(params);
         _validateConfigureParams(configData);
@@ -111,28 +117,26 @@ contract SimpleCollectAction is ISimpleCollectAction {
             }
         }
         bytes memory encodedStoredData = abi.encode(storedData);
-        emit Lens_PostAction_Configured(feed, postId, params, encodedStoredData);
         return encodedStoredData;
     }
 
-    function execute(
+    function _execute(
+        address originalMsgSender,
         address feed,
         uint256 postId,
         KeyValue[] calldata params
-    ) external override returns (bytes memory) {
+    ) internal override returns (bytes memory) {
         CollectActionExecutionParams memory expectedParams = _extractCollectActionExecutionParams(params);
 
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
         storedData.currentCollects++;
 
-        _validateCollect(feed, postId, expectedParams);
+        _validateCollect(originalMsgSender, feed, postId, expectedParams);
 
-        _processCollect(feed, postId);
+        _processCollect(originalMsgSender, feed, postId);
 
         // TODO: Might want to move inside _processCollect?
-        LensCollectedPost(storedData.collectionAddress).mint(msg.sender, storedData.currentCollects);
-
-        emit Lens_PostAction_Executed(feed, postId, params, "");
+        LensCollectedPost(storedData.collectionAddress).mint(originalMsgSender, storedData.currentCollects);
         return "";
     }
 
@@ -146,7 +150,9 @@ contract SimpleCollectAction is ISimpleCollectAction {
         }
     }
 
-    function _validateConfigureParams(CollectActionConfigureParams memory configData) internal virtual {
+    function _validateConfigureParams(
+        CollectActionConfigureParams memory configData
+    ) internal virtual {
         if (configData.amount == 0) {
             require(configData.currency == address(0), "Invalid currency");
         } else {
@@ -156,7 +162,7 @@ contract SimpleCollectAction is ISimpleCollectAction {
             revert("Invalid params");
         }
         if (configData.followerOnlyGraph != address(0)) {
-            // Check if the Graph supports isFollowing() interface
+            // Check if the Graph supports isFollowing() interface with two random addresses
             IGraph(configData.followerOnlyGraph).isFollowing(address(this), msg.sender);
         }
     }
@@ -181,6 +187,7 @@ contract SimpleCollectAction is ISimpleCollectAction {
     }
 
     function _validateCollect(
+        address originalMsgSender,
         address feed,
         uint256 postId,
         CollectActionExecutionParams memory expectedParams
@@ -203,7 +210,7 @@ contract SimpleCollectAction is ISimpleCollectAction {
 
         if (data.followerOnlyGraph != address(0)) {
             require(
-                IGraph(data.followerOnlyGraph).isFollowing(msg.sender, IFeed(feed).getPostAuthor(postId)),
+                IGraph(data.followerOnlyGraph).isFollowing(originalMsgSender, IFeed(feed).getPostAuthor(postId)),
                 "Not following"
             );
         }
@@ -219,7 +226,7 @@ contract SimpleCollectAction is ISimpleCollectAction {
         }
     }
 
-    function _processCollect(address feed, uint256 postId) internal virtual {
+    function _processCollect(address originalMsgSender, address feed, uint256 postId) internal virtual {
         CollectActionData storage data = $collectDataStorage().collectData[feed][postId];
 
         uint256 amount = data.amount;
@@ -227,15 +234,13 @@ contract SimpleCollectAction is ISimpleCollectAction {
         address recipient = data.recipient;
 
         if (amount > 0) {
-            IERC20(currency).safeTransferFrom(msg.sender, recipient, amount);
+            IERC20(currency).safeTransferFrom(originalMsgSender, recipient, amount);
         }
     }
 
-    function _extractConfigurationFromParams(KeyValue[] calldata params)
-        internal
-        pure
-        returns (CollectActionConfigureParams memory)
-    {
+    function _extractConfigurationFromParams(
+        KeyValue[] calldata params
+    ) internal pure returns (CollectActionConfigureParams memory) {
         CollectActionConfigureParams memory configData = CollectActionConfigureParams({
             amount: 0,
             collectLimit: 0,
@@ -266,11 +271,9 @@ contract SimpleCollectAction is ISimpleCollectAction {
         return configData;
     }
 
-    function _extractCollectActionExecutionParams(KeyValue[] calldata params)
-        internal
-        pure
-        returns (CollectActionExecutionParams memory)
-    {
+    function _extractCollectActionExecutionParams(
+        KeyValue[] calldata params
+    ) internal pure returns (CollectActionExecutionParams memory) {
         CollectActionExecutionParams memory executionParams =
             CollectActionExecutionParams({amount: 0, currency: address(0)});
 

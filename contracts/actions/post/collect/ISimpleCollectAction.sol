@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IPostAction} from "./../../core/interfaces/IPostAction.sol";
+import {IPostAction} from "./../../../dashboard/actions/ActionHub.sol";
 
 /**
  * @notice A storage struct containing all data regarding a post's collect action.

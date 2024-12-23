@@ -2,36 +2,44 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue} from "./../../core/types/Types.sol";
-import {BaseAction} from "./BaseAction.sol";
-import {IAccountAction} from "./ActionHub.sol";
+import {KeyValue} from "./../../../core/types/Types.sol";
+import {BaseAction} from "./../../base/BaseAction.sol";
+import {IPostAction} from "./../../../dashboard/actions/ActionHub.sol";
 
-abstract contract BaseAccountAction is BaseAction, IAccountAction {
+abstract contract BasePostAction is BaseAction, IPostAction {
+    constructor(
+        address actionHub
+    ) BaseAction(actionHub) {}
+
     function configure(
         address originalMsgSender,
-        address account,
+        address feed,
+        uint256 postId,
         KeyValue[] calldata params
     ) external override onlyActionHub returns (bytes memory) {
-        return _configure(originalMsgSender, account, params);
+        return _configure(originalMsgSender, feed, postId, params);
     }
 
     function execute(
         address originalMsgSender,
-        address account,
+        address feed,
+        uint256 postId,
         KeyValue[] calldata params
     ) external override onlyActionHub returns (bytes memory) {
-        return _execute(originalMsgSender, account, params);
+        return _execute(originalMsgSender, feed, postId, params);
     }
 
     function _configure(
         address originalMsgSender,
-        address account,
+        address feed,
+        uint256 postId,
         KeyValue[] calldata params
     ) internal virtual returns (bytes memory);
 
     function _execute(
         address originalMsgSender,
-        address account,
+        address feed,
+        uint256 postId,
         KeyValue[] calldata params
     ) internal virtual returns (bytes memory);
 }

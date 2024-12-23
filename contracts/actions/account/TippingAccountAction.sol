@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IAccountAction} from "./../../core/interfaces/IAccountAction.sol";
+import {BaseAccountAction} from "./base/BaseAccountAction.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 
-contract TippingAccountAction is IAccountAction {
+contract TippingAccountAction is BaseAccountAction {
     using SafeERC20 for IERC20;
 
     // keccak256("lens.actions.account.TippingAccountAction.param.key.tipAmount");
@@ -15,14 +15,23 @@ contract TippingAccountAction is IAccountAction {
     // keccak256("lens.actions.account.TippingAccountAction.param.key.tipToken");
     bytes32 immutable TIP_TOKEN_PARAM_KEY = 0xae0b2bf062e67ee8e231397eadff68e32752f185a8cb19379ed8cfa87ae7bd08;
 
-    function configure(
+    constructor(
+        address actionHub
+    ) BaseAccountAction(actionHub) {}
+
+    function _configure(
+        address, /* originalMsgSender */
         address, /* account */
         KeyValue[] calldata /* params */
-    ) external pure override returns (bytes memory) {
+    ) internal pure override returns (bytes memory) {
         revert(); // Configuration not needed for tipping.
     }
 
-    function execute(address account, KeyValue[] calldata params) external override returns (bytes memory) {
+    function _execute(
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata params
+    ) internal override returns (bytes memory) {
         address erc20Token;
         uint256 tipAmount;
         for (uint256 i = 0; i < params.length; i++) {
@@ -33,8 +42,7 @@ contract TippingAccountAction is IAccountAction {
             }
         }
         require(tipAmount > 0);
-        IERC20(erc20Token).safeTransferFrom(msg.sender, account, tipAmount);
-        emit Lens_AccountAction_Executed(account, params);
+        IERC20(erc20Token).safeTransferFrom(originalMsgSender, account, tipAmount);
         return "";
     }
 }
