@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {ISimpleCollectAction, CollectActionData, CollectActionData} from "./ISimpleCollectAction.sol";
+import {ISimpleCollectAction, CollectActionData} from "./ISimpleCollectAction.sol";
 import {IFeed} from "./../../../core/interfaces/IFeed.sol";
 import {IGraph} from "./../../../core/interfaces/IGraph.sol";
 
