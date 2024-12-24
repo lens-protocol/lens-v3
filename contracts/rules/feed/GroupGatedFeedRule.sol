@@ -6,15 +6,12 @@ import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.so
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGroup} from "./../../core/interfaces/IGroup.sol";
 import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract GroupGatedFeedRule is IFeedRule, MetadataBased {
+contract GroupGatedFeedRule is IFeedRule {
     // keccak256("lens.param.key.group");
     bytes32 immutable GROUP_PARAM_KEY = 0xe556a4384e8a110aab4ea745eff2c09de81f87f56e4ecba2205982230d3bd4f4;
 
     mapping(address => mapping(bytes32 => address)) internal _groupGate;
-
-    constructor(string memory metadataURI) MetadataBased(metadataURI) {}
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address groupGate;

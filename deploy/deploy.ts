@@ -1,10 +1,15 @@
 import deployFactories from './deployFactories';
-import { deployPrimitives, deployAccessControl } from './deployAux';
+import { deployLensPrimitives, deployLensAccessControl, deployLensActionHub } from './deployAux';
 import { deployRules } from './deployRules';
+import { deployActions } from './deployActions';
+import { generateEnvFile } from './lensUtils';
 
 export default async function deploy() {
-  const { lensFactory, accessControlFactory } = await deployFactories();
-  await deployPrimitives(lensFactory);
-  await deployAccessControl(accessControlFactory);
+  await deployFactories();
+  await deployLensPrimitives();
+  const actionHub = await deployLensActionHub();
+  await deployLensAccessControl();
   await deployRules();
+  await deployActions(actionHub);
+  generateEnvFile();
 }

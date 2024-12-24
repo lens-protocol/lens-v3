@@ -1,121 +1,36 @@
-import { deploy, camelToAllCaps } from './utils';
-import { writeFileSync } from 'fs';
+import {
+  deployLensContract,
+  ContractType,
+  ContractInfo,
+} from './lensUtils';
 
-enum ContractType {
-  PostAction,
-  AccountAction,
-  FeedRule,
-  PostRule,
-  GraphRule,
-  FollowRule,
-  GroupRule,
-  UsernameRule,
-}
-
-interface DeployContract {
-  contractName: string;
-  contractType: ContractType;
-  address?: string;
-}
-
-export async function deployRules() {
-  const contracts: DeployContract[] = [
-    // Actions
-    { contractName: 'TippingAccountAction', contractType: ContractType.AccountAction },
-    { contractName: 'SimpleCollectAction', contractType: ContractType.PostAction },
+export async function deployRules(): Promise<void> {
+  const contracts: ContractInfo[] = [
     // Feed Rules
-    { contractName: 'GroupGatedFeedRule', contractType: ContractType.FeedRule },
-    { contractName: 'RestrictedSignersFeedRule', contractType: ContractType.FeedRule },
-    { contractName: 'SimplePaymentFeedRule', contractType: ContractType.FeedRule },
-    { contractName: 'TokenGatedFeedRule', contractType: ContractType.FeedRule },
+    { contractName: 'GroupGatedFeedRule', contractType: ContractType.Rule },
+    { contractName: 'RestrictedSignersFeedRule', contractType: ContractType.Rule },
+    { contractName: 'SimplePaymentFeedRule', contractType: ContractType.Rule },
+    { contractName: 'TokenGatedFeedRule', contractType: ContractType.Rule },
     // Post Rules
-    { contractName: 'FollowersOnlyPostRule', contractType: ContractType.PostRule },
+    { contractName: 'FollowersOnlyPostRule', contractType: ContractType.Rule },
     // Graph Rules
-    { contractName: 'RestrictedSignersGraphRule', contractType: ContractType.GraphRule },
-    { contractName: 'TokenGatedGraphRule', contractType: ContractType.GraphRule },
+    { contractName: 'RestrictedSignersGraphRule', contractType: ContractType.Rule },
+    { contractName: 'TokenGatedGraphRule', contractType: ContractType.Rule },
     // Follow Rules
-    { contractName: 'SimplePaymentFollowRule', contractType: ContractType.FollowRule },
-    { contractName: 'TokenGatedFollowRule', contractType: ContractType.FollowRule },
+    { contractName: 'SimplePaymentFollowRule', contractType: ContractType.Rule },
+    { contractName: 'TokenGatedFollowRule', contractType: ContractType.Rule },
     // Group Rules
-    { contractName: 'MembershipApprovalGroupRule', contractType: ContractType.GroupRule },
-    { contractName: 'SimplePaymentGroupRule', contractType: ContractType.GroupRule },
-    { contractName: 'TokenGatedGroupRule', contractType: ContractType.GroupRule },
+    { contractName: 'MembershipApprovalGroupRule', contractType: ContractType.Rule },
+    { contractName: 'SimplePaymentGroupRule', contractType: ContractType.Rule },
+    { contractName: 'TokenGatedGroupRule', contractType: ContractType.Rule },
     // Username Rules
-    { contractName: 'CharsetUsernameRule', contractType: ContractType.UsernameRule },
-    { contractName: 'LengthUsernameRule', contractType: ContractType.UsernameRule },
-    { contractName: 'SimplePaymentUsernameRule', contractType: ContractType.UsernameRule },
-    { contractName: 'TokenGatedUsernameRule', contractType: ContractType.UsernameRule },
+    { contractName: 'CharsetUsernameRule', contractType: ContractType.Rule },
+    { contractName: 'LengthUsernameRule', contractType: ContractType.Rule },
+    { contractName: 'SimplePaymentUsernameRule', contractType: ContractType.Rule },
+    { contractName: 'TokenGatedUsernameRule', contractType: ContractType.Rule },
   ];
 
   for (const contract of contracts) {
-    const address = await deploy(contract.contractName, []);
-    contract.address = address;
+    await deployLensContract(contract);
   }
-
-  const outputLines: string[] = [];
-
-  outputLines.push('# ACTIONS');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.AccountAction)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  contracts
-    .filter((contract) => contract.contractType === ContractType.PostAction)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  outputLines.push('\n# RULES');
-
-  outputLines.push('# Feed Rules');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.FeedRule)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  outputLines.push('# Feed -> Post Rules');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.PostRule)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  outputLines.push('# Graph Rules');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.GraphRule)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  outputLines.push('# Graph -> Follow Rules');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.FollowRule)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  outputLines.push('# Group Rules');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.GroupRule)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  outputLines.push('# Username Rules');
-  contracts
-    .filter((contract) => contract.contractType === ContractType.UsernameRule)
-    .forEach((contract) => {
-      outputLines.push(`${camelToAllCaps(contract.contractName)}="${contract.address}"`);
-    });
-
-  const output = outputLines.join('\n');
-  writeFileSync('deployed_rules.txt', output);
-
-  console.log(`\n\nDeployed Contracts:\n`);
-  console.log(output);
-
-  console.log('\n\nContracts deployed and addresses saved to deployed_contracts.txt');
 }
