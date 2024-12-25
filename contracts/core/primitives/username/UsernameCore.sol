@@ -7,7 +7,6 @@ library UsernameCore {
 
     struct Storage {
         string namespace;
-        string metadataURI;
         mapping(string => bool) usernameExists; // TODO: Should this store the owner instead???
         mapping(string => address) usernameToAccount;
         mapping(address => string) accountToUsername;

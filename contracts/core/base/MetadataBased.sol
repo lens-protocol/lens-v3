@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-abstract contract MetadataBased {
+import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
+
+abstract contract MetadataBased is IMetadataBased {
     struct MetadataURIStorage {
         string metadataURI;
     }
@@ -15,27 +17,23 @@ abstract contract MetadataBased {
         }
     }
 
-    event Lens_MetadataURISet(string metadataURI);
-
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function setMetadataURI(string memory metadataURI) external {
+    function setMetadataURI(string memory metadataURI) external override {
         _beforeMetadataURIUpdate(metadataURI);
         _setMetadataURI(metadataURI);
     }
 
     function _setMetadataURI(string memory metadataURI) internal {
         $metadataStorage().metadataURI = metadataURI;
-        emit Lens_MetadataURISet(metadataURI);
+        _emitMetadataURISet(metadataURI);
     }
 
     function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal virtual {
         revert();
     }
 
-    function getMetadataURI() external view returns (string memory) {
+    function _emitMetadataURISet(string memory /* metadataURI */ ) internal virtual;
+
+    function getMetadataURI() external view override returns (string memory) {
         return $metadataStorage().metadataURI;
     }
 }

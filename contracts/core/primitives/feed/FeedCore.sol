@@ -21,7 +21,6 @@ library FeedCore {
     // Storage
 
     struct Storage {
-        string metadataURI;
         uint256 postCount;
         mapping(address => uint256) authorPostCount;
         mapping(uint256 => PostStorage) posts;

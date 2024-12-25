@@ -14,9 +14,18 @@ import {Events} from "./../../types/Events.sol";
 import {LensERC721} from "./../../base/LensERC721.sol";
 import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
-
+import {MetadataBased} from "./../../base/MetadataBased.sol";
 // TODO: Rename to Namespace (cause "Username" is an entity of the primitive "Namespace", like "Post" of "Feed")
-contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled, ExtraStorageBased, SourceStampBased {
+
+contract Username is
+    IUsername,
+    LensERC721,
+    RuleBasedUsername,
+    AccessControlled,
+    ExtraStorageBased,
+    SourceStampBased,
+    MetadataBased
+{
     event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     // TODO: Do we want more granular resources here? Like add/update/remove PIDs? Or are we OK with the multi-purpose?
@@ -37,10 +46,13 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         ITokenURIProvider tokenURIProvider
     ) LensERC721(nftName, nftSymbol, tokenURIProvider) AccessControlled(accessControl) {
         Core.$storage().namespace = namespace;
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Username_MetadataURISet(metadataURI);
+        _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("username", "lens.username", "username", "lens.username");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Username_MetadataURISet(metadataURI);
     }
 
     function _emitPIDs() internal override {
@@ -51,16 +63,14 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         emit Events.Lens_PermissionId_Available(SET_TOKEN_URI_PROVIDER_PID, "SET_TOKEN_URI_PROVIDER");
     }
 
-    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view override {
-        _requireAccess(msg.sender, SET_TOKEN_URI_PROVIDER_PID);
-    }
-
     // Access Controlled functions
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
         _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Username_MetadataURISet(metadataURI);
+    }
+
+    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view override {
+        _requireAccess(msg.sender, SET_TOKEN_URI_PROVIDER_PID);
     }
 
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
@@ -270,9 +280,5 @@ contract Username is IUsername, LensERC721, RuleBasedUsername, AccessControlled,
         uint256 tokenId = _computeId(username);
         address owner = _ownerOf(tokenId);
         return _getEntityExtraData(owner, tokenId, key);
-    }
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
     }
 }

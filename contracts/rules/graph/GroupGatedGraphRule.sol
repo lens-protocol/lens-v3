@@ -8,10 +8,13 @@ import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {IGroup} from "./../../core/interfaces/IGroup.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract GroupGatedGraphRule is IGraphRule {
+contract GroupGatedGraphRule is IGraphRule, MetadataBased {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
+
+    event Lens_Rule_MetadataURISet(string metadataURI);
 
     uint256 constant SKIP_TOKEN_GATE_PID = uint256(keccak256("SKIP_TOKEN_GATE"));
 
@@ -28,7 +31,13 @@ contract GroupGatedGraphRule is IGraphRule {
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {

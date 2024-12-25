@@ -11,11 +11,13 @@ import {BasePostAction} from "./../base/BasePostAction.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import {MetadataBased} from "./../../../core/base/MetadataBased.sol";
 import {KeyValue} from "./../../../core/types/Types.sol";
 
-contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
+contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;
+
+    event Lens_Action_MetadataURISet(string metadataURI);
 
     struct CollectActionStorage {
         mapping(address => mapping(uint256 => CollectActionData)) collectData;
@@ -77,7 +79,14 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction {
         address currency; // (Optional, but required if amount > 0) Default: address(0)
     }
 
-    constructor(address actionHub) BasePostAction(actionHub) {}
+    constructor(address actionHub) BasePostAction(actionHub) {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Action_MetadataURISet(metadataURI);
+    }
 
     function _configure(
         address originalMsgSender,

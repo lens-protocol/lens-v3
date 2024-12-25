@@ -11,7 +11,6 @@ library GroupCore {
     // Storage
 
     struct Storage {
-        string metadataURI;
         uint256 lastMemberIdAssigned;
         uint256 numberOfMembers;
         mapping(address => Membership) memberships;

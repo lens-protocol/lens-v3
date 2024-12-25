@@ -7,8 +7,11 @@ import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract CharsetUsernameRule is IUsernameRule {
+contract CharsetUsernameRule is IUsernameRule, MetadataBased {
+    event Lens_Rule_MetadataURISet(string metadataURI);
+
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -53,7 +56,13 @@ contract CharsetUsernameRule is IUsernameRule {
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
         emit Events.Lens_PermissionId_Available(SKIP_CHARSET_PID, "SKIP_CHARSET");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {

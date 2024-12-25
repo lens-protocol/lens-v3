@@ -7,8 +7,11 @@ import {IGraph} from "./../../core/interfaces/IGraph.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract FollowersOnlyPostRule is IPostRule {
+contract FollowersOnlyPostRule is IPostRule, MetadataBased {
+    event Lens_Rule_MetadataURISet(string metadataURI);
+
     struct Configuration {
         address graph;
         bool repliesRestricted;
@@ -26,6 +29,15 @@ contract FollowersOnlyPostRule is IPostRule {
     bytes32 immutable QUOTES_RESTRICTED_PARAM_KEY = 0xaa67cc93791051d4b576cfc397a1494d5f4baf59f14681843bfef453034cd9fa;
 
     mapping(address => mapping(bytes32 => mapping(uint256 => Configuration))) internal _configuration;
+
+    constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
+    }
 
     function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration;

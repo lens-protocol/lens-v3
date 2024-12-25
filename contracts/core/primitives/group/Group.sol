@@ -12,8 +12,9 @@ import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
+import {MetadataBased} from "./../../base/MetadataBased.sol";
 
-contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, SourceStampBased {
+contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -22,10 +23,13 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
     uint256 constant REMOVE_MEMBER_PID = uint256(keccak256("REMOVE_MEMBER"));
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Group_MetadataURISet(metadataURI);
+        _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("group", "lens.group", "group", "lens.group");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Group_MetadataURISet(metadataURI);
     }
 
     function _emitPIDs() internal override {
@@ -39,14 +43,12 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
 
     // Access Controlled functions
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
-        _requireAccess(msg.sender, SET_RULES_PID);
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
+        _requireAccess(msg.sender, SET_METADATA_PID);
     }
 
-    function setMetadataURI(string calldata metadataURI) external override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Group_MetadataURISet(metadataURI);
+    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+        _requireAccess(msg.sender, SET_RULES_PID);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -122,10 +124,6 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
     }
 
     // Getters
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
-    }
 
     function getNumberOfMembers() external view override returns (uint256) {
         return Core.$storage().numberOfMembers;

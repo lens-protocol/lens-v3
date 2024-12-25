@@ -11,19 +11,24 @@ import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
+import {MetadataBased} from "./../../base/MetadataBased.sol";
 
-contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased {
+contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
+    // TODO: Move these to respective contracts
     // Resource IDs involved in the contract
-    uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
+    uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
     uint256 constant REMOVE_POST_PID = uint256(keccak256("REMOVE_POST"));
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Feed_MetadataURISet(metadataURI);
+        _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
     function _emitPIDs() internal override {
@@ -36,10 +41,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     // Access Controlled functions
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
         _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
@@ -218,10 +221,6 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     function getPostCount(address author) external view override returns (uint256) {
         return Core.$storage().authorPostCount[author];
-    }
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
     }
 
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {

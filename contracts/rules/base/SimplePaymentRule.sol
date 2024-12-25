@@ -4,12 +4,15 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-abstract contract SimplePaymentRule {
+abstract contract SimplePaymentRule is MetadataBased {
     using SafeERC20 for IERC20;
 
     event Lens_SimplePaymentRule_Trusted(address indexed payer, address indexed trusted);
     event Lens_SimplePaymentRule_Untrusted(address indexed payer, address indexed untrusted);
+
+    event Lens_Rule_MetadataURISet(string metadataURI);
 
     // keccak256("lens.rules.SimplePaymentRule.param.key.paymentConfiguration");
     bytes32 internal immutable PAYMENT_CONFIG_PARAM_KEY =
@@ -22,6 +25,15 @@ abstract contract SimplePaymentRule {
     }
 
     mapping(address => mapping(address => bool)) internal _isTrusted;
+
+    constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
+    }
 
     function setTrust(address primitive, bool isTrusted) external virtual {
         _isTrusted[msg.sender][primitive] = isTrusted;

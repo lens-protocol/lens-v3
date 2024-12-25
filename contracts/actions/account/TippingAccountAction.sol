@@ -6,18 +6,26 @@ import {BaseAccountAction} from "./base/BaseAccountAction.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract TippingAccountAction is BaseAccountAction {
+contract TippingAccountAction is BaseAccountAction, MetadataBased {
     using SafeERC20 for IERC20;
+
+    event Lens_Action_MetadataURISet(string metadataURI);
 
     // keccak256("lens.actions.account.TippingAccountAction.param.key.tipAmount");
     bytes32 immutable TIP_AMOUNT_PARAM_KEY = 0x9c3dd1983546cd2f985b2e6692b416f4157648b3750ffc5bdf5a6365061d9bd9;
     // keccak256("lens.actions.account.TippingAccountAction.param.key.tipToken");
     bytes32 immutable TIP_TOKEN_PARAM_KEY = 0xae0b2bf062e67ee8e231397eadff68e32752f185a8cb19379ed8cfa87ae7bd08;
 
-    constructor(
-        address actionHub
-    ) BaseAccountAction(actionHub) {}
+    constructor(address actionHub) BaseAccountAction(actionHub) {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Action_MetadataURISet(metadataURI);
+    }
 
     function _execute(
         address originalMsgSender,

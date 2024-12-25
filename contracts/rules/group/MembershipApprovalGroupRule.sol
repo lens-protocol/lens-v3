@@ -7,10 +7,13 @@ import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract MembershipApprovalGroupRule is IGroupRule {
+contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
+
+    event Lens_Rule_MetadataURISet(string metadataURI);
 
     uint256 constant APPROVE_MEMBER_PID = uint256(keccak256("APPROVE_MEMBER"));
 
@@ -33,7 +36,13 @@ contract MembershipApprovalGroupRule is IGroupRule {
     mapping(address => mapping(address => mapping(bytes32 => MembershipRequest))) internal _membershipRequests;
 
     constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
         emit Events.Lens_PermissionId_Available(APPROVE_MEMBER_PID, "APPROVE_MEMBER");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function requestMembership(bytes32 configSalt, address group) external {

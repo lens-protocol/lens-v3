@@ -8,7 +8,6 @@ library GraphCore {
     // Storage
 
     struct Storage {
-        string metadataURI;
         mapping(address => uint256) lastFollowIdAssigned;
         mapping(address => mapping(address => Follow)) follows;
         mapping(address => mapping(uint256 => address)) followers;

@@ -11,8 +11,9 @@ import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
+import {MetadataBased} from "./../../base/MetadataBased.sol";
 
-contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, SourceStampBased {
+contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
     // Resource IDs involved in the contract
     uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
     uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
@@ -21,10 +22,13 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
     // uint256 constant SKIP_FOLLOW_RULES_CHECKS_PID = uint256(keccak256("SKIP_FOLLOW_RULES_CHECKS"));
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Graph_MetadataURISet(metadataURI);
+        _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("graph", "lens.graph", "graph", "lens.graph");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Graph_MetadataURISet(metadataURI);
     }
 
     function _emitPIDs() internal override {
@@ -36,6 +40,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     // Access Controlled functions
 
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
+        _requireAccess(msg.sender, SET_METADATA_PID);
+    }
+
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
@@ -46,12 +54,6 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
     ) internal virtual override {
         address account = address(uint160(entityId));
         // TODO: What should we validate here?
-    }
-
-    function setMetadataURI(string calldata metadataURI) external override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Graph_MetadataURISet(metadataURI);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -142,9 +144,5 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
-    }
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
     }
 }

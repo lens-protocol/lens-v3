@@ -5,8 +5,9 @@ pragma solidity ^0.8.0;
 import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
-
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 // Move to types
+
 struct EIP712Signature {
     address signer;
     uint8 v;
@@ -23,10 +24,12 @@ struct RestrictedSignerMessage {
     uint256 deadline;
 }
 
-abstract contract RestrictedSignersRule {
+abstract contract RestrictedSignersRule is MetadataBased {
     event Lens_RestrictedSignersRule_SignerAdded(address indexed signer, string label);
     event Lens_RestrictedSignersRule_SignerRemoved(address indexed signer);
     event Lens_RestrictedSignersRule_SignerNonceUsed(address indexed signer, uint256 indexed nonce);
+
+    event Lens_Rule_MetadataURISet(string metadataURI);
 
     struct RulesStorage {
         mapping(address => mapping(bytes32 => InnerStorage)) rulesStorage;
@@ -63,6 +66,15 @@ abstract contract RestrictedSignersRule {
     bytes32 constant RESTRICTED_SIGNER_MESSAGE_TYPEHASH = keccak256(
         "RestrictedSignerMessage(bytes4 functionSelector,bytes abiEncodedParams,uint256 nonce,uint256 deadline)"
     );
+
+    constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
+    }
 
     function _configure(bytes32 configSalt, KeyValue[] calldata ruleParams) internal virtual {
         require(ruleParams.length > 0);

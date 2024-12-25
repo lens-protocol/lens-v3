@@ -7,12 +7,24 @@ import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
 import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract UserBlockingRule is IFeedRule, IGraphRule {
+contract UserBlockingRule is IFeedRule, IGraphRule, MetadataBased {
     event Lens_UserBlocking_UserBlocked(address indexed source, address indexed target, uint256 timestamp);
     event Lens_UserBlocking_UserUnblocked(address indexed source, address indexed target);
 
+    event Lens_Rule_MetadataURISet(string metadataURI);
+
     mapping(address => mapping(address => uint256)) public userBlocks;
+
+    constructor() {
+        // TODO: Decide on metadata format
+        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
+    }
 
     function configure(
         bytes32, /* salt */
