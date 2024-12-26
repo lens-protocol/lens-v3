@@ -17,9 +17,8 @@ contract UserBlockingRule is IFeedRule, IGraphRule, MetadataBased {
 
     mapping(address => mapping(address => uint256)) public userBlocks;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

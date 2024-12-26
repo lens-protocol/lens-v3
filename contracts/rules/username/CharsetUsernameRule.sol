@@ -55,9 +55,8 @@ contract CharsetUsernameRule is IUsernameRule, MetadataBased {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
         emit Events.Lens_PermissionId_Available(SKIP_CHARSET_PID, "SKIP_CHARSET");
     }
 

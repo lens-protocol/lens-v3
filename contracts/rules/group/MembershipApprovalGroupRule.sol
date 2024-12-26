@@ -35,9 +35,8 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(address => mapping(bytes32 => MembershipRequest))) internal _membershipRequests;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
         emit Events.Lens_PermissionId_Available(APPROVE_MEMBER_PID, "APPROVE_MEMBER");
     }
 

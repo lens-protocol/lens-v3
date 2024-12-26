@@ -26,9 +26,8 @@ abstract contract SimplePaymentRule is MetadataBased {
 
     mapping(address => mapping(address => bool)) internal _isTrusted;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

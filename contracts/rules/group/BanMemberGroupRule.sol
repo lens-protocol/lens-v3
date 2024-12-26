@@ -33,9 +33,8 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(bytes32 => mapping(address => bool))) internal _isMemberBanned;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
         emit Events.Lens_PermissionId_Available(BAN_MEMBER_PID, "BAN_MEMBER");
         emit Events.Lens_PermissionId_Available(UNBAN_MEMBER_PID, "UNBAN_MEMBER");
     }

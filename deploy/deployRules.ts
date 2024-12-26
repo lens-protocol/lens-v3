@@ -5,29 +5,30 @@ import {
 } from './lensUtils';
 
 export async function deployRules(): Promise<void> {
+  const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
   const contracts: ContractInfo[] = [
     // Feed Rules
-    { contractName: 'GroupGatedFeedRule', contractType: ContractType.Rule },
-    { contractName: 'RestrictedSignersFeedRule', contractType: ContractType.Rule },
-    { contractName: 'SimplePaymentFeedRule', contractType: ContractType.Rule },
-    { contractName: 'TokenGatedFeedRule', contractType: ContractType.Rule },
+    { contractName: 'GroupGatedFeedRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'RestrictedSignersFeedRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'SimplePaymentFeedRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'TokenGatedFeedRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
     // Post Rules
-    { contractName: 'FollowersOnlyPostRule', contractType: ContractType.Rule },
+    { contractName: 'FollowersOnlyPostRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
     // Graph Rules
-    { contractName: 'RestrictedSignersGraphRule', contractType: ContractType.Rule },
-    { contractName: 'TokenGatedGraphRule', contractType: ContractType.Rule },
+    { contractName: 'RestrictedSignersGraphRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'TokenGatedGraphRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
     // Follow Rules
-    { contractName: 'SimplePaymentFollowRule', contractType: ContractType.Rule },
-    { contractName: 'TokenGatedFollowRule', contractType: ContractType.Rule },
+    { contractName: 'SimplePaymentFollowRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'TokenGatedFollowRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
     // Group Rules
-    { contractName: 'MembershipApprovalGroupRule', contractType: ContractType.Rule },
-    { contractName: 'SimplePaymentGroupRule', contractType: ContractType.Rule },
-    { contractName: 'TokenGatedGroupRule', contractType: ContractType.Rule },
+    { contractName: 'MembershipApprovalGroupRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'SimplePaymentGroupRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'TokenGatedGroupRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
     // Username Rules
-    { contractName: 'CharsetUsernameRule', contractType: ContractType.Rule },
-    { contractName: 'LengthUsernameRule', contractType: ContractType.Rule },
-    { contractName: 'SimplePaymentUsernameRule', contractType: ContractType.Rule },
-    { contractName: 'TokenGatedUsernameRule', contractType: ContractType.Rule },
+    { contractName: 'CharsetUsernameRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'LengthUsernameRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'SimplePaymentUsernameRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    { contractName: 'TokenGatedUsernameRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
   ];
 
   for (const contract of contracts) {

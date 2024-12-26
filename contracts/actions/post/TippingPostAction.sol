@@ -19,9 +19,8 @@ contract TippingPostAction is BasePostAction, MetadataBased {
     // keccak256("lens.actions.account.TippingPostAction.param.key.tipToken");
     bytes32 immutable TIP_TOKEN_PARAM_KEY = 0xae0b2bf062e67ee8e231397eadff68e32752f185a8cb19379ed8cfa87ae7bd08;
 
-    constructor(address actionHub) BasePostAction(actionHub) {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(address actionHub, string memory metadataURI) BasePostAction(actionHub) {
+        _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

@@ -79,9 +79,8 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         address currency; // (Optional, but required if amount > 0) Default: address(0)
     }
 
-    constructor(address actionHub) BasePostAction(actionHub) {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(address actionHub, string memory metadataURI) BasePostAction(actionHub) {
+        _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

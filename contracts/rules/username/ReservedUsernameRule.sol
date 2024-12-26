@@ -43,9 +43,8 @@ contract ReservedUsernameRule is IUsernameRule, MetadataBased {
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(bytes32 => mapping(string => bool))) internal _isUsernameReserved;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
         emit Events.Lens_PermissionId_Available(CREATE_RESERVED_USERNAME_PID, "CREATE_RESERVED_USERNAME");
     }
 

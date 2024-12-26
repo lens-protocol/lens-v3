@@ -25,7 +25,7 @@ contract SimplePaymentUsernameRule is SimplePaymentRule, IUsernameRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor() {
+    constructor(string memory metadataURI) SimplePaymentRule(metadataURI) {
         emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
     }
 

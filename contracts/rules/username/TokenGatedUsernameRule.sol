@@ -25,7 +25,7 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor() {
+    constructor(string memory metadataURI) TokenGatedRule(metadataURI) {
         emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
     }
 

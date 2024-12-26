@@ -16,9 +16,8 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
 
     mapping(address => mapping(bytes32 => address)) internal _groupGate;
 
-    constructor() {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

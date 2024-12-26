@@ -18,9 +18,8 @@ contract TippingAccountAction is BaseAccountAction, MetadataBased {
     // keccak256("lens.actions.account.TippingAccountAction.param.key.tipToken");
     bytes32 immutable TIP_TOKEN_PARAM_KEY = 0xae0b2bf062e67ee8e231397eadff68e32752f185a8cb19379ed8cfa87ae7bd08;
 
-    constructor(address actionHub) BaseAccountAction(actionHub) {
-        // TODO: Decide on metadata format
-        _setMetadataURI("{ lensMetadata: 'some metadata' }");
+    constructor(address actionHub, string memory metadataURI) BaseAccountAction(actionHub) {
+        _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
