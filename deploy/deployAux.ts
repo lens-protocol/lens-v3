@@ -26,7 +26,7 @@ export const emptySourceStamp = {
 export interface AppInitialProperties {
   graph: string;
   feeds: string[];
-  username: string;
+  namespace: string;
   groups: string[];
   defaultFeed: string;
   signers: string[];
@@ -52,12 +52,12 @@ export async function deployLensPrimitives() {
   const feed = await deployLensFeed(lensFactory);
   const group = await deployLensGroup(lensFactory);
   const graph = await deployLensGraph(lensFactory);
-  const username = await deployLensUsername(lensFactory);
+  const namespace = await deployLensNamespace(lensFactory);
 
   const initialProperties: AppInitialProperties = {
     graph,
     feeds: [feed],
-    username,
+    namespace,
     groups: [group],
     defaultFeed: feed,
     signers: [],
@@ -189,23 +189,23 @@ async function deployLensGraph(lensFactory: ethers.Contract): Promise<string> {
   return graphAddress;
 }
 
-export async function deployLensUsername(
+export async function deployLensNamespace(
   lensFactory: ethers.Contract,
   noVerify: Boolean = false
 ): Promise<string> {
-  const contractName = 'Username';
+  const contractName = 'Namespace';
   const existingContract = loadContractFromAddressBook(contractName);
   if (existingContract && existingContract.address) {
     console.log(`${contractName} already deployed at ${existingContract.address}. Skipping...`);
     return existingContract.address;
   }
 
-  console.log('Deploying Username');
+  console.log('Deploying Namespace');
   const namespace = 'lens';
   const nftName = 'nftName';
   const nftSymbol = 'nftSymbol';
 
-  const transaction = await lensFactory.deployUsername(
+  const transaction = await lensFactory.deployNamespace(
     namespace,
     metadataURI,
     getWallet().address,
@@ -218,7 +218,7 @@ export async function deployLensUsername(
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const usernameAddress = getAddressFromEvents(events, 'username');
+  const namespaceAddress = getAddressFromEvents(events, 'namespace');
   const accessControlAddress = getAddressFromEvents(events, 'access-control');
   const lensUsernameTokenURIProviderAddress = getAddressFromEvents(
     events,
@@ -226,7 +226,7 @@ export async function deployLensUsername(
   );
 
   if (!noVerify) {
-    await verifyPrimitive('Username', usernameAddress, [
+    await verifyPrimitive('Namespace', namespaceAddress, [
       namespace,
       metadataURI,
       accessControlAddress,
@@ -237,12 +237,12 @@ export async function deployLensUsername(
   }
 
   saveContractToAddressBook({
-    contractName: 'Username',
+    contractName: 'Namespace',
     contractType: ContractType.Primitive,
-    address: usernameAddress
+    address: namespaceAddress
   });
 
-  return usernameAddress;
+  return namespaceAddress;
 }
 
 export async function deployLensApp(

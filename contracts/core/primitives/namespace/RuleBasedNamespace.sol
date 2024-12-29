@@ -2,45 +2,45 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IUsernameRule} from "./../../interfaces/IUsernameRule.sol";
+import {INamespaceRule} from "./../../interfaces/INamespaceRule.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
 import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "./../../types/Types.sol";
-import {IUsername} from "./../../interfaces/IUsername.sol";
+import {INamespace} from "./../../interfaces/INamespace.sol";
 import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
 
-abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
+abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
 
     struct RuleBasedStorage {
-        RulesStorage usernameRulesStorage;
+        RulesStorage namespaceRulesStorage;
     }
 
-    // keccak256('lens.rule.based.username.storage')
-    bytes32 constant RULE_BASED_USERNAME_STORAGE_SLOT =
-        0xdb7398dc7b1d4544bdce6830d22802260c007b71c45e9fa93889a6ec0667be87;
+    // keccak256('lens.rule.based.namespace.storage')
+    bytes32 constant RULE_BASED_NAMESPACE_STORAGE_SLOT =
+        0x217b52007082874e501211ba85dc5d9de80968a125bf61e48698a792fb130140;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_USERNAME_STORAGE_SLOT
+            _storage.slot := RULE_BASED_NAMESPACE_STORAGE_SLOT
         }
     }
 
-    function $usernameRulesStorage() private view returns (RulesStorage storage _storage) {
-        return $ruleBasedStorage().usernameRulesStorage;
+    function $namespaceRulesStorage() private view returns (RulesStorage storage _storage) {
+        return $ruleBasedStorage().namespaceRulesStorage;
     }
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeUsernameRules(RuleChange[] calldata ruleChanges) external virtual override {
-        _changePrimitiveRules($usernameRulesStorage(), ruleChanges);
+    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external virtual override {
+        _changePrimitiveRules($namespaceRulesStorage(), ruleChanges);
     }
 
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = IUsernameRule.processCreation.selector;
-        selectors[1] = IUsernameRule.processRemoval.selector;
-        selectors[2] = IUsernameRule.processAssigning.selector;
-        selectors[3] = IUsernameRule.processUnassigning.selector;
+        selectors[0] = INamespaceRule.processCreation.selector;
+        selectors[1] = INamespaceRule.processRemoval.selector;
+        selectors[2] = INamespaceRule.processAssigning.selector;
+        selectors[3] = INamespaceRule.processUnassigning.selector;
         return selectors;
     }
 
@@ -48,7 +48,7 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         bytes32 configSalt,
         KeyValue[] calldata ruleParams
     ) internal pure override returns (bytes memory) {
-        return abi.encodeCall(IUsernameRule.configure, (configSalt, ruleParams));
+        return abi.encodeCall(INamespaceRule.configure, (configSalt, ruleParams));
     }
 
     function _emitPrimitiveRuleConfiguredEvent(
@@ -58,9 +58,9 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         KeyValue[] calldata ruleParams
     ) internal override {
         if (wasAlreadyConfigured) {
-            emit IUsername.Lens_Username_RuleReconfigured(ruleAddress, configSalt, ruleParams);
+            emit INamespace.Lens_Namespace_RuleReconfigured(ruleAddress, configSalt, ruleParams);
         } else {
-            emit IUsername.Lens_Username_RuleConfigured(ruleAddress, configSalt, ruleParams);
+            emit INamespace.Lens_Namespace_RuleConfigured(ruleAddress, configSalt, ruleParams);
         }
     }
 
@@ -72,22 +72,22 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         bytes4 ruleSelector
     ) internal override {
         if (enabled) {
-            emit Lens_Username_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
+            emit Lens_Namespace_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
         } else {
-            emit Lens_Username_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
+            emit Lens_Namespace_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
         }
     }
 
     function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
-        return $usernameRulesStorage()._getRulesArray(ruleSelector, false).length
-            + $usernameRulesStorage()._getRulesArray(ruleSelector, true).length;
+        return $namespaceRulesStorage()._getRulesArray(ruleSelector, false).length
+            + $namespaceRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
-    function getUsernameRules(
+    function getNamespaceRules(
         bytes4 ruleSelector,
         bool isRequired
     ) external view virtual override returns (Rule[] memory) {
-        return $usernameRulesStorage()._getRulesArray(ruleSelector, isRequired);
+        return $namespaceRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
     ////////////////////////////  PROCESSING FUNCTIONS  ////////////////////////////
@@ -103,7 +103,7 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IUsernameRule.processCreation,
+                INamespaceRule.processCreation,
                 (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -116,9 +116,9 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
-        _processUsernameRule(
+        _processNamespaceRule(
             _encodeAndCallProcessCreation,
-            IUsernameRule.processCreation.selector,
+            INamespaceRule.processCreation.selector,
             originalMsgSender,
             account,
             username,
@@ -138,7 +138,7 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IUsernameRule.processRemoval,
+                INamespaceRule.processRemoval,
                 (configSalt, originalMsgSender, username, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -150,9 +150,9 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
-        _processUsernameRule(
+        _processNamespaceRule(
             _encodeAndCallProcessRemoval,
-            IUsernameRule.processRemoval.selector,
+            INamespaceRule.processRemoval.selector,
             originalMsgSender,
             address(0),
             username,
@@ -172,7 +172,7 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IUsernameRule.processAssigning,
+                INamespaceRule.processAssigning,
                 (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -185,9 +185,9 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
-        _processUsernameRule(
+        _processNamespaceRule(
             _encodeAndCallProcessAssigning,
-            IUsernameRule.processAssigning.selector,
+            INamespaceRule.processAssigning.selector,
             originalMsgSender,
             account,
             username,
@@ -207,7 +207,7 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
     ) internal returns (bool, bytes memory) {
         return rule.call(
             abi.encodeCall(
-                IUsernameRule.processUnassigning,
+                INamespaceRule.processUnassigning,
                 (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
             )
         );
@@ -220,9 +220,9 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
-        _processUsernameRule(
+        _processNamespaceRule(
             _encodeAndCallProcessUnassigning,
-            IUsernameRule.processUnassigning.selector,
+            INamespaceRule.processUnassigning.selector,
             originalMsgSender,
             account,
             username,
@@ -231,7 +231,7 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         );
     }
 
-    function _processUsernameRule(
+    function _processNamespaceRule(
         function(address,bytes32,address,address,string memory,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
             encodeAndCall,
         bytes4 ruleSelector,
@@ -242,8 +242,8 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
         RuleProcessingParams[] calldata rulesProcessingParams
     ) private {
         // Check required rules (AND-combined rules)
-        for (uint256 i = 0; i < $usernameRulesStorage().requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = $usernameRulesStorage().requiredRules[ruleSelector][i];
+        for (uint256 i = 0; i < $namespaceRulesStorage().requiredRules[ruleSelector].length; i++) {
+            Rule memory rule = $namespaceRulesStorage().requiredRules[ruleSelector][i];
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
@@ -265,8 +265,8 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
             }
         }
         // Check any-of rules (OR-combined rules)
-        for (uint256 i = 0; i < $usernameRulesStorage().anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = $usernameRulesStorage().anyOfRules[ruleSelector][i];
+        for (uint256 i = 0; i < $namespaceRulesStorage().anyOfRules[ruleSelector].length; i++) {
+            Rule memory rule = $namespaceRulesStorage().anyOfRules[ruleSelector][i];
             for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
@@ -290,6 +290,6 @@ abstract contract RuleBasedUsername is IUsername, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($usernameRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($namespaceRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
     }
 }

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-library UsernameCore {
+library NamespaceCore {
     // Storage
 
     struct Storage {
@@ -12,8 +12,8 @@ library UsernameCore {
         mapping(address => string) accountToUsername;
     }
 
-    // keccak256('lens.username.core.storage')
-    bytes32 constant CORE_STORAGE_SLOT = 0x99859b45773300f37fd6dda5224af64cfd118242932458b3472b7865bfa1b249;
+    // keccak256('lens.namespace.core.storage')
+    bytes32 constant CORE_STORAGE_SLOT = 0x4633c806713e508283f343c3870478c20173363bf79b100380c3b7de19d23da3;
 
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {

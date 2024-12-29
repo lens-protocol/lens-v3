@@ -5,16 +5,16 @@ pragma solidity ^0.8.0;
 import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
-interface IUsername is IMetadataBased {
-    event Lens_Username_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+interface INamespace is IMetadataBased {
+    event Lens_Namespace_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
-    event Lens_Username_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
+    event Lens_Namespace_RuleReconfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
-    event Lens_Username_RuleSelectorEnabled(
+    event Lens_Namespace_RuleSelectorEnabled(
         address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
-    event Lens_Username_RuleSelectorDisabled(
+    event Lens_Namespace_RuleSelectorDisabled(
         address indexed rule, bytes32 indexed configSalt, bool isRequired, bytes4 ruleSelector
     );
 
@@ -58,11 +58,11 @@ interface IUsername is IMetadataBased {
     event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
 
-    event Lens_Username_MetadataURISet(string metadataURI);
+    event Lens_Namespace_MetadataURISet(string metadataURI);
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
-    function changeUsernameRules(RuleChange[] calldata ruleChanges) external;
+    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external;
 
     function createUsername(
         address account,
@@ -94,7 +94,7 @@ interface IUsername is IMetadataBased {
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external;
 
-    function setExtraData(string memory username, KeyValue[] calldata extraDataToSet) external;
+    function setUsernameExtraData(string memory username, KeyValue[] calldata extraDataToSet) external;
 
     function usernameOf(address user) external view returns (string memory);
 
@@ -102,9 +102,9 @@ interface IUsername is IMetadataBased {
 
     function getNamespace() external view returns (string memory);
 
-    function getUsernameRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
+    function getNamespaceRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
 
-    function getExtraData(string calldata username, bytes32 key) external view returns (bytes memory);
+    function getUsernameExtraData(string calldata username, bytes32 key) external view returns (bytes memory);
 }

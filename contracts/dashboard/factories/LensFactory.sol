@@ -17,23 +17,21 @@ import {
 import {GroupFactory} from "./GroupFactory.sol";
 import {FeedFactory} from "./FeedFactory.sol";
 import {GraphFactory} from "./GraphFactory.sol";
-import {UsernameFactory} from "./UsernameFactory.sol";
+import {NamespaceFactory} from "./NamespaceFactory.sol";
 import {AppFactory, AppInitialProperties} from "./AppFactory.sol";
 import {AccessControlFactory} from "./AccessControlFactory.sol";
 import {AccountFactory} from "./AccountFactory.sol";
 import {IAccount, AccountManagerPermissions} from "./../account/IAccount.sol";
-import {IUsername} from "./../../core/interfaces/IUsername.sol";
+import {INamespace} from "./../../core/interfaces/INamespace.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
-import {LensUsernameTokenURIProvider} from "./../../core/primitives/username/LensUsernameTokenURIProvider.sol";
+import {LensUsernameTokenURIProvider} from "./../../core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {GROUP_PARAM_KEY} from "./../../rules/feed/GroupGatedFeedRule.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
-    function transferOwnership(
-        address newOwner
-    ) external;
+    function transferOwnership(address newOwner) external;
     function owner() external view returns (address);
 }
 
@@ -53,7 +51,7 @@ contract LensFactory {
     GroupFactory internal immutable GROUP_FACTORY;
     FeedFactory internal immutable FEED_FACTORY;
     GraphFactory internal immutable GRAPH_FACTORY;
-    UsernameFactory internal immutable USERNAME_FACTORY;
+    NamespaceFactory internal immutable NAMESPACE_FACTORY;
     IAccessControl internal immutable _factoryOwnedAccessControl;
     address internal immutable _accountBlockingRule;
     address internal immutable _groupGatedFeedRule;
@@ -65,7 +63,7 @@ contract LensFactory {
         GroupFactory groupFactory,
         FeedFactory feedFactory,
         GraphFactory graphFactory,
-        UsernameFactory usernameFactory,
+        NamespaceFactory namespaceFactory,
         address accountBlockingRule,
         address groupGatedFeedRule
     ) {
@@ -75,7 +73,7 @@ contract LensFactory {
         GROUP_FACTORY = groupFactory;
         FEED_FACTORY = feedFactory;
         GRAPH_FACTORY = graphFactory;
-        USERNAME_FACTORY = usernameFactory;
+        NAMESPACE_FACTORY = namespaceFactory;
         _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
         _accountBlockingRule = accountBlockingRule;
         _groupGatedFeedRule = groupGatedFeedRule;
@@ -87,7 +85,7 @@ contract LensFactory {
         address owner,
         address[] calldata accountManagers,
         AccountManagerPermissions[] calldata accountManagersPermissions,
-        address usernamePrimitiveAddress,
+        address namespacePrimitiveAddress,
         string calldata username,
         SourceStamp calldata accountCreationSourceStamp,
         KeyValue[] calldata createUsernameCustomParams,
@@ -106,14 +104,14 @@ contract LensFactory {
             accountCreationSourceStamp,
             accountExtraData
         );
-        IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
+        INamespace namespacePrimitive = INamespace(namespacePrimitiveAddress);
         bytes memory txData = abi.encodeCall(
-            usernamePrimitive.createUsername,
+            namespacePrimitive.createUsername,
             (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams, usernameExtraData)
         );
-        IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
+        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         txData = abi.encodeCall(
-            usernamePrimitive.assignUsername,
+            namespacePrimitive.assignUsername,
             (
                 account,
                 username,
@@ -123,7 +121,7 @@ contract LensFactory {
                 assignRuleProcessingParams
             )
         );
-        IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
+        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(owner);
         return account;
     }
@@ -271,7 +269,7 @@ contract LensFactory {
         );
     }
 
-    function deployUsername(
+    function deployNamespace(
         string calldata namespace,
         string calldata metadataURI,
         address owner,
@@ -282,7 +280,7 @@ contract LensFactory {
         string calldata nftSymbol
     ) external returns (address) {
         ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider(); // TODO!
-        return USERNAME_FACTORY.deployUsername(
+        return NAMESPACE_FACTORY.deployNamespace(
             namespace,
             metadataURI,
             _deployAccessControl(owner, admins),

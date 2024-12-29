@@ -63,24 +63,29 @@ export async function deployRules(): Promise<void> {
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },
-    // Username Rules
+    // Namespace Rules
     {
-      contractName: 'CharsetUsernameRule',
+      contractName: 'UsernameCharsetNamespaceRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },
     {
-      contractName: 'LengthUsernameRule',
+      contractName: 'UsernameLengthNamespaceRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },
     {
-      contractName: 'SimplePaymentUsernameRule',
+      contractName: 'UsernameReservedNamespaceRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },
     {
-      contractName: 'TokenGatedUsernameRule',
+      contractName: 'SimplePaymentNamespaceRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [metadataURI],
+    },
+    {
+      contractName: 'TokenGatedNamespaceRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },

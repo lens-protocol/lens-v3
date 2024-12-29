@@ -22,17 +22,17 @@ library AppCore {
         mapping(address => ArrayStorageHelper) paymasterStorageHelper;
         mapping(address => ArrayStorageHelper) graphStorageHelper;
         mapping(address => ArrayStorageHelper) feedStorageHelper;
-        mapping(address => ArrayStorageHelper) usernameStorageHelper;
+        mapping(address => ArrayStorageHelper) namespaceStorageHelper;
         mapping(address => ArrayStorageHelper) groupStorageHelper;
         address[] signers;
         address[] paymasters;
         address[] graphs;
         address[] feeds;
-        address[] usernames;
+        address[] namespaces;
         address[] groups;
         address defaultGraph;
         address defaultFeed;
-        address defaultUsername;
+        address defaultNamespace;
         address defaultGroup;
         address defaultPaymaster;
         mapping(bytes32 => bytes) extraData;
@@ -115,23 +115,23 @@ library AppCore {
         return $storage().feedStorageHelper[feed].isSet;
     }
 
-    ////////////// Username
+    ////////////// Namespace
 
-    function _addUsername(address username) internal {
-        _add(username, $storage().usernames, $storage().usernameStorageHelper);
+    function _addNamespace(address namespace) internal {
+        _add(namespace, $storage().namespaces, $storage().namespaceStorageHelper);
     }
 
-    function _removeUsername(address username) internal {
-        _remove(username, $storage().usernames, $storage().usernameStorageHelper);
+    function _removeNamespace(address namespace) internal {
+        _remove(namespace, $storage().namespaces, $storage().namespaceStorageHelper);
     }
 
-    function _setDefaultUsername(address username) internal returns (bool) {
-        bool wasAValuePreviouslySet = $storage().defaultUsername != address(0);
-        if (username != address(0)) {
-            // address(0) allowed as a way to remove the default username
-            require($storage().usernameStorageHelper[username].isSet, "NOT_FOUND");
+    function _setDefaultNamespace(address namespace) internal returns (bool) {
+        bool wasAValuePreviouslySet = $storage().defaultNamespace != address(0);
+        if (namespace != address(0)) {
+            // address(0) allowed as a way to remove the default namespace
+            require($storage().namespaceStorageHelper[namespace].isSet, "NOT_FOUND");
         }
-        $storage().defaultUsername = username;
+        $storage().defaultNamespace = namespace;
         return wasAValuePreviouslySet;
     }
 
