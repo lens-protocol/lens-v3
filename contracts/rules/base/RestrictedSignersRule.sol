@@ -67,11 +67,15 @@ abstract contract RestrictedSignersRule is MetadataBased {
         "RestrictedSignerMessage(bytes4 functionSelector,bytes abiEncodedParams,uint256 nonce,uint256 deadline)"
     );
 
-    constructor(string memory metadataURI) {
+    constructor(
+        string memory metadataURI
+    ) {
         _setMetadataURI(metadataURI);
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(
+        string memory metadataURI
+    ) internal override {
         emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
@@ -125,7 +129,9 @@ abstract contract RestrictedSignersRule is MetadataBased {
         _validateRecoveredAddress(digest, signature);
     }
 
-    function _calculateMessageHashStruct(RestrictedSignerMessage memory message) private pure returns (bytes32) {
+    function _calculateMessageHashStruct(
+        RestrictedSignerMessage memory message
+    ) private pure returns (bytes32) {
         return keccak256(
             abi.encode(
                 RESTRICTED_SIGNER_MESSAGE_TYPEHASH,
@@ -137,7 +143,9 @@ abstract contract RestrictedSignersRule is MetadataBased {
         );
     }
 
-    function _calculateDigest(bytes32 messageHashStruct) private view returns (bytes32) {
+    function _calculateDigest(
+        bytes32 messageHashStruct
+    ) private view returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", _calculateDomainSeparatorHashStruct(), messageHashStruct));
     }
 
@@ -148,7 +156,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
                 keccak256("Lens Protocol Restricted Signer Rule"),
                 EIP712_DOMAIN_VERSION_HASH,
                 block.chainid,
-                msg.sender // This is the address of the primitive, and we assume the primitive calls the rule
+                msg.sender // TODO: This is using primitive's address, maybe should be address(this), so it's rule addr
             )
         );
     }
