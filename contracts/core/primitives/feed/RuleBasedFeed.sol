@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {IPostRule} from "./../../interfaces/IPostRule.sol";
 import {IFeedRule} from "./../../interfaces/IFeedRule.sol";
 import {IFeed} from "./../../interfaces/IFeed.sol";
-import {FeedCore as Core} from "./FeedCore.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
 import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "./../../types/Types.sol";
 import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
@@ -32,13 +31,17 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return $ruleBasedStorage().feedRulesStorage;
     }
 
-    function $postRulesStorage(uint256 postId) private view returns (RulesStorage storage _storage) {
+    function $postRulesStorage(
+        uint256 postId
+    ) private view returns (RulesStorage storage _storage) {
         return $ruleBasedStorage().postRulesStorage[postId];
     }
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeFeedRules(RuleChange[] calldata ruleChanges) external virtual override {
+    function changeFeedRules(
+        RuleChange[] calldata ruleChanges
+    ) external virtual override {
         _changePrimitiveRules($feedRulesStorage(), ruleChanges);
     }
 
@@ -47,8 +50,6 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata ruleChangesProcessingParams
     ) external virtual override {
-        // TODO: msg.sender must be author
-        // TODO: Post must exist before we allow changing its rules
         _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, ruleChangesProcessingParams);
     }
 
@@ -102,7 +103,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         }
     }
 
-    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
+    function _amountOfRules(
+        bytes4 ruleSelector
+    ) internal view returns (uint256) {
         return $feedRulesStorage()._getRulesArray(ruleSelector, false).length
             + $feedRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
