@@ -14,7 +14,7 @@ import {Username} from "../../contracts/core/primitives/username/Username.sol";
 import {RuleChange, DataElement, SourceStamp, RuleExecutionData} from "../../contracts/core/types/Types.sol";
 import {AccountManagerPermissions} from "../../contracts/dashboard/account/Account.sol";
 import {AccessControlFactory} from "../../contracts/dashboard/factories/AccessControlFactory.sol";
-import {UserBlockingRule} from "../../contracts/rules/base/UserBlockingRule.sol";
+import {AccountBlockingRule} from "../../contracts/rules/base/AccountBlockingRule.sol";
 import {IGraph} from "../../contracts/core/interfaces/IGraph.sol";
 import "../helpers/TypeHelpers.sol";
 
@@ -23,7 +23,7 @@ contract LensFactoryTest is Test {
     Username username;
 
     function setUp() public {
-        UserBlockingRule userBlockingRule = new UserBlockingRule();
+        AccountBlockingRule accountBlockingRule = new AccountBlockingRule();
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(),
@@ -33,7 +33,7 @@ contract LensFactoryTest is Test {
             feedFactory: new FeedFactory(),
             graphFactory: new GraphFactory(),
             usernameFactory: new UsernameFactory(),
-            userBlockingRule: address(userBlockingRule)
+            accountBlockingRule: address(accountBlockingRule)
         });
 
         username = Username(

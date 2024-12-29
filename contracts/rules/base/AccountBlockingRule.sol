@@ -9,19 +9,23 @@ import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
 import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract UserBlockingRule is IFeedRule, IGraphRule, MetadataBased {
-    event Lens_UserBlocking_UserBlocked(address indexed source, address indexed target, uint256 timestamp);
-    event Lens_UserBlocking_UserUnblocked(address indexed source, address indexed target);
+contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
+    event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target, uint256 timestamp);
+    event Lens_AccountBlocking_UserUnblocked(address indexed source, address indexed target);
 
     event Lens_Rule_MetadataURISet(string metadataURI);
 
-    mapping(address => mapping(address => uint256)) public userBlocks;
+    mapping(address => mapping(address => uint256)) public accountBlocks;
 
-    constructor(string memory metadataURI) {
+    constructor(
+        string memory metadataURI
+    ) {
         _setMetadataURI(metadataURI);
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(
+        string memory metadataURI
+    ) internal override {
         emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
@@ -33,12 +37,12 @@ contract UserBlockingRule is IFeedRule, IGraphRule, MetadataBased {
     function blockUser(address source, address target) external {
         require(msg.sender == source, "Only the source can block a user");
         require(source != target, "Cannot block self");
-        userBlocks[source][target] = block.timestamp;
+        accountBlocks[source][target] = block.timestamp;
     }
 
     function unblockUser(address source, address target) external {
         require(msg.sender == source, "Only the source can unblock a user");
-        userBlocks[msg.sender][target] = 0;
+        accountBlocks[msg.sender][target] = 0;
     }
 
     function processCreatePost(
@@ -80,7 +84,7 @@ contract UserBlockingRule is IFeedRule, IGraphRule, MetadataBased {
     }
 
     function _isBlocked(address source, address blockTarget) internal view returns (bool) {
-        return userBlocks[source][blockTarget] > 0;
+        return accountBlocks[source][blockTarget] > 0;
     }
 
     // Unimplemented functions

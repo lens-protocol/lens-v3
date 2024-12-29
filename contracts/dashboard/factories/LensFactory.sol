@@ -55,7 +55,7 @@ contract LensFactory {
     GraphFactory internal immutable GRAPH_FACTORY;
     UsernameFactory internal immutable USERNAME_FACTORY;
     IAccessControl internal immutable _factoryOwnedAccessControl;
-    address internal immutable _userBlockingRule;
+    address internal immutable _accountBlockingRule;
     address internal immutable _groupGatedFeedRule;
 
     constructor(
@@ -66,7 +66,7 @@ contract LensFactory {
         FeedFactory feedFactory,
         GraphFactory graphFactory,
         UsernameFactory usernameFactory,
-        address userBlockingRule,
+        address accountBlockingRule,
         address groupGatedFeedRule
     ) {
         ACCESS_CONTROL_FACTORY = accessControlFactory;
@@ -77,7 +77,7 @@ contract LensFactory {
         GRAPH_FACTORY = graphFactory;
         USERNAME_FACTORY = usernameFactory;
         _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
-        _userBlockingRule = userBlockingRule;
+        _accountBlockingRule = accountBlockingRule;
         _groupGatedFeedRule = groupGatedFeedRule;
     }
 
@@ -149,7 +149,7 @@ contract LensFactory {
             RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
 
         modifiedFeedRules[0] = RuleChange({
-            ruleAddress: _userBlockingRule,
+            ruleAddress: _accountBlockingRule,
             configSalt: bytes32(0),
             configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
             selectorChanges: selectorChanges
@@ -166,7 +166,7 @@ contract LensFactory {
         });
 
         for (uint256 i = 0; i < feedRules.length; i++) {
-            require(feedRules[i].ruleAddress != _userBlockingRule, "UserBlockingRule was already prepended");
+            require(feedRules[i].ruleAddress != _accountBlockingRule, "AccountBlockingRule was already prepended");
             require(feedRules[i].ruleAddress != _groupGatedFeedRule, "GroupGatedRule was already prepended");
             modifiedFeedRules[i + 2] = feedRules[i];
         }
@@ -228,12 +228,12 @@ contract LensFactory {
         return FEED_FACTORY.deployFeed(
             metadataURI,
             _deployAccessControl(owner, admins),
-            _prependUserBlocking(rules, IFeedRule.processCreatePost.selector),
+            _prependAccountBlocking(rules, IFeedRule.processCreatePost.selector),
             extraData
         );
     }
 
-    function _prependUserBlocking(
+    function _prependAccountBlocking(
         RuleChange[] calldata rules,
         bytes4 ruleSelector
     ) internal view returns (RuleChange[] memory) {
@@ -243,13 +243,13 @@ contract LensFactory {
         selectorChanges[0] = RuleSelectorChange({ruleSelector: ruleSelector, isRequired: true, enabled: true});
 
         modifiedRules[0] = RuleChange({
-            ruleAddress: _userBlockingRule,
+            ruleAddress: _accountBlockingRule,
             configSalt: bytes32(0),
             configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
             selectorChanges: selectorChanges
         });
         for (uint256 i = 0; i < rules.length; i++) {
-            require(rules[i].ruleAddress != _userBlockingRule, "UserBlockingRule was already prepended");
+            require(rules[i].ruleAddress != _accountBlockingRule, "AccountBlockingRule was already prepended");
             modifiedRules[i + 1] = rules[i];
         }
 
@@ -266,7 +266,7 @@ contract LensFactory {
         return GRAPH_FACTORY.deployGraph(
             metadataURI,
             _deployAccessControl(owner, admins),
-            _prependUserBlocking(rules, IGraphRule.processFollow.selector),
+            _prependAccountBlocking(rules, IGraphRule.processFollow.selector),
             extraData
         );
     }
