@@ -156,10 +156,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         }
     }
 
-    // TODO: Decide how DELETE operation should work in Feed (soft vs. hard delete)
-    function removePost(
+    function deletePost(
         uint256 postId,
-        bytes32[] calldata, /*extraDataKeysToRemove*/ // TODO: Consider moving this into customParams
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) external override {
@@ -168,7 +166,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         Core._removePost(postId);
         _processPostRemoval(postId, customParams, feedRulesParams);
         address source = _processSourceStamp(postId, customParams);
-        emit Lens_Feed_PostRemoved(postId, author, customParams, source);
+        emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
