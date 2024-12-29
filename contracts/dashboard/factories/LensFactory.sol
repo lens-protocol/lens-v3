@@ -193,6 +193,7 @@ contract LensFactory {
             selectorChanges: selectorChanges
         });
         for (uint256 i = 0; i < ruleChanges.length; i++) {
+            require(ruleChanges[i].ruleAddress != _userBlockingRule, "UserBlockingRule was already prepended");
             modifiedRuleChanges[i + 1] = modifiedRuleChanges[i];
         }
 
