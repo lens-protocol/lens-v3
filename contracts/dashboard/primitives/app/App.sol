@@ -124,6 +124,10 @@ contract App is IApp, BaseSource, AccessControlled {
 
     function setDefaultFeed(address feed) external override {
         _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        if (feed != address(0) && !Core._isFeedPresent(feed)) {
+            Core._addFeed(feed);
+            emit Lens_App_FeedAdded(feed);
+        }
         _setDefaultFeed(feed);
     }
 
