@@ -1,8 +1,4 @@
-import {
-  deployLensContract,
-  ContractType,
-  ContractInfo,
-} from './lensUtils';
+import { deployLensContract, ContractType, ContractInfo } from './lensUtils';
 
 export default async function deployFactories(): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
@@ -15,7 +11,16 @@ export default async function deployFactories(): Promise<void> {
     { contractName: 'GraphFactory', contractType: ContractType.Factory },
     { contractName: 'GroupFactory', contractType: ContractType.Factory },
     { contractName: 'UsernameFactory', contractType: ContractType.Factory },
-    { contractName: 'UserBlockingRule', contractType: ContractType.Rule, constructorArguments: [metadataURI] },
+    {
+      contractName: 'UserBlockingRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [metadataURI],
+    },
+    {
+      contractName: 'GroupGatedFeedRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [metadataURI],
+    },
   ];
   const deployedContracts: Record<string, ContractInfo> = {};
   for (const contract of contracts) {
@@ -33,6 +38,7 @@ export default async function deployFactories(): Promise<void> {
     deployedContracts['GraphFactory'].address,
     deployedContracts['UsernameFactory'].address,
     deployedContracts['UserBlockingRule'].address,
+    deployedContracts['GroupGatedFeedRule'].address,
   ];
 
   await deployLensContract({
