@@ -52,16 +52,16 @@ library FeedCore {
         _newPost.contentURI = postParams.contentURI;
         uint256 rootPostId = postId;
         if (postParams.quotedPostId != 0) {
-            _requirePostExistence(postParams.quotedPostId);
+            _require(_postExists(postParams.quotedPostId), "QUOTED_POST_DOES_NOT_EXIST");
             _newPost.quotedPostId = postParams.quotedPostId;
         }
         if (postParams.repliedPostId != 0) {
-            _requirePostExistence(postParams.repliedPostId);
+            _require(_postExists(postParams.repliedPostId), "REPLIED_POST_DOES_NOT_EXIST");
             _newPost.repliedPostId = postParams.repliedPostId;
             rootPostId = $storage().posts[postParams.repliedPostId].rootPostId;
         }
         if (postParams.repostedPostId != 0) {
-            _requirePostExistence(postParams.repostedPostId);
+            _require(_postExists(postParams.repostedPostId), "REPOSTED_POST_DOES_NOT_EXIST");
             _newPost.repostedPostId = postParams.repostedPostId;
             rootPostId = $storage().posts[postParams.repostedPostId].rootPostId;
             require(
@@ -90,12 +90,7 @@ library FeedCore {
         delete $storage().posts[postId];
     }
 
-    function _requirePostExistence(uint256 postId) internal view {
-        require($storage().posts[postId].creationTimestamp != 0, "POST_DOES_NOT_EXIST");
+    function _postExists(uint256 postId) internal view returns (bool) {
+        return $storage().posts[postId].creationTimestamp != 0;
     }
-
-    // TODO: Debate this more. It should be a soft delete, you can reconstruct anyways from tx history.
-    // function _disablePost(uint256 postId) internal {
-    //      $storage().posts[postId].disabled = true;
-    // }
 }
