@@ -43,10 +43,12 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(IGroupRule.configure, (configSalt, ruleParams));
     }
 
@@ -82,10 +84,13 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             + $groupRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
-    function getGroupRules(
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getGroupRules(bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $groupRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 

@@ -58,10 +58,10 @@ abstract contract ExtraStorageBased {
         return _setExtraData(address(0), 0, extraDataToSet);
     }
 
-    function _setPrimitiveInternalExtraDataForEntity(
-        uint256 entityId,
-        KeyValue memory extraDataToSet
-    ) internal returns (bool) {
+    function _setPrimitiveInternalExtraDataForEntity(uint256 entityId, KeyValue memory extraDataToSet)
+        internal
+        returns (bool)
+    {
         return _setExtraData(address(0), entityId, extraDataToSet);
     }
 
@@ -86,10 +86,11 @@ abstract contract ExtraStorageBased {
         return _getExtraData(address(0), 0, key);
     }
 
-    function _getPrimitiveInternalExtraDataForEntity(
-        uint256 entityId,
-        bytes32 key
-    ) internal view returns (bytes memory) {
+    function _getPrimitiveInternalExtraDataForEntity(uint256 entityId, bytes32 key)
+        internal
+        view
+        returns (bytes memory)
+    {
         return _getExtraData(address(0), entityId, key);
     }
 

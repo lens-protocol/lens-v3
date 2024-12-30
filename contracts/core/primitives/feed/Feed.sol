@@ -27,9 +27,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
     }
 
-    function _emitMetadataURISet(
-        string memory metadataURI
-    ) internal override {
+    function _emitMetadataURISet(string memory metadataURI) internal override {
         emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
@@ -43,22 +41,19 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     // Access Controlled functions
 
-    function _beforeMetadataURIUpdate(
-        string memory /* metadataURI */
-    ) internal view override {
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
         _requireAccess(msg.sender, SET_METADATA_PID);
     }
 
-    function _beforeChangePrimitiveRules(
-        RuleChange[] calldata /* ruleChanges */
-    ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
-    function _beforeChangeEntityRules(
-        uint256 entityId,
-        RuleChange[] calldata /* ruleChanges */
-    ) internal virtual override {
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata /* ruleChanges */ )
+        internal
+        virtual
+        override
+    {
         require(msg.sender == Core.$storage().posts[entityId].author);
     }
 
@@ -175,9 +170,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
-    function setExtraData(
-        KeyValue[] calldata extraDataToSet
-    ) external override {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
@@ -229,9 +222,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return Core.$storage().postCount;
     }
 
-    function getPostCount(
-        address author
-    ) external view override returns (uint256) {
+    function getPostCount(address author) external view override returns (uint256) {
         return Core.$storage().authorPostCount[author];
     }
 
@@ -241,9 +232,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return _getEntityExtraData(postAuthor, postId, key);
     }
 
-    function getExtraData(
-        bytes32 key
-    ) external view override returns (bytes memory) {
+    function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
     }
 
@@ -257,9 +246,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return Core.$storage().posts[postId].authorPostSequentialId;
     }
 
-    function getNextPostId(
-        address author
-    ) external view returns (uint256) {
+    function getNextPostId(address author) external view returns (uint256) {
         return Core._generatePostId(author, Core.$storage().authorPostCount[author] + 1);
     }
 }

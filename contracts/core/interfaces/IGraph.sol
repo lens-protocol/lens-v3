@@ -105,11 +105,10 @@ interface IGraph is IMetadataBased {
 
     function getGraphRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
-    function getFollowRules(
-        address account,
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view returns (Rule[] memory);
+    function getFollowRules(address account, bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
 }

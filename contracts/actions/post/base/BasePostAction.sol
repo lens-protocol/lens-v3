@@ -9,21 +9,21 @@ import {IPostAction} from "./../../../dashboard/actions/ActionHub.sol";
 abstract contract BasePostAction is BaseAction, IPostAction {
     constructor(address actionHub) BaseAction(actionHub) {}
 
-    function configure(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external override onlyActionHub returns (bytes memory) {
+    function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        override
+        onlyActionHub
+        returns (bytes memory)
+    {
         return _configure(originalMsgSender, feed, postId, params);
     }
 
-    function execute(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external override onlyActionHub returns (bytes memory) {
+    function execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        override
+        onlyActionHub
+        returns (bytes memory)
+    {
         return _execute(originalMsgSender, feed, postId, params);
     }
 
@@ -46,12 +46,10 @@ abstract contract BasePostAction is BaseAction, IPostAction {
         return _configureUniversalAction(originalMsgSender);
     }
 
-    function _execute(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) internal virtual returns (bytes memory);
+    function _execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        internal
+        virtual
+        returns (bytes memory);
 
     function _setDisabled(
         address, /* originalMsgSender */

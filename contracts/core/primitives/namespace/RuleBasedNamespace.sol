@@ -44,10 +44,12 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(INamespaceRule.configure, (configSalt, ruleParams));
     }
 
@@ -83,10 +85,13 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
             + $namespaceRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
-    function getNamespaceRules(
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getNamespaceRules(bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $namespaceRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 

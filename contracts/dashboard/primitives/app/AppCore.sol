@@ -47,11 +47,9 @@ library AppCore {
         }
     }
 
-    function _add(
-        address element,
-        address[] storage array,
-        mapping(address => ArrayStorageHelper) storage arrayHelper
-    ) internal {
+    function _add(address element, address[] storage array, mapping(address => ArrayStorageHelper) storage arrayHelper)
+        internal
+    {
         require(element != address(0), "INVALID_ELEMENT");
         require(!arrayHelper[element].isSet, "ALREADY_ADDED");
         array.push(element);

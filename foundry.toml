@@ -8,4 +8,3 @@ solc_version = '0.8.17'
 
 [fmt]
 line_length = 121
-multiline_func_header = 'params_first'

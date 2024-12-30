@@ -33,9 +33,7 @@ import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
-    function transferOwnership(
-        address newOwner
-    ) external;
+    function transferOwnership(address newOwner) external;
     function owner() external view returns (address);
 }
 
@@ -238,10 +236,11 @@ contract LensFactory {
         );
     }
 
-    function _prependAccountBlocking(
-        RuleChange[] calldata rules,
-        bytes4 ruleSelector
-    ) internal view returns (RuleChange[] memory) {
+    function _prependAccountBlocking(RuleChange[] calldata rules, bytes4 ruleSelector)
+        internal
+        view
+        returns (RuleChange[] memory)
+    {
         RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
 
         RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);

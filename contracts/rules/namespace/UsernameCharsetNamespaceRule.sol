@@ -116,10 +116,10 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         revert();
     }
 
-    function _processRestrictions(
-        string calldata username,
-        CharsetRestrictions memory charsetRestrictions
-    ) internal pure {
+    function _processRestrictions(string calldata username, CharsetRestrictions memory charsetRestrictions)
+        internal
+        pure
+    {
         // Cannot start with a character in the cannotStartWith charset
         require(
             !_isInCharset(bytes(username)[0], charsetRestrictions.cannotStartWith),

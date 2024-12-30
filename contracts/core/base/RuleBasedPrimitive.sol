@@ -15,10 +15,10 @@ import {
 abstract contract RuleBasedPrimitive {
     using RulesLib for RulesStorage;
 
-    function _changePrimitiveRules(
-        RulesStorage storage rulesStorage,
-        RuleChange[] calldata ruleChanges
-    ) internal virtual {
+    function _changePrimitiveRules(RulesStorage storage rulesStorage, RuleChange[] calldata ruleChanges)
+        internal
+        virtual
+    {
         _changeRules(
             rulesStorage,
             0,
@@ -47,11 +47,11 @@ abstract contract RuleBasedPrimitive {
         );
     }
 
-    function _encodeConfigureCall(
-        uint256 entityId,
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure returns (bytes memory) {
+    function _encodeConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        returns (bytes memory)
+    {
         if (entityId == 0) {
             return _encodePrimitiveConfigureCall(configSalt, ruleParams);
         } else {
@@ -90,10 +90,11 @@ abstract contract RuleBasedPrimitive {
 
     // Primitive functions:
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure virtual returns (bytes memory);
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        virtual
+        returns (bytes memory);
 
     function _emitPrimitiveRuleConfiguredEvent(
         bool wasAlreadyConfigured,
@@ -112,11 +113,12 @@ abstract contract RuleBasedPrimitive {
 
     // Entity functions:
 
-    function _encodeEntityConfigureCall(
-        uint256 entityId,
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure virtual returns (bytes memory) {}
+    function _encodeEntityConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        virtual
+        returns (bytes memory)
+    {}
 
     function _emitEntityRuleConfiguredEvent(
         bool wasAlreadyConfigured,
@@ -200,10 +202,10 @@ abstract contract RuleBasedPrimitive {
         RuleProcessingParams[] memory ruleChangesProcessingParams
     ) internal virtual {}
 
-    function _validateRulesLength(
-        RulesStorage storage rulesStorage,
-        bytes4[] memory selectorsToValidate
-    ) internal view {
+    function _validateRulesLength(RulesStorage storage rulesStorage, bytes4[] memory selectorsToValidate)
+        internal
+        view
+    {
         for (uint256 i = 0; i < selectorsToValidate.length; i++) {
             bytes4 ruleSelector = selectorsToValidate[i];
             uint256 requiredRulesLength = rulesStorage._getRulesArray(ruleSelector, true).length;

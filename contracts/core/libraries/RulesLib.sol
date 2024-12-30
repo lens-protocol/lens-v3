@@ -70,11 +70,11 @@ library RulesLib {
         _removeRuleSelectorFromStorage(rulesStorage, ruleSelector, ruleAddress, configSalt);
     }
 
-    function _getRulesArray(
-        RulesStorage storage rulesStorage,
-        bytes4 ruleSelector,
-        bool requiredRules
-    ) internal view returns (Rule[] storage) {
+    function _getRulesArray(RulesStorage storage rulesStorage, bytes4 ruleSelector, bool requiredRules)
+        internal
+        view
+        returns (Rule[] storage)
+    {
         return requiredRules ? rulesStorage.requiredRules[ruleSelector] : rulesStorage.anyOfRules[ruleSelector];
     }
 

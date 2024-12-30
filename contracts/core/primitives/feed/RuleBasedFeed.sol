@@ -65,10 +65,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(IFeedRule.configure, (configSalt, ruleParams));
     }
 
@@ -108,11 +110,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return $feedRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
-    function getPostRules(
-        bytes4 ruleSelector,
-        uint256 postId,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getPostRules(bytes4 ruleSelector, uint256 postId, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $postRulesStorage(postId)._getRulesArray(ruleSelector, isRequired);
     }
 

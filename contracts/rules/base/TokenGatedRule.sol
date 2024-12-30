@@ -54,10 +54,11 @@ abstract contract TokenGatedRule is MetadataBased {
         require(_checkTokenBalance(configuration, owner), "Errors.InsufficientTokenBalance()");
     }
 
-    function _checkTokenBalance(
-        TokenGateConfiguration memory configuration,
-        address owner
-    ) internal view returns (bool) {
+    function _checkTokenBalance(TokenGateConfiguration memory configuration, address owner)
+        internal
+        view
+        returns (bool)
+    {
         uint256 balance;
         if (configuration.tokenStandard == ERC20 || configuration.tokenStandard == ERC721) {
             balance = IToken(configuration.token).balanceOf(owner);

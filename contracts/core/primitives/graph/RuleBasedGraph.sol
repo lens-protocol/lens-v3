@@ -64,10 +64,12 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(IGraphRule.configure, (configSalt, ruleParams));
     }
 
@@ -103,18 +105,23 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             + $graphRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
-    function getGraphRules(
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getGraphRules(bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $graphRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
-    function getFollowRules(
-        address account,
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getFollowRules(address account, bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $followRulesStorage(account)._getRulesArray(ruleSelector, isRequired);
     }
 

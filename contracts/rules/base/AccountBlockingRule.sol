@@ -25,10 +25,11 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
-    function configure(
-        bytes32, /* salt */
-        KeyValue[] calldata /* ruleConfigurationParams */
-    ) external pure override(IFeedRule, IGraphRule) {}
+    function configure(bytes32, /* salt */ KeyValue[] calldata /* ruleConfigurationParams */ )
+        external
+        pure
+        override(IFeedRule, IGraphRule)
+    {}
 
     function blockUser(address source, address target) external {
         require(msg.sender == source, "Only the source can block a user");

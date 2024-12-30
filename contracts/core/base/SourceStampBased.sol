@@ -37,11 +37,10 @@ abstract contract SourceStampBased is ExtraStorageBased {
         return address(0);
     }
 
-    function _processSourceStamp(
-        uint256 entityId,
-        KeyValue[] calldata customParams,
-        bool storeSource
-    ) internal returns (address) {
+    function _processSourceStamp(uint256 entityId, KeyValue[] calldata customParams, bool storeSource)
+        internal
+        returns (address)
+    {
         return _processSourceStamp(entityId, customParams, storeSource, false);
     }
 

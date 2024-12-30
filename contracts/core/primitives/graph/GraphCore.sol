@@ -26,12 +26,10 @@ library GraphCore {
 
     // Internal functions - Use these functions to be called as an inlined library
 
-    function _follow(
-        address followerAccount,
-        address accountToFollow,
-        uint256 followId,
-        uint256 timestamp
-    ) internal returns (uint256) {
+    function _follow(address followerAccount, address accountToFollow, uint256 followId, uint256 timestamp)
+        internal
+        returns (uint256)
+    {
         require(followerAccount != accountToFollow); // Cannot follow yourself
         require($storage().follows[followerAccount][accountToFollow].id == 0); // Cannot follow more than once
         if (followId == 0) {
