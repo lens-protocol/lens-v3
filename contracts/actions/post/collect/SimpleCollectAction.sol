@@ -23,36 +23,35 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         mapping(address => mapping(uint256 => CollectActionData)) collectData;
     }
 
-    // keccak256('lens.simple.collect.action.storage')
-    bytes32 constant SIMPLE_COLLECT_ACTION_STORAGE_SLOT =
-        0xec3c61dac83a5e1c58a4edc68a1b1d187690a6379142dd5c3c7be1006dbe60f7;
+    /// @custom:keccak lens.storage.SimpleCollectAction.CollectActionStorage
+    bytes32 constant STORAGE__SIMPLE_COLLECT_ACTION = 0xa818dbc25de051abcaa7f2eef0c43fdf86f365dfc6389654719cb8486eace5a5;
 
     function $collectDataStorage() private pure returns (CollectActionStorage storage _storage) {
         assembly {
-            _storage.slot := SIMPLE_COLLECT_ACTION_STORAGE_SLOT
+            _storage.slot := STORAGE__SIMPLE_COLLECT_ACTION
         }
     }
 
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.amount");
-    bytes32 immutable AMOUNT_PARAM_KEY = 0x51d27705e956fda3036fa0e06473280e805ad727991b5c04a7dd648006ee6516;
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.currency");
-    bytes32 immutable CURRENCY_PARAM_KEY = 0xf4480a2542407ad170d4070fcb73508d7a7f0fa76228a5bc4a9f53807499c268;
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.collectLimit");
-    bytes32 immutable COLLECT_LIMIT_PARAM_KEY = 0x59226908c34e8d25542cf48fcd8c1b4d8b21a10bbf52610f73743ac1b318013e;
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.endTimestamp");
-    bytes32 immutable END_TIMESTAMP_PARAM_KEY = 0x6ce823f3b1902903a294181f25c7425553b4413066cb33e266594974e3a9abb5;
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.recipient");
-    bytes32 immutable RECIPIENT_PARAM_KEY = 0xecf1d963892397e95e102ceadd1b1c1e9f0c9161c45f8353e84752d7cdaefbcd;
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.followerOnlyGraph");
-    bytes32 immutable FOLLOWER_ONLY_GRAPH_PARAM_KEY = 0x022d08514a767b1bcb924fb7da6ce0de8f0d4972af8201900b707dc53b07b535;
-    // keccak256("lens.actions.collect.SimpleCollectAction.param.key.isImmutable");
-    bytes32 immutable IS_IMMUTABLE_PARAM_KEY = 0x2fdb09caa9ef7bd4957f8a9bddb15e864218fedbcd97e9f5944b386d1657c5cd;
+    /// @custom:keccak lens.param.amount
+    bytes32 constant PARAM__AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
+    /// @custom:keccak lens.param.token
+    bytes32 constant PARAM__TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
+    /// @custom:keccak lens.param.collectLimit
+    bytes32 constant PARAM__COLLECT_LIMIT = 0xa3a202292a3a2b62eecfeb02565126445fa5c792f06c6222157d3244eca405d5;
+    /// @custom:keccak lens.param.endTimestamp
+    bytes32 constant PARAM__END_TIMESTAMP = 0xe2a4a768f409ba480a321a7d36ec9da16e9eae60a25bb0aeccf334822cc859a8;
+    /// @custom:keccak lens.param.recipient
+    bytes32 constant PARAM__RECIPIENT = 0xa402f27be0e1380b17f8a7ab131394fbdf24cd8b5c2745bd842d1ae1668867ff;
+    /// @custom:keccak lens.param.graph
+    bytes32 constant PARAM__FOLLOWER_ONLY_GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
+    /// @custom:keccak lens.param.isImmutable
+    bytes32 constant PARAM__IS_IMMUTABLE = 0x4d1cad3e438026974130ac84979964dd6019eace55216c3de16bc79e36a4c44b;
 
     /**
      * @notice A struct containing the params to configure this Collect Module on a post.
      *
      * @param amount The collecting cost associated with this post. 0 for free collect.
-     * @param currency The currency associated with this publication.
+     * @param token The token associated with this publication.
      * @param collectLimit The maximum number of collects for this publication. 0 for no limit.
      * @param endTimestamp The end timestamp after which collecting is impossible. 0 for no expiry.
      * @param recipient Recipient of collect fees.
@@ -60,7 +59,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
     struct CollectActionConfigureParams {
         uint160 amount; ///////////// (Optional) Default: 0
         uint96 collectLimit; //////// (Optional) Default: 0
-        address currency; /////////// (Optional, but required if amount > 0) Default: address(0)
+        address token; /////////// (Optional, but required if amount > 0) Default: address(0)
         uint72 endTimestamp; //////// (Optional) Default: 0
         address followerOnlyGraph; // (Optional) Default: address(0)
         address recipient; ////////// (Optional, but required if amount > 0) Default: address(0)
@@ -72,11 +71,11 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
      * @notice Both should be either 0 (if optional) or both should be non-zero if required by collect configuration.
      *
      * @param amount The amount to pay for collect.
-     * @param currency The currency to pay for collect.
+     * @param token The token to pay for collect.
      */
     struct CollectActionExecutionParams {
         uint256 amount; //// (Optional) Default: 0
-        address currency; // (Optional, but required if amount > 0) Default: address(0)
+        address token; // (Optional, but required if amount > 0) Default: address(0)
     }
 
     constructor(address actionHub, string memory metadataURI) BasePostAction(actionHub) {
@@ -87,12 +86,11 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         emit Lens_Action_MetadataURISet(metadataURI);
     }
 
-    function _configure(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) internal override returns (bytes memory) {
+    function _configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        internal
+        override
+        returns (bytes memory)
+    {
         _validateSenderIsAuthor(originalMsgSender, feed, postId);
 
         CollectActionConfigureParams memory configData = _extractConfigurationFromParams(params);
@@ -113,7 +111,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
             } else {
                 storedData.amount = configData.amount;
                 storedData.collectLimit = configData.collectLimit;
-                storedData.currency = configData.currency;
+                storedData.token = configData.token;
                 storedData.recipient = configData.recipient;
                 storedData.followerOnlyGraph = configData.followerOnlyGraph;
                 storedData.endTimestamp = configData.endTimestamp;
@@ -125,12 +123,11 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         return abi.encode(storedData);
     }
 
-    function _execute(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) internal override returns (bytes memory) {
+    function _execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        internal
+        override
+        returns (bytes memory)
+    {
         CollectActionExecutionParams memory expectedParams = _extractCollectActionExecutionParams(params);
 
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
@@ -174,9 +171,9 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
 
     function _validateConfigureParams(CollectActionConfigureParams memory configData) internal virtual {
         if (configData.amount == 0) {
-            require(configData.currency == address(0), "Invalid currency");
+            require(configData.token == address(0), "Invalid token");
         } else {
-            require(configData.currency != address(0), "Invalid currency");
+            require(configData.token != address(0), "Invalid token");
         }
         if (configData.endTimestamp != 0 && configData.endTimestamp < block.timestamp) {
             revert("Invalid params");
@@ -196,7 +193,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
         storedData.amount = configData.amount;
         storedData.collectLimit = configData.collectLimit;
-        storedData.currency = configData.currency;
+        storedData.token = configData.token;
         storedData.recipient = configData.recipient;
         storedData.endTimestamp = configData.endTimestamp;
         storedData.followerOnlyGraph = configData.followerOnlyGraph;
@@ -222,8 +219,8 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
             revert("Collect limit exceeded");
         }
 
-        if (expectedParams.amount != data.amount || expectedParams.currency != data.currency) {
-            revert("Invalid expected amount and/or currency");
+        if (expectedParams.amount != data.amount || expectedParams.token != data.token) {
+            revert("Invalid expected amount and/or token");
         }
 
         if (data.followerOnlyGraph != address(0)) {
@@ -252,11 +249,11 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         CollectActionData storage data = $collectDataStorage().collectData[feed][postId];
 
         uint256 amount = data.amount;
-        address currency = data.currency;
+        address token = data.token;
         address recipient = data.recipient;
 
         if (amount > 0) {
-            IERC20(currency).safeTransferFrom(originalMsgSender, recipient, amount);
+            IERC20(token).safeTransferFrom(originalMsgSender, recipient, amount);
         }
     }
 
@@ -268,7 +265,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         CollectActionConfigureParams memory configData = CollectActionConfigureParams({
             amount: 0,
             collectLimit: 0,
-            currency: address(0),
+            token: address(0),
             endTimestamp: 0,
             followerOnlyGraph: address(0),
             recipient: address(0),
@@ -276,19 +273,19 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         });
 
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == AMOUNT_PARAM_KEY) {
+            if (params[i].key == PARAM__AMOUNT) {
                 configData.amount = abi.decode(params[i].value, (uint160));
-            } else if (params[i].key == CURRENCY_PARAM_KEY) {
-                configData.currency = abi.decode(params[i].value, (address));
-            } else if (params[i].key == COLLECT_LIMIT_PARAM_KEY) {
+            } else if (params[i].key == PARAM__TOKEN) {
+                configData.token = abi.decode(params[i].value, (address));
+            } else if (params[i].key == PARAM__COLLECT_LIMIT) {
                 configData.collectLimit = abi.decode(params[i].value, (uint96));
-            } else if (params[i].key == END_TIMESTAMP_PARAM_KEY) {
+            } else if (params[i].key == PARAM__END_TIMESTAMP) {
                 configData.endTimestamp = abi.decode(params[i].value, (uint72));
-            } else if (params[i].key == RECIPIENT_PARAM_KEY) {
+            } else if (params[i].key == PARAM__RECIPIENT) {
                 configData.recipient = abi.decode(params[i].value, (address));
-            } else if (params[i].key == FOLLOWER_ONLY_GRAPH_PARAM_KEY) {
+            } else if (params[i].key == PARAM__FOLLOWER_ONLY_GRAPH) {
                 configData.followerOnlyGraph = abi.decode(params[i].value, (address));
-            } else if (params[i].key == IS_IMMUTABLE_PARAM_KEY) {
+            } else if (params[i].key == PARAM__IS_IMMUTABLE) {
                 configData.isImmutable = abi.decode(params[i].value, (bool));
             }
         }
@@ -301,13 +298,13 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         returns (CollectActionExecutionParams memory)
     {
         CollectActionExecutionParams memory executionParams =
-            CollectActionExecutionParams({amount: 0, currency: address(0)});
+            CollectActionExecutionParams({amount: 0, token: address(0)});
 
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == AMOUNT_PARAM_KEY) {
+            if (params[i].key == PARAM__AMOUNT) {
                 executionParams.amount = abi.decode(params[i].value, (uint256));
-            } else if (params[i].key == CURRENCY_PARAM_KEY) {
-                executionParams.currency = abi.decode(params[i].value, (address));
+            } else if (params[i].key == PARAM__TOKEN) {
+                executionParams.token = abi.decode(params[i].value, (address));
             }
         }
         return executionParams;

@@ -9,7 +9,7 @@ import {IPostAction} from "./../../../dashboard/actions/ActionHub.sol";
  *
  * @param amount The collecting cost associated with this publication. 0 for free collect.
  * @param collectLimit The maximum number of collects for this publication. 0 for no limit.
- * @param currency The currency associated with this publication.
+ * @param token The token associated with this publication.
  * @param currentCollects The current number of collects for this publication.
  * @param recipient Recipient of collect fees.
  * @param endTimestamp The end timestamp after which collecting is impossible. 0 for no expiry.
@@ -18,7 +18,7 @@ import {IPostAction} from "./../../../dashboard/actions/ActionHub.sol";
 struct CollectActionData {
     uint160 amount;
     uint96 collectLimit;
-    address currency;
+    address token;
     uint96 currentCollects;
     address recipient;
     uint72 endTimestamp;
