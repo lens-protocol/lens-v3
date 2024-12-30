@@ -36,7 +36,6 @@ contract Namespace is
 
     mapping(uint256 => string) private _idToUsername; // TODO: Move to computed storage
 
-    // TODO: We need initializer for all primitives to make them upgradeable
     constructor(
         string memory namespace,
         string memory metadataURI,
@@ -259,11 +258,15 @@ contract Namespace is
     // Getters
 
     function usernameOf(address user) external view returns (string memory) {
-        return Core.$storage().accountToUsername[user];
+        string memory username = Core.$storage().accountToUsername[user];
+        require(bytes(username).length != 0, "NO_USERNAME_ASSIGNED");
+        return username;
     }
 
-    function accountOf(string memory name) external view returns (address) {
-        return Core.$storage().usernameToAccount[name];
+    function accountOf(string memory username) external view returns (address) {
+        uint256 tokenId = _computeId(username);
+        require(_exists(tokenId), "NO_SUCH_USERNAME");
+        return Core.$storage().usernameToAccount[username];
     }
 
     function getNamespace() external view returns (string memory) {
@@ -276,7 +279,7 @@ contract Namespace is
 
     function getUsernameExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
         uint256 tokenId = _computeId(username);
-        address owner = _ownerOf(tokenId);
+        address owner = ownerOf(tokenId);
         return _getEntityExtraData(owner, tokenId, key);
     }
 }

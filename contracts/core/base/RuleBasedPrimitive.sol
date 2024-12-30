@@ -176,7 +176,7 @@ abstract contract RuleBasedPrimitive {
             _validateRulesLength(rulesStorage, _supportedPrimitiveRuleSelectors());
         } else {
             _validateRulesLength(rulesStorage, _supportedEntityRuleSelectors());
-            _processEntityRulesChanges(entityId, ruleChanges, ruleChangesProcessingParams); // TODO: Which one we pass? The one with configSalt's already assigned or the original one with the zero-ed configSalt's?
+            _processEntityRulesChanges(entityId, ruleChanges, ruleChangesProcessingParams);
         }
     }
 

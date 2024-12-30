@@ -46,8 +46,6 @@ interface IOwnable {
 //     IRoleBasedAccessControl.Access access;
 // }
 
-// uint8 decimals; TODO ???
-
 contract LensFactory {
     AccessControlFactory internal immutable ACCESS_CONTROL_FACTORY;
     AccountFactory internal immutable ACCOUNT_FACTORY;
@@ -288,7 +286,7 @@ contract LensFactory {
         string calldata nftName,
         string calldata nftSymbol
     ) external returns (address) {
-        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider(); // TODO!
+        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
         return NAMESPACE_FACTORY.deployNamespace(
             namespace,
             metadataURI,

@@ -154,6 +154,8 @@ interface IFeed is IMetadataBased {
 
     function getPost(uint256 postId) external view returns (Post memory);
 
+    function postExists(uint256 postId) external view returns (bool);
+
     function getPostAuthor(uint256 postId) external view returns (address);
 
     function getFeedRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
@@ -173,6 +175,4 @@ interface IFeed is IMetadataBased {
     function getAuthorPostSequentialId(uint256 postId) external view returns (uint256);
 
     function getNextPostId(address author) external view returns (uint256);
-
-    // TODO: Should we have getPostBySequentialId and getPostByAuthorSequentialId ?
 }

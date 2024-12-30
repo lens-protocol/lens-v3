@@ -15,7 +15,6 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    // TODO: Think about renaming Username primitive to Namespace or something else
     event Lens_UsernameReservedNamespaceRule_UsernameReserved(
         address indexed usernamePrimitive, bytes32 indexed configSalt, string indexed indexedUsername, string username
     );

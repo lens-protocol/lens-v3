@@ -27,7 +27,7 @@ library RulesLib {
         bytes32 providedConfigSalt
     ) internal returns (bytes32) {
         if (providedConfigSalt == 0x00) {
-            return bytes32(++rulesStorage.lastConfigSaltGenerated); // TODO: We can choose another generation procedure
+            return bytes32(++rulesStorage.lastConfigSaltGenerated);
         } else {
             require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt]);
             return providedConfigSalt;

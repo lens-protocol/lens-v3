@@ -198,10 +198,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     // Getters
 
-    function getPost(
-        uint256 postId
-    ) external view override returns (Post memory) {
-        // TODO: Should fail if post doesn't exist
+    function getPost(uint256 postId) external view override returns (Post memory) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Post({
             author: Core.$storage().posts[postId].author,
             authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
@@ -218,10 +216,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         });
     }
 
-    function getPostAuthor(
-        uint256 postId
-    ) external view override returns (address) {
-        // TODO: Should fail if post doesn't exist?
+    function postExists(uint256 postId) external view override returns (bool) {
+        return Core._postExists(postId);
+    }
+
+    function getPostAuthor(uint256 postId) external view override returns (address) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Core.$storage().posts[postId].author;
     }
 
@@ -236,6 +236,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     }
 
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         address postAuthor = Core.$storage().posts[postId].author;
         return _getEntityExtraData(postAuthor, postId, key);
     }
@@ -246,15 +247,13 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return _getPrimitiveExtraData(key);
     }
 
-    function getPostSequentialId(
-        uint256 postId
-    ) external view override returns (uint256) {
+    function getPostSequentialId(uint256 postId) external view override returns (uint256) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Core.$storage().posts[postId].postSequentialId;
     }
 
-    function getAuthorPostSequentialId(
-        uint256 postId
-    ) external view override returns (uint256) {
+    function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Core.$storage().posts[postId].authorPostSequentialId;
     }
 
