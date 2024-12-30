@@ -295,6 +295,6 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($namespaceRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($namespaceRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }

@@ -174,7 +174,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _encodeAndCallGraphProcessFollow(
@@ -365,7 +365,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processFollow(
@@ -428,6 +428,6 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }

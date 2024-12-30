@@ -264,6 +264,6 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($groupRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($groupRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }

@@ -213,7 +213,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostCreationOnRootPost(
@@ -367,7 +367,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostRemoval(
@@ -417,7 +417,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostRulesChanges(
@@ -467,6 +467,6 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }
