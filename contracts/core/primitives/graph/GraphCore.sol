@@ -26,7 +26,12 @@ library GraphCore {
 
     // Internal functions - Use these functions to be called as an inlined library
 
-    function _follow(address followerAccount, address accountToFollow, uint256 followId) internal returns (uint256) {
+    function _follow(
+        address followerAccount,
+        address accountToFollow,
+        uint256 followId,
+        uint256 timestamp
+    ) internal returns (uint256) {
         require(followerAccount != accountToFollow); // Cannot follow yourself
         require($storage().follows[followerAccount][accountToFollow].id == 0); // Cannot follow more than once
         if (followId == 0) {
@@ -35,7 +40,7 @@ library GraphCore {
             require(followId < $storage().lastFollowIdAssigned[accountToFollow]); // Only previous Follow IDs allowed to be reused
             require($storage().followers[accountToFollow][followId] == address(0)); // Follow ID is already taken
         }
-        $storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: block.timestamp});
+        $storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: timestamp});
         $storage().followers[accountToFollow][followId] = followerAccount;
         $storage().followersCount[accountToFollow]++;
         $storage().followingCount[followerAccount]++;

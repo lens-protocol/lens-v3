@@ -28,10 +28,14 @@ import {LensUsernameTokenURIProvider} from "./../../core/primitives/namespace/Le
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
 import {GROUP_PARAM_KEY} from "./../../rules/feed/GroupGatedFeedRule.sol";
+import {AccessControlled} from "./../../core/access/AccessControlled.sol";
+import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
-    function transferOwnership(address newOwner) external;
+    function transferOwnership(
+        address newOwner
+    ) external;
     function owner() external view returns (address);
 }
 
@@ -135,7 +139,7 @@ contract LensFactory {
         KeyValue[] calldata feedExtraData
     ) external returns (address, address) {
         address group =
-            GROUP_FACTORY.deployGroup(groupMetadataURI, _deployAccessControl(owner, admins), groupRules, groupExtraData);
+            GROUP_FACTORY.deployGroup(groupMetadataURI, _factoryOwnedAccessControl, groupRules, groupExtraData);
 
         RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
 
@@ -171,6 +175,11 @@ contract LensFactory {
             feedMetadataURI, _deployAccessControl(owner, admins), modifiedFeedRules, feedExtraData
         );
 
+        IRoleBasedAccessControl groupAccessControl = _deployAccessControl(owner, admins);
+        KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
+        groupExtraDataWithFeed[0] = KeyValue({key: keccak256("lens.group.linked-feed"), value: abi.encode(feed)});
+        IGroup(group).setExtraData(groupExtraDataWithFeed);
+        AccessControlled(group).setAccessControl(groupAccessControl);
         return (group, feed);
     }
 
