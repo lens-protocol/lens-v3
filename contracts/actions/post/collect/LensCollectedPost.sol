@@ -56,9 +56,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
         return _contractURI;
     }
 
-    function tokenURI(
-        uint256 /*tokenId*/
-    ) public view override returns (string memory) {
+    function tokenURI(uint256 /*tokenId*/ ) public view override returns (string memory) {
         if (_isImmutable) {
             return _contentURISnapshot;
         } else {
@@ -73,9 +71,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
 
     // Disabling integrated LensERC721 tokenURIProvider
     // TODO: Is this approach more favorable than deploying the LensCollectedPostTokenURIProvider over and over?
-    function _beforeTokenURIProviderSet(
-        ITokenURIProvider /* tokenURIProvider */
-    ) internal pure override {
+    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal pure override {
         revert();
     }
 }

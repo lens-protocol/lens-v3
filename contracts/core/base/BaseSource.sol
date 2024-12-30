@@ -15,16 +15,12 @@ abstract contract BaseSource is ISource {
 
     mapping(uint256 => bool) internal _wasSourceStampNonceUsed;
 
-    function validateSource(
-        SourceStamp calldata sourceStamp
-    ) external virtual override {
+    function validateSource(SourceStamp calldata sourceStamp) external virtual override {
         _validateSource(sourceStamp);
     }
 
     // Signature Standard: EIP-191 - Version Byte: 0x00
-    function _validateSource(
-        SourceStamp calldata sourceStamp
-    ) internal virtual {
+    function _validateSource(SourceStamp calldata sourceStamp) internal virtual {
         require(!_wasSourceStampNonceUsed[sourceStamp.nonce]);
         require(sourceStamp.deadline >= block.timestamp);
         require(sourceStamp.source == address(this));
@@ -43,19 +39,13 @@ abstract contract BaseSource is ISource {
         require(_isValidSourceStampSigner(signer));
     }
 
-    function _isValidSourceStampSigner(
-        address signer
-    ) internal virtual returns (bool);
+    function _isValidSourceStampSigner(address signer) internal virtual returns (bool);
 
-    function _calculateHashStruct(
-        SourceStamp memory sourceStamp
-    ) private pure returns (bytes32) {
+    function _calculateHashStruct(SourceStamp memory sourceStamp) private pure returns (bytes32) {
         return keccak256(abi.encode(SOURCE_STAMP_TYPEHASH, sourceStamp.source, sourceStamp.nonce, sourceStamp.deadline));
     }
 
-    function _calculateDigest(
-        bytes32 hashStruct
-    ) private view returns (bytes32) {
+    function _calculateDigest(bytes32 hashStruct) private view returns (bytes32) {
         return keccak256(
             abi.encodePacked(EIP191_VERSION_BYTE_0X01_HEADER, _calculateDomainSeparatorHashStruct(), hashStruct)
         );

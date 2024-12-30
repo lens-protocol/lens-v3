@@ -17,15 +17,11 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
 
     mapping(address => mapping(address => uint256)) public accountBlocks;
 
-    constructor(
-        string memory metadataURI
-    ) {
+    constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
     }
 
-    function _emitMetadataURISet(
-        string memory metadataURI
-    ) internal override {
+    function _emitMetadataURISet(string memory metadataURI) internal override {
         emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
