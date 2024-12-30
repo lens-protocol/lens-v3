@@ -40,6 +40,10 @@ abstract contract RestrictedSignersRule is MetadataBased {
         mapping(address => mapping(uint256 => bool)) wasSignerNonceUsed;
     }
 
+    // keccak256("lens.rules.RestrictedSignersRule.param.key.restrictedSigners");
+    bytes32 internal immutable RESTRICTED_SIGNERS_PARAM_KEY =
+        0xb8a2337c40148374f2742539ca15863f85c2a622200150799113b1b02dfa658b;
+
     // keccak256('lens.rule.restricted.storage')
     bytes32 constant RESTRICTED_RULE_STORAGE_SLOT = 0xcf6ecf8730d498cbf6701bc1140f2b12e988e1c416a85799d241dcfbb3ed90df;
 
@@ -77,7 +81,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
 
     function _configure(bytes32 configSalt, KeyValue[] calldata ruleParams) internal virtual {
         require(ruleParams.length > 0);
-        require(ruleParams[0].key == "restrictedSigners"); // TODO: Use proper constant
+        require(ruleParams[0].key == RESTRICTED_SIGNERS_PARAM_KEY);
         (address[] memory signers, string[] memory labels, bool[] memory isWhitelisted) =
             abi.decode(ruleParams[0].value, (address[], string[], bool[]));
         require(signers.length == isWhitelisted.length);
