@@ -36,7 +36,6 @@ contract Namespace is
 
     mapping(uint256 => string) private _idToUsername; // TODO: Move to computed storage
 
-    // TODO: We need initializer for all primitives to make them upgradeable
     constructor(
         string memory namespace,
         string memory metadataURI,

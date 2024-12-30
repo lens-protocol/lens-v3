@@ -34,7 +34,6 @@ abstract contract ExtraStorageBased {
     }
 
     // keccak256('lens.extra.storage')
-    // TODO: Why again we don't use dynamic keccak here?
     bytes32 constant EXTRA_STORAGE_SLOT = 0x46682673acfb524e27de924ad404eee31c5d1237de941d864bdf1364c405fb35;
 
     function $extraDataStorage() private pure returns (ExtraDataStorage storage _storage) {
