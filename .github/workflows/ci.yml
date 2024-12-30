@@ -31,3 +31,5 @@ jobs:
         run: yarn
       - name: Compile Project
         run: npx hardhat compile
+      - name: Verify Hashed Constants
+        run: node verify_hashed_constants.js
