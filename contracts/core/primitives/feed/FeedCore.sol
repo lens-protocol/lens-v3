@@ -52,16 +52,16 @@ library FeedCore {
         _newPost.contentURI = postParams.contentURI;
         uint256 rootPostId = postId;
         if (postParams.quotedPostId != 0) {
-            _require(_postExists(postParams.quotedPostId), "QUOTED_POST_DOES_NOT_EXIST");
+            require(_postExists(postParams.quotedPostId), "QUOTED_POST_DOES_NOT_EXIST");
             _newPost.quotedPostId = postParams.quotedPostId;
         }
         if (postParams.repliedPostId != 0) {
-            _require(_postExists(postParams.repliedPostId), "REPLIED_POST_DOES_NOT_EXIST");
+            require(_postExists(postParams.repliedPostId), "REPLIED_POST_DOES_NOT_EXIST");
             _newPost.repliedPostId = postParams.repliedPostId;
             rootPostId = $storage().posts[postParams.repliedPostId].rootPostId;
         }
         if (postParams.repostedPostId != 0) {
-            _require(_postExists(postParams.repostedPostId), "REPOSTED_POST_DOES_NOT_EXIST");
+            require(_postExists(postParams.repostedPostId), "REPOSTED_POST_DOES_NOT_EXIST");
             _newPost.repostedPostId = postParams.repostedPostId;
             rootPostId = $storage().posts[postParams.repostedPostId].rootPostId;
             require(

@@ -5,6 +5,11 @@ pragma solidity ^0.8.0;
 import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
+struct Membership {
+    uint256 id;
+    uint256 timestamp;
+}
+
 interface IGroup is IMetadataBased {
     event Lens_Group_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
 
@@ -87,6 +92,10 @@ interface IGroup is IMetadataBased {
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
     function getNumberOfMembers() external view returns (uint256);
+
+    function isMember(address account) external view returns (bool);
+
+    function getMembership(address account) external view returns (Membership memory);
 
     function getMembershipTimestamp(address account) external view returns (uint256);
 

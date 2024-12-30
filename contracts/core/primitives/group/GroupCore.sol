@@ -2,12 +2,9 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-library GroupCore {
-    struct Membership {
-        uint256 id;
-        uint256 timestamp;
-    }
+import {Membership} from "./../../interfaces/IGroup.sol";
 
+library GroupCore {
     // Storage
 
     struct Storage {
@@ -26,6 +23,14 @@ library GroupCore {
     }
 
     // Internal functions - Use these functions to be called as an inlined library
+
+    function _isMember(address account) internal view returns (bool) {
+        return $storage().memberships[account].id != 0;
+    }
+
+    function _getMembership(address account) internal view returns (Membership memory) {
+        return $storage().memberships[account];
+    }
 
     function _grantMembership(address account) internal returns (uint256) {
         uint256 membershipId = ++$storage().lastMemberIdAssigned;

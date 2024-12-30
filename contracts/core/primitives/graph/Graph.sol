@@ -126,11 +126,15 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
     }
 
     function getFollowerById(address account, uint256 followId) external view override returns (address) {
-        return Core.$storage().followers[account][followId];
+        address follower = Core.$storage().followers[account][followId];
+        require(follower != address(0), "FOLLOWER_DOES_NOT_EXIST");
+        return follower;
     }
 
     function getFollow(address followerAccount, address targetAccount) external view override returns (Follow memory) {
-        return Core.$storage().follows[followerAccount][targetAccount];
+        Follow memory followData = Core.$storage().follows[followerAccount][targetAccount];
+        require(followData.id != 0, "FOLLOW_DOES_NOT_EXIST");
+        return followData;
     }
 
     function getFollowersCount(address account) external view override returns (uint256) {

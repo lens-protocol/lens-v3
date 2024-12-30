@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IGroup} from "./../../interfaces/IGroup.sol";
+import {Membership, IGroup} from "./../../interfaces/IGroup.sol";
 import {GroupCore as Core} from "./GroupCore.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
@@ -129,12 +129,26 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
         return Core.$storage().numberOfMembers;
     }
 
+    function isMember(address account) external view override returns (bool) {
+        return Core._isMember(account);
+    }
+
+    function getMembership(address account) external view override returns (Membership memory) {
+        Membership memory membership = Core._getMembership(account);
+        require(membership.id != 0, "NOT_A_MEMBER");
+        return membership;
+    }
+
     function getMembershipTimestamp(address account) external view override returns (uint256) {
-        return Core.$storage().memberships[account].timestamp;
+        Membership memory membership = Core._getMembership(account);
+        require(membership.id != 0, "NOT_A_MEMBER");
+        return membership.timestamp;
     }
 
     function getMembershipId(address account) external view override returns (uint256) {
-        return Core.$storage().memberships[account].id;
+        uint256 membershipId = Core.$storage().memberships[account].id;
+        require(membershipId != 0, "NOT_A_MEMBER");
+        return membershipId;
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
