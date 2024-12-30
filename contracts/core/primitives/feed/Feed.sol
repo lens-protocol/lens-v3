@@ -27,7 +27,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(
+        string memory metadataURI
+    ) internal override {
         emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
@@ -41,11 +43,15 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     // Access Controlled functions
 
-    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
+    function _beforeMetadataURIUpdate(
+        string memory /* metadataURI */
+    ) internal view override {
         _requireAccess(msg.sender, SET_METADATA_PID);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(
+        RuleChange[] calldata /* ruleChanges */
+    ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
@@ -64,9 +70,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external override returns (uint256) {
+    ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
-        (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         address source = _processSourceStamp(postId, customParams);
         _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(LAST_UPDATED_SOURCE_EXTRA_DATA, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
@@ -88,7 +94,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Lens_Feed_PostCreated(
             postId,
             postParams.author,
-            localSequentialId,
+            authorPostSequentialId,
             rootPostId,
             postParams,
             customParams,
@@ -113,7 +119,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external override {
+    ) external virtual override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
@@ -160,7 +166,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         uint256 postId,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
-    ) external override {
+    ) external virtual override {
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, REMOVE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
         Core._removePost(postId);
@@ -169,7 +175,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+    function setExtraData(
+        KeyValue[] calldata extraDataToSet
+    ) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
@@ -190,7 +198,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     // Getters
 
-    function getPost(uint256 postId) external view override returns (Post memory) {
+    function getPost(
+        uint256 postId
+    ) external view override returns (Post memory) {
         // TODO: Should fail if post doesn't exist
         return Post({
             author: Core.$storage().posts[postId].author,
@@ -208,7 +218,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         });
     }
 
-    function getPostAuthor(uint256 postId) external view override returns (address) {
+    function getPostAuthor(
+        uint256 postId
+    ) external view override returns (address) {
         // TODO: Should fail if post doesn't exist?
         return Core.$storage().posts[postId].author;
     }
@@ -217,7 +229,9 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return Core.$storage().postCount;
     }
 
-    function getPostCount(address author) external view override returns (uint256) {
+    function getPostCount(
+        address author
+    ) external view override returns (uint256) {
         return Core.$storage().authorPostCount[author];
     }
 
@@ -226,19 +240,27 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return _getEntityExtraData(postAuthor, postId, key);
     }
 
-    function getExtraData(bytes32 key) external view override returns (bytes memory) {
+    function getExtraData(
+        bytes32 key
+    ) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
     }
 
-    function getPostSequentialId(uint256 postId) external view override returns (uint256) {
+    function getPostSequentialId(
+        uint256 postId
+    ) external view override returns (uint256) {
         return Core.$storage().posts[postId].postSequentialId;
     }
 
-    function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
+    function getAuthorPostSequentialId(
+        uint256 postId
+    ) external view override returns (uint256) {
         return Core.$storage().posts[postId].authorPostSequentialId;
     }
 
-    function getNextPostId(address author) external view returns (uint256) {
+    function getNextPostId(
+        address author
+    ) external view returns (uint256) {
         return Core._generatePostId(author, Core.$storage().authorPostCount[author] + 1);
     }
 }

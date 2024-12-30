@@ -27,7 +27,9 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         emit Events.Lens_Contract_Deployed("graph", "lens.graph", "graph", "lens.graph");
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(
+        string memory metadataURI
+    ) internal override {
         emit Lens_Graph_MetadataURISet(metadataURI);
     }
 
@@ -40,11 +42,15 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     // Access Controlled functions
 
-    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
+    function _beforeMetadataURIUpdate(
+        string memory /* metadataURI */
+    ) internal view override {
         _requireAccess(msg.sender, SET_METADATA_PID);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(
+        RuleChange[] calldata /* ruleChanges */
+    ) internal virtual override {
         _requireAccess(msg.sender, SET_RULES_PID);
     }
 
@@ -55,7 +61,9 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         require(msg.sender == address(uint160(entityId))); // Follow rules can only be changed in your own account
     }
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+    function setExtraData(
+        KeyValue[] calldata extraDataToSet
+    ) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
@@ -83,10 +91,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external override returns (uint256) {
+    ) external virtual override returns (uint256) {
         require(msg.sender == followerAccount);
         // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
-        uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0);
+        uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);
         address source = _processSourceStamp(assignedFollowId, customParams);
         _graphProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, graphRulesProcessingParams);
         _accountProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, followRulesProcessingParams);
@@ -108,7 +116,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external override returns (uint256) {
+    ) external virtual override returns (uint256) {
         require(msg.sender == followerAccount);
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(followId, customParams);
@@ -133,15 +141,21 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         return Core.$storage().follows[followerAccount][targetAccount];
     }
 
-    function getFollowersCount(address account) external view override returns (uint256) {
+    function getFollowersCount(
+        address account
+    ) external view override returns (uint256) {
         return Core.$storage().followersCount[account];
     }
 
-    function getFollowingCount(address account) external view override returns (uint256) {
+    function getFollowingCount(
+        address account
+    ) external view override returns (uint256) {
         return Core.$storage().followingCount[account];
     }
 
-    function getExtraData(bytes32 key) external view override returns (bytes memory) {
+    function getExtraData(
+        bytes32 key
+    ) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
     }
 }
