@@ -8,8 +8,8 @@ import {IGroup} from "./../../core/interfaces/IGroup.sol";
 import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-// keccak256("lens.param.key.group");
-bytes32 constant GROUP_PARAM_KEY = 0xe556a4384e8a110aab4ea745eff2c09de81f87f56e4ecba2205982230d3bd4f4;
+/// @custom:keccak lens.param.group
+bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;
 
 contract GroupGatedFeedRule is IFeedRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
@@ -27,7 +27,7 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address groupGate;
         for (uint256 i = 0; i < ruleParams.length; i++) {
-            if (ruleParams[i].key == GROUP_PARAM_KEY) {
+            if (ruleParams[i].key == PARAM__GROUP) {
                 groupGate = abi.decode(ruleParams[i].value, (address));
             }
         }

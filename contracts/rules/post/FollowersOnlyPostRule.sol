@@ -19,14 +19,14 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
         bool quotesRestricted;
     }
 
-    // keccak256("lens.param.key.graph");
-    bytes32 immutable GRAPH_PARAM_KEY = 0x628a4bca9db11e5f912854a55e24d0941ed8a7ef363805062e4742b80ebd87d3;
-    // keccak256("lens.param.key.repliesRestricted");
-    bytes32 immutable REPLIES_RESTRICTED_PARAM_KEY = 0x95bbd2e4311bcbf9c65ad79e6a70b63a8d50c9d6a0f746285b582b19d9c60cab;
-    // keccak256("lens.param.key.repostsRestricted");
-    bytes32 immutable REPOSTS_RESTRICTED_PARAM_KEY = 0x7be144f8221b98a59a886bdac9502f9e8311a283b170b902fa01d25cf68b9bb9;
-    // keccak256("lens.param.key.quotesRestricted");
-    bytes32 immutable QUOTES_RESTRICTED_PARAM_KEY = 0xaa67cc93791051d4b576cfc397a1494d5f4baf59f14681843bfef453034cd9fa;
+    /// @custom:keccak lens.param.graph
+    bytes32 constant PARAM__GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
+    /// @custom:keccak lens.param.repliesRestricted
+    bytes32 constant PARAM__REPLIES_RESTRICTED = 0x4ce0155a596c1a9d5bcefb32cdbf357c849ac621a9b91d222b367cf53fe79a6f;
+    /// @custom:keccak lens.param.repostsRestricted
+    bytes32 constant PARAM__REPOSTS_RESTRICTED = 0x4888fd5474d5999daba89bdcba85aa57b7a2ed60bdcccee0a949f2da51050bbd;
+    /// @custom:keccak lens.param.quotesRestricted
+    bytes32 constant PARAM__QUOTES_RESTRICTED = 0x323cbd3bdd5537df3af23e8d4c6c6bb31c9fa33346759abf247f998a32cda0a2;
 
     mapping(address => mapping(bytes32 => mapping(uint256 => Configuration))) internal _configuration;
 
@@ -41,13 +41,13 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
     function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration;
         for (uint256 i = 0; i < ruleParams.length; i++) {
-            if (ruleParams[i].key == GRAPH_PARAM_KEY) {
+            if (ruleParams[i].key == PARAM__GRAPH) {
                 configuration.graph = abi.decode(ruleParams[i].value, (address));
-            } else if (ruleParams[i].key == REPLIES_RESTRICTED_PARAM_KEY) {
+            } else if (ruleParams[i].key == PARAM__REPLIES_RESTRICTED) {
                 configuration.repliesRestricted = abi.decode(ruleParams[i].value, (bool));
-            } else if (ruleParams[i].key == REPOSTS_RESTRICTED_PARAM_KEY) {
+            } else if (ruleParams[i].key == PARAM__REPOSTS_RESTRICTED) {
                 configuration.repostsRestricted = abi.decode(ruleParams[i].value, (bool));
-            } else if (ruleParams[i].key == QUOTES_RESTRICTED_PARAM_KEY) {
+            } else if (ruleParams[i].key == PARAM__QUOTES_RESTRICTED) {
                 configuration.quotesRestricted = abi.decode(ruleParams[i].value, (bool));
             }
         }

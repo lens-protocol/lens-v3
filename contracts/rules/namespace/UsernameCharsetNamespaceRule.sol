@@ -17,27 +17,25 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
 
     string constant UNRESTRICTED = "";
 
-    // uint256(keccak256("SKIP_CHARSET"))
-    uint256 immutable SKIP_CHARSET_PID = uint256(0xdcdf9b745e3f53451b2b79d265c8b66498f6483b3ef60fb5eb21c88e5f071211);
+    /// @custom:keccak lens.permission.SkipCharsetRestrictions
+    uint256 constant PID__SKIP_CHARSET_RESTRICTIONS =
+        uint256(0xe80b6488cb28aed0341cef6acc8d785449927ff75edf083fd1d3ea3f4883e6fe);
 
-    // keccak256("lens.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
-    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.allowNumeric");
-    bytes32 immutable ALLOW_NUMERIC_PARAM_KEY = 0xa5343d1f72fad751af812c7d2f314beb3946101f8926b126c90bf56185650e66;
-    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.allowLatinLowercase");
-    bytes32 immutable ALLOW_LATIN_LOWERCASE_PARAM_KEY =
-        0x48000ae8df8d4602963f7fd9813736c2ad0dfa204db72c382d7763bdca24627d;
-    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.allowLatinUppercase");
-    bytes32 immutable ALLOW_LATIN_UPPERCASE_PARAM_KEY =
-        0x3c19617bbf30f545edfbdfba272a5fa1896d806d87b89ef7b1bb6ea891fb2d79;
-    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.customAllowedCharset");
-    bytes32 immutable CUSTOM_ALLOWED_CHARSET_PARAM_KEY =
-        0xe6cd53e810eb73a4469a94a3ec25b5568c19ca256303d99b5a025f8d1cd515cb;
-    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.customDisallowedCharset");
-    bytes32 immutable CUSTOM_DISALLOWED_CHARSET_PARAM_KEY =
-        0x7b2d46fead0a26f8c7a25e0f4a26a6cfd344f33be50d92fbb3b617b9ed829c85;
-    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.cannotStartWith");
-    bytes32 immutable CANNOT_START_WITH_PARAM_KEY = 0xdb553ed6f7565512034b5c85634ef06a1666dc287f38cea87762d44684df1256;
+    /// @custom:keccak lens.param.accessControl
+    bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
+    /// @custom:keccak lens.param.allowNumeric
+    bytes32 constant PARAM__ALLOW_NUMERIC = 0x9c767af33c504d4a59ff2622822d51b5ef43021074382f2ff27b2105d90a8e51;
+    /// @custom:keccak lens.param.allowLatinLowercase
+    bytes32 constant PARAM__ALLOW_LATIN_LOWERCASE = 0x54237b94f122fc08ecf50ce7b4b70024372a8be4b1f7e2c402e74fda43b74c7f;
+    /// @custom:keccak lens.param.allowLatinUppercase
+    bytes32 constant PARAM__ALLOW_LATIN_UPPERCASE = 0xcfec96cd369714d0ab6f715eb77b0dae9d8ad1c42c6f223391dd5ee0aa825897;
+    /// @custom:keccak lens.param.customAllowedCharset
+    bytes32 constant PARAM__CUSTOM_ALLOWED_CHARSET = 0x1503890d3cb87494db3ea6506e81bb58da67e80d82c074f968bd71fa241ebdba;
+    /// @custom:keccak lens.param.customDisallowedCharset
+    bytes32 constant PARAM__CUSTOM_DISALLOWED_CHARSET =
+        0xc5e90b4342e3e921a3af69f90937f6e20b0aa7a82c7adf6795ba002e8dc8a67f;
+    /// @custom:keccak lens.param.cannotStartWith
+    bytes32 constant PARAM__CANNOT_START_WITH = 0xc96b6ff1bcfa502b5659a89edeaeb9713e283a8f6090f5b1ac62692b78f5dce2;
 
     struct CharsetRestrictions {
         bool allowNumeric; /////////////// Default: true
@@ -57,7 +55,9 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
 
     constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
-        emit Events.Lens_PermissionId_Available(SKIP_CHARSET_PID, "SKIP_CHARSET");
+        emit Events.Lens_PermissionId_Available(
+            PID__SKIP_CHARSET_RESTRICTIONS, "lens.permission.SkipCharsetRestrictions"
+        );
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
@@ -79,7 +79,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata /* ruleParams */
     ) external view override {
         Configuration memory configuration = _configuration[msg.sender][configSalt];
-        if (!configuration.accessControl.hasAccess(originalMsgSender, SKIP_CHARSET_PID)) {
+        if (!configuration.accessControl.hasAccess(originalMsgSender, PID__SKIP_CHARSET_RESTRICTIONS)) {
             _processRestrictions(username, configuration.charsetRestrictions);
         }
     }
@@ -203,19 +203,19 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         });
         // Extract configuration from params
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == ALLOW_NUMERIC_PARAM_KEY) {
+            if (params[i].key == PARAM__ALLOW_NUMERIC) {
                 configuration.charsetRestrictions.allowNumeric = abi.decode(params[i].value, (bool));
-            } else if (params[i].key == ALLOW_LATIN_LOWERCASE_PARAM_KEY) {
+            } else if (params[i].key == PARAM__ALLOW_LATIN_LOWERCASE) {
                 configuration.charsetRestrictions.allowLatinLowercase = abi.decode(params[i].value, (bool));
-            } else if (params[i].key == ALLOW_LATIN_UPPERCASE_PARAM_KEY) {
+            } else if (params[i].key == PARAM__ALLOW_LATIN_UPPERCASE) {
                 configuration.charsetRestrictions.allowLatinUppercase = abi.decode(params[i].value, (bool));
-            } else if (params[i].key == CUSTOM_ALLOWED_CHARSET_PARAM_KEY) {
+            } else if (params[i].key == PARAM__CUSTOM_ALLOWED_CHARSET) {
                 configuration.charsetRestrictions.customAllowedCharset = abi.decode(params[i].value, (string));
-            } else if (params[i].key == CUSTOM_DISALLOWED_CHARSET_PARAM_KEY) {
+            } else if (params[i].key == PARAM__CUSTOM_DISALLOWED_CHARSET) {
                 configuration.charsetRestrictions.customDisallowedCharset = abi.decode(params[i].value, (string));
-            } else if (params[i].key == CANNOT_START_WITH_PARAM_KEY) {
+            } else if (params[i].key == PARAM__CANNOT_START_WITH) {
                 configuration.charsetRestrictions.cannotStartWith = abi.decode(params[i].value, (string));
-            } else if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+            } else if (params[i].key == PARAM__ACCESS_CONTROL) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
             }
         }

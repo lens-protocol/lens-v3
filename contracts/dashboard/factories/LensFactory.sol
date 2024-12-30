@@ -27,7 +27,7 @@ import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "./../../core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
-import {GROUP_PARAM_KEY} from "./../../rules/feed/GroupGatedFeedRule.sol";
+import {PARAM__GROUP} from "./../../rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "./../../core/access/AccessControlled.sol";
 import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
@@ -154,7 +154,7 @@ contract LensFactory {
         });
 
         KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
-        groupGatedRuleParams[0] = KeyValue({key: GROUP_PARAM_KEY, value: abi.encode(group)});
+        groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(group)});
 
         modifiedFeedRules[1] = RuleChange({
             ruleAddress: _groupGatedFeedRule,
@@ -175,7 +175,7 @@ contract LensFactory {
 
         IRoleBasedAccessControl groupAccessControl = _deployAccessControl(owner, admins);
         KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
-        groupExtraDataWithFeed[0] = KeyValue({key: keccak256("lens.group.linked-feed"), value: abi.encode(feed)});
+        groupExtraDataWithFeed[0] = KeyValue({key: keccak256("lens.group.linked-feed"), value: abi.encode(feed)}); // TODO: Fix hashed constant
         IGroup(group).setExtraData(groupExtraDataWithFeed);
         AccessControlled(group).setAccessControl(groupAccessControl);
         return (group, feed);

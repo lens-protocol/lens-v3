@@ -15,10 +15,11 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
 
     event Lens_Rule_MetadataURISet(string metadataURI);
 
-    uint256 constant APPROVE_MEMBER_PID = uint256(keccak256("APPROVE_MEMBER"));
+    /// @custom:keccak lens.permission.ApproveMember
+    uint256 constant PID__APPROVE_MEMBER = uint256(0x6dee95fe4c317d653a8497c1c8ce08e19bdee16c90d0ec8d1795b29ff85811b6);
 
-    // keccak256("lens.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
+    /// @custom:keccak lens.param.accessControl
+    bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
     // TODO: Should we add `messageURI` for both the request and the rejection? so you could provide a reason.
     event Lens_ApprovalGroupRule_MembershipRequested(address indexed group, address indexed account);
@@ -37,7 +38,7 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
 
     constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
-        emit Events.Lens_PermissionId_Available(APPROVE_MEMBER_PID, "APPROVE_MEMBER");
+        emit Events.Lens_PermissionId_Available(PID__APPROVE_MEMBER, "lens.permission.ApproveMember");
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
@@ -65,13 +66,13 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
             delete _membershipRequests[group][account][configSalt];
             emit Lens_ApprovalGroupRule_MembershipRejected(group, account, msg.sender);
         }
-        require(_accessControl[group][configSalt].hasAccess(msg.sender, APPROVE_MEMBER_PID));
+        require(_accessControl[group][configSalt].hasAccess(msg.sender, PID__APPROVE_MEMBER));
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address accessControl;
         for (uint256 i = 0; i < ruleParams.length; i++) {
-            if (ruleParams[i].key == ACCESS_CONTROL_PARAM_KEY) {
+            if (ruleParams[i].key == PARAM__ACCESS_CONTROL) {
                 accessControl = abi.decode(ruleParams[i].value, (address));
                 break;
             }
@@ -88,7 +89,7 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata /* ruleParams */
     ) external override {
         if (!_membershipRequests[msg.sender][account][configSalt].isApproved) {
-            require(_accessControl[msg.sender][configSalt].hasAccess(originalMsgSender, APPROVE_MEMBER_PID));
+            require(_accessControl[msg.sender][configSalt].hasAccess(originalMsgSender, PID__APPROVE_MEMBER));
             emit Lens_ApprovalGroupRule_MembershipApproved(msg.sender, account, originalMsgSender);
         }
         delete _membershipRequests[msg.sender][account][configSalt];

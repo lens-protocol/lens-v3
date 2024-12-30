@@ -14,9 +14,8 @@ abstract contract SimplePaymentRule is MetadataBased {
 
     event Lens_Rule_MetadataURISet(string metadataURI);
 
-    // keccak256("lens.rules.SimplePaymentRule.param.key.paymentConfiguration");
-    bytes32 internal immutable PAYMENT_CONFIG_PARAM_KEY =
-        0x91813a72876e8e72632a605170833caa3bcd468944917f7e9f54ddb630a3a4b9;
+    /// @custom:keccak lens.param.paymentConfiguration
+    bytes32 constant PARAM__PAYMENT_CONFIG = 0x1d614931e4da442dfded7a7b2023927603d40081577686bb6fd4debb2fd73fc0;
 
     struct PaymentConfiguration {
         address token;

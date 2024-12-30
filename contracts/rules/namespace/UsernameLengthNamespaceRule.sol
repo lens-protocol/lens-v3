@@ -15,15 +15,19 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    uint256 constant SKIP_MIN_LENGTH_PID = uint256(keccak256("SKIP_MIN_LENGTH"));
-    uint256 constant SKIP_MAX_LENGTH_PID = uint256(keccak256("SKIP_MAX_LENGTH"));
+    /// @custom:keccak lens.permission.SkipMinLengthRestriction
+    uint256 constant PID__SKIP_MIN_LENGTH_RESTRICTION =
+        uint256(0x4e795d2b3487cc7a9b7d04dada8fb5fc0ccf8b049be6fa52eaf40ee7e08b79d6);
+    /// @custom:keccak lens.permission.SkipMaxLengthRestriction
+    uint256 constant PID__SKIP_MAX_LENGTH_RESTRICTION =
+        uint256(0x4e5453345605763b18b5158bae028643cd90ed224a334fccfc4c406ced5e34d2);
 
-    // keccak256("lens.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
-    // keccak256("lens.rules.namespace.UsernameLengthNamespaceRule.param.key.LengthRestrictions.min");
-    bytes32 immutable MIN_LENGTH_PARAM_KEY = 0xf24966807c09d7889bd35e72626011103391604d2e7e592296209a0f83709f53;
-    // keccak256("lens.rules.namespace.UsernameLengthNamespaceRule.param.key.LengthRestrictions.max");
-    bytes32 immutable MAX_LENGTH_PARAM_KEY = 0xb03e5fe3b62f2c4cdf212dd7fcbca4b05bbf4adbeba508c61423620b69a58b19;
+    /// @custom:keccak lens.param.accessControl
+    bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
+    /// @custom:keccak lens.param.minLength
+    bytes32 constant PARAM__MIN_LENGTH = 0x05e0174338b64de19b75800e83be51b0092b6235a3f8d74e5fe7255f433a341a;
+    /// @custom:keccak lens.param.maxLength
+    bytes32 constant PARAM__MAX_LENGTH = 0x1ca8667b94b405cf7da43e835d971ef185da6461852b8b81579a58637515aa69;
 
     struct LengthRestrictions {
         uint8 min;
@@ -39,8 +43,12 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
 
     constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
-        emit Events.Lens_PermissionId_Available(SKIP_MIN_LENGTH_PID, "SKIP_MIN_LENGTH");
-        emit Events.Lens_PermissionId_Available(SKIP_MAX_LENGTH_PID, "SKIP_MAX_LENGTH");
+        emit Events.Lens_PermissionId_Available(
+            PID__SKIP_MIN_LENGTH_RESTRICTION, "lens.permission.SkipMinLengthRestriction"
+        );
+        emit Events.Lens_PermissionId_Available(
+            PID__SKIP_MAX_LENGTH_RESTRICTION, "lens.permission.SkipMaxLengthRestriction"
+        );
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
@@ -69,13 +77,13 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
         uint256 usernameLength = bytes(username).length;
         if (
             configuration.lengthRestrictions.min != 0
-                && !configuration.accessControl.hasAccess(originalMsgSender, SKIP_MIN_LENGTH_PID)
+                && !configuration.accessControl.hasAccess(originalMsgSender, PID__SKIP_MIN_LENGTH_RESTRICTION)
         ) {
             require(usernameLength >= configuration.lengthRestrictions.min, "Username: too short");
         }
         if (
             configuration.lengthRestrictions.max != 0
-                && !configuration.accessControl.hasAccess(originalMsgSender, SKIP_MAX_LENGTH_PID)
+                && !configuration.accessControl.hasAccess(originalMsgSender, PID__SKIP_MAX_LENGTH_RESTRICTION)
         ) {
             require(usernameLength <= configuration.lengthRestrictions.max, "Username: too long");
         }
@@ -116,11 +124,11 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
         Configuration memory configuration;
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+            if (params[i].key == PARAM__ACCESS_CONTROL) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
-            } else if (params[i].key == MIN_LENGTH_PARAM_KEY) {
+            } else if (params[i].key == PARAM__MIN_LENGTH) {
                 configuration.lengthRestrictions.min = abi.decode(params[i].value, (uint8));
-            } else if (params[i].key == MAX_LENGTH_PARAM_KEY) {
+            } else if (params[i].key == PARAM__MAX_LENGTH) {
                 configuration.lengthRestrictions.max = abi.decode(params[i].value, (uint8));
             }
         }

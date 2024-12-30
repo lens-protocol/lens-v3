@@ -40,12 +40,12 @@ abstract contract RestrictedSignersRule is MetadataBased {
         mapping(address => mapping(uint256 => bool)) wasSignerNonceUsed;
     }
 
-    // keccak256("lens.rules.RestrictedSignersRule.param.key.restrictedSigners");
-    bytes32 internal immutable RESTRICTED_SIGNERS_PARAM_KEY =
-        0xb8a2337c40148374f2742539ca15863f85c2a622200150799113b1b02dfa658b;
+    /// @custom:keccak lens.param.restrictedSigners
+    bytes32 constant PARAM__RESTRICTED_SIGNERS = 0x49dbb83c2ecd648eb2e855c62ee31e80d5716566338c31ed8b5e70e483511ab6;
 
-    // keccak256('lens.rule.restricted.storage')
-    bytes32 constant RESTRICTED_RULE_STORAGE_SLOT = 0xcf6ecf8730d498cbf6701bc1140f2b12e988e1c416a85799d241dcfbb3ed90df;
+    /// @custom:keccak lens.storage.RestrictedSignersRule.RulesStorage
+    bytes32 constant STORAGE__RESTRICTED_SIGNERS_RULE =
+        0x4e044b499e5458aefc8410057ecfc08c7c44c10d7468c520c4d177f2d15ed6d0;
 
     function $rulesStorage()
         private
@@ -53,7 +53,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
         returns (mapping(address => mapping(bytes32 => InnerStorage)) storage _storage)
     {
         assembly {
-            _storage.slot := RESTRICTED_RULE_STORAGE_SLOT
+            _storage.slot := STORAGE__RESTRICTED_SIGNERS_RULE
         }
     }
 
@@ -62,14 +62,15 @@ abstract contract RestrictedSignersRule is MetadataBased {
         return _rulesStorage[primitiveAddress][configSalt];
     }
 
+    // bytes4(keccak256("isValidSignature(bytes32,bytes)")
     bytes4 constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
-    string constant EIP712_DOMAIN_VERSION = "1";
-    bytes32 constant EIP712_DOMAIN_VERSION_HASH = keccak256(bytes(EIP712_DOMAIN_VERSION));
-    bytes32 constant EIP712_DOMAIN_TYPEHASH =
-        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-    bytes32 constant RESTRICTED_SIGNER_MESSAGE_TYPEHASH = keccak256(
-        "RestrictedSignerMessage(bytes4 functionSelector,bytes abiEncodedParams,uint256 nonce,uint256 deadline)"
-    );
+    // keccak256(bytes("1"))
+    bytes32 constant EIP712_DOMAIN_VERSION_HASH = 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6;
+    // keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
+    bytes32 constant EIP712_DOMAIN_TYPEHASH = 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
+    // keccak256("RestrictedSignerMessage(bytes4 functionSelector,bytes abiEncodedParams,uint256 nonce,uint256 deadline)")
+    bytes32 constant RESTRICTED_SIGNER_MESSAGE_TYPEHASH =
+        0x7ad50a890590bc3256729acae2904e819ef1a0db262583f09fef8974530accdf;
 
     constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
@@ -81,7 +82,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
 
     function _configure(bytes32 configSalt, KeyValue[] calldata ruleParams) internal virtual {
         require(ruleParams.length > 0);
-        require(ruleParams[0].key == RESTRICTED_SIGNERS_PARAM_KEY);
+        require(ruleParams[0].key == PARAM__RESTRICTED_SIGNERS);
         (address[] memory signers, string[] memory labels, bool[] memory isWhitelisted) =
             abi.decode(ruleParams[0].value, (address[], string[], bool[]));
         require(signers.length == isWhitelisted.length);

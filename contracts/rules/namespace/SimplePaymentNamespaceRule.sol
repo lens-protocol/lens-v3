@@ -13,10 +13,11 @@ contract SimplePaymentNamespaceRule is SimplePaymentRule, INamespaceRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    uint256 constant SKIP_PAYMENT_PID = uint256(keccak256("SKIP_PAYMENT"));
+    /// @custom:keccak lens.permission.SkipPayment
+    uint256 constant PID__SKIP_PAYMENT = uint256(0xa66e29d0251835683fb30a4666181c9bf842ce169e3f6fc68358d75e1822a785);
 
-    // keccak256("lens.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
+    /// @custom:keccak lens.param.accessControl
+    bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
     struct Configuration {
         address accessControl;
@@ -26,7 +27,7 @@ contract SimplePaymentNamespaceRule is SimplePaymentRule, INamespaceRule {
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor(string memory metadataURI) SimplePaymentRule(metadataURI) {
-        emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external {
@@ -105,7 +106,7 @@ contract SimplePaymentNamespaceRule is SimplePaymentRule, INamespaceRule {
         PaymentConfiguration memory expectedPaymentConfiguration,
         address payer
     ) internal {
-        if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
+        if (!accessControl.hasAccess(payer, PID__SKIP_PAYMENT)) {
             _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
     }
@@ -113,9 +114,9 @@ contract SimplePaymentNamespaceRule is SimplePaymentRule, INamespaceRule {
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
         Configuration memory configuration;
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+            if (params[i].key == PARAM__ACCESS_CONTROL) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
-            } else if (params[i].key == PAYMENT_CONFIG_PARAM_KEY) {
+            } else if (params[i].key == PARAM__PAYMENT_CONFIG) {
                 configuration.paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
             }
         }
@@ -129,7 +130,7 @@ contract SimplePaymentNamespaceRule is SimplePaymentRule, INamespaceRule {
     {
         PaymentConfiguration memory paymentConfiguration;
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == PAYMENT_CONFIG_PARAM_KEY) {
+            if (params[i].key == PARAM__PAYMENT_CONFIG) {
                 paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
             }
         }
