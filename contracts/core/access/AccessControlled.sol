@@ -16,12 +16,12 @@ contract AccessControlled {
         address accessControl;
     }
 
-    // keccak256('lens.access.controlled.storage')
-    bytes32 constant ACCESS_CONTROLLED_STORAGE_SLOT = 0x9211c0302e22d62530da4939528366f76a6ad7e8fc8b35b47780fadbea21baac;
+    /// @custom:keccak lens.storage.AccessControlledStorage.AccessControlledStorage
+    bytes32 constant STORAGE__ACCESS_CONTROLLED = 0x9211c0302e22d62530da4939528366f76a6ad7e8fc8b35b47780fadbea21baac;
 
     function $accessControlledStorage() private pure returns (AccessControlledStorage storage _storage) {
         assembly {
-            _storage.slot := ACCESS_CONTROLLED_STORAGE_SLOT
+            _storage.slot := STORAGE__ACCESS_CONTROLLED
         }
     }
 
