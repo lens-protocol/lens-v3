@@ -56,11 +56,12 @@ function extractAndValidateKeccak(folderPath) {
         const computedHash = computeKeccak256(hashToCompute);
 
         if (computedHash === value) {
-          console.log(`• Hash to compute:   "${hashToCompute}"`);
-          console.log(`• Constant name:     ${constantName}:`);
-          console.log(`• Computed:          ${computedHash}`);
-          console.log(`• Extracted:         ${value}`);
-          console.log(`⦿ Match status:      Correct ✅`);
+          // Commented to it is easy to find and fix the non-matching ones. Uncomment if verbose print needed.
+          // console.log(`• Hash to compute:   "${hashToCompute}"`);
+          // console.log(`• Constant name:     ${constantName}:`);
+          // console.log(`• Computed:          ${computedHash}`);
+          // console.log(`• Extracted:         ${value}`);
+          // console.log(`⦿ Match status:      Correct ✅`);
         } else {
           someUnmatch = true;
           console.error(`• Hash to compute:   "${hashToCompute}"`);
