@@ -47,16 +47,15 @@ function extractAndValidateKeccak(folderPath) {
       if (constantMatch && hashToCompute) {
         const [_, type, constantName, value] = constantMatch;
 
-        if (!hasSomeHashToCompute) {
-          console.log(`\n\n\n - - - - - At file: ${filePath}\n`);
-          hasSomeHashToCompute = true;
-        }
-
         // Compute keccak256 hash of the annotation
         const computedHash = computeKeccak256(hashToCompute);
 
         if (computedHash === value) {
           // Commented to it is easy to find and fix the non-matching ones. Uncomment if verbose print needed.
+          // if (!hasSomeHashToCompute) {
+          //   console.log(`\n\n\n - - - - - At file: ${filePath}\n`);
+          //   hasSomeHashToCompute = true;
+          // }
           // console.log(`• Hash to compute:   "${hashToCompute}"`);
           // console.log(`• Constant name:     ${constantName}:`);
           // console.log(`• Computed:          ${computedHash}`);
@@ -64,6 +63,10 @@ function extractAndValidateKeccak(folderPath) {
           // console.log(`⦿ Match status:      Correct ✅`);
         } else {
           someUnmatch = true;
+          if (!hasSomeHashToCompute) {
+            console.log(`\n\n\n - - - - - At file: ${filePath}\n`);
+            hasSomeHashToCompute = true;
+          }
           console.error(`• Hash to compute:   "${hashToCompute}"`);
           console.error(`• Constant name:     ${constantName}:`);
           console.error(`• Computed:          ${computedHash}`);
@@ -71,7 +74,6 @@ function extractAndValidateKeccak(folderPath) {
           console.error(`⦿ Match status:      Incorrect ❌`);
         }
 
-        console.log(``);
         hashToCompute = null;
       }
     });
