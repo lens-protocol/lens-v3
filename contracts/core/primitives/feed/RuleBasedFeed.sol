@@ -31,17 +31,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return $ruleBasedStorage().feedRulesStorage;
     }
 
-    function $postRulesStorage(
-        uint256 postId
-    ) private view returns (RulesStorage storage _storage) {
+    function $postRulesStorage(uint256 postId) private view returns (RulesStorage storage _storage) {
         return $ruleBasedStorage().postRulesStorage[postId];
     }
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeFeedRules(
-        RuleChange[] calldata ruleChanges
-    ) external virtual override {
+    function changeFeedRules(RuleChange[] calldata ruleChanges) external virtual override {
         _changePrimitiveRules($feedRulesStorage(), ruleChanges);
     }
 
@@ -103,9 +99,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         }
     }
 
-    function _amountOfRules(
-        bytes4 ruleSelector
-    ) internal view returns (uint256) {
+    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
         return $feedRulesStorage()._getRulesArray(ruleSelector, false).length
             + $feedRulesStorage()._getRulesArray(ruleSelector, true).length;
     }

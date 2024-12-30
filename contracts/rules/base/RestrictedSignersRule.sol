@@ -67,15 +67,11 @@ abstract contract RestrictedSignersRule is MetadataBased {
         "RestrictedSignerMessage(bytes4 functionSelector,bytes abiEncodedParams,uint256 nonce,uint256 deadline)"
     );
 
-    constructor(
-        string memory metadataURI
-    ) {
+    constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
     }
 
-    function _emitMetadataURISet(
-        string memory metadataURI
-    ) internal override {
+    function _emitMetadataURISet(string memory metadataURI) internal override {
         emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
@@ -129,9 +125,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
         _validateRecoveredAddress(digest, signature);
     }
 
-    function _calculateMessageHashStruct(
-        RestrictedSignerMessage memory message
-    ) private pure returns (bytes32) {
+    function _calculateMessageHashStruct(RestrictedSignerMessage memory message) private pure returns (bytes32) {
         return keccak256(
             abi.encode(
                 RESTRICTED_SIGNER_MESSAGE_TYPEHASH,
@@ -143,9 +137,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
         );
     }
 
-    function _calculateDigest(
-        bytes32 messageHashStruct
-    ) private view returns (bytes32) {
+    function _calculateDigest(bytes32 messageHashStruct) private view returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x01", _calculateDomainSeparatorHashStruct(), messageHashStruct));
     }
 
