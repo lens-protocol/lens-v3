@@ -3,36 +3,36 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
+import {INamespaceRule} from "./../../core/interfaces/INamespaceRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
-import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
+import {SimplePaymentRule} from "./../base/SimplePaymentRule.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 
-contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
+contract SimplePaymentNamespaceRule is SimplePaymentRule, INamespaceRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    uint256 constant SKIP_TOKEN_GATE_PID = uint256(keccak256("SKIP_TOKEN_GATE"));
+    uint256 constant SKIP_PAYMENT_PID = uint256(keccak256("SKIP_PAYMENT"));
 
     // keccak256("lens.param.key.accessControl");
     bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
 
     struct Configuration {
         address accessControl;
-        TokenGateConfiguration tokenGate;
+        PaymentConfiguration paymentConfiguration;
     }
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(string memory metadataURI) TokenGatedRule(metadataURI) {
-        emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
+    constructor(string memory metadataURI) SimplePaymentRule(metadataURI) {
+        emit Events.Lens_PermissionId_Available(SKIP_PAYMENT_PID, "SKIP_PAYMENT");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
-        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external {
+        Configuration memory configuration = _extractConfigurationFromParams(ruleConfigurationParams);
         configuration.accessControl.verifyHasAccessFunction();
-        _validateTokenGateConfiguration(configuration.tokenGate);
+        _validatePaymentConfiguration(configuration.paymentConfiguration);
         _configuration[msg.sender][configSalt] = configuration;
     }
 
@@ -42,11 +42,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address, /* account */
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
-    ) external view override {
-        _validateTokenBalance(
+        KeyValue[] calldata ruleParams
+    ) external {
+        _processPayment(
             _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -56,11 +57,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address originalMsgSender,
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
-    ) external view override {
-        _validateTokenBalance(
+        KeyValue[] calldata ruleParams
+    ) external {
+        _processPayment(
             _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -71,11 +73,12 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address, /* account */
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
-    ) external view override {
-        _validateTokenBalance(
+        KeyValue[] calldata ruleParams
+    ) external {
+        _processPayment(
             _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
@@ -86,22 +89,24 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         address, /* account */
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
-    ) external view override {
-        _validateTokenBalance(
+        KeyValue[] calldata ruleParams
+    ) external {
+        _processPayment(
             _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].tokenGate,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
     }
 
-    function _validateTokenBalance(
+    function _processPayment(
         address accessControl,
-        TokenGateConfiguration memory tokenGateConfiguration,
-        address account
-    ) internal view {
-        if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
-            _validateTokenBalance(tokenGateConfiguration, account);
+        PaymentConfiguration memory paymentConfiguration,
+        PaymentConfiguration memory expectedPaymentConfiguration,
+        address payer
+    ) internal {
+        if (!accessControl.hasAccess(payer, SKIP_PAYMENT_PID)) {
+            _processPayment(paymentConfiguration, expectedPaymentConfiguration, payer);
         }
     }
 
@@ -110,10 +115,24 @@ contract TokenGatedUsernameRule is TokenGatedRule, IUsernameRule {
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
-            } else if (params[i].key == TOKEN_GATE_PARAM_KEY) {
-                configuration.tokenGate = abi.decode(params[i].value, (TokenGateConfiguration));
+            } else if (params[i].key == PAYMENT_CONFIG_PARAM_KEY) {
+                configuration.paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
             }
         }
         return configuration;
+    }
+
+    function _extractPaymentConfigurationFromParams(KeyValue[] calldata params)
+        internal
+        pure
+        returns (PaymentConfiguration memory)
+    {
+        PaymentConfiguration memory paymentConfiguration;
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == PAYMENT_CONFIG_PARAM_KEY) {
+                paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
+            }
+        }
+        return paymentConfiguration;
     }
 }

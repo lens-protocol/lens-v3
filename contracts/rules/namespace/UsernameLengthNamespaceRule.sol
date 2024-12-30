@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
+import {INamespaceRule} from "./../../core/interfaces/INamespaceRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract LengthUsernameRule is IUsernameRule, MetadataBased {
+contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
 
     using AccessControlLib for IAccessControl;
@@ -20,10 +20,10 @@ contract LengthUsernameRule is IUsernameRule, MetadataBased {
 
     // keccak256("lens.param.key.accessControl");
     bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
-    // keccak256("lens.rules.username.LengthUsernameRule.param.key.LengthRestrictions.min");
-    bytes32 immutable MIN_LENGTH_PARAM_KEY = 0x422f1cf00b1079acacf4b218aeed45c02143aca53f622b7ab03d6960ab052fc3;
-    // keccak256("lens.rules.username.LengthUsernameRule.param.key.LengthRestrictions.max");
-    bytes32 immutable MAX_LENGTH_PARAM_KEY = 0x07014494232a11e71c003affb5e107b669a9b2b4c523a50097f41c6b95916081;
+    // keccak256("lens.rules.namespace.UsernameLengthNamespaceRule.param.key.LengthRestrictions.min");
+    bytes32 immutable MIN_LENGTH_PARAM_KEY = 0xf24966807c09d7889bd35e72626011103391604d2e7e592296209a0f83709f53;
+    // keccak256("lens.rules.namespace.UsernameLengthNamespaceRule.param.key.LengthRestrictions.max");
+    bytes32 immutable MAX_LENGTH_PARAM_KEY = 0xb03e5fe3b62f2c4cdf212dd7fcbca4b05bbf4adbeba508c61423620b69a58b19;
 
     struct LengthRestrictions {
         uint8 min;

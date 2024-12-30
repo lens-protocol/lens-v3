@@ -10,7 +10,7 @@ export default async function deployFactories(): Promise<void> {
     { contractName: 'FeedFactory', contractType: ContractType.Factory },
     { contractName: 'GraphFactory', contractType: ContractType.Factory },
     { contractName: 'GroupFactory', contractType: ContractType.Factory },
-    { contractName: 'UsernameFactory', contractType: ContractType.Factory },
+    { contractName: 'NamespaceFactory', contractType: ContractType.Factory },
     {
       contractName: 'AccountBlockingRule',
       contractType: ContractType.Rule,
@@ -36,7 +36,7 @@ export default async function deployFactories(): Promise<void> {
     deployedContracts['GroupFactory'].address,
     deployedContracts['FeedFactory'].address,
     deployedContracts['GraphFactory'].address,
-    deployedContracts['UsernameFactory'].address,
+    deployedContracts['NamespaceFactory'].address,
     deployedContracts['AccountBlockingRule'].address,
     deployedContracts['GroupGatedFeedRule'].address,
   ];

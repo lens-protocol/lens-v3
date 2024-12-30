@@ -3,26 +3,26 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
+import {INamespaceRule} from "./../../core/interfaces/INamespaceRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract ReservedUsernameRule is IUsernameRule, MetadataBased {
+contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
 
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
     // TODO: Think about renaming Username primitive to Namespace or something else
-    event Lens_ReservedUsernameRule_UsernameReserved(
+    event Lens_UsernameReservedNamespaceRule_UsernameReserved(
         address indexed usernamePrimitive, bytes32 indexed configSalt, string indexed indexedUsername, string username
     );
-    event Lens_ReservedUsernameRule_UsernameReleased(
+    event Lens_UsernameReservedNamespaceRule_UsernameReleased(
         address indexed usernamePrimitive, bytes32 indexed configSalt, string indexed indexedUsername, string username
     );
-    event Lens_ReservedUsernameRule_ReservedUsernameCreated(
+    event Lens_UsernameReservedNamespaceRule_ReservedUsernameCreated(
         address indexed usernamePrimitive,
         bytes32 indexed configSalt,
         string indexed indexedUsername,
@@ -33,10 +33,10 @@ contract ReservedUsernameRule is IUsernameRule, MetadataBased {
 
     // keccak256("lens.param.key.accessControl");
     bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
-    // keccak256("lens.param.key.usernamesToReserve");
-    bytes32 immutable USERNAMES_TO_RESERVE_PARAM_KEY = 0xe35845d5270ebd172ba5dfaf14a7256cbc847d131e6a9d37dcd9bce7c75e9e77;
-    // keccak256("lens.param.key.usernamesToRelease");
-    bytes32 immutable USERNAMES_TO_RELEASE_PARAM_KEY = 0x68f854736312031d89be36bdf38f9d77e90822b1a6417823a39f8721c4db9cb2;
+    // keccak256("lens.rules.namespace.UsernameReservedNamespaceRule.param.key.usernamesToReserve");
+    bytes32 immutable USERNAMES_TO_RESERVE_PARAM_KEY = 0xac73ea9176302dedf93d018cb2851aabed8378e612d5c8f094b84162baf60a54;
+    // keccak256("lens.rules.namespace.UsernameReservedNamespaceRule.param.key.usernamesToRelease");
+    bytes32 immutable USERNAMES_TO_RELEASE_PARAM_KEY = 0xf39a11cac75c11509a76f28c17d7d93727c605b6426fb4783e74703c68005563;
 
     uint256 constant CREATE_RESERVED_USERNAME_PID = uint256(keccak256("CREATE_RESERVED_USERNAME"));
 
@@ -62,7 +62,7 @@ contract ReservedUsernameRule is IUsernameRule, MetadataBased {
                 for (uint256 j = 0; j < usernamesToReserve.length; j++) {
                     require(!_isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]]);
                     _isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]] = true;
-                    emit Lens_ReservedUsernameRule_UsernameReserved(
+                    emit Lens_UsernameReservedNamespaceRule_UsernameReserved(
                         msg.sender, configSalt, usernamesToReserve[j], usernamesToReserve[j]
                     );
                 }
@@ -71,7 +71,7 @@ contract ReservedUsernameRule is IUsernameRule, MetadataBased {
                 for (uint256 j = 0; j < usernamesToRelease.length; j++) {
                     require(_isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]]);
                     _isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]] = false;
-                    emit Lens_ReservedUsernameRule_UsernameReleased(
+                    emit Lens_UsernameReservedNamespaceRule_UsernameReleased(
                         msg.sender, configSalt, usernamesToRelease[j], usernamesToRelease[j]
                     );
                 }
@@ -91,7 +91,7 @@ contract ReservedUsernameRule is IUsernameRule, MetadataBased {
     ) external override {
         if (_isUsernameReserved[msg.sender][configSalt][username]) {
             _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, CREATE_RESERVED_USERNAME_PID);
-            emit Lens_ReservedUsernameRule_ReservedUsernameCreated(
+            emit Lens_UsernameReservedNamespaceRule_ReservedUsernameCreated(
                 msg.sender, configSalt, username, username, account, originalMsgSender
             );
         }

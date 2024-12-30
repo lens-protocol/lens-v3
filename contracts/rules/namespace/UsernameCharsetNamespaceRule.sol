@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {IUsernameRule} from "./../../core/interfaces/IUsernameRule.sol";
+import {INamespaceRule} from "./../../core/interfaces/INamespaceRule.sol";
 import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
 import {Events} from "./../../core/types/Events.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract CharsetUsernameRule is IUsernameRule, MetadataBased {
+contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
 
     using AccessControlLib for IAccessControl;
@@ -22,22 +22,22 @@ contract CharsetUsernameRule is IUsernameRule, MetadataBased {
 
     // keccak256("lens.param.key.accessControl");
     bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowNumeric");
-    bytes32 immutable ALLOW_NUMERIC_PARAM_KEY = 0x99d79d7e6786d3f6700df19cf91a74d5ed8a7432315a6bd2c8e4b2f31d3ac48a;
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowLatinLowercase");
+    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.allowNumeric");
+    bytes32 immutable ALLOW_NUMERIC_PARAM_KEY = 0xa5343d1f72fad751af812c7d2f314beb3946101f8926b126c90bf56185650e66;
+    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.allowLatinLowercase");
     bytes32 immutable ALLOW_LATIN_LOWERCASE_PARAM_KEY =
-        0xa735991047ce9edafbd39838f3238bb614995aa5c14aa6166b56c77068c0a7ed;
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.allowLatinUppercase");
+        0x48000ae8df8d4602963f7fd9813736c2ad0dfa204db72c382d7763bdca24627d;
+    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.allowLatinUppercase");
     bytes32 immutable ALLOW_LATIN_UPPERCASE_PARAM_KEY =
-        0xfd3b4bccd5e9e72fc05f6dc6ad82a080cd57364c3c3af686f0cffb6659e06d21;
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.customAllowedCharset");
+        0x3c19617bbf30f545edfbdfba272a5fa1896d806d87b89ef7b1bb6ea891fb2d79;
+    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.customAllowedCharset");
     bytes32 immutable CUSTOM_ALLOWED_CHARSET_PARAM_KEY =
-        0x6fb6492ecde426d67006445c3c9e467922fc363ab49b27688217c25c7ae5333d;
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.customDisallowedCharset");
+        0xe6cd53e810eb73a4469a94a3ec25b5568c19ca256303d99b5a025f8d1cd515cb;
+    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.customDisallowedCharset");
     bytes32 immutable CUSTOM_DISALLOWED_CHARSET_PARAM_KEY =
-        0xae29c55eda70ddcd46fe4555b4ce2e9ef13ab1e67b6c2ab4e5b1473b5784c08e;
-    // keccak256("lens.rules.username.CharsetUsernameRule.param.key.CharsetRestrictions.cannotStartWith");
-    bytes32 immutable CANNOT_START_WITH_PARAM_KEY = 0x9fe6896d61f7ebd0eb7ed29f076cbca24254a8736ee3d3b38389dc0c9e9893f2;
+        0x7b2d46fead0a26f8c7a25e0f4a26a6cfd344f33be50d92fbb3b617b9ed829c85;
+    // keccak256("lens.rules.namespace.UsernameCharsetNamespaceRule.param.key.CharsetRestrictions.cannotStartWith");
+    bytes32 immutable CANNOT_START_WITH_PARAM_KEY = 0xdb553ed6f7565512034b5c85634ef06a1666dc287f38cea87762d44684df1256;
 
     struct CharsetRestrictions {
         bool allowNumeric; /////////////// Default: true

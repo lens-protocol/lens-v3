@@ -14,7 +14,7 @@ import {ISource} from "./../../../core/interfaces/ISource.sol";
 struct AppInitialProperties {
     address graph;
     address[] feeds;
-    address username;
+    address namespace;
     address[] groups;
     address defaultFeed;
     address[] signers;
@@ -45,7 +45,7 @@ contract App is IApp, BaseSource, AccessControlled {
         _setTreasury(initialProps.treasury);
         _setGraph(initialProps.graph);
         _addFeeds(initialProps.feeds);
-        _setUsername(initialProps.username);
+        _setNamespace(initialProps.namespace);
         _addGroups(initialProps.groups);
         _setDefaultFeed(initialProps.defaultFeed);
         _addSigners(initialProps.signers);
@@ -154,25 +154,25 @@ contract App is IApp, BaseSource, AccessControlled {
         emit Lens_App_DefaultFeedSet(feed);
     }
 
-    ///////////////// Username
+    ///////////////// Namespace
 
-    function setUsername(address username) external override {
+    function setNamespace(address namespace) external override {
         _requireAccess(msg.sender, SET_PRIMITIVES_PID);
-        _setUsername(username);
+        _setNamespace(namespace);
     }
 
     // In this implementation we allow to have a single graph only.
-    function _setUsername(address username) internal {
-        address usernamePreviouslySet = Core.$storage().defaultUsername;
-        if (usernamePreviouslySet != address(0)) {
-            Core._removeUsername(usernamePreviouslySet);
-            emit Lens_App_UsernameRemoved(usernamePreviouslySet);
+    function _setNamespace(address namespace) internal {
+        address namespacePreviouslySet = Core.$storage().defaultNamespace;
+        if (namespacePreviouslySet != address(0)) {
+            Core._removeNamespace(namespacePreviouslySet);
+            emit Lens_App_NamespaceRemoved(namespacePreviouslySet);
         }
-        if (username != address(0)) {
-            emit Lens_App_UsernameAdded(username);
-            Core._addUsername(username);
+        if (namespace != address(0)) {
+            emit Lens_App_NamespaceAdded(namespace);
+            Core._addNamespace(namespace);
         }
-        Core._setDefaultUsername(username);
+        Core._setDefaultNamespace(namespace);
     }
 
     ///////////////// Group
@@ -317,8 +317,8 @@ contract App is IApp, BaseSource, AccessControlled {
         return Core.$storage().feeds;
     }
 
-    function getUsernames() external view override returns (address[] memory) {
-        return Core.$storage().usernames;
+    function getNamespaces() external view override returns (address[] memory) {
+        return Core.$storage().namespaces;
     }
 
     function getGroups() external view override returns (address[] memory) {
@@ -333,8 +333,8 @@ contract App is IApp, BaseSource, AccessControlled {
         return Core.$storage().defaultFeed;
     }
 
-    function getDefaultUsername() external view override returns (address) {
-        return Core.$storage().defaultUsername;
+    function getDefaultNamespace() external view override returns (address) {
+        return Core.$storage().defaultNamespace;
     }
 
     function getDefaultGroup() external view override returns (address) {

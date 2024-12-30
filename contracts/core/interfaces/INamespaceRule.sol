@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {KeyValue} from "./../types/Types.sol";
 
-interface IUsernameRule {
+interface INamespaceRule {
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
 
     function processCreation(

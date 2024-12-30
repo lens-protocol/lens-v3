@@ -2,11 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {UsernameCore as Core} from "./UsernameCore.sol";
-import {IUsername} from "./../../interfaces/IUsername.sol";
+import {NamespaceCore as Core} from "./NamespaceCore.sol";
+import {INamespace} from "./../../interfaces/INamespace.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
-import {RuleBasedUsername} from "./RuleBasedUsername.sol";
+import {RuleBasedNamespace} from "./RuleBasedNamespace.sol";
 import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
@@ -15,17 +15,17 @@ import {LensERC721} from "./../../base/LensERC721.sol";
 import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 import {MetadataBased} from "./../../base/MetadataBased.sol";
-// TODO: Rename to Namespace (cause "Username" is an entity of the primitive "Namespace", like "Post" of "Feed")
 
-contract Username is
-    IUsername,
+contract Namespace is
+    INamespace,
     LensERC721,
-    RuleBasedUsername,
+    RuleBasedNamespace,
     AccessControlled,
     ExtraStorageBased,
     SourceStampBased,
     MetadataBased
 {
+    // TODO: Why is this event not in the INamespace interface?
     event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     // TODO: Do we want more granular resources here? Like add/update/remove PIDs? Or are we OK with the multi-purpose?
@@ -48,11 +48,11 @@ contract Username is
         Core.$storage().namespace = namespace;
         _setMetadataURI(metadataURI);
         _emitPIDs();
-        emit Events.Lens_Contract_Deployed("username", "lens.username", "username", "lens.username");
+        emit Events.Lens_Contract_Deployed("namespace", "lens.namespace", "namespace", "lens.namespace");
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Username_MetadataURISet(metadataURI);
+        emit Lens_Namespace_MetadataURISet(metadataURI);
     }
 
     function _emitPIDs() internal override {
@@ -170,7 +170,6 @@ contract Username is
         emit Lens_Username_Unassigned(username, account, customParams, ruleProcessingParams, source);
     }
 
-    // TODO: Rename this to setNamespaceExtraData/setPrimitiveExtraData?
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
@@ -192,8 +191,7 @@ contract Username is
         }
     }
 
-    // TODO: Rename this to setUsernameExtraData?
-    function setExtraData(string calldata username, KeyValue[] calldata extraDataToSet) external {
+    function setUsernameExtraData(string calldata username, KeyValue[] calldata extraDataToSet) external {
         uint256 id = _computeId(username);
         address owner = _ownerOf(id);
         require(msg.sender == owner);
@@ -276,7 +274,7 @@ contract Username is
         return _getPrimitiveExtraData(key);
     }
 
-    function getExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
+    function getUsernameExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
         uint256 tokenId = _computeId(username);
         address owner = _ownerOf(tokenId);
         return _getEntityExtraData(owner, tokenId, key);
