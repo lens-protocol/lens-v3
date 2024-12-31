@@ -17,12 +17,12 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         mapping(address => RulesStorage) followRulesStorage;
     }
 
-    // keccak256('lens.rule.based.graph.storage')
-    bytes32 constant RULE_BASED_GRAPH_STORAGE_SLOT = 0x02d31ef96f666bf684ab1c8a89d21f38a88719152ba49251cdaacb4c11cdae39;
+    /// @custom:keccak lens.storage.RuleBasedGraph
+    bytes32 constant STORAGE__RULE_BASED_GRAPH = 0x6644773a6cb3d68b635cf6054580d77eff2d2b0b6851802f2c6d1adbf85026f9;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_GRAPH_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_GRAPH
         }
     }
 

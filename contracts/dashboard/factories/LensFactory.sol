@@ -44,6 +44,9 @@ interface IOwnable {
 //     IRoleBasedAccessControl.Access access;
 // }
 
+/// @custom:keccak lens.data.groupFeed
+bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92d4ee5701c6d20b721221326b94ae1;
+
 contract LensFactory {
     AccessControlFactory internal immutable ACCESS_CONTROL_FACTORY;
     AccountFactory internal immutable ACCOUNT_FACTORY;
@@ -175,7 +178,7 @@ contract LensFactory {
 
         IRoleBasedAccessControl groupAccessControl = _deployAccessControl(owner, admins);
         KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
-        groupExtraDataWithFeed[0] = KeyValue({key: keccak256("lens.group.linked-feed"), value: abi.encode(feed)}); // TODO: Fix hashed constant
+        groupExtraDataWithFeed[0] = KeyValue({key: DATA__GROUP_LINKED_FEED, value: abi.encode(feed)});
         IGroup(group).setExtraData(groupExtraDataWithFeed);
         AccessControlled(group).setAccessControl(groupAccessControl);
         return (group, feed);

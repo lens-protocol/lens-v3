@@ -6,9 +6,12 @@ import {ExtraStorageBased} from "./ExtraStorageBased.sol";
 import {ISource} from "./../interfaces/ISource.sol";
 
 abstract contract SourceStampBased is ExtraStorageBased {
-    bytes32 constant SOURCE_STAMP_CUSTOM_PARAM = keccak256("lens.core.sourceStamp");
-    bytes32 constant SOURCE_EXTRA_DATA = keccak256("lens.core.source");
-    bytes32 constant LAST_UPDATED_SOURCE_EXTRA_DATA = keccak256("lens.core.lastUpdatedSource");
+    /// @custom:keccak lens.param.sourceStamp
+    bytes32 constant PARAM__SOURCE_STAMP = 0xedc03eff258927169d8466a6d671afad7cb0b69c2ad73f480eab23a233329cfc;
+    /// @custom:keccak lens.data.source
+    bytes32 constant DATA__SOURCE = 0xe256f222b2a828c71663f947d88e5c36216c58578c760b915641bf46ffe6a66e;
+    /// @custom:keccak lens.data.lastUpdatedSource
+    bytes32 constant DATA__LAST_UPDATED_SOURCE = 0x3cd0f450c58e5572a9f19a4af172d526fb9645ba11a751c1e6fe7f53c4d956eb;
 
     // TODO: We might consider moving source storing out of this contract (see Post created VS lastUpdated source)
     function _processSourceStamp(
@@ -17,9 +20,9 @@ abstract contract SourceStampBased is ExtraStorageBased {
         bool storeSource,
         bool lastUpdatedSourceType
     ) internal returns (address) {
-        bytes32 key = lastUpdatedSourceType ? LAST_UPDATED_SOURCE_EXTRA_DATA : SOURCE_EXTRA_DATA;
+        bytes32 key = lastUpdatedSourceType ? DATA__LAST_UPDATED_SOURCE : DATA__SOURCE;
         for (uint256 i = 0; i < customParams.length; i++) {
-            if (customParams[i].key == SOURCE_STAMP_CUSTOM_PARAM) {
+            if (customParams[i].key == PARAM__SOURCE_STAMP) {
                 if (customParams[i].value.length > 0) {
                     SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
                     ISource(sourceStamp.source).validateSource(sourceStamp);
@@ -49,7 +52,7 @@ abstract contract SourceStampBased is ExtraStorageBased {
     }
 
     function _getSource(uint256 entityId) internal view returns (address) {
-        bytes memory encodedSource = _getPrimitiveInternalExtraDataForEntity(entityId, SOURCE_EXTRA_DATA);
+        bytes memory encodedSource = _getPrimitiveInternalExtraDataForEntity(entityId, DATA__SOURCE);
         if (encodedSource.length == 0) {
             return address(0);
         } else {
@@ -58,7 +61,7 @@ abstract contract SourceStampBased is ExtraStorageBased {
     }
 
     function _getLastUpdateSource(uint256 entityId) internal view returns (address) {
-        bytes memory encodedSource = _getPrimitiveInternalExtraDataForEntity(entityId, LAST_UPDATED_SOURCE_EXTRA_DATA);
+        bytes memory encodedSource = _getPrimitiveInternalExtraDataForEntity(entityId, DATA__LAST_UPDATED_SOURCE);
         if (encodedSource.length == 0) {
             return address(0);
         } else {

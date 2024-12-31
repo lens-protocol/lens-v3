@@ -74,7 +74,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
         (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         address source = _processSourceStamp(postId, customParams);
-        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(LAST_UPDATED_SOURCE_EXTRA_DATA, abi.encode(source)));
+        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {

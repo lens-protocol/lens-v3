@@ -15,13 +15,12 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         RulesStorage namespaceRulesStorage;
     }
 
-    // keccak256('lens.rule.based.namespace.storage')
-    bytes32 constant RULE_BASED_NAMESPACE_STORAGE_SLOT =
-        0x217b52007082874e501211ba85dc5d9de80968a125bf61e48698a792fb130140;
+    /// @custom:keccak lens.storage.RuleBasedNamespace
+    bytes32 constant STORAGE__RULE_BASED_NAMESPACE = 0x2b39616f97e9eef16558dd56193aaab38d2eb87d6444b98781a13eea228ddaae;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_NAMESPACE_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_NAMESPACE
         }
     }
 

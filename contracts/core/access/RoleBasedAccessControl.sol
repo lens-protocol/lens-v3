@@ -22,7 +22,10 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
 
     address internal constant ANY_CONTRACT_ADDRESS = address(0);
     uint256 internal constant ANY_PERMISSION_ID = uint256(0);
-    uint256 constant OWNER_ROLE_ID = uint256(keccak256("OWNER"));
+    /// @custom:keccak lens.role.Owner
+    uint256 constant OWNER_ROLE_ID = uint256(0x441b0c1da21837a189de2bb219f231a98e08a545e9ede0b2874dec4807e57e7e);
+    /// @custom:keccak lens.contract.AccessControl.RoleBasedAccessControl
+    bytes32 constant CONTRACT_TYPE = 0xd7f02d8d0f478fc8e4dfbe64bafebbee03e9d359c4395bdbf35858b495f3daaa;
 
     address internal _owner;
     mapping(address => uint256[]) internal _roles;
@@ -45,7 +48,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
     }
 
     function getType() external pure virtual override returns (bytes32) {
-        return keccak256("lens.access-control.role-based-access-control");
+        return CONTRACT_TYPE;
     }
 
     function canChangeAccessControl(address account, address /* contractAddress */ )
@@ -208,7 +211,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
     }
 
     function _emitLensContractDeployedEvent() internal virtual {
-        emit Events.Lens_Contract_Deployed(
+        emit Events.Lens_Contract_Deployed( // TODO: Fix!
             "access-control",
             "lens.access-control.role-based-access-control",
             "access-control",

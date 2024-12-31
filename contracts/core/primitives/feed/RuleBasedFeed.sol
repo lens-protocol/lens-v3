@@ -18,12 +18,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         mapping(uint256 => RulesStorage) postRulesStorage;
     }
 
-    // keccak256('lens.rule.based.feed.storage')
-    bytes32 constant RULE_BASED_FEED_STORAGE_SLOT = 0x02d31ef96f666bf684ab1c8a89d21f38a88719152ba49251cdaacb4c11cdae39;
+    /// @custom:keccak lens.storage.RuleBasedStorage
+    bytes32 constant STORAGE__RULE_BASED_FEED = 0x5d84583cb768017b44ca3aec8199901a24d17ed118ff103b086430f4dac47b71;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_FEED_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_FEED
         }
     }
 

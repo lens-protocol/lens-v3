@@ -36,8 +36,8 @@ interface IAccountAction {
         returns (bytes memory);
 }
 
-// keccak256("lens.action.universal");
-bytes32 constant UNIVERSAL_ACTION_MAGIC_VALUE = 0xa428ff01516755687b6330e79f5727df2d51cc3306cf3a39b056986d10db69c0;
+/// @custom:keccak lens.constant.UniversalAction
+bytes32 constant UNIVERSAL_ACTION_MAGIC_VALUE = 0xa12c06eea999f2a08fb2bd50e396b2a286921eebbda81fb45a0adcf13afb18ef;
 
 contract ActionHub {
     event Lens_ActionHub_PostAction_Universal(address indexed action);

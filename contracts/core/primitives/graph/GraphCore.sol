@@ -15,12 +15,12 @@ library GraphCore {
         mapping(address => uint256) followingCount;
     }
 
-    // keccak256('lens.graph.core.storage')
-    bytes32 constant CORE_STORAGE_SLOT = 0x29a85df5a038cd27b30b628cc380bae0d47a34cf0abae91c50f7411863dd209b;
+    /// @custom:keccak lens.storage.GraphCore
+    bytes32 constant STORAGE__GRAPH_CORE = 0x5863e3ed01973a22e9d816ccf1175242559c6aa633e210d5eef6ba360542fe03;
 
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {
-            _storage.slot := CORE_STORAGE_SLOT
+            _storage.slot := STORAGE__GRAPH_CORE
         }
     }
 

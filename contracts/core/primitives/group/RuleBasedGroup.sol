@@ -15,12 +15,12 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         RulesStorage groupRulesStorage;
     }
 
-    // keccak256('lens.rule.based.group.storage')
-    bytes32 constant RULE_BASED_GROUP_STORAGE_SLOT = 0x6b4f86fd68b78c2e5c3c4bc3b3dbb99669a3da3f0bb2db367c4d64acdb2fd3d9;
+    /// @custom:keccak lens.storage.RuleBasedGroup
+    bytes32 constant STORAGE__RULE_BASED_GROUP = 0x99daa1bc32e51d43348d6cfb165a280fbe2c093a37fe63320452612b9fb73547;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_GROUP_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_GROUP
         }
     }
 

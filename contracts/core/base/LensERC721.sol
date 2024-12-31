@@ -32,12 +32,12 @@ contract LensERC721 is IERC721 {
         mapping(address => mapping(address => bool)) operatorApprovals;
     }
 
-    // keccak256('lens.erc721.core.storage')
-    bytes32 constant ERC721_STORAGE_SLOT = 0xac58803b788368130c11d5bafac7ab92ca2b9d10691d402b06996b767d7246ac;
+    /// @custom:keccak lens.storage.ERC721
+    bytes32 constant STORAGE__ERC721 = 0x5d84583cb768017b44ca3aec8199901a24d17ed118ff103b086430f4dac47b71;
 
     function $erc721Storage() internal pure returns (ERC721Storage storage _storage) {
         assembly {
-            _storage.slot := ERC721_STORAGE_SLOT
+            _storage.slot := STORAGE__ERC721
         }
     }
 

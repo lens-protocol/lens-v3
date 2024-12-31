@@ -26,12 +26,12 @@ library FeedCore {
         mapping(uint256 => PostStorage) posts;
     }
 
-    // keccak256('lens.feed.core.storage')
-    bytes32 constant CORE_STORAGE_SLOT = 0x53e5f3a14c02f725b39e2bf6437f59559b62f544e37322ca762304defb765d0e;
+    /// @custom:keccak lens.storage.FeedCore
+    bytes32 constant STORAGE__FEED_CORE = 0x0ac8a89c1a9da2727c9b15c85fbb8fe7be84a171a628701c1a4b1022d72d46f7;
 
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {
-            _storage.slot := CORE_STORAGE_SLOT
+            _storage.slot := STORAGE__FEED_CORE
         }
     }
 

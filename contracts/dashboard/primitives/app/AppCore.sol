@@ -38,12 +38,12 @@ library AppCore {
         mapping(bytes32 => bytes) extraData;
     }
 
-    // keccak256('lens.app.core.storage')
-    bytes32 constant CORE_STORAGE_SLOT = 0x13ac6c950512eee7a16ca70c4437c8719ba8e39704daf190995c963091228bf5;
+    /// @custom:keccak lens.storage.AppCore
+    bytes32 constant STORAGE__APP_CORE = 0x00d742ba6838b80a9db3f3500fd0588118c5ae3a7f39bc9da201d6bdb2a0151a;
 
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {
-            _storage.slot := CORE_STORAGE_SLOT
+            _storage.slot := STORAGE__APP_CORE
         }
     }
 
