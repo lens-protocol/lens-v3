@@ -22,7 +22,7 @@ contract Proxy {
         emit AutoUpgrade(true);
         _beacon = beacon;
         emit BeaconChanged(beacon);
-        _fetchImplFromBaconAndAutoUpgradeIfNeeded();
+        _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
     function optOutFromAutoUpgrade() external {
@@ -35,7 +35,7 @@ contract Proxy {
         require(msg.sender == _proxyAdmin);
         _autoUpgrade = true;
         emit AutoUpgrade(true);
-        _fetchImplFromBaconAndAutoUpgradeIfNeeded();
+        _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
     function setImplementation(
@@ -58,7 +58,7 @@ contract Proxy {
             emit BeaconChanged(beacon);
         }
         if (_autoUpgrade) {
-            _fetchImplFromBaconAndAutoUpgradeIfNeeded();
+            _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
         }
     }
 
@@ -75,7 +75,7 @@ contract Proxy {
 
     function triggerUpgrade() external {
         require(msg.sender == _proxyAdmin);
-        _fetchImplFromBaconAndAutoUpgradeIfNeeded();
+        _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
     // Function copied from @openzeppelin/contracts/proxy/Proxy.sol::_delegate
@@ -105,14 +105,14 @@ contract Proxy {
     function _resolveImplementation() internal returns (address) {
         address implementation;
         if (_autoUpgrade) {
-            implementation = _fetchImplFromBaconAndAutoUpgradeIfNeeded();
+            implementation = _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
         } else {
             implementation = _currentImplementation;
         }
         return implementation;
     }
 
-    function _fetchImplFromBaconAndAutoUpgradeIfNeeded() internal returns (address) {
+    function _fetchImplFromBeaconAndAutoUpgradeIfNeeded() internal returns (address) {
         address implementationFromBeacon = IVersionedBeacon(_beacon).implementation();
         if (implementationFromBeacon != _currentImplementation) {
             emit Upgraded(implementationFromBeacon);
