@@ -14,7 +14,7 @@ contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
     using AccessControlLib for address;
 
     /// @custom:keccak lens.permission.SkipPayment
-    uint256 constant PID__SKIP_PAYMENT = uint256(0xa66e29d0251835683fb30a4666181c9bf842ce169e3f6fc68358d75e1822a785);
+    uint256 constant PID__SKIP_PAYMENT = uint256(0x00f37ae888d55466c7f464a414e84bc629550dc0e0655302b62e8c608a260b5c);
 
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;

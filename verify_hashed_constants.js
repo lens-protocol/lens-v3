@@ -28,7 +28,9 @@ function extractAndValidateKeccak(folderPath) {
   const files = getSolFiles(folderPath);
 
   const annotationRegex = /\/\/\/ @custom:keccak\s+([a-zA-Z0-9_.]+)/;
-  const constantRegex = /(uint256|bytes32)\s+constant\s+([A-Z_]+)\s*=\s*(0x[a-fA-F0-9]+);/;
+  const bytes32Regex = /(uint256|bytes32)\s+constant\s+([A-Z_]+)\s*=\s*(0x[a-fA-F0-9]+);/;
+  const uint256CastedRegex =
+    /(uint256|bytes32)\s+constant\s+([A-Z_]+)\s*=\s*\w+\((0x[a-fA-F0-9]+)\);/;
 
   files.forEach((filePath) => {
     let hasSomeHashToCompute = false;
@@ -43,7 +45,7 @@ function extractAndValidateKeccak(folderPath) {
         return;
       }
 
-      const constantMatch = constantRegex.exec(line);
+      const constantMatch = bytes32Regex.exec(line) || uint256CastedRegex.exec(line);
       if (constantMatch && hashToCompute) {
         const [_, type, constantName, value] = constantMatch;
 
