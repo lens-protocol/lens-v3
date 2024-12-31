@@ -13,7 +13,6 @@ contract LensUsernameTokenURIProvider is ITokenURIProvider {
         _emitLensContractDeployedEvent();
     }
 
-    // TODO: Implement Lens Username Token URI SVGs
     function tokenURI(uint256 tokenId) external pure override returns (string memory) {
         return string.concat(
             "data:image/svg+xml;",
