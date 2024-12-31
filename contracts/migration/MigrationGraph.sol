@@ -30,7 +30,7 @@ contract MigrationGraph is Graph {
             customParams,
             graphRulesProcessingParams,
             followRulesProcessingParams,
-            address(0), //TODO: Do we want to pass the migrator as source?
+            address(0),
             extraData
         );
         return followId;
