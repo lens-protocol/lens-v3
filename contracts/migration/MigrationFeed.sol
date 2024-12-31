@@ -28,7 +28,11 @@ contract MigrationFeed is Feed {
         ) = abi.decode(customParams[0].value, (uint256, uint256, uint256, uint256, uint80, address));
         _createPost(postParams, postId, rootPostId, postSequentialId, authorPostSequentialId, creationTimestamp);
 
-        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
+        if (source != address(0)) {
+            // Trust the migrator, no source verification
+            _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__SOURCE, abi.encode(source)));
+            _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
+        }
 
         emit Lens_Feed_PostCreated(
             postId,
