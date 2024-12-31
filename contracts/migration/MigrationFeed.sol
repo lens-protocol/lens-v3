@@ -23,11 +23,12 @@ contract MigrationFeed is Feed {
             uint256 rootPostId,
             uint256 postSequentialId,
             uint256 authorPostSequentialId,
-            uint80 creationTimestamp
-        ) = abi.decode(customParams[0].value, (uint256, uint256, uint256, uint256, uint80));
+            uint80 creationTimestamp,
+            address source
+        ) = abi.decode(customParams[0].value, (uint256, uint256, uint256, uint256, uint80, address));
         _createPost(postParams, postId, rootPostId, postSequentialId, authorPostSequentialId, creationTimestamp);
 
-        // TODO: _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(LAST_UPDATED_SOURCE_EXTRA_DATA, abi.encode(source)));
+        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
 
         emit Lens_Feed_PostCreated(
             postId,
@@ -39,10 +40,9 @@ contract MigrationFeed is Feed {
             feedRulesParams,
             rootPostRulesParams,
             quotedPostRulesParams,
-            address(0) // TODO: Think if we want to pass the migrator as source
+            source
         );
 
-        // TODO: Do we keep the extraData?
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
             _setEntityExtraData(postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
@@ -73,6 +73,6 @@ contract MigrationFeed is Feed {
         _newPost.repostedPostId = postParams.repostedPostId;
         _newPost.rootPostId = rootPostId;
         _newPost.creationTimestamp = creationTimestamp;
-        _newPost.lastUpdatedTimestamp = creationTimestamp; // TODO: Maybe block.timestamp?
+        _newPost.lastUpdatedTimestamp = creationTimestamp;
     }
 }
