@@ -32,7 +32,7 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
             }
         }
         _groupGate[msg.sender][configSalt] = groupGate;
-        IGroup(groupGate).getMembershipId(address(this));
+        IGroup(groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group
     }
 
     function processCreatePost(
@@ -42,7 +42,7 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(IGroup(_groupGate[msg.sender][configSalt]).getMembershipId(postParams.author) != 0, "NotAMember()");
+        require(IGroup(_groupGate[msg.sender][configSalt]).isMember(postParams.author), "NotAMember()");
     }
 
     function processEditPost(

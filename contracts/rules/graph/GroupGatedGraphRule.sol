@@ -43,7 +43,7 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
-        IGroup(configuration.groupGate).getMembershipId(address(this));
+        IGroup(configuration.groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group
         _configuration[msg.sender][configSalt] = configuration;
     }
 
@@ -93,7 +93,7 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
 
     function _validateGroupMembership(address accessControl, address group, address account) internal view {
         if (!accessControl.hasAccess(account, PID__SKIP_TOKEN_GATE)) {
-            require(IGroup(group).getMembershipId(account) != 0, "NotAMember()");
+            require(IGroup(group).isMember(account), "NotAMember()");
         }
     }
 

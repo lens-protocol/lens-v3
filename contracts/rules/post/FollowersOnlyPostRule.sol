@@ -51,7 +51,7 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
                 configuration.quotesRestricted = abi.decode(ruleParams[i].value, (bool));
             }
         }
-        IGraph(configuration.graph).getFollowersCount(address(this)); // Aims to verify the given address is a IGraph
+        IGraph(configuration.graph).isFollowing(address(this), msg.sender); // Verifies the provided address is a graph
         require(configuration.repliesRestricted || configuration.repostsRestricted || configuration.quotesRestricted);
         _configuration[msg.sender][configSalt][postId] = configuration;
     }
