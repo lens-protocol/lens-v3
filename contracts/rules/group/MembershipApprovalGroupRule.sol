@@ -21,7 +21,6 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
-    // TODO: Should we add `messageURI` for both the request and the rejection? so you could provide a reason.
     event Lens_ApprovalGroupRule_MembershipRequested(address indexed group, address indexed account);
     event Lens_ApprovalGroupRule_MembershipRequestCancelled(address indexed group, address indexed account);
     event Lens_ApprovalGroupRule_MembershipApproved(address indexed group, address indexed account, address approvedBy);
