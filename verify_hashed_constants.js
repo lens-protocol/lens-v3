@@ -53,7 +53,7 @@ function extractAndValidateKeccak(folderPath) {
         const computedHash = computeKeccak256(hashToCompute);
 
         if (computedHash === value) {
-          // Commented to it is easy to find and fix the non-matching ones. Uncomment if verbose print needed.
+          // // Commented to it is easy to find and fix the non-matching ones. Uncomment if verbose print needed.
           // if (!hasSomeHashToCompute) {
           //   console.log(`\n\n\n - - - - - At file: ${filePath}\n`);
           //   hasSomeHashToCompute = true;
@@ -63,6 +63,7 @@ function extractAndValidateKeccak(folderPath) {
           // console.log(`• Computed:          ${computedHash}`);
           // console.log(`• Extracted:         ${value}`);
           // console.log(`⦿ Match status:      Correct ✅`);
+          // console.log();
         } else {
           someUnmatch = true;
           if (!hasSomeHashToCompute) {
@@ -74,6 +75,7 @@ function extractAndValidateKeccak(folderPath) {
           console.error(`• Computed:          ${computedHash}`);
           console.error(`• Extracted:         ${value}`);
           console.error(`⦿ Match status:      Incorrect ❌`);
+          console.error();
         }
 
         hashToCompute = null;

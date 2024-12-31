@@ -28,11 +28,15 @@ contract Namespace is
     // TODO: Why is this event not in the INamespace interface?
     event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
-    // TODO: Do we want more granular resources here? Like add/update/remove PIDs? Or are we OK with the multi-purpose?
-    uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
-    uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
-    uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
-    uint256 constant SET_TOKEN_URI_PROVIDER_PID = uint256(keccak256("SET_TOKEN_URI_PROVIDER"));
+    /// @custom:keccak lens.permission.SetMetadata
+    uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
+    /// @custom:keccak lens.permission.ChangeRules
+    uint256 constant PID__CHANGE_RULES = uint256(0x550b12ef6572134aefc5804fd2b13ab3d8451e067ad453f67afe134cffebd977);
+    /// @custom:keccak lens.permission.SetExtraData
+    uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
+    /// @custom:keccak lens.permission.SetTokenURIProvider
+    uint256 constant PID__SET_TOKEN_URI_PROVIDER =
+        uint256(0x32b3651aa4f96bc363c3045558bf6accc2b6027323bee86f6b4a570142cbd469);
 
     mapping(uint256 => string) private _idToUsername; // TODO: Move to computed storage
 
@@ -56,24 +60,24 @@ contract Namespace is
 
     function _emitPIDs() internal override {
         super._emitPIDs();
-        emit Events.Lens_PermissionId_Available(SET_RULES_PID, "SET_RULES");
-        emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
-        emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
-        emit Events.Lens_PermissionId_Available(SET_TOKEN_URI_PROVIDER_PID, "SET_TOKEN_URI_PROVIDER");
+        emit Events.Lens_PermissionId_Available(PID__CHANGE_RULES, "lens.permission.ChangeRules");
+        emit Events.Lens_PermissionId_Available(PID__SET_METADATA, "lens.permission.SetMetadata");
+        emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
+        emit Events.Lens_PermissionId_Available(PID__SET_TOKEN_URI_PROVIDER, "lens.permission.SetTokenURIProvider");
     }
 
     // Access Controlled functions
 
     function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
+        _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
     function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view override {
-        _requireAccess(msg.sender, SET_TOKEN_URI_PROVIDER_PID);
+        _requireAccess(msg.sender, PID__SET_TOKEN_URI_PROVIDER);
     }
 
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
-        _requireAccess(msg.sender, SET_RULES_PID);
+        _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
     // Permissionless functions
 
@@ -170,7 +174,7 @@ contract Namespace is
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;

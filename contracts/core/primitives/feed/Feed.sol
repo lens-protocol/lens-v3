@@ -16,10 +16,15 @@ import {MetadataBased} from "./../../base/MetadataBased.sol";
 contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
     // TODO: Move these to respective contracts
     // Resource IDs involved in the contract
-    uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
-    uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
-    uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
-    uint256 constant REMOVE_POST_PID = uint256(keccak256("REMOVE_POST"));
+
+    /// @custom:keccak lens.permission.SetMetadata
+    uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
+    /// @custom:keccak lens.permission.ChangeRules
+    uint256 constant PID__CHANGE_RULES = uint256(0x550b12ef6572134aefc5804fd2b13ab3d8451e067ad453f67afe134cffebd977);
+    /// @custom:keccak lens.permission.SetExtraData
+    uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
+    /// @custom:keccak lens.permission.RemovePost
+    uint256 constant PID__REMOVE_POST = uint256(0x25b86c749bcf827bec85b3f107e1d65771462eb329e68ff158d50a2f4b301c89);
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
         _setMetadataURI(metadataURI);
@@ -33,20 +38,20 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
 
     function _emitPIDs() internal override {
         super._emitPIDs();
-        emit Events.Lens_PermissionId_Available(SET_RULES_PID, "SET_RULES");
-        emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
-        emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
-        emit Events.Lens_PermissionId_Available(REMOVE_POST_PID, "REMOVE_POST");
+        emit Events.Lens_PermissionId_Available(PID__CHANGE_RULES, "lens.permission.ChangeRules");
+        emit Events.Lens_PermissionId_Available(PID__SET_METADATA, "lens.permission.SetMetadata");
+        emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
+        emit Events.Lens_PermissionId_Available(PID__REMOVE_POST, "lens.permission.RemovePost");
     }
 
     // Access Controlled functions
 
     function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
+        _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
-        _requireAccess(msg.sender, SET_RULES_PID);
+        _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 
     function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata /* ruleChanges */ )
@@ -163,7 +168,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         RuleProcessingParams[] calldata feedRulesParams
     ) external virtual override {
         address author = Core.$storage().posts[postId].author;
-        require(msg.sender == author || _hasAccess(msg.sender, REMOVE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
+        require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
         Core._removePost(postId);
         _processPostRemoval(postId, customParams, feedRulesParams);
         address source = _processSourceStamp(postId, customParams);
@@ -171,7 +176,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;

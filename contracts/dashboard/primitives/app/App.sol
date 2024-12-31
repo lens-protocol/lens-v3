@@ -25,13 +25,21 @@ struct AppInitialProperties {
 contract App is IApp, BaseSource, AccessControlled {
     // Resource IDs involved in the contract
 
-    uint256 constant SET_PRIMITIVES_PID = uint256(keccak256("SET_PRIMITIVES"));
-    uint256 constant SET_SIGNERS_PID = uint256(keccak256("SET_SIGNERS"));
-    uint256 constant SET_TREASURY_PID = uint256(keccak256("SET_TREASURY"));
-    uint256 constant SET_PAYMASTER_PID = uint256(keccak256("SET_PAYMASTER"));
-    uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
-    uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
-    uint256 constant SET_SOURCE_STAMP_VERIFICATION_PID = uint256(keccak256("SET_SOURCE_STAMP_VERIFICATION"));
+    /// @custom:keccak lens.permission.SetPrimitives
+    uint256 constant PID__SET_PRIMITIVES = uint256(0x2be4bb804d9ebc1b1990cb2f1727ea09d1ac120a3466c62e804028516f9d24ae);
+    /// @custom:keccak lens.permission.SetSigners
+    uint256 constant PID__SET_SIGNERS = uint256(0x7cffc02293bdfeb075851a6bf2895d576026aed46f1ef5520b866951477e4252);
+    /// @custom:keccak lens.permission.SetTreasury
+    uint256 constant PID__SET_TREASURY = uint256(0x5c37928b3c9092cd0d2fb37e7b2c81c39348a65f14f7ff0f3c9d4558a2d85804);
+    /// @custom:keccak lens.permission.SetPaymaster
+    uint256 constant PID__SET_PAYMASTER = uint256(0x230828c21ca427ba35df5ba53b09310ab6248c3eb59bf0ef72db90c7a0abb78a);
+    /// @custom:keccak lens.permission.SetExtraData
+    uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
+    /// @custom:keccak lens.permission.SetMetadata
+    uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
+    /// @custom:keccak lens.permission.SetSourceStampVerification
+    uint256 constant PID__SET_SOURCE_STAMP_VERIFICATION =
+        uint256(0x874f1133714eb68cab3e7feede3b8186418ef58948747b7e70981e346a5c7491);
 
     constructor(
         string memory metadataURI,
@@ -59,13 +67,13 @@ contract App is IApp, BaseSource, AccessControlled {
 
     function _emitPIDs() internal override {
         super._emitPIDs();
-        emit Events.Lens_PermissionId_Available(SET_PRIMITIVES_PID, "SET_PRIMITIVES");
-        emit Events.Lens_PermissionId_Available(SET_SIGNERS_PID, "SET_SIGNERS");
-        emit Events.Lens_PermissionId_Available(SET_TREASURY_PID, "SET_TREASURY");
-        emit Events.Lens_PermissionId_Available(SET_PAYMASTER_PID, "SET_PAYMASTER");
-        emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
-        emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
-        emit Events.Lens_PermissionId_Available(SET_SOURCE_STAMP_VERIFICATION_PID, "SET_SOURCE_STAMP_VERIFICATION");
+        emit Events.Lens_PermissionId_Available(PID__SET_PRIMITIVES, "SET_PRIMITIVES");
+        emit Events.Lens_PermissionId_Available(PID__SET_SIGNERS, "SET_SIGNERS");
+        emit Events.Lens_PermissionId_Available(PID__SET_TREASURY, "SET_TREASURY");
+        emit Events.Lens_PermissionId_Available(PID__SET_PAYMASTER, "SET_PAYMASTER");
+        emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "SET_EXTRA_DATA");
+        emit Events.Lens_PermissionId_Available(PID__SET_METADATA, "SET_METADATA");
+        emit Events.Lens_PermissionId_Available(PID__SET_SOURCE_STAMP_VERIFICATION, "SET_SOURCE_STAMP_VERIFICATION");
     }
 
     function _validateSource(SourceStamp calldata sourceStamp) internal virtual override {
@@ -85,14 +93,14 @@ contract App is IApp, BaseSource, AccessControlled {
     }
 
     function setSourceStampVerification(bool isEnabled) external virtual override {
-        _requireAccess(msg.sender, SET_SOURCE_STAMP_VERIFICATION_PID);
+        _requireAccess(msg.sender, PID__SET_SOURCE_STAMP_VERIFICATION);
         _setSourceStampVerification(isEnabled);
     }
 
     ///////////////// Graph
 
     function setGraph(address graph) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _setGraph(graph);
     }
 
@@ -113,17 +121,17 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Feed
 
     function addFeeds(address[] memory feeds) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _addFeeds(feeds);
     }
 
     function removeFeeds(address[] memory feeds) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _removeFeeds(feeds);
     }
 
     function setDefaultFeed(address feed) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         if (feed != address(0) && !Core._isFeedPresent(feed)) {
             Core._addFeed(feed);
             emit Lens_App_FeedAdded(feed);
@@ -157,7 +165,7 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Namespace
 
     function setNamespace(address namespace) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _setNamespace(namespace);
     }
 
@@ -178,12 +186,12 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Group
 
     function addGroups(address[] memory groups) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _addGroups(groups);
     }
 
     function removeGroups(address[] memory groups) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _removeGroups(groups);
     }
 
@@ -204,12 +212,12 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Signers
 
     function addSigners(address[] memory signers) external {
-        _requireAccess(msg.sender, SET_SIGNERS_PID);
+        _requireAccess(msg.sender, PID__SET_SIGNERS);
         _addSigners(signers);
     }
 
     function removeSigners(address[] memory signers) external {
-        _requireAccess(msg.sender, SET_SIGNERS_PID);
+        _requireAccess(msg.sender, PID__SET_SIGNERS);
         _removeSigners(signers);
     }
 
@@ -230,7 +238,7 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Paymaster
 
     function setPaymaster(address paymaster) external override {
-        _requireAccess(msg.sender, SET_PRIMITIVES_PID);
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _setPaymaster(paymaster);
     }
 
@@ -255,7 +263,7 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Treasury
 
     function setTreasury(address treasury) external override {
-        _requireAccess(msg.sender, SET_TREASURY_PID);
+        _requireAccess(msg.sender, PID__SET_TREASURY);
         _setTreasury(treasury);
     }
 
@@ -271,7 +279,7 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Metadata URI
 
     function setMetadataURI(string calldata metadataURI) external override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
+        _requireAccess(msg.sender, PID__SET_METADATA);
         _setMetadataURI(metadataURI);
     }
 
@@ -283,7 +291,7 @@ contract App is IApp, BaseSource, AccessControlled {
     ///////////////// Extra Data
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         _setExtraData(extraDataToSet);
     }
 
