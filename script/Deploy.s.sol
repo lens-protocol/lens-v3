@@ -9,17 +9,17 @@ import {IAccessControl} from "./../contracts/core/interfaces/IAccessControl.sol"
 import {ITokenURIProvider} from "./../contracts/core/interfaces/ITokenURIProvider.sol";
 
 import {RoleBasedAccessControl} from "./../contracts/core/access/RoleBasedAccessControl.sol";
-import {LensUsernameTokenURIProvider} from "./../contracts/core/primitives/username/LensUsernameTokenURIProvider.sol";
+import {LensUsernameTokenURIProvider} from "./../contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 
 import {Feed} from "./../contracts/core/primitives/feed/Feed.sol";
 import {Graph} from "./../contracts/core/primitives/graph/Graph.sol";
 import {Group} from "./../contracts/core/primitives/group/Group.sol";
-import {Username} from "./../contracts/core/primitives/username/Username.sol";
+import {Namespace} from "./../contracts/core/primitives/namespace/Namespace.sol";
 
 import {FeedFactory} from "./../contracts/dashboard/factories/FeedFactory.sol";
 import {GraphFactory} from "./../contracts/dashboard/factories/GraphFactory.sol";
 import {GroupFactory} from "./../contracts/dashboard/factories/GroupFactory.sol";
-import {UsernameFactory} from "./../contracts/dashboard/factories/UsernameFactory.sol";
+import {NamespaceFactory} from "./../contracts/dashboard/factories/NamespaceFactory.sol";
 
 contract MyScript is Script {
     IAccessControl simpleAccessControl;
@@ -49,9 +49,9 @@ contract MyScript is Script {
         console.log("   Gas used for GroupFactory Deployment: ", gasBefore - gasAfter);
 
         gasBefore = gasleft();
-        UsernameFactory usernameFactory = new UsernameFactory();
+        NamespaceFactory namespaceFactory = new NamespaceFactory();
         gasAfter = gasleft();
-        console.log("   Gas used for UsernameFactory Deployment: ", gasBefore - gasAfter);
+        console.log("   Gas used for NamespaceFactory Deployment: ", gasBefore - gasAfter);
     }
 
     function _deployPrimitives() internal {
@@ -76,7 +76,9 @@ contract MyScript is Script {
         console.log("   Gas used for Group Deployment: ", gasBefore - gasAfter);
 
         gasBefore = gasleft();
-        _deployUsername("lens", "https://lens.dev/username", simpleAccessControl, "Lens", "LENS", simpleTokenURIProvider);
+        _deployNamespace(
+            "lens", "https://lens.dev/username", simpleAccessControl, "Lens", "LENS", simpleTokenURIProvider
+        );
         gasAfter = gasleft();
         console.log("   Gas used for Username Deployment: ", gasBefore - gasAfter);
     }
@@ -93,7 +95,7 @@ contract MyScript is Script {
         Group group = new Group(metadataURI, accessControl);
     }
 
-    function _deployUsername(
+    function _deployNamespace(
         string memory namespace,
         string memory metadataURI,
         IAccessControl accessControl,
@@ -101,6 +103,7 @@ contract MyScript is Script {
         string memory nftSymbol,
         ITokenURIProvider tokenURIProvider
     ) internal {
-        Username username = new Username(namespace, metadataURI, accessControl, nftName, nftSymbol, tokenURIProvider);
+        Namespace namespacePrimitive =
+            new Namespace(namespace, metadataURI, accessControl, nftName, nftSymbol, tokenURIProvider);
     }
 }

@@ -31,7 +31,8 @@ contract AccountTest is Test {
                 metadataURI: "uri://account-metadata",
                 accountManagers: accountManagers,
                 accountManagerPermissions: accountManagerPermissions,
-                sourceStamp: _emptySourceStamp()
+                sourceStamp: _emptySourceStamp(),
+                extraData: _emptyKeyValueArray()
             })
         );
 
@@ -49,14 +50,13 @@ contract AccountTest is Test {
                     repostedPostId: 0,
                     quotedPostId: 0,
                     repliedPostId: 0,
-                    rules: _emptyRuleConfigurationArray(),
-                    feedRulesData: _emptyExecutionData(),
-                    repostedPostRulesData: _emptyExecutionData(),
-                    quotedPostRulesData: _emptyExecutionData(),
-                    repliedPostRulesData: _emptyExecutionData(),
-                    extraData: _emptyExtraData()
+                    ruleChanges: _emptyRuleChangeArray(),
+                    extraData: _emptyKeyValueArray()
                 }),
-                _emptySourceStamp()
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
             )
         );
 
@@ -79,14 +79,13 @@ contract AccountTest is Test {
                     repostedPostId: 0,
                     quotedPostId: 0,
                     repliedPostId: 0,
-                    rules: _emptyRuleConfigurationArray(),
-                    feedRulesData: _emptyExecutionData(),
-                    repostedPostRulesData: _emptyExecutionData(),
-                    quotedPostRulesData: _emptyExecutionData(),
-                    repliedPostRulesData: _emptyExecutionData(),
-                    extraData: _emptyExtraData()
+                    ruleChanges: _emptyRuleChangeArray(),
+                    extraData: _emptyKeyValueArray()
                 }),
-                _emptySourceStamp()
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
             )
         );
 

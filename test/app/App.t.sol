@@ -5,13 +5,13 @@ pragma solidity 0.8.17;
 import "forge-std/Test.sol";
 import {App, AppInitialProperties} from "../../contracts/dashboard/primitives/app/App.sol";
 import {IAccessControl} from "../../contracts/core/interfaces/IAccessControl.sol";
-import {DataElement} from "../../contracts/core/types/Types.sol";
+import {KeyValue} from "../../contracts/core/types/Types.sol";
 import {OwnerAdminOnlyAccessControl} from "../../contracts/dashboard/access/OwnerAdminOnlyAccessControl.sol";
 
 // struct AppInitialProperties {
 //     address graph;
 //     address[] feeds;
-//     address username;
+//     address namespace;
 //     address[] groups;
 //     address defaultFeed;
 //     address[] signers;
@@ -24,7 +24,7 @@ import {OwnerAdminOnlyAccessControl} from "../../contracts/dashboard/access/Owne
 // bool isSourceStampVerificationEnabled,
 // IAccessControl accessControl,
 // AppInitialProperties memory initialProps,
-// DataElement[] memory extraData
+// KeyValue[] memory extraData
 
 contract AppTest is Test {
     IAccessControl accessControl;
@@ -42,14 +42,14 @@ contract AppTest is Test {
             initialProps: AppInitialProperties({
                 graph: address(0x01),
                 feeds: new address[](0),
-                username: address(0x02),
+                namespace: address(0x02),
                 groups: new address[](0),
                 defaultFeed: address(0),
                 signers: new address[](0),
                 paymaster: address(0x3),
                 treasury: address(0x4)
             }),
-            extraData: new DataElement[](0)
+            extraData: new KeyValue[](0)
         });
     }
 
@@ -61,14 +61,14 @@ contract AppTest is Test {
             initialProps: AppInitialProperties({
                 graph: address(0),
                 feeds: new address[](0),
-                username: address(0),
+                namespace: address(0),
                 groups: new address[](0),
                 defaultFeed: address(0),
                 signers: new address[](0),
                 paymaster: address(0),
                 treasury: address(0)
             }),
-            extraData: new DataElement[](0)
+            extraData: new KeyValue[](0)
         });
     }
 }
