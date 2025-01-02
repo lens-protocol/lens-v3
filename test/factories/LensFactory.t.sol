@@ -23,9 +23,12 @@ contract LensFactoryTest is Test {
     LensFactory lensFactory;
     Namespace namespace;
 
+    AccountBlockingRule accountBlockingRule;
+    GroupGatedFeedRule groupGatedFeedRule;
+
     function setUp() public {
-        AccountBlockingRule accountBlockingRule = new AccountBlockingRule({metadataURI: "uri://any"});
-        GroupGatedFeedRule groupGatedFeedRule = new GroupGatedFeedRule({metadataURI: "uri://any"});
+        accountBlockingRule = new AccountBlockingRule({metadataURI: "uri://any"});
+        groupGatedFeedRule = new GroupGatedFeedRule({metadataURI: "uri://any"});
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(),
