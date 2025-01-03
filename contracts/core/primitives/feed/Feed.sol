@@ -12,8 +12,10 @@ import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.so
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 import {MetadataBased} from "./../../base/MetadataBased.sol";
+import {AccessControlLib} from "./../../libraries/AccessControlLib.sol";
 
 contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
+    using AccessControlLib for IAccessControl;
     // TODO: Move these to respective contracts
     // Resource IDs involved in the contract
 
@@ -26,9 +28,16 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     /// @custom:keccak lens.permission.RemovePost
     uint256 constant PID__REMOVE_POST = uint256(0x25b86c749bcf827bec85b3f107e1d65771462eb329e68ff158d50a2f4b301c89);
 
-    constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
+    constructor(string memory, /* metadataURI */ IAccessControl accessControl) AccessControlled(accessControl) {}
+
+    function initialize(string memory metadataURI, IAccessControl accessControl) external {
+        // TODO: Replace with inheriting the Initializable contract
+
+        require(bytes(_getMetadataURI()).length == 0, "ALREADY_INITIALIZED");
         _setMetadataURI(metadataURI);
         _emitPIDs();
+        accessControl.verifyHasAccessFunction();
+        _setAccessControl(accessControl);
         emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
     }
 

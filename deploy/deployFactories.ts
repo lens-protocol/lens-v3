@@ -1,13 +1,21 @@
 import { deployLensContract, ContractType, ContractInfo } from './lensUtils';
+import { ZeroAddress } from 'ethers';
 
 export default async function deployFactories(): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
+
+  const feedImplementation = await deployLensContract({
+    contractName: 'Feed',
+    contractType: ContractType.Implementation,
+    constructorArguments: ["", ZeroAddress],
+  });
+
   const contracts: ContractInfo[] = [
     // Factories
     { contractName: 'AccessControlFactory', contractType: ContractType.Factory },
     { contractName: 'AccountFactory', contractType: ContractType.Factory },
     { contractName: 'AppFactory', contractType: ContractType.Factory },
-    { contractName: 'FeedFactory', contractType: ContractType.Factory },
+    { contractName: 'FeedFactory', contractType: ContractType.Factory, constructorArguments: [feedImplementation.address] },
     { contractName: 'GraphFactory', contractType: ContractType.Factory },
     { contractName: 'GroupFactory', contractType: ContractType.Factory },
     { contractName: 'NamespaceFactory', contractType: ContractType.Factory },

@@ -5,6 +5,7 @@ import * as hre from 'hardhat';
 
 export enum ContractType {
   Factory,
+  Implementation,
   Primitive,
   Aux,
   Action,

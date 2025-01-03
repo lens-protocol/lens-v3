@@ -260,7 +260,7 @@ export const deployContract = async (
     if (!options?.silent) console.log(message);
   };
 
-  log(`\nStarting deployment process of "${contractArtifactName}"...`);
+  console.log(`\nStarting deployment process of "\x1b[36m${contractArtifactName}\x1b[0m"...`);
 
   const wallet = options?.wallet ?? getWallet();
   const deployer = new Deployer(hre, wallet);
@@ -278,9 +278,13 @@ export const deployContract = async (
   const estimatedDeployFee = await deployer.estimateDeployFee(artifact, constructorArguments || []);
   const gasPrice = await wallet.provider.getGasPrice();
   console.log(`Estimated deployment costs:`);
-  console.log(` - Estimated gas used: ${estimatedDeployGas.toString()}`);
-  console.log(` - Estimated gas price: ${ethers.formatUnits(gasPrice, 'gwei')} Gwei`);
-  console.log(` - Estimated deployment fee: ${ethers.formatEther(estimatedDeployFee)} ETH`);
+  console.log(
+    ` - Estimated gas used: ${
+      estimatedDeployGas > 15_000_000
+        ? '\x1b[31m' // red
+        : '\x1b[32m' // green
+    }${estimatedDeployGas.toLocaleString()}\x1b[0m`
+  );
 
   // Check if the wallet has enough balance
   await verifyEnoughBalance(wallet, estimatedDeployFee);

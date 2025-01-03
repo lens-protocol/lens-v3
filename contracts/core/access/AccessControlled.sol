@@ -25,9 +25,9 @@ contract AccessControlled {
         }
     }
 
-    constructor(IAccessControl accessControl) {
-        accessControl.verifyHasAccessFunction();
-        _setAccessControl(accessControl);
+    constructor(IAccessControl /* accessControl */ ) {
+        // accessControl.verifyHasAccessFunction();
+        // _setAccessControl(accessControl);
     }
 
     modifier requireAccess(uint256 permissionId) {

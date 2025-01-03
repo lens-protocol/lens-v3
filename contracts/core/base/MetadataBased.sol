@@ -27,6 +27,10 @@ abstract contract MetadataBased is IMetadataBased {
         _emitMetadataURISet(metadataURI);
     }
 
+    function _getMetadataURI() internal view returns (string memory) {
+        return $metadataStorage().metadataURI;
+    }
+
     function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal virtual {
         revert();
     }
@@ -34,6 +38,6 @@ abstract contract MetadataBased is IMetadataBased {
     function _emitMetadataURISet(string memory /* metadataURI */ ) internal virtual;
 
     function getMetadataURI() external view override returns (string memory) {
-        return $metadataStorage().metadataURI;
+        return _getMetadataURI();
     }
 }
