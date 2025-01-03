@@ -54,10 +54,11 @@ contract Account is IAccount, Ownable, IERC721Receiver, ExtraStorageBased {
         emit Lens_Account_AllowNonOwnerSpending(allow, allow ? block.timestamp : 0);
     }
 
-    function addAccountManager(
-        address accountManager,
-        AccountManagerPermissions calldata accountManagerPermissions
-    ) external override onlyOwner {
+    function addAccountManager(address accountManager, AccountManagerPermissions calldata accountManagerPermissions)
+        external
+        override
+        onlyOwner
+    {
         require(!_accountManagerPermissions[accountManager].canExecuteTransactions, "Account manager already exists");
         require(accountManager != owner(), "Cannot add owner as account manager");
         require(accountManager != address(0), "Cannot add zero address as account manager");
@@ -97,11 +98,12 @@ contract Account is IAccount, Ownable, IERC721Receiver, ExtraStorageBased {
         emit Lens_Account_MetadataURISet(metadataURI, sourceStamp.source);
     }
 
-    function executeTransaction(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable override returns (bytes memory) {
+    function executeTransaction(address to, uint256 value, bytes calldata data)
+        external
+        payable
+        override
+        returns (bytes memory)
+    {
         if (msg.sender != owner()) {
             require(
                 _accountManagerPermissions[msg.sender].canExecuteTransactions, "No permissions to execute transactions"

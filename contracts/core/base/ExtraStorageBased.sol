@@ -33,13 +33,12 @@ abstract contract ExtraStorageBased {
         mapping(address => mapping(uint256 => mapping(bytes32 => bytes))) extraStorage;
     }
 
-    // keccak256('lens.extra.storage')
-    // TODO: Why again we don't use dynamic keccak here?
-    bytes32 constant EXTRA_STORAGE_SLOT = 0x46682673acfb524e27de924ad404eee31c5d1237de941d864bdf1364c405fb35;
+    /// @custom:keccak lens.storage.ExtraDataStorage
+    bytes32 constant STORAGE__EXTRA_STORAGE = 0xfcea8b4575b2819c79ea87472ec531dc6bcf2b1f70176b2f7050dc0569bb7a44;
 
     function $extraDataStorage() private pure returns (ExtraDataStorage storage _storage) {
         assembly {
-            _storage.slot := EXTRA_STORAGE_SLOT
+            _storage.slot := STORAGE__EXTRA_STORAGE
         }
     }
 
@@ -59,10 +58,10 @@ abstract contract ExtraStorageBased {
         return _setExtraData(address(0), 0, extraDataToSet);
     }
 
-    function _setPrimitiveInternalExtraDataForEntity(
-        uint256 entityId,
-        KeyValue memory extraDataToSet
-    ) internal returns (bool) {
+    function _setPrimitiveInternalExtraDataForEntity(uint256 entityId, KeyValue memory extraDataToSet)
+        internal
+        returns (bool)
+    {
         return _setExtraData(address(0), entityId, extraDataToSet);
     }
 
@@ -87,10 +86,11 @@ abstract contract ExtraStorageBased {
         return _getExtraData(address(0), 0, key);
     }
 
-    function _getPrimitiveInternalExtraDataForEntity(
-        uint256 entityId,
-        bytes32 key
-    ) internal view returns (bytes memory) {
+    function _getPrimitiveInternalExtraDataForEntity(uint256 entityId, bytes32 key)
+        internal
+        view
+        returns (bytes memory)
+    {
         return _getExtraData(address(0), entityId, key);
     }
 

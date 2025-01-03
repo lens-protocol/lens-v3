@@ -7,31 +7,37 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
 import {IFeed} from "./../../core/interfaces/IFeed.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
-contract TippingPostAction is BasePostAction {
+contract TippingPostAction is BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;
 
-    // keccak256("lens.actions.account.TippingPostAction.param.key.tipAmount");
-    bytes32 immutable TIP_AMOUNT_PARAM_KEY = 0x9c3dd1983546cd2f985b2e6692b416f4157648b3750ffc5bdf5a6365061d9bd9;
-    // keccak256("lens.actions.account.TippingPostAction.param.key.tipToken");
-    bytes32 immutable TIP_TOKEN_PARAM_KEY = 0xae0b2bf062e67ee8e231397eadff68e32752f185a8cb19379ed8cfa87ae7bd08;
+    event Lens_Action_MetadataURISet(string metadataURI);
 
-    constructor(
-        address actionHub
-    ) BasePostAction(actionHub) {}
+    /// @custom:keccak lens.param.amount
+    bytes32 constant PARAM__TIP_AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
+    /// @custom:keccak lens.param.token
+    bytes32 constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 
-    function _execute(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) internal override returns (bytes memory) {
+    constructor(address actionHub, string memory metadataURI) BasePostAction(actionHub) {
+        _setMetadataURI(metadataURI);
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Action_MetadataURISet(metadataURI);
+    }
+
+    function _execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        internal
+        override
+        returns (bytes memory)
+    {
         address erc20Token;
         uint256 tipAmount;
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == TIP_AMOUNT_PARAM_KEY) {
+            if (params[i].key == PARAM__TIP_AMOUNT) {
                 tipAmount = abi.decode(params[i].value, (uint256));
-            } else if (params[i].key == TIP_TOKEN_PARAM_KEY) {
+            } else if (params[i].key == PARAM__TIP_TOKEN) {
                 erc20Token = abi.decode(params[i].value, (address));
             }
         }

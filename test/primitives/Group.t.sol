@@ -22,9 +22,17 @@ contract GroupTest is Test {
 
     function testJoinAndLeave() public {
         vm.prank(account);
-        group.joinGroup(account, _emptyExecutionData(), _emptySourceStamp());
+        group.joinGroup({
+            account: account,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
 
         vm.prank(account);
-        group.leaveGroup(account, _emptyExecutionData(), _emptySourceStamp());
+        group.leaveGroup({
+            account: account,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
     }
 }

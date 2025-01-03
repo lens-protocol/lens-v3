@@ -27,7 +27,7 @@ library RulesLib {
         bytes32 providedConfigSalt
     ) internal returns (bytes32) {
         if (providedConfigSalt == 0x00) {
-            return bytes32(++rulesStorage.lastConfigSaltGenerated); // TODO: We can choose another generation procedure
+            return bytes32(++rulesStorage.lastConfigSaltGenerated);
         } else {
             require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt]);
             return providedConfigSalt;
@@ -70,11 +70,11 @@ library RulesLib {
         _removeRuleSelectorFromStorage(rulesStorage, ruleSelector, ruleAddress, configSalt);
     }
 
-    function _getRulesArray(
-        RulesStorage storage rulesStorage,
-        bytes4 ruleSelector,
-        bool requiredRules
-    ) internal view returns (Rule[] storage) {
+    function _getRulesArray(RulesStorage storage rulesStorage, bytes4 ruleSelector, bool requiredRules)
+        internal
+        view
+        returns (Rule[] storage)
+    {
         return requiredRules ? rulesStorage.requiredRules[ruleSelector] : rulesStorage.anyOfRules[ruleSelector];
     }
 

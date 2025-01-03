@@ -23,9 +23,22 @@ contract GraphTest is Test {
 
     function testFollowAndUnfollow() public {
         vm.prank(sourceAccount);
-        graph.follow(sourceAccount, targetAccount, 0, _emptyExecutionData(), _emptyExecutionData(), _emptySourceStamp());
+        graph.follow({
+            followerAccount: sourceAccount,
+            targetAccount: targetAccount,
+            customParams: _emptyKeyValueArray(),
+            graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
+            followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
 
         vm.prank(sourceAccount);
-        graph.unfollow(sourceAccount, targetAccount, _emptyExecutionData(), _emptySourceStamp());
+        // graph.unfollow(sourceAccount, targetAccount, _emptyExecutionData(), _emptySourceStamp());
+        graph.unfollow({
+            followerAccount: sourceAccount,
+            targetAccount: targetAccount,
+            customParams: _emptyKeyValueArray(),
+            graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
+        });
     }
 }

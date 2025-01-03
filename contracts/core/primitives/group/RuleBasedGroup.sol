@@ -15,12 +15,12 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         RulesStorage groupRulesStorage;
     }
 
-    // keccak256('lens.rule.based.group.storage')
-    bytes32 constant RULE_BASED_GROUP_STORAGE_SLOT = 0x6b4f86fd68b78c2e5c3c4bc3b3dbb99669a3da3f0bb2db367c4d64acdb2fd3d9;
+    /// @custom:keccak lens.storage.RuleBasedGroup
+    bytes32 constant STORAGE__RULE_BASED_GROUP = 0x99daa1bc32e51d43348d6cfb165a280fbe2c093a37fe63320452612b9fb73547;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_GROUP_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_GROUP
         }
     }
 
@@ -43,10 +43,12 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(IGroupRule.configure, (configSalt, ruleParams));
     }
 
@@ -82,10 +84,13 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             + $groupRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
-    function getGroupRules(
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getGroupRules(bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $groupRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
@@ -259,6 +264,6 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($groupRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($groupRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }

@@ -11,51 +11,55 @@ import {AccessControlled} from "./../../access/AccessControlled.sol";
 import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
+import {MetadataBased} from "./../../base/MetadataBased.sol";
 
-contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, SourceStampBased {
+contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
     // Resource IDs involved in the contract
-    uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
-    uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
-    uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
 
-    // uint256 constant SKIP_FOLLOW_RULES_CHECKS_PID = uint256(keccak256("SKIP_FOLLOW_RULES_CHECKS"));
+    /// @custom:keccak lens.permission.ChangeRules
+    uint256 constant PID__CHANGE_RULES = uint256(0x550b12ef6572134aefc5804fd2b13ab3d8451e067ad453f67afe134cffebd977);
+    /// @custom:keccak lens.permission.SetMetadata
+    uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
+    /// @custom:keccak lens.permission.SetExtraData
+    uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Graph_MetadataURISet(metadataURI);
+        _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("graph", "lens.graph", "graph", "lens.graph");
     }
 
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Graph_MetadataURISet(metadataURI);
+    }
+
     function _emitPIDs() internal override {
         super._emitPIDs();
-        emit Events.Lens_PermissionId_Available(SET_RULES_PID, "SET_RULES");
-        emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
-        emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
+        emit Events.Lens_PermissionId_Available(PID__CHANGE_RULES, "lens.permission.ChangeRules");
+        emit Events.Lens_PermissionId_Available(PID__SET_METADATA, "lens.permission.SetMetadata");
+        emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
     }
 
     // Access Controlled functions
 
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
+        _requireAccess(msg.sender, PID__SET_METADATA);
+    }
+
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
-        _requireAccess(msg.sender, SET_RULES_PID);
+        _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 
-    function _beforeChangeEntityRules(
-        uint256 entityId,
-        RuleChange[] calldata /* ruleChanges */
-    ) internal virtual override {
-        address account = address(uint160(entityId));
-        // TODO: What should we validate here?
-    }
-
-    function setMetadataURI(string calldata metadataURI) external override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Graph_MetadataURISet(metadataURI);
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata /* ruleChanges */ )
+        internal
+        virtual
+        override
+    {
+        require(msg.sender == address(uint160(entityId))); // Follow rules can only be changed in your own account
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
@@ -82,10 +86,10 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external override returns (uint256) {
+    ) external virtual override returns (uint256) {
         require(msg.sender == followerAccount);
         // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
-        uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0);
+        uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);
         address source = _processSourceStamp(assignedFollowId, customParams);
         _graphProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, graphRulesProcessingParams);
         _accountProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, followRulesProcessingParams);
@@ -107,7 +111,7 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
         address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external override returns (uint256) {
+    ) external virtual override returns (uint256) {
         require(msg.sender == followerAccount);
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(followId, customParams);
@@ -125,11 +129,15 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
     }
 
     function getFollowerById(address account, uint256 followId) external view override returns (address) {
-        return Core.$storage().followers[account][followId];
+        address follower = Core.$storage().followers[account][followId];
+        require(follower != address(0), "FOLLOWER_DOES_NOT_EXIST");
+        return follower;
     }
 
     function getFollow(address followerAccount, address targetAccount) external view override returns (Follow memory) {
-        return Core.$storage().follows[followerAccount][targetAccount];
+        Follow memory followData = Core.$storage().follows[followerAccount][targetAccount];
+        require(followData.id != 0, "FOLLOW_DOES_NOT_EXIST");
+        return followData;
     }
 
     function getFollowersCount(address account) external view override returns (uint256) {
@@ -142,9 +150,5 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getPrimitiveExtraData(key);
-    }
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
     }
 }

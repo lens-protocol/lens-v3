@@ -61,7 +61,7 @@ interface IFeed is IMetadataBased {
         address indexed source
     );
 
-    event Lens_Feed_PostRemoved(
+    event Lens_Feed_PostDeleted(
         uint256 indexed postId, address indexed author, KeyValue[] customParams, address indexed source
     );
 
@@ -136,12 +136,8 @@ interface IFeed is IMetadataBased {
         RuleProcessingParams[] calldata quotedPostRulesParams
     ) external;
 
-    // "Delete" - u know u cannot delete stuff from the internet, right? :]
-    // But this will at least remove it from the current state, so contracts accessing it will know.
-    // TODO: Debate post deletion, soft vs. hard delete, extra data deletion, etc.
-    function removePost(
+    function deletePost(
         uint256 postId,
-        bytes32[] calldata extraDataKeysToRemove,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) external;
@@ -157,6 +153,8 @@ interface IFeed is IMetadataBased {
     // Getters
 
     function getPost(uint256 postId) external view returns (Post memory);
+
+    function postExists(uint256 postId) external view returns (bool);
 
     function getPostAuthor(uint256 postId) external view returns (address);
 
@@ -177,6 +175,4 @@ interface IFeed is IMetadataBased {
     function getAuthorPostSequentialId(uint256 postId) external view returns (uint256);
 
     function getNextPostId(address author) external view returns (uint256);
-
-    // TODO: Should we have getPostBySequentialId and getPostByAuthorSequentialId ?
 }

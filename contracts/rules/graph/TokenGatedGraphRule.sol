@@ -13,10 +13,11 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    uint256 constant SKIP_TOKEN_GATE_PID = uint256(keccak256("SKIP_TOKEN_GATE"));
+    /// @custom:keccak lens.permission.SkipTokenGate
+    uint256 constant PID__SKIP_TOKEN_GATE = uint256(0x42073514d6ebc3c4c46bdc33d53105f5c563a0d184e86952704eb3e7b74ec1ae);
 
-    // keccak256("lens.param.key.accessControl");
-    bytes32 immutable ACCESS_CONTROL_PARAM_KEY = 0x6552dd4db64bdb68f2725e4865ecb072df1c2befcfb455b69e2d2b886a8e185e;
+    /// @custom:keccak lens.param.accessControl
+    bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
     struct Configuration {
         address accessControl;
@@ -25,8 +26,8 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor() {
-        emit Events.Lens_PermissionId_Available(SKIP_TOKEN_GATE_PID, "SKIP_TOKEN_GATE");
+    constructor(string memory metadataURI) TokenGatedRule(metadataURI) {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_TOKEN_GATE, "lens.permission.SkipTokenGate");
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
@@ -85,7 +86,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         TokenGateConfiguration memory tokenGateConfiguration,
         address account
     ) internal view {
-        if (!accessControl.hasAccess(account, SKIP_TOKEN_GATE_PID)) {
+        if (!accessControl.hasAccess(account, PID__SKIP_TOKEN_GATE)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
     }
@@ -93,9 +94,9 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
         Configuration memory configuration;
         for (uint256 i = 0; i < params.length; i++) {
-            if (params[i].key == ACCESS_CONTROL_PARAM_KEY) {
+            if (params[i].key == PARAM__ACCESS_CONTROL) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
-            } else if (params[i].key == TOKEN_GATE_PARAM_KEY) {
+            } else if (params[i].key == PARAM__TOKEN_GATE) {
                 configuration.tokenGate = abi.decode(params[i].value, (TokenGateConfiguration));
             }
         }

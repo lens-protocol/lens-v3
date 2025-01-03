@@ -5,11 +5,6 @@ pragma solidity ^0.8.0;
 import {RuleProcessingParams, KeyValue, RuleChange, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
 
-// TODO: Might worth to add extraData to the follow entity
-// Maybe it requires a targetExtraData and a followerExtraData
-// so then you have different auth for them, and they store different data
-// e.g. the follower can store a label/tag/category, like "I follow this account because of crypto/politics/etc"
-// and the target can store other information like tiers, etc.
 struct Follow {
     uint256 id;
     uint256 timestamp;
@@ -110,11 +105,10 @@ interface IGraph is IMetadataBased {
 
     function getGraphRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
-    function getFollowRules(
-        address account,
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view returns (Rule[] memory);
+    function getFollowRules(address account, bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
 }

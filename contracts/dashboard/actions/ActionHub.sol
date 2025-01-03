@@ -5,19 +5,13 @@ pragma solidity ^0.8.0;
 import {KeyValue} from "./../../core/types/Types.sol";
 
 interface IPostAction {
-    function configure(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external returns (bytes memory);
+    function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        returns (bytes memory);
 
-    function execute(
-        address originalMsgSender,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external returns (bytes memory);
+    function execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        returns (bytes memory);
 
     function setDisabled(
         address originalMsgSender,
@@ -29,28 +23,21 @@ interface IPostAction {
 }
 
 interface IAccountAction {
-    function configure(
-        address originalMsgSender,
-        address account,
-        KeyValue[] calldata params
-    ) external returns (bytes memory);
+    function configure(address originalMsgSender, address account, KeyValue[] calldata params)
+        external
+        returns (bytes memory);
 
-    function execute(
-        address originalMsgSender,
-        address account,
-        KeyValue[] calldata params
-    ) external returns (bytes memory);
+    function execute(address originalMsgSender, address account, KeyValue[] calldata params)
+        external
+        returns (bytes memory);
 
-    function setDisabled(
-        address originalMsgSender,
-        address account,
-        bool isDisabled,
-        KeyValue[] calldata params
-    ) external returns (bytes memory);
+    function setDisabled(address originalMsgSender, address account, bool isDisabled, KeyValue[] calldata params)
+        external
+        returns (bytes memory);
 }
 
-// keccak256("lens.action.universal");
-bytes32 constant UNIVERSAL_ACTION_MAGIC_VALUE = 0xa428ff01516755687b6330e79f5727df2d51cc3306cf3a39b056986d10db69c0;
+/// @custom:keccak lens.constant.UniversalAction
+bytes32 constant UNIVERSAL_ACTION_MAGIC_VALUE = 0xa12c06eea999f2a08fb2bd50e396b2a286921eebbda81fb45a0adcf13afb18ef;
 
 contract ActionHub {
     event Lens_ActionHub_PostAction_Universal(address indexed action);
@@ -115,45 +102,41 @@ contract ActionHub {
         emit Lens_ActionHub_PostAction_Universal(action);
     }
 
-    function configurePostAction(
-        address action,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function configurePostAction(address action, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IPostAction(action).configure(msg.sender, feed, postId, params);
         emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
 
-    function executePostAction(
-        address action,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function executePostAction(address action, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, params);
         emit Lens_ActionHub_PostAction_Executed(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
 
-    function disablePostAction(
-        address action,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function disablePostAction(address action, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, true, params);
         emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
 
-    function enablePostAction(
-        address action,
-        address feed,
-        uint256 postId,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function enablePostAction(address action, address feed, uint256 postId, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, false, params);
         emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, params, returnData);
         return returnData;
@@ -165,41 +148,41 @@ contract ActionHub {
         emit Lens_ActionHub_AccountAction_Universal(action);
     }
 
-    function configureAccountAction(
-        address action,
-        address account,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function configureAccountAction(address action, address account, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IAccountAction(action).configure(msg.sender, account, params);
         emit Lens_ActionHub_AccountAction_Configured(action, msg.sender, account, params, returnData);
         return returnData;
     }
 
-    function executeAccountAction(
-        address action,
-        address account,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function executeAccountAction(address action, address account, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IAccountAction(action).execute(msg.sender, account, params);
         emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, params, returnData);
         return returnData;
     }
 
-    function disableAccountAction(
-        address action,
-        address account,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function disableAccountAction(address action, address account, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, true, params);
         emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, params, returnData);
         return returnData;
     }
 
-    function enableAccountAction(
-        address action,
-        address account,
-        KeyValue[] calldata params
-    ) external payable returns (bytes memory) {
+    function enableAccountAction(address action, address account, KeyValue[] calldata params)
+        external
+        payable
+        returns (bytes memory)
+    {
         bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, false, params);
         emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, params, returnData);
         return returnData;

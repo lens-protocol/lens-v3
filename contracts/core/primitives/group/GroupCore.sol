@@ -2,31 +2,35 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-library GroupCore {
-    struct Membership {
-        uint256 id;
-        uint256 timestamp;
-    }
+import {Membership} from "./../../interfaces/IGroup.sol";
 
+library GroupCore {
     // Storage
 
     struct Storage {
-        string metadataURI;
         uint256 lastMemberIdAssigned;
         uint256 numberOfMembers;
         mapping(address => Membership) memberships;
     }
 
-    // keccak256('lens.group.core.storage')
-    bytes32 constant CORE_STORAGE_SLOT = 0xe3d84445237a06d082986111e0d101bb8001f44a5807dc25d1929b8fc52c1c69;
+    /// @custom:keccak lens.storage.GroupCore
+    bytes32 constant STORAGE__GROUP_CORE = 0x21ab408a492cf8beda2879363dd3a4ec8ba15c85532aa540e0e12415acdd09ed;
 
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {
-            _storage.slot := CORE_STORAGE_SLOT
+            _storage.slot := STORAGE__GROUP_CORE
         }
     }
 
     // Internal functions - Use these functions to be called as an inlined library
+
+    function _isMember(address account) internal view returns (bool) {
+        return $storage().memberships[account].id != 0;
+    }
+
+    function _getMembership(address account) internal view returns (Membership memory) {
+        return $storage().memberships[account];
+    }
 
     function _grantMembership(address account) internal returns (uint256) {
         uint256 membershipId = ++$storage().lastMemberIdAssigned;

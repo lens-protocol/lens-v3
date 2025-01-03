@@ -8,6 +8,8 @@ import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
 import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
 
 contract RestrictedSignersGraphRule is RestrictedSignersRule, IGraphRule {
+    constructor(string memory metadataURI) RestrictedSignersRule(metadataURI) {}
+
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         _configure(configSalt, ruleParams);
     }

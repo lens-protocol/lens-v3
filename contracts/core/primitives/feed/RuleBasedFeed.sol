@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {IPostRule} from "./../../interfaces/IPostRule.sol";
 import {IFeedRule} from "./../../interfaces/IFeedRule.sol";
 import {IFeed} from "./../../interfaces/IFeed.sol";
-import {FeedCore as Core} from "./FeedCore.sol";
 import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
 import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "./../../types/Types.sol";
 import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
@@ -19,12 +18,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         mapping(uint256 => RulesStorage) postRulesStorage;
     }
 
-    // keccak256('lens.rule.based.feed.storage')
-    bytes32 constant RULE_BASED_FEED_STORAGE_SLOT = 0x02d31ef96f666bf684ab1c8a89d21f38a88719152ba49251cdaacb4c11cdae39;
+    /// @custom:keccak lens.storage.RuleBasedStorage
+    bytes32 constant STORAGE__RULE_BASED_FEED = 0x5d84583cb768017b44ca3aec8199901a24d17ed118ff103b086430f4dac47b71;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_FEED_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_FEED
         }
     }
 
@@ -47,8 +46,6 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata ruleChangesProcessingParams
     ) external virtual override {
-        // TODO: msg.sender must be author
-        // TODO: Post must exist before we allow changing its rules
         _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, ruleChangesProcessingParams);
     }
 
@@ -68,10 +65,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(IFeedRule.configure, (configSalt, ruleParams));
     }
 
@@ -111,11 +110,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return $feedRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
-    function getPostRules(
-        bytes4 ruleSelector,
-        uint256 postId,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getPostRules(bytes4 ruleSelector, uint256 postId, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $postRulesStorage(postId)._getRulesArray(ruleSelector, isRequired);
     }
 
@@ -212,7 +213,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostCreationOnRootPost(
@@ -366,7 +367,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostRemoval(
@@ -416,7 +417,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostRulesChanges(
@@ -466,6 +467,6 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($feedRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }

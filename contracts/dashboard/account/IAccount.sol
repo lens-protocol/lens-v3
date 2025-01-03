@@ -23,10 +23,8 @@ interface IAccount {
     event Lens_Account_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Account_ExtraDataRemoved(bytes32 indexed key);
 
-    function addAccountManager(
-        address _accountManager,
-        AccountManagerPermissions calldata accountManagerPermissions
-    ) external;
+    function addAccountManager(address _accountManager, AccountManagerPermissions calldata accountManagerPermissions)
+        external;
 
     function removeAccountManager(address _accountManager) external;
 
@@ -39,11 +37,10 @@ interface IAccount {
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
-    function executeTransaction(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable returns (bytes memory);
+    function executeTransaction(address to, uint256 value, bytes calldata data)
+        external
+        payable
+        returns (bytes memory);
 
     function getMetadataURI(address source) external view returns (string memory);
 

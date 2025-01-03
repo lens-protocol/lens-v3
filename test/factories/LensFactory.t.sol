@@ -9,21 +9,26 @@ import {AppFactory} from "../../contracts/dashboard/factories/AppFactory.sol";
 import {GroupFactory} from "../../contracts/dashboard/factories/GroupFactory.sol";
 import {FeedFactory} from "../../contracts/dashboard/factories/FeedFactory.sol";
 import {GraphFactory} from "../../contracts/dashboard/factories/GraphFactory.sol";
-import {UsernameFactory} from "../../contracts/dashboard/factories/UsernameFactory.sol";
-import {Username} from "../../contracts/core/primitives/username/Username.sol";
-import {RuleChange, DataElement, SourceStamp, RuleExecutionData} from "../../contracts/core/types/Types.sol";
+import {NamespaceFactory} from "../../contracts/dashboard/factories/NamespaceFactory.sol";
+import {Namespace} from "../../contracts/core/primitives/namespace/Namespace.sol";
+import {RuleChange, KeyValue} from "../../contracts/core/types/Types.sol";
 import {AccountManagerPermissions} from "../../contracts/dashboard/account/Account.sol";
 import {AccessControlFactory} from "../../contracts/dashboard/factories/AccessControlFactory.sol";
-import {UserBlockingRule} from "../../contracts/rules/base/UserBlockingRule.sol";
+import {AccountBlockingRule} from "../../contracts/rules/base/AccountBlockingRule.sol";
 import {IGraph} from "../../contracts/core/interfaces/IGraph.sol";
+import {GroupGatedFeedRule} from "../../contracts/rules/feed/GroupGatedFeedRule.sol";
 import "../helpers/TypeHelpers.sol";
 
 contract LensFactoryTest is Test {
     LensFactory lensFactory;
-    Username username;
+    Namespace namespace;
+
+    AccountBlockingRule accountBlockingRule;
+    GroupGatedFeedRule groupGatedFeedRule;
 
     function setUp() public {
-        UserBlockingRule userBlockingRule = new UserBlockingRule();
+        accountBlockingRule = new AccountBlockingRule({metadataURI: "uri://any"});
+        groupGatedFeedRule = new GroupGatedFeedRule({metadataURI: "uri://any"});
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(),
@@ -32,18 +37,19 @@ contract LensFactoryTest is Test {
             groupFactory: new GroupFactory(),
             feedFactory: new FeedFactory(),
             graphFactory: new GraphFactory(),
-            usernameFactory: new UsernameFactory(),
-            userBlockingRule: address(userBlockingRule)
+            namespaceFactory: new NamespaceFactory(),
+            accountBlockingRule: address(accountBlockingRule),
+            groupGatedFeedRule: address(groupGatedFeedRule)
         });
 
-        username = Username(
-            lensFactory.deployUsername({
+        namespace = Namespace(
+            lensFactory.deployNamespace({
                 namespace: "bitcoin",
                 metadataURI: "satoshi://nakamoto",
                 owner: address(this),
                 admins: new address[](0),
                 rules: new RuleChange[](0),
-                extraData: new DataElement[](0),
+                extraData: new KeyValue[](0),
                 nftName: "Bitcoin",
                 nftSymbol: "BTC"
             })
@@ -54,15 +60,18 @@ contract LensFactoryTest is Test {
         lensFactory.createAccountWithUsernameFree({
             metadataURI: "someMetadataURI",
             owner: address(this),
-            accountManagers: new address[](0),
+            accountManagers: _emptyAddressArray(),
             accountManagersPermissions: new AccountManagerPermissions[](0),
-            usernamePrimitiveAddress: address(username),
+            namespacePrimitiveAddress: address(namespace),
             username: "myTestUsername",
-            createUsernameData: RuleExecutionData(new bytes[](0), new bytes[](0)),
-            assignUsernameData: RuleExecutionData(new bytes[](0), new bytes[](0)),
-            accountCreationSourceStamp: SourceStamp(address(0), 0, 0, ""),
-            assignUsernameSourceStamp: SourceStamp(address(0), 0, 0, ""),
-            createUsernameSourceStamp: SourceStamp(address(0), 0, 0, "")
+            accountCreationSourceStamp: _emptySourceStamp(),
+            createUsernameCustomParams: _emptyKeyValueArray(),
+            createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignUsernameCustomParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            accountExtraData: _emptyKeyValueArray(),
+            usernameExtraData: _emptyKeyValueArray()
         });
     }
 
@@ -73,20 +82,16 @@ contract LensFactoryTest is Test {
                 owner: address(this),
                 admins: _emptyAddressArray(),
                 rules: _emptyRuleChangeArray(),
-                extraData: _emptyExtraData()
+                extraData: _emptyKeyValueArray()
             })
         );
-        RuleExecutionData memory ruleExecutionDataArray = _emptyExecutionData();
-        // bytes array with single empty element
-        bytes[] memory singleElementByteArray = new bytes[](1);
-        ruleExecutionDataArray.dataForRequiredRules = singleElementByteArray;
         graph.follow({
             followerAccount: address(this),
             targetAccount: address(0xc0ffee),
-            followId: 0,
-            graphRulesData: ruleExecutionDataArray,
-            followRulesData: _emptyExecutionData(),
-            sourceStamp: _emptySourceStamp()
+            customParams: _emptyKeyValueArray(),
+            graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
+            followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
         });
     }
 }

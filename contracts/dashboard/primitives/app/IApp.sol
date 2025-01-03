@@ -15,9 +15,9 @@ interface IApp is IMetadataBased {
     event Lens_App_FeedRemoved(address indexed feed);
     event Lens_App_DefaultFeedSet(address indexed feed);
 
-    // Username
-    event Lens_App_UsernameAdded(address indexed username);
-    event Lens_App_UsernameRemoved(address indexed username);
+    // Namespace
+    event Lens_App_NamespaceAdded(address indexed namespace);
+    event Lens_App_NamespaceRemoved(address indexed namespace);
 
     // Group
     event Lens_App_GroupAdded(address indexed group);
@@ -56,7 +56,7 @@ interface IApp is IMetadataBased {
 
     function setGraph(address graph) external;
 
-    function setUsername(address username) external;
+    function setNamespace(address namespace) external;
 
     function addSigners(address[] memory signers) external;
     function removeSigners(address[] memory signers) external;
@@ -77,7 +77,7 @@ interface IApp is IMetadataBased {
 
     function getGraphs() external view returns (address[] memory);
 
-    function getUsernames() external view returns (address[] memory);
+    function getNamespaces() external view returns (address[] memory);
 
     function getSigners() external view returns (address[] memory);
 
@@ -89,7 +89,7 @@ interface IApp is IMetadataBased {
 
     function getDefaultGraph() external view returns (address);
     function getDefaultFeed() external view returns (address);
-    function getDefaultUsername() external view returns (address);
+    function getDefaultNamespace() external view returns (address);
     function getDefaultGroup() external view returns (address);
     function getDefaultPaymaster() external view returns (address);
 }

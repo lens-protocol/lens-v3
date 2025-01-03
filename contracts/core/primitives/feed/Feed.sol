@@ -11,46 +11,55 @@ import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
+import {MetadataBased} from "./../../base/MetadataBased.sol";
 
-contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased {
+contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
+    // TODO: Move these to respective contracts
     // Resource IDs involved in the contract
-    uint256 constant SET_RULES_PID = uint256(keccak256("SET_RULES"));
-    uint256 constant SET_METADATA_PID = uint256(keccak256("SET_METADATA"));
-    uint256 constant SET_EXTRA_DATA_PID = uint256(keccak256("SET_EXTRA_DATA"));
-    uint256 constant REMOVE_POST_PID = uint256(keccak256("REMOVE_POST"));
+
+    /// @custom:keccak lens.permission.SetMetadata
+    uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
+    /// @custom:keccak lens.permission.ChangeRules
+    uint256 constant PID__CHANGE_RULES = uint256(0x550b12ef6572134aefc5804fd2b13ab3d8451e067ad453f67afe134cffebd977);
+    /// @custom:keccak lens.permission.SetExtraData
+    uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
+    /// @custom:keccak lens.permission.RemovePost
+    uint256 constant PID__REMOVE_POST = uint256(0x25b86c749bcf827bec85b3f107e1d65771462eb329e68ff158d50a2f4b301c89);
 
     constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Feed_MetadataURISet(metadataURI);
+        _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
     }
 
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Feed_MetadataURISet(metadataURI);
+    }
+
     function _emitPIDs() internal override {
         super._emitPIDs();
-        emit Events.Lens_PermissionId_Available(SET_RULES_PID, "SET_RULES");
-        emit Events.Lens_PermissionId_Available(SET_METADATA_PID, "SET_METADATA");
-        emit Events.Lens_PermissionId_Available(SET_EXTRA_DATA_PID, "SET_EXTRA_DATA");
-        emit Events.Lens_PermissionId_Available(REMOVE_POST_PID, "REMOVE_POST");
+        emit Events.Lens_PermissionId_Available(PID__CHANGE_RULES, "lens.permission.ChangeRules");
+        emit Events.Lens_PermissionId_Available(PID__SET_METADATA, "lens.permission.SetMetadata");
+        emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
+        emit Events.Lens_PermissionId_Available(PID__REMOVE_POST, "lens.permission.RemovePost");
     }
 
     // Access Controlled functions
 
-    function setMetadataURI(string calldata metadataURI) external override {
-        _requireAccess(msg.sender, SET_METADATA_PID);
-        Core.$storage().metadataURI = metadataURI;
-        emit Lens_Feed_MetadataURISet(metadataURI);
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
+        _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
     function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
-        _requireAccess(msg.sender, SET_RULES_PID);
+        _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 
-    function _beforeChangeEntityRules(
-        uint256 entityId,
-        RuleChange[] calldata /* ruleChanges */
-    ) internal virtual override {
-        // TODO: What should we validate here?
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata /* ruleChanges */ )
+        internal
+        virtual
+        override
+    {
+        require(msg.sender == Core.$storage().posts[entityId].author);
     }
 
     // Public user functions
@@ -61,11 +70,11 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external override returns (uint256) {
+    ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
-        (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         address source = _processSourceStamp(postId, customParams);
-        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(LAST_UPDATED_SOURCE_EXTRA_DATA, abi.encode(source)));
+        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
@@ -85,7 +94,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         emit Lens_Feed_PostCreated(
             postId,
             postParams.author,
-            localSequentialId,
+            authorPostSequentialId,
             rootPostId,
             postParams,
             customParams,
@@ -110,7 +119,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external override {
+    ) external virtual override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
@@ -153,23 +162,21 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         }
     }
 
-    // TODO: Decide how DELETE operation should work in Feed (soft vs. hard delete)
-    function removePost(
+    function deletePost(
         uint256 postId,
-        bytes32[] calldata, /*extraDataKeysToRemove*/ // TODO: Consider moving this into customParams
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
-    ) external override {
+    ) external virtual override {
         address author = Core.$storage().posts[postId].author;
-        require(msg.sender == author || _hasAccess(msg.sender, REMOVE_POST_PID), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
+        require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
         Core._removePost(postId);
         _processPostRemoval(postId, customParams, feedRulesParams);
         address source = _processSourceStamp(postId, customParams);
-        emit Lens_Feed_PostRemoved(postId, author, customParams, source);
+        emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, SET_EXTRA_DATA_PID);
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
@@ -190,7 +197,7 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     // Getters
 
     function getPost(uint256 postId) external view override returns (Post memory) {
-        // TODO: Should fail if post doesn't exist
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Post({
             author: Core.$storage().posts[postId].author,
             authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
@@ -207,8 +214,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         });
     }
 
+    function postExists(uint256 postId) external view override returns (bool) {
+        return Core._postExists(postId);
+    }
+
     function getPostAuthor(uint256 postId) external view override returns (address) {
-        // TODO: Should fail if post doesn't exist?
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Core.$storage().posts[postId].author;
     }
 
@@ -220,11 +231,8 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
         return Core.$storage().authorPostCount[author];
     }
 
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
-    }
-
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         address postAuthor = Core.$storage().posts[postId].author;
         return _getEntityExtraData(postAuthor, postId, key);
     }
@@ -234,10 +242,12 @@ contract Feed is IFeed, RuleBasedFeed, AccessControlled, ExtraStorageBased, Sour
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Core.$storage().posts[postId].postSequentialId;
     }
 
     function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
+        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
         return Core.$storage().posts[postId].authorPostSequentialId;
     }
 

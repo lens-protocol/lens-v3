@@ -17,16 +17,19 @@ import {
 import {GroupFactory} from "./GroupFactory.sol";
 import {FeedFactory} from "./FeedFactory.sol";
 import {GraphFactory} from "./GraphFactory.sol";
-import {UsernameFactory} from "./UsernameFactory.sol";
+import {NamespaceFactory} from "./NamespaceFactory.sol";
 import {AppFactory, AppInitialProperties} from "./AppFactory.sol";
 import {AccessControlFactory} from "./AccessControlFactory.sol";
 import {AccountFactory} from "./AccountFactory.sol";
 import {IAccount, AccountManagerPermissions} from "./../account/IAccount.sol";
-import {IUsername} from "./../../core/interfaces/IUsername.sol";
+import {INamespace} from "./../../core/interfaces/INamespace.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
-import {LensUsernameTokenURIProvider} from "./../../core/primitives/username/LensUsernameTokenURIProvider.sol";
+import {LensUsernameTokenURIProvider} from "./../../core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
+import {PARAM__GROUP} from "./../../rules/feed/GroupGatedFeedRule.sol";
+import {AccessControlled} from "./../../core/access/AccessControlled.sol";
+import {IGroup} from "./../../core/interfaces/IGroup.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
@@ -41,7 +44,8 @@ interface IOwnable {
 //     IRoleBasedAccessControl.Access access;
 // }
 
-// uint8 decimals; TODO ???
+/// @custom:keccak lens.data.groupFeed
+bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92d4ee5701c6d20b721221326b94ae1;
 
 contract LensFactory {
     AccessControlFactory internal immutable ACCESS_CONTROL_FACTORY;
@@ -50,9 +54,10 @@ contract LensFactory {
     GroupFactory internal immutable GROUP_FACTORY;
     FeedFactory internal immutable FEED_FACTORY;
     GraphFactory internal immutable GRAPH_FACTORY;
-    UsernameFactory internal immutable USERNAME_FACTORY;
+    NamespaceFactory internal immutable NAMESPACE_FACTORY;
     IAccessControl internal immutable _factoryOwnedAccessControl;
-    address internal immutable _userBlockingRule;
+    address internal immutable _accountBlockingRule;
+    address internal immutable _groupGatedFeedRule;
 
     constructor(
         AccessControlFactory accessControlFactory,
@@ -61,8 +66,9 @@ contract LensFactory {
         GroupFactory groupFactory,
         FeedFactory feedFactory,
         GraphFactory graphFactory,
-        UsernameFactory usernameFactory,
-        address userBlockingRule
+        NamespaceFactory namespaceFactory,
+        address accountBlockingRule,
+        address groupGatedFeedRule
     ) {
         ACCESS_CONTROL_FACTORY = accessControlFactory;
         ACCOUNT_FACTORY = accountFactory;
@@ -70,9 +76,10 @@ contract LensFactory {
         GROUP_FACTORY = groupFactory;
         FEED_FACTORY = feedFactory;
         GRAPH_FACTORY = graphFactory;
-        USERNAME_FACTORY = usernameFactory;
+        NAMESPACE_FACTORY = namespaceFactory;
         _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
-        _userBlockingRule = userBlockingRule;
+        _accountBlockingRule = accountBlockingRule;
+        _groupGatedFeedRule = groupGatedFeedRule;
     }
 
     // TODO: This function belongs to an App probably.
@@ -81,7 +88,7 @@ contract LensFactory {
         address owner,
         address[] calldata accountManagers,
         AccountManagerPermissions[] calldata accountManagersPermissions,
-        address usernamePrimitiveAddress,
+        address namespacePrimitiveAddress,
         string calldata username,
         SourceStamp calldata accountCreationSourceStamp,
         KeyValue[] calldata createUsernameCustomParams,
@@ -100,14 +107,14 @@ contract LensFactory {
             accountCreationSourceStamp,
             accountExtraData
         );
-        IUsername usernamePrimitive = IUsername(usernamePrimitiveAddress);
+        INamespace namespacePrimitive = INamespace(namespacePrimitiveAddress);
         bytes memory txData = abi.encodeCall(
-            usernamePrimitive.createUsername,
+            namespacePrimitive.createUsername,
             (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams, usernameExtraData)
         );
-        IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
+        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         txData = abi.encodeCall(
-            usernamePrimitive.assignUsername,
+            namespacePrimitive.assignUsername,
             (
                 account,
                 username,
@@ -117,9 +124,64 @@ contract LensFactory {
                 assignRuleProcessingParams
             )
         );
-        IAccount(payable(account)).executeTransaction(usernamePrimitiveAddress, uint256(0), txData);
+        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(owner);
         return account;
+    }
+
+    function createGroupWithFeed(
+        address owner,
+        address[] calldata admins,
+        string calldata groupMetadataURI,
+        RuleChange[] calldata groupRules,
+        KeyValue[] calldata groupExtraData,
+        string calldata feedMetadataURI,
+        RuleChange[] calldata feedRules,
+        KeyValue[] calldata feedExtraData
+    ) external returns (address, address) {
+        address group =
+            GROUP_FACTORY.deployGroup(groupMetadataURI, _factoryOwnedAccessControl, groupRules, groupExtraData);
+
+        RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
+
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
+        selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
+
+        modifiedFeedRules[0] = RuleChange({
+            ruleAddress: _accountBlockingRule,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: selectorChanges
+        });
+
+        KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
+        groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(group)});
+
+        modifiedFeedRules[1] = RuleChange({
+            ruleAddress: _groupGatedFeedRule,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
+            selectorChanges: selectorChanges
+        });
+
+        for (uint256 i = 0; i < feedRules.length; i++) {
+            require(feedRules[i].ruleAddress != _accountBlockingRule, "AccountBlockingRule was already prepended");
+            require(feedRules[i].ruleAddress != _groupGatedFeedRule, "GroupGatedRule was already prepended");
+            modifiedFeedRules[i + 2] = feedRules[i];
+        }
+
+        address feed = FEED_FACTORY.deployFeed(
+            feedMetadataURI, _deployAccessControl(owner, admins), modifiedFeedRules, feedExtraData
+        );
+
+        IRoleBasedAccessControl groupAccessControl = _deployAccessControl(owner, admins);
+        KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
+        groupExtraDataWithFeed[0] = KeyValue({key: DATA__GROUP_LINKED_FEED, value: abi.encode(feed)});
+        IGroup(group).setExtraData(groupExtraDataWithFeed);
+        AccessControlled(group).setAccessControl(groupAccessControl);
+        return (group, feed);
     }
 
     function deployAccount(
@@ -156,80 +218,82 @@ contract LensFactory {
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata ruleChanges,
+        RuleChange[] calldata rules,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), ruleChanges, extraData);
+        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
     }
 
     function deployFeed(
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata ruleChanges,
+        RuleChange[] calldata rules,
         KeyValue[] calldata extraData
     ) external returns (address) {
         return FEED_FACTORY.deployFeed(
             metadataURI,
             _deployAccessControl(owner, admins),
-            _prependUserBlocking(ruleChanges, IFeedRule.processCreatePost.selector),
+            _prependAccountBlocking(rules, IFeedRule.processCreatePost.selector),
             extraData
         );
     }
 
-    function _prependUserBlocking(
-        RuleChange[] calldata ruleChanges,
-        bytes4 ruleSelector
-    ) internal view returns (RuleChange[] memory) {
-        RuleChange[] memory modifiedRuleChanges = new RuleChange[](ruleChanges.length + 1);
+    function _prependAccountBlocking(RuleChange[] calldata rules, bytes4 ruleSelector)
+        internal
+        view
+        returns (RuleChange[] memory)
+    {
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
 
         RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
         selectorChanges[0] = RuleSelectorChange({ruleSelector: ruleSelector, isRequired: true, enabled: true});
 
-        modifiedRuleChanges[0] = RuleChange({
-            ruleAddress: _userBlockingRule,
+        modifiedRules[0] = RuleChange({
+            ruleAddress: _accountBlockingRule,
             configSalt: bytes32(0),
             configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
             selectorChanges: selectorChanges
         });
-        for (uint256 i = 0; i < ruleChanges.length; i++) {
-            modifiedRuleChanges[i + 1] = modifiedRuleChanges[i];
+        for (uint256 i = 0; i < rules.length; i++) {
+            require(rules[i].ruleAddress != _accountBlockingRule, "AccountBlockingRule was already prepended");
+            modifiedRules[i + 1] = rules[i];
         }
 
-        return modifiedRuleChanges;
+        return modifiedRules;
     }
 
     function deployGraph(
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata ruleChanges,
+        RuleChange[] calldata rules,
         KeyValue[] calldata extraData
     ) external returns (address) {
         return GRAPH_FACTORY.deployGraph(
             metadataURI,
             _deployAccessControl(owner, admins),
-            _prependUserBlocking(ruleChanges, IGraphRule.processFollow.selector),
+            _prependAccountBlocking(rules, IGraphRule.processFollow.selector),
             extraData
         );
     }
 
-    function deployUsername(
+    function deployNamespace(
         string calldata namespace,
         string calldata metadataURI,
         address owner,
         address[] calldata admins,
-        RuleChange[] calldata ruleChanges,
+        RuleChange[] calldata rules,
         KeyValue[] calldata extraData,
         string calldata nftName,
         string calldata nftSymbol
     ) external returns (address) {
-        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider(); // TODO!
-        return USERNAME_FACTORY.deployUsername(
+        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
+        return NAMESPACE_FACTORY.deployNamespace(
             namespace,
             metadataURI,
             _deployAccessControl(owner, admins),
-            ruleChanges,
+            rules,
             extraData,
             nftName,
             nftSymbol,

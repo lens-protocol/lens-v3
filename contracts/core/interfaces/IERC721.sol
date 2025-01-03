@@ -8,8 +8,6 @@ pragma solidity ^0.8.0;
  * @dev Required interface of an ERC721 compliant contract.
  */
 interface IERC721 {
-    // TODO: We want to define Lens-specific events, like Lens_Transfer - We might want to emit BOTH events
-
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */

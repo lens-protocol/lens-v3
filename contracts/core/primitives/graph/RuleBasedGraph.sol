@@ -17,12 +17,12 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         mapping(address => RulesStorage) followRulesStorage;
     }
 
-    // keccak256('lens.rule.based.graph.storage')
-    bytes32 constant RULE_BASED_GRAPH_STORAGE_SLOT = 0x02d31ef96f666bf684ab1c8a89d21f38a88719152ba49251cdaacb4c11cdae39;
+    /// @custom:keccak lens.storage.RuleBasedGraph
+    bytes32 constant STORAGE__RULE_BASED_GRAPH = 0x6644773a6cb3d68b635cf6054580d77eff2d2b0b6851802f2c6d1adbf85026f9;
 
     function $ruleBasedStorage() private pure returns (RuleBasedStorage storage _storage) {
         assembly {
-            _storage.slot := RULE_BASED_GRAPH_STORAGE_SLOT
+            _storage.slot := STORAGE__RULE_BASED_GRAPH
         }
     }
 
@@ -64,10 +64,12 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(
-        bytes32 configSalt,
-        KeyValue[] calldata ruleParams
-    ) internal pure override returns (bytes memory) {
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
         return abi.encodeCall(IGraphRule.configure, (configSalt, ruleParams));
     }
 
@@ -103,18 +105,23 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             + $graphRulesStorage()._getRulesArray(ruleSelector, true).length;
     }
 
-    function getGraphRules(
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getGraphRules(bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $graphRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }
 
-    function getFollowRules(
-        address account,
-        bytes4 ruleSelector,
-        bool isRequired
-    ) external view virtual override returns (Rule[] memory) {
+    function getFollowRules(address account, bytes4 ruleSelector, bool isRequired)
+        external
+        view
+        virtual
+        override
+        returns (Rule[] memory)
+    {
         return $followRulesStorage(account)._getRulesArray(ruleSelector, isRequired);
     }
 
@@ -167,7 +174,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _encodeAndCallGraphProcessFollow(
@@ -358,7 +365,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processFollow(
@@ -421,6 +428,6 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length > 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
     }
 }

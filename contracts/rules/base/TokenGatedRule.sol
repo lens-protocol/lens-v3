@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import {MetadataBased} from "./../../core/base/MetadataBased.sol";
 
 interface IToken {
     /**
@@ -11,19 +12,29 @@ interface IToken {
     function balanceOf(address account) external view returns (uint256);
 }
 
-abstract contract TokenGatedRule {
+abstract contract TokenGatedRule is MetadataBased {
+    event Lens_Rule_MetadataURISet(string metadataURI);
+
     uint256 internal constant ERC20 = 20;
     uint256 internal constant ERC721 = 721;
     uint256 internal constant ERC1155 = 1155;
 
-    // keccak256("lens.rules.TokenGatedRule.param.key.tokenGate");
-    bytes32 internal immutable TOKEN_GATE_PARAM_KEY = 0x5b35354681265fb29cacc9eee788924889b95a232ef90388f970779780c3ce3b;
+    /// @custom:keccak lens.param.tokenGate
+    bytes32 constant PARAM__TOKEN_GATE = 0xb395c61ecf6294b637d557db500d79f61694bd0d2e3c9b0d54383cc4a6c6dcea;
 
     struct TokenGateConfiguration {
         uint256 tokenStandard;
         address token;
         uint256 typeId; // Optional, only for ERC-1155 tokens. Use 0 for ERC-20/ERC-721 tokens.
         uint256 amount;
+    }
+
+    constructor(string memory metadataURI) {
+        _setMetadataURI(metadataURI);
+    }
+
+    function _emitMetadataURISet(string memory metadataURI) internal override {
+        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function _validateTokenGateConfiguration(TokenGateConfiguration memory configuration) internal view {
@@ -43,10 +54,11 @@ abstract contract TokenGatedRule {
         require(_checkTokenBalance(configuration, owner), "Errors.InsufficientTokenBalance()");
     }
 
-    function _checkTokenBalance(
-        TokenGateConfiguration memory configuration,
-        address owner
-    ) internal view returns (bool) {
+    function _checkTokenBalance(TokenGateConfiguration memory configuration, address owner)
+        internal
+        view
+        returns (bool)
+    {
         uint256 balance;
         if (configuration.tokenStandard == ERC20 || configuration.tokenStandard == ERC721) {
             balance = IToken(configuration.token).balanceOf(owner);
