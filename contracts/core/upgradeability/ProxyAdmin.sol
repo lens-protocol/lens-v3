@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {ILock} from "contracts/core/interfaces/ILock.sol";
-import {Proxy} from "contracts/core/upgradeability/Proxy.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 
 contract ProxyAdmin {
     ILock immutable LOCK;
@@ -25,18 +25,18 @@ contract ProxyAdmin {
         if (LOCK.isRestricted()) {
             // While the Proxy Admin is restricted:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
-            require(selector != Proxy.changeProxyAdmin.selector);
+            require(selector != BeaconProxy.changeProxyAdmin.selector);
             // - Cannot change the Beacon in the Proxy
-            require(selector != Proxy.setBeacon.selector);
+            require(selector != BeaconProxy.setBeacon.selector);
             // - Cannot change the implementation in the Proxy
-            require(selector != Proxy.setImplementation.selector);
+            require(selector != BeaconProxy.setImplementation.selector);
             // - Cannot trigger an upgrade in the Proxy
-            require(selector != Proxy.triggerUpgradeToVersion.selector);
-            require(selector != Proxy.triggerUpgradeToLatestVersion.selector);
+            require(selector != BeaconProxy.triggerUpgradeToVersion.selector);
+            require(selector != BeaconProxy.triggerUpgradeToLatestVersion.selector);
             // - Cannot opt-out from auto-upgrade in the Proxy
-            require(selector != Proxy.optOutFromAutoUpgrade.selector);
+            require(selector != BeaconProxy.optOutFromAutoUpgrade.selector);
             // - Cannot opt-in to auto-upgrade in the Proxy
-            require(selector != Proxy.optInToAutoUpgrade.selector);
+            require(selector != BeaconProxy.optInToAutoUpgrade.selector);
         }
         // Do the call
         (bool success, bytes memory ret) = to.call{value: value}(data);
