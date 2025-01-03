@@ -2,9 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-interface ILock {
-    function isRestricted() external view returns (bool);
-}
+import {ILock} from "contracts/core/interfaces/ILock.sol";
+import {Proxy} from "contracts/core/upgradeability/Proxy.sol";
 
 contract ProxyAdmin {
     ILock immutable LOCK;
@@ -26,17 +25,18 @@ contract ProxyAdmin {
         if (LOCK.isRestricted()) {
             // While the Proxy Admin is restricted:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
-            require(selector != bytes4(keccak256("changeProxyAdmin(address)")));
+            require(selector != Proxy.changeProxyAdmin.selector);
             // - Cannot change the Beacon in the Proxy
-            require(selector != bytes4(keccak256("setBeacon(address")));
+            require(selector != Proxy.setBeacon.selector);
             // - Cannot change the implementation in the Proxy
-            require(selector != bytes4(keccak256("setImplementation(address)")));
-            // - Cannot trigger an upgrade in the Proxy for specific version
-            require(selector != bytes4(keccak256("triggerUpgrade(uint256)")));
+            require(selector != Proxy.setImplementation.selector);
+            // - Cannot trigger an upgrade in the Proxy
+            require(selector != Proxy.triggerUpgradeToVersion.selector);
+            require(selector != Proxy.triggerUpgradeToLatestVersion.selector);
             // - Cannot opt-out from auto-upgrade in the Proxy
-            require(selector != bytes4(keccak256("optOutFromAutoUpgrade()")));
-            // - Cannot opt-in from auto-upgrade in the Proxy
-            require(selector != bytes4(keccak256("optInFromAutoUpgrade()")));
+            require(selector != Proxy.optOutFromAutoUpgrade.selector);
+            // - Cannot opt-in to auto-upgrade in the Proxy
+            require(selector != Proxy.optInToAutoUpgrade.selector);
         }
         // Do the call
         (bool success, bytes memory ret) = to.call{value: value}(data);

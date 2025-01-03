@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IVersionedBeacon} from "./IVersionedBeacon.sol";
+import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 
 contract Proxy {
     bool _autoUpgrade;
@@ -23,6 +23,12 @@ contract Proxy {
         _beacon = beacon;
         emit BeaconChanged(beacon);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
+    }
+
+    function changeProxyAdmin(address proxyAdmin) external {
+        require(msg.sender == _proxyAdmin);
+        _proxyAdmin = proxyAdmin;
+        emit ProxyAdminChanged(proxyAdmin);
     }
 
     function optOutFromAutoUpgrade() external {
@@ -58,7 +64,7 @@ contract Proxy {
         }
     }
 
-    function triggerUpgrade(uint256 implementationVersion) external {
+    function triggerUpgradeToVersion(uint256 implementationVersion) external {
         require(msg.sender == _proxyAdmin);
         address implementationFromBeacon = IVersionedBeacon(_beacon).implementation(implementationVersion);
         if (implementationFromBeacon != _currentImplementation) {
@@ -67,7 +73,7 @@ contract Proxy {
         }
     }
 
-    function triggerUpgrade() external {
+    function triggerUpgradeToLatestVersion() external {
         require(msg.sender == _proxyAdmin);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
