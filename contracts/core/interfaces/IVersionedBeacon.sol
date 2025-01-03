@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 
 interface IVersionedBeacon {
     /**
-     * @dev Returns the latest implementation held by the Beacon.
+     * @dev Returns the default implementation held by the Beacon. Usually this will be the latest or the most
+     * stable version.
      * @return Address of the implementation.
      */
     function implementation() external view returns (address);
