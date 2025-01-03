@@ -31,7 +31,7 @@ contract Proxy {
         emit AutoUpgrade(false);
     }
 
-    function optInFromAutoUpgrade() external {
+    function optInToAutoUpgrade() external {
         require(msg.sender == _proxyAdmin);
         _autoUpgrade = true;
         emit AutoUpgrade(true);
