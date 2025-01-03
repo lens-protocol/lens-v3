@@ -38,9 +38,7 @@ contract Proxy {
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
-    function setImplementation(
-        address implementation
-    ) external {
+    function setImplementation(address implementation) external {
         require(msg.sender == _proxyAdmin);
         require(_autoUpgrade == false);
         if (implementation != _currentImplementation) {
@@ -49,9 +47,7 @@ contract Proxy {
         }
     }
 
-    function setBeacon(
-        address beacon
-    ) external {
+    function setBeacon(address beacon) external {
         require(msg.sender == _proxyAdmin);
         if (beacon != _beacon) {
             _beacon = beacon;
@@ -62,9 +58,7 @@ contract Proxy {
         }
     }
 
-    function triggerUpgrade(
-        uint256 implementationVersion
-    ) external {
+    function triggerUpgrade(uint256 implementationVersion) external {
         require(msg.sender == _proxyAdmin);
         address implementationFromBeacon = IVersionedBeacon(_beacon).implementation(implementationVersion);
         if (implementationFromBeacon != _currentImplementation) {
@@ -79,9 +73,7 @@ contract Proxy {
     }
 
     // Function copied from @openzeppelin/contracts/proxy/Proxy.sol::_delegate
-    function _delegateCallToImplementation(
-        address implementation
-    ) internal virtual {
+    function _delegateCallToImplementation(address implementation) internal virtual {
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
             // block because it will not return to Solidity code. We overwrite the

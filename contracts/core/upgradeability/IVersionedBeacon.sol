@@ -14,7 +14,5 @@ interface IVersionedBeacon {
      * @param implementationVersion Version of the implementation to return.
      * @return Address of the implementation.
      */
-    function implementation(
-        uint256 implementationVersion
-    ) external view returns (address);
+    function implementation(uint256 implementationVersion) external view returns (address);
 }

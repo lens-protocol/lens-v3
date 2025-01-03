@@ -15,9 +15,7 @@ contract ProxyAdmin {
         LOCK = ILock(lock);
     }
 
-    function ProxyAdmin__changeProxyAdmin(
-        address proxyAdmin
-    ) external {
+    function ProxyAdmin__changeProxyAdmin(address proxyAdmin) external {
         require(msg.sender == _proxyAdmin);
         _proxyAdmin = proxyAdmin;
         // Event
