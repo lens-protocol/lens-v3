@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 
-contract Proxy {
+contract BeaconProxy {
     bool _autoUpgrade;
     address _currentImplementation;
     address _beacon;
