@@ -2,6 +2,7 @@ import { HardhatUserConfig } from 'hardhat/config';
 
 import '@matterlabs/hardhat-zksync';
 import '@nomicfoundation/hardhat-foundry';
+import 'hardhat-contract-sizer';
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'lensSepoliaTestnet',
@@ -34,8 +35,8 @@ const config: HardhatUserConfig = {
       // https://docs.zksync.io/build/tooling/hardhat/hardhat-zksync-solc#configuration
       optimizer: {
         enabled: true, // optional. True by default
-        mode: 'z', // optional. 3 by default, z to optimize bytecode size
-      }
+        mode: '1', // optional. 3 by default, z to optimize bytecode size
+      },
     },
   },
   solidity: {

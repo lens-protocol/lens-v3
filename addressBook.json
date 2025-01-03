@@ -1,182 +1,182 @@
 {
   "AccessControlFactory": {
     "contractType": 0,
-    "address": "0xcD4A5A64c6f990ae0205205ed768820452AF449d",
-    "bytecodeHash": "0x018b778e8888f587fa7689f315cd48ba6898556261713084271ea9db2d7f1a40"
+    "address": "0xa503521cc376411026734F1434C5C1925648458a",
+    "bytecodeHash": "0xb167284d87bcbb86c2c962bf8043afaaf398c2784c6c8215e9fe682cf7b950cd"
   },
   "AccountFactory": {
     "contractType": 0,
-    "address": "0x9a65aD78bdF1fC7205BFc1fA08FF9553010FE544",
-    "bytecodeHash": "0xdb4d29f552ed63dc496e444f8dde0b21d13a385ac4f5afc9f780aada6243cd09"
+    "address": "0x88EF24D97d1cBA4D0CF8cd2AA073aB48d0453A6C",
+    "bytecodeHash": "0xa74d8a3349283231c194dcfe5531008a19774d40b0d682f713b61f01dbeb508f"
   },
   "AppFactory": {
     "contractType": 0,
-    "address": "0x8A5482bCa0fbb85081c3c0d5b6c4dD5100898986",
-    "bytecodeHash": "0x53d7b317ba0f573eba71e55dd5fd26bcac8e642bb6999f29514311b4c2e4e7b3"
+    "address": "0xe29E219De701Bf066fa1d612670376f6925C74d6",
+    "bytecodeHash": "0xcd9ea4036f15d4ca674b192f863582dfd67b78865a231311db0a58b0dd7fb28a"
   },
   "FeedFactory": {
     "contractType": 0,
-    "address": "0x16e1CEFF548165DED15aEb4781FC1c0547094B1D",
-    "bytecodeHash": "0xbe5eb549634c8723a451f5589ff419320e3a536d2cfff7c75cb20a0c266ffb67"
+    "address": "0xC559F43d52df16691D24Ee6c934Cf67e0D6CE00D",
+    "bytecodeHash": "0xa3d69aa7ab2d435089cb3497892f6f10c6eded644ff60db4d3bbe9a2e80ec34e"
   },
   "GraphFactory": {
     "contractType": 0,
-    "address": "0x49a9142374d60BeBf5451aecD0fc1e8928ddb630",
-    "bytecodeHash": "0x3ce0a2eb8a41f0aeb821a95f7cc0c79a955b37bca58ef3391808034d606bf419"
+    "address": "0x48D084Fbb48d3eFB7F77Ffb594AA48F60EF90377",
+    "bytecodeHash": "0x300208d65ae87550ab4155874371cc3ea7b49225dece31281cd1be54a4374612"
   },
   "GroupFactory": {
     "contractType": 0,
-    "address": "0x0c120C307F61bf6bE1607467067697790df0C388",
-    "bytecodeHash": "0x7fe7e5b70b37c3e8d1b7dc09e3da9b67166b56725429721a7e7d3cc6a5aa8df0"
+    "address": "0xF55Abb90e7BF98C6Ca5d98Cc9F0ad215269838FE",
+    "bytecodeHash": "0xd86ba02e004e421973b555a035067fabc161c0cf8ea6e5fc66a7df09c89bbe67"
   },
   "NamespaceFactory": {
     "contractType": 0,
-    "address": "0x38e29FeEF65a97d52992019994EaDE35416130Ab",
-    "bytecodeHash": "0x55c1194769913e184c3b53b98ba873820c5e13872289f6a4cb3b9951daef663a"
+    "address": "0x3e2fc1faaa400064C7D758576221454a64a7A0E2",
+    "bytecodeHash": "0xb7f7441e5697fbd39e831793cebeb0876cac9e71f8cc757ecd83a7490f521129"
   },
   "AccountBlockingRule": {
     "contractType": 4,
-    "address": "0xB272A60C9D9D6918A3AeFC45ba345B88a3DDE3c4",
-    "bytecodeHash": "0x925428fd8a6f93bcd736ddaa910279bc39179bebfd4b8477ac04c431c6c0a6aa"
+    "address": "0xcec48BAF2b3FE98512678DFcC2B28F6249FD132E",
+    "bytecodeHash": "0xde6c7e966260dd42523cbe95d8153b90c72c49d17898ecfab052e255fe089e4b"
   },
   "GroupGatedFeedRule": {
     "contractType": 4,
-    "address": "0x72A156e9842CF582f2453a844Dfb8a22c284D56D",
-    "bytecodeHash": "0x1f8392aa062a0f233c43f06a12a7985dff57495dc2cecc8544d7ff0dfa904a0b"
+    "address": "0x1d95FD09A7A7fa4BfC8D28E1510Add6A4182Fd72",
+    "bytecodeHash": "0x223d159c4d65f2e68fe8c10e9f54bfa4e91bdc1f908d26e1e9b1006310125cdd"
   },
   "LensFactory": {
     "contractType": 0,
-    "address": "0x3c7b46945a358Ce4B2eF268E1dfF377Da2f071cB",
-    "bytecodeHash": "0xfec3b706bc0d67638d24eaf8b2e5b4bc126de18f545edaddd36b83b143ba6436"
+    "address": "0xafAf83dCf5A559c4Ac8F171B6dcb69e91b9e34c8",
+    "bytecodeHash": "0xd104be7c1db02e41f78889df7e22fb627f9dd5c60b5a32132a70524588933467"
   },
   "Account": {
     "contractName": "Account",
     "contractType": 5,
-    "address": "0x1b7DFD44c1b37D2fe22254c75C282c4237236201"
+    "address": "0x0f521479D9c5A838092f6C07636Eac5b623873d7"
   },
   "Feed": {
     "contractName": "Feed",
     "contractType": 1,
-    "address": "0x979C6F77135dC679E3a99be6971eD8A0994f0199"
+    "address": "0xA284474e156f3b9e2451E29fa4D1817b2C43bd14"
   },
   "Group": {
     "contractName": "Group",
     "contractType": 1,
-    "address": "0x3b25AF6Ba5a063fe71EcC1d8616bB541bbA751ab"
+    "address": "0x386f43FdE11F2CDE4A9A7BD3702B45a6bF42484B"
   },
   "Graph": {
     "contractName": "Graph",
     "contractType": 1,
-    "address": "0x71953aE7e401837CDc26af0C8c1A2767C38aef13"
+    "address": "0x236a80BF1468b7D689F0A20D3Dd38A062fE819fD"
   },
   "Namespace": {
     "contractName": "Namespace",
     "contractType": 1,
-    "address": "0x4B03518F434c947f563D1B9f5f7bCfB4A270515b"
+    "address": "0xB8a3910b7709E53BeCb7c63AB5692AabD3B8635b"
   },
   "App": {
     "contractName": "App",
     "contractType": 5,
-    "address": "0x7E1191b4065d309C84d3235F2fbac00016619B36"
+    "address": "0x346Ceb832Ea861f37FFEEB0fCFE994826F747026"
   },
   "ActionHub": {
     "contractName": "ActionHub",
     "contractType": 2,
-    "address": "0x55B046b2A5655D9C2CDf456B6E5F72c58439d85f"
+    "address": "0xBd3bc821AB9816f6903bcCC42fF0851650C27e08"
   },
   "OwnerAdminOnlyAccessControl": {
     "contractName": "OwnerAdminOnlyAccessControl",
     "contractType": 2,
-    "address": "0x778798083685954cB8Df001b1acD75E50FbAbd56"
+    "address": "0xc9fc3705410a391e2e9e263094580bc4BF02E4c3"
   },
   "RestrictedSignersFeedRule": {
     "contractType": 4,
-    "address": "0x60a8D952E2d5d2332B469F216EcB1D05Eca6f1f2",
-    "bytecodeHash": "0x98cb67f37d3e18ed20a2c5597800b9ed6ab06d2502837420973c245bd573dbf9"
+    "address": "0x05Eee80EF8913830B3792394f4e16064CbD5FDFE",
+    "bytecodeHash": "0x2102c7526394b4fb528b9c56c3bfbcf7de65172d3c1c3160ada10960e62338cf"
   },
   "SimplePaymentFeedRule": {
     "contractType": 4,
-    "address": "0xB2Ebe520C9DdCE3502d5a3619A28Dc24FCF53D51",
-    "bytecodeHash": "0x192412b1dd883426317c98abdb7408b067c9b6ae0cfc598f35605a75a4728c01"
+    "address": "0xE76d30836a8653460870F0a6723218b7B60fbE28",
+    "bytecodeHash": "0x96c699b6ad25c9227e628e87ee1e183a73970d1afd7d6d8891992eb84507da62"
   },
   "TokenGatedFeedRule": {
     "contractType": 4,
-    "address": "0xc1DAeB63Fca762Ed4E89F6e9CfD4b1f1A27F0c00",
-    "bytecodeHash": "0xbee3c603261992edc621465cebdc19dde881e6f418d74a6b68afd7ff64a86334"
+    "address": "0x9847245BFdee62aF907Faa17b94A7a2e7Bfdb36f",
+    "bytecodeHash": "0x4416a98918041462e9dca87be76c73bc58fc5e63209162fa71fb382770684143"
   },
   "FollowersOnlyPostRule": {
     "contractType": 4,
-    "address": "0xd97728639e3f7D8F2F1714bcDb978A701BDb2553",
-    "bytecodeHash": "0x95a67a05523c20e96c5726b7aff134dd74d782e2d974884fa352b9a47807088b"
+    "address": "0x3e3F6fBa9AA7Df7E588d78584bd9A5cE4b03aEF3",
+    "bytecodeHash": "0xe126f7aa63fe54211398e107c7d33344318ec91901aa5ed5c8e4c237bac6ff1a"
   },
   "RestrictedSignersGraphRule": {
     "contractType": 4,
-    "address": "0x2D40E1d4e6Cc791fc3B7760567368B93F5c977D2",
-    "bytecodeHash": "0x455a7d3148ac8a71eb1597d2b898109f7f1a79cf49be373924db77e56a235c3b"
+    "address": "0x34Bb781cA7580D2BE955A3915d9213935b13a5cA",
+    "bytecodeHash": "0x8f7a8ef38070132a6d9c48a6002504e3d3a182157ea581d19614a46ba5dce1fe"
   },
   "TokenGatedGraphRule": {
     "contractType": 4,
-    "address": "0xF2E5774e41eaCf14D253D514501941717F1eBbEe",
-    "bytecodeHash": "0xa67a8124c136f30f12c2254401e50c75ffcb000f92efe7294d6ff2166f929421"
+    "address": "0xCA716405f1F6da78767D06107F39a272Dec80bdd",
+    "bytecodeHash": "0x959378b1681e11e5880feac83ef47be173b14bd245526f49a7d8802780d4bdc6"
   },
   "SimplePaymentFollowRule": {
     "contractType": 4,
-    "address": "0xc92AFA46DC84A481Af01845b96910852878f9799",
-    "bytecodeHash": "0x51f5f9295199973dcd8f8e3efd7c944bd91fe343c44b4274aa146ed6ea5372dd"
+    "address": "0x81AC4bfC7a5893d7E6064555bA67b53AA468eBEf",
+    "bytecodeHash": "0xe4af211b6254a11ef28406e0ef6e2c537a81192516eb57e99c079beb8fae3fc9"
   },
   "TokenGatedFollowRule": {
     "contractType": 4,
-    "address": "0x6D1179bdC6E39BD451B8F0f659Ba969789EFa985",
-    "bytecodeHash": "0x56ef13eb21f2990370cabdd802adbe6b415c389783c3096163d932c23ddf9218"
+    "address": "0x978827E6C93E04547Be68C27E398f3f3B96fFf19",
+    "bytecodeHash": "0xaf2fe43f78bbfb26bc6c6f022e5846db85986f30a456246215e0db30b9282cd2"
   },
   "MembershipApprovalGroupRule": {
     "contractType": 4,
-    "address": "0x49b079D36d4d8De66CA82F0B983dd5B4116FfAAC",
-    "bytecodeHash": "0x971a7533cd9d1324e3fe9c8e9209573e4b0b7732dd16dd9ad4e71dc05e84dccf"
+    "address": "0x6AC6BD5c012548a4FB0dbDA7a5CD7C886e0af036",
+    "bytecodeHash": "0x1180f79d5a6a27c6cf9e41048196fc367b4fb9b7bbbcb7d94813fa79c818aa68"
   },
   "SimplePaymentGroupRule": {
     "contractType": 4,
-    "address": "0x0e36FaeAddB110A327AD20e23853274992CBc41a",
-    "bytecodeHash": "0xb685d94ee150224fcba69297a4c0502c4e8233c521b94df7f6477b76b54cc419"
+    "address": "0x840E11A3A30B72C32DD53A9f4bc84F541d3428A3",
+    "bytecodeHash": "0x19982910574e9ff4cdbc0239049a98b232b65173c44291ba638207ce041c2c8b"
   },
   "TokenGatedGroupRule": {
     "contractType": 4,
-    "address": "0x2BDf16CF4288A0E08FD867789eebe91919fbD80B",
-    "bytecodeHash": "0x6962ebf8db9a983e3f33413ab6d4f335099f0a0e99fcfae7146d92c988ba1ef0"
+    "address": "0xeA05C266cFCCC727440DE8EC56282D3540Ec03Bb",
+    "bytecodeHash": "0xa73aed9a18ef0b1068ad5f4b04398899027bc7b7d0820fdee633b2e81d760e37"
   },
   "UsernameCharsetNamespaceRule": {
     "contractType": 4,
-    "address": "0xaa5d5720Ad2Ad9aa23d2D81db30448C23178880e",
-    "bytecodeHash": "0x2db1e33f68f7e20bd416e9d704d9c4c5412caedcbaff7fcdeac23768ed491aef"
+    "address": "0xfD49A5D3Ab46b9bec4E9377e54Cf5ceB72531E88",
+    "bytecodeHash": "0x635141d9e89f87dee870f1706678c2de0dfc1b679868c8b5d6bac0595703ae04"
   },
   "UsernameLengthNamespaceRule": {
     "contractType": 4,
-    "address": "0xE83ffEB45E73F687309B44f7860cABeeDdD80Fa7",
-    "bytecodeHash": "0x2dc961a035294dbfd397fe9edb6a7ccc80d7b6105bfbf19f70925b52894fb97a"
+    "address": "0x278F7ff5e4E9D4905Df245c4774c4D1a107d4098",
+    "bytecodeHash": "0x00ec05ad573d89a1ce243d88c35a9c30337fcf8eaa19d2309e15490b551236cc"
   },
   "UsernameReservedNamespaceRule": {
     "contractType": 4,
-    "address": "0x4B487ECa79E4B707C029AFe1C3492BdF38CCABE1",
-    "bytecodeHash": "0x052f3941dc7f32eb0c14fa2329ef9b184a7b0c829b1b8e1571e815f36657c117"
+    "address": "0x822e422D3119CF3BD5CcdA246212087756f4B548",
+    "bytecodeHash": "0x3804b3833ba60f474fb87ac538c6a67f20a165e5145803d70a369426b2adf9d1"
   },
   "SimplePaymentNamespaceRule": {
     "contractType": 4,
-    "address": "0xf8FF9f6bdDe871A197FecA5637C5bE914288D96d",
-    "bytecodeHash": "0x29feddc8de50470a16f6736e864575496c864cc1fa18c951cbabb8e14d1c6181"
+    "address": "0x8B826FEEecbB07de541e10E8b114997143b58958",
+    "bytecodeHash": "0xd74444be3e9c7329045533029fa06d60f59a91206676d794678d4f18d6f034dc"
   },
   "TokenGatedNamespaceRule": {
     "contractType": 4,
-    "address": "0x03Dc2f43C0336C69a6FEc1d13192639d22338054",
-    "bytecodeHash": "0x91a42f0263d5b9ece60372ac5a886015a7095d0ba6f7ef4a8359e6976078431c"
+    "address": "0xD7c90dcC221716992187716dd8273bcAbca7CdF9",
+    "bytecodeHash": "0xa7f6bb75d9759069c50f9ef099242430521075fc3f474f0d1d026e309761e722"
   },
   "TippingAccountAction": {
     "contractType": 3,
-    "address": "0x4BD3Ee155E6C85F365483c33A44c5764E82C1F44",
-    "bytecodeHash": "0x363801f4bb76cf5a4d9d5679281a6d40ab7a845d982938f207bfffdb782572f4"
+    "address": "0x9bBa6C806762c276bf7b3e6154c1367189A97363",
+    "bytecodeHash": "0xe665199b162e384734e76e8a10ea19daa73845ac68b40aed05bf82fd94d7ccf8"
   },
   "SimpleCollectAction": {
     "contractType": 3,
-    "address": "0x5E6135832dbe5ADc135f2B0B46691105695cF62d",
-    "bytecodeHash": "0x6623a6086819ef4a6144b5575cdb7698ec36f0051a3e9f0cdd7899ada14c0a48"
+    "address": "0xD7CA19e583bf2D54a0202eabD7a1dd9d40584B6D",
+    "bytecodeHash": "0x06cac23f83c4f521d9ed00f0f0553d1e790d094290c26f0349d616dfb9d5c673"
   }
 }
