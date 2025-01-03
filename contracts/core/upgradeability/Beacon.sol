@@ -7,10 +7,10 @@ import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 contract Beacon is IVersionedBeacon {
     address internal _owner; // TODO: Ownable
     mapping(uint256 => address) internal _implementations;
-    uint256 internal _latestVersion;
+    uint256 internal _defaultVersion;
 
     function implementation() external view override returns (address) {
-        return _implementations[_latestVersion];
+        return _implementations[_defaultVersion];
     }
 
     function implementation(uint256 implementationVersion) external view override returns (address) {
@@ -25,18 +25,10 @@ contract Beacon is IVersionedBeacon {
         // event
     }
 
-    function setLatestVersion(uint256 version) external {
+    function setDefaultVersion(uint256 version) external {
         require(msg.sender == _owner);
         require(_implementations[version] != address(0));
-        _latestVersion = version;
+        _defaultVersion = version;
         // event
-    }
-
-    function setLatestImplementation(uint256 version, address implementationToSet) external {
-        require(msg.sender == _owner);
-        require(implementationToSet != address(0));
-        _implementations[version] = implementationToSet;
-        _latestVersion = version;
-        // events
     }
 }

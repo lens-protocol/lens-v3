@@ -73,7 +73,7 @@ contract BeaconProxy {
         }
     }
 
-    function triggerUpgradeToLatestVersion() external {
+    function triggerUpgrade() external {
         require(msg.sender == _proxyAdmin);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }

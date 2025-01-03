@@ -32,7 +32,7 @@ contract ProxyAdmin {
             require(selector != BeaconProxy.setImplementation.selector);
             // - Cannot trigger an upgrade in the Proxy
             require(selector != BeaconProxy.triggerUpgradeToVersion.selector);
-            require(selector != BeaconProxy.triggerUpgradeToLatestVersion.selector);
+            require(selector != BeaconProxy.triggerUpgrade.selector);
             // - Cannot opt-out from auto-upgrade in the Proxy
             require(selector != BeaconProxy.optOutFromAutoUpgrade.selector);
             // - Cannot opt-in to auto-upgrade in the Proxy
