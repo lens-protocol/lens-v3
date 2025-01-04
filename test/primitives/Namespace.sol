@@ -9,23 +9,29 @@ import {INamespace} from "@core/interfaces/INamespace.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import "../helpers/TypeHelpers.sol";
+import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
 
-contract NamespaceTest is Test {
-    IAccessControl accessControl;
+contract NamespaceTest is Test, BaseDeployments {
     INamespace namespace;
 
     address account = makeAddr("ACCOUNT");
+    address namespaceOwner = makeAddr("NAMESPACE_OWNER");
 
-    function setUp() public {
-        accessControl = new OwnerAdminOnlyAccessControl(address(this));
-        namespace = new Namespace({
-            namespace: "bitcoin",
-            metadataURI: "satoshi://nakamoto",
-            accessControl: accessControl,
-            nftName: "Bitcoin",
-            nftSymbol: "BTC",
-            tokenURIProvider: new LensUsernameTokenURIProvider()
-        });
+    function setUp() public override {
+        super.setUp();
+
+        namespace = INamespace(
+            lensFactory.deployNamespace({
+                namespace: "bitcoin",
+                metadataURI: "satoshi://nakamoto",
+                owner: namespaceOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray(),
+                nftName: "Bitcoin",
+                nftSymbol: "BTC"
+            })
+        );
     }
 
     function testCreateAssignUnassignDelete() public {

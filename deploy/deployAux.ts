@@ -127,6 +127,7 @@ async function deployLensFeed(lensFactory: ethers.Contract): Promise<string> {
   await verifyPrimitive('Feed', feedAddress, [metadataURI, accessControlAddress]);
 
   saveContractToAddressBook({
+    name: 'LensGlobalFeed',
     contractName: 'Feed',
     contractType: ContractType.Primitive,
     address: feedAddress
@@ -154,6 +155,7 @@ async function deployLensGroup(lensFactory: ethers.Contract): Promise<string> {
   await verifyPrimitive('Group', groupAddress, [metadataURI, accessControlAddress]);
 
   saveContractToAddressBook({
+    name: 'LensGlobalGroup',
     contractName: 'Group',
     contractType: ContractType.Primitive,
     address: groupAddress
@@ -181,6 +183,7 @@ async function deployLensGraph(lensFactory: ethers.Contract): Promise<string> {
     await verifyPrimitive('Graph', graphAddress, [metadataURI, accessControlAddress]);
 
   saveContractToAddressBook({
+    name: 'LensGlobalGraph',
     contractName: 'Graph',
     contractType: ContractType.Primitive,
     address: graphAddress
@@ -237,6 +240,7 @@ export async function deployLensNamespace(
   }
 
   saveContractToAddressBook({
+    name: 'LensGlobalNamespace',
     contractName: 'Namespace',
     contractType: ContractType.Primitive,
     address: namespaceAddress
@@ -283,6 +287,7 @@ export async function deployLensApp(
   ]);
 
   saveContractToAddressBook({
+    name: 'LensGlobalApp',
     contractName: 'App',
     contractType: ContractType.Misc,
     address: appAddress

@@ -8,16 +8,26 @@ import {OwnerAdminOnlyAccessControl} from "../../contracts/dashboard/access/Owne
 import {IGroup} from "../../contracts/core/interfaces/IGroup.sol";
 import {Group} from "../../contracts/core/primitives/group/Group.sol";
 import "../helpers/TypeHelpers.sol";
+import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
 
-contract GroupTest is Test {
-    IAccessControl accessControl;
+contract GroupTest is Test, BaseDeployments {
     IGroup group;
 
     address account = makeAddr("ACCOUNT");
+    address groupOwner = makeAddr("GROUP_OWNER");
 
-    function setUp() public {
-        accessControl = new OwnerAdminOnlyAccessControl(address(this));
-        group = new Group({metadataURI: "uri://group-metadata", accessControl: IAccessControl(accessControl)});
+    function setUp() public override {
+        super.setUp();
+
+        group = IGroup(
+            lensFactory.deployGroup({
+                metadataURI: "some metadata uri",
+                owner: groupOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
     }
 
     function testJoinAndLeave() public {

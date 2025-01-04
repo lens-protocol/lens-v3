@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {IMetadataBased} from "./../../../core/interfaces/IMetadataBased.sol";
 import {KeyValue} from "./../../../core/types/Types.sol";
+import {IAccessControl} from "./../../../core/interfaces/IAccessControl.sol";
+import {AppInitialProperties} from "./App.sol";
 
 interface IApp is IMetadataBased {
     // Graph
@@ -44,6 +46,14 @@ interface IApp is IMetadataBased {
 
     // Source Stamp Verification
     event Lens_App_SourceStampVerificationSet(bool indexed isEnabled);
+
+    function initialize(
+        string memory metadataURI,
+        bool isSourceStampVerificationEnabled,
+        IAccessControl accessControl,
+        AppInitialProperties memory initialProps,
+        KeyValue[] memory extraData
+    ) external;
 
     // Setters
 

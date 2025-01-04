@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 
 import {IAccessControl} from "./../interfaces/IAccessControl.sol";
 import {AccessControlLib} from "./../libraries/AccessControlLib.sol";
+import {Initializable} from "./../upgradeability/Initializable.sol";
 
-contract AccessControlled {
+abstract contract AccessControlled is Initializable {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -25,7 +26,7 @@ contract AccessControlled {
         }
     }
 
-    constructor(IAccessControl accessControl) {
+    function _initialize(IAccessControl accessControl) internal onlyInitializing {
         accessControl.verifyHasAccessFunction();
         _setAccessControl(accessControl);
     }

@@ -10,6 +10,7 @@ import {AccessControlled} from "./../../../core/access/AccessControlled.sol";
 import {Events} from "./../../../core/types/Events.sol";
 import {BaseSource} from "./../../../core/base/BaseSource.sol";
 import {ISource} from "./../../../core/interfaces/ISource.sol";
+import {Initializable} from "./../../../core/upgradeability/Initializable.sol";
 
 struct AppInitialProperties {
     address graph;
@@ -22,7 +23,7 @@ struct AppInitialProperties {
     address treasury;
 }
 
-contract App is IApp, BaseSource, AccessControlled {
+contract App is IApp, Initializable, BaseSource, AccessControlled {
     // Resource IDs involved in the contract
 
     /// @custom:keccak lens.permission.SetPrimitives
@@ -41,13 +42,27 @@ contract App is IApp, BaseSource, AccessControlled {
     uint256 constant PID__SET_SOURCE_STAMP_VERIFICATION =
         uint256(0x874f1133714eb68cab3e7feede3b8186418ef58948747b7e70981e346a5c7491);
 
-    constructor(
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         string memory metadataURI,
         bool isSourceStampVerificationEnabled,
         IAccessControl accessControl,
         AppInitialProperties memory initialProps,
         KeyValue[] memory extraData
-    ) AccessControlled(accessControl) {
+    ) external override initializer {
+        _initialize(metadataURI, isSourceStampVerificationEnabled, initialProps, extraData);
+        AccessControlled._initialize(accessControl);
+    }
+
+    function _initialize(
+        string memory metadataURI,
+        bool isSourceStampVerificationEnabled,
+        AppInitialProperties memory initialProps,
+        KeyValue[] memory extraData
+    ) internal onlyInitializing {
         _setMetadataURI(metadataURI);
         _setSourceStampVerification(isSourceStampVerificationEnabled);
         _setTreasury(initialProps.treasury);

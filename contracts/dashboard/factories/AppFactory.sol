@@ -5,18 +5,32 @@ pragma solidity ^0.8.0;
 import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
 import {AppInitialProperties, App} from "./../primitives/app/App.sol";
 import {KeyValue} from "./../../core/types/Types.sol";
+import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
 
 contract AppFactory {
     event Lens_AppFactory_Deployment(address indexed app, string metadataURI, KeyValue[] extraData);
+
+    address internal immutable _beacon;
+    address internal immutable _proxyAdminLock;
+
+    constructor(address beacon, address proxyAdminLock) {
+        _beacon = beacon;
+        _proxyAdminLock = proxyAdminLock;
+    }
 
     function deployApp(
         string memory metadataURI,
         bool sourceStampVerificationEnabled,
         IAccessControl accessControl,
+        address proxyAdminOwner,
         AppInitialProperties calldata initialProperties,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        App app = new App(metadataURI, sourceStampVerificationEnabled, accessControl, initialProperties, extraData);
+        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _proxyAdminLock));
+        App app = App(address(new BeaconProxy(proxyAdmin, _beacon)));
+        app.initialize(metadataURI, sourceStampVerificationEnabled, accessControl, initialProperties, extraData);
         emit Lens_AppFactory_Deployment(address(app), metadataURI, extraData);
         return address(app);
     }

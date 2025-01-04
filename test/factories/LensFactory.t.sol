@@ -18,30 +18,13 @@ import {AccountBlockingRule} from "../../contracts/rules/base/AccountBlockingRul
 import {IGraph} from "../../contracts/core/interfaces/IGraph.sol";
 import {GroupGatedFeedRule} from "../../contracts/rules/feed/GroupGatedFeedRule.sol";
 import "../helpers/TypeHelpers.sol";
+import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
 
-contract LensFactoryTest is Test {
-    LensFactory lensFactory;
+contract LensFactoryTest is Test, BaseDeployments {
     Namespace namespace;
 
-    AccountBlockingRule accountBlockingRule;
-    GroupGatedFeedRule groupGatedFeedRule;
-
-    function setUp() public {
-        accountBlockingRule = new AccountBlockingRule({metadataURI: "uri://any"});
-        groupGatedFeedRule = new GroupGatedFeedRule({metadataURI: "uri://any"});
-
-        lensFactory = new LensFactory({
-            accessControlFactory: new AccessControlFactory(),
-            accountFactory: new AccountFactory(),
-            appFactory: new AppFactory(),
-            groupFactory: new GroupFactory(),
-            feedFactory: new FeedFactory(),
-            graphFactory: new GraphFactory(),
-            namespaceFactory: new NamespaceFactory(),
-            accountBlockingRule: address(accountBlockingRule),
-            groupGatedFeedRule: address(groupGatedFeedRule)
-        });
-
+    function setUp() public override {
+        super.setUp();
         namespace = Namespace(
             lensFactory.deployNamespace({
                 namespace: "bitcoin",

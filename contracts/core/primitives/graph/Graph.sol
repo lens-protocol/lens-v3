@@ -12,8 +12,17 @@ import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
 import {Events} from "./../../types/Events.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 import {MetadataBased} from "./../../base/MetadataBased.sol";
+import {Initializable} from "./../../upgradeability/Initializable.sol";
 
-contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
+contract Graph is
+    IGraph,
+    Initializable,
+    RuleBasedGraph,
+    AccessControlled,
+    ExtraStorageBased,
+    SourceStampBased,
+    MetadataBased
+{
     // Resource IDs involved in the contract
 
     /// @custom:keccak lens.permission.ChangeRules
@@ -23,7 +32,16 @@ contract Graph is IGraph, RuleBasedGraph, AccessControlled, ExtraStorageBased, S
     /// @custom:keccak lens.permission.SetExtraData
     uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
 
-    constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(string memory metadataURI, IAccessControl accessControl) external override initializer {
+        _initialize(metadataURI);
+        AccessControlled._initialize(accessControl);
+    }
+
+    function _initialize(string memory metadataURI) internal onlyInitializing {
         _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("graph", "lens.graph", "graph", "lens.graph");

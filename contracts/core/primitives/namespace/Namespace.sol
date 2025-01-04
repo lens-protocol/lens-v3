@@ -15,9 +15,11 @@ import {LensERC721} from "./../../base/LensERC721.sol";
 import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 import {MetadataBased} from "./../../base/MetadataBased.sol";
+import {Initializable} from "./../../upgradeability/Initializable.sol";
 
 contract Namespace is
     INamespace,
+    Initializable,
     LensERC721,
     RuleBasedNamespace,
     AccessControlled,
@@ -40,14 +42,24 @@ contract Namespace is
 
     mapping(uint256 => string) private _idToUsername; // TODO: Move to computed storage
 
-    constructor(
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         string memory namespace,
         string memory metadataURI,
-        IAccessControl accessControl,
         string memory nftName,
         string memory nftSymbol,
-        ITokenURIProvider tokenURIProvider
-    ) LensERC721(nftName, nftSymbol, tokenURIProvider) AccessControlled(accessControl) {
+        ITokenURIProvider tokenURIProvider,
+        IAccessControl accessControl
+    ) external override initializer {
+        _initialize(namespace, metadataURI);
+        AccessControlled._initialize(accessControl);
+        LensERC721._initialize(nftName, nftSymbol, tokenURIProvider);
+    }
+
+    function _initialize(string memory namespace, string memory metadataURI) internal onlyInitializing {
         Core.$storage().namespace = namespace;
         _setMetadataURI(metadataURI);
         _emitPIDs();

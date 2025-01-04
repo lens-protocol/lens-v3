@@ -260,7 +260,7 @@ export const deployContract = async (
     if (!options?.silent) console.log(message);
   };
 
-  log(`\nStarting deployment process of "${contractArtifactName}"...`);
+  console.log(`\nStarting deployment process of "${contractArtifactName}"...`);
 
   const wallet = options?.wallet ?? getWallet();
   const deployer = new Deployer(hre, wallet);

@@ -7,28 +7,39 @@ import {Namespace} from "./../../core/primitives/namespace/Namespace.sol";
 import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
 import {RuleChange, KeyValue} from "./../../core/types/Types.sol";
 import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
+import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
 
 contract NamespaceFactory {
     event Lens_NamespaceFactory_Deployment(address indexed namespaceAddress, string namespace, string metadataURI);
 
     IAccessControl internal immutable _factoryOwnedAccessControl;
+    address internal immutable _beacon;
+    address internal immutable _proxyBeaconLock;
 
-    constructor() {
+    constructor(address beacon, address proxyBeaconLock) {
         _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
+        _beacon = beacon;
+        _proxyBeaconLock = proxyBeaconLock;
     }
 
     function deployNamespace(
         string memory namespace,
         string memory metadataURI,
         IAccessControl accessControl,
+        address proxyAdminOwner,
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData,
         string memory nftName,
         string memory nftSymbol,
         ITokenURIProvider tokenURIProvider
     ) external returns (address) {
-        Namespace namespacePrimitive =
-            new Namespace(namespace, metadataURI, _factoryOwnedAccessControl, nftName, nftSymbol, tokenURIProvider);
+        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _proxyBeaconLock));
+        Namespace namespacePrimitive = Namespace(address(new BeaconProxy(proxyAdmin, _beacon)));
+        namespacePrimitive.initialize(
+            namespace, metadataURI, nftName, nftSymbol, tokenURIProvider, _factoryOwnedAccessControl
+        );
         namespacePrimitive.changeNamespaceRules(ruleChanges);
         namespacePrimitive.setExtraData(extraData);
         namespacePrimitive.setAccessControl(accessControl);

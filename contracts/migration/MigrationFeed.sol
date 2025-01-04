@@ -9,8 +9,6 @@ import {Feed} from "./../core/primitives/feed/Feed.sol";
 import {IAccessControl} from "./../core/interfaces/IAccessControl.sol";
 
 contract MigrationFeed is Feed {
-    constructor(string memory metadataURI, IAccessControl accessControl) Feed(metadataURI, accessControl) {}
-
     function createPost(
         CreatePostParams calldata postParams,
         KeyValue[] calldata customParams,

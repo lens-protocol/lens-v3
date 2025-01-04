@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {RuleProcessingParams, KeyValue, RuleChange, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
+import {IAccessControl} from "./IAccessControl.sol";
 
 struct Follow {
     uint256 id;
@@ -64,6 +65,8 @@ interface IGraph is IMetadataBased {
     event Lens_Graph_ExtraDataRemoved(bytes32 indexed key);
 
     event Lens_Graph_MetadataURISet(string metadataURI);
+
+    function initialize(string memory metadataURI, IAccessControl accessControl) external;
 
     function changeGraphRules(RuleChange[] calldata ruleChanges) external;
 

@@ -10,15 +10,18 @@ import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
+import {BaseDeployments} from "./helpers/BaseDeployments.sol";
 
-contract AccountTest is Test {
+contract AccountTest is Test, BaseDeployments {
     address owner = makeAddr("OWNER");
     address manager = makeAddr("MANAGER");
 
     IAccount account;
     IFeed feed;
 
-    function setUp() public {
+    function setUp() public override {
+        super.setUp();
+
         address[] memory accountManagers = new address[](1);
         accountManagers[0] = manager;
 
@@ -36,8 +39,15 @@ contract AccountTest is Test {
             })
         );
 
-        IAccessControl accessControl = IAccessControl(new OwnerAdminOnlyAccessControl(address(this)));
-        feed = new Feed({metadataURI: "uri://feed-metadata", accessControl: accessControl});
+        feed = IFeed(
+            lensFactory.deployFeed({
+                metadataURI: "some metadata uri",
+                owner: address(account),
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
     }
 
     function testCanExecuteTxDirectly() public {
@@ -62,6 +72,7 @@ contract AccountTest is Test {
 
         vm.prank(owner);
         bytes memory returnData = account.executeTransaction({to: address(feed), value: 0, data: txData});
+        console.log("Return Data length:", returnData.length);
         uint256 postId = abi.decode(returnData, (uint256));
 
         Post memory post = feed.getPost(postId);

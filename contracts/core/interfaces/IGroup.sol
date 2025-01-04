@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
+import {IAccessControl} from "./IAccessControl.sol";
 
 struct Membership {
     uint256 id;
@@ -62,6 +63,8 @@ interface IGroup is IMetadataBased {
     event Lens_Group_ExtraDataRemoved(bytes32 indexed key);
 
     event Lens_Group_MetadataURISet(string metadataURI);
+
+    function initialize(string memory metadataURI, IAccessControl accessControl) external;
 
     function addMember(
         address account,
