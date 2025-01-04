@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
 import {IMetadataBased} from "./IMetadataBased.sol";
+import {IAccessControl} from "./IAccessControl.sol";
+import {ITokenURIProvider} from "./ITokenURIProvider.sol";
 
 interface INamespace is IMetadataBased {
     event Lens_Namespace_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);
@@ -59,6 +61,15 @@ interface INamespace is IMetadataBased {
     event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
 
     event Lens_Namespace_MetadataURISet(string metadataURI);
+
+    function initialize(
+        string memory namespace,
+        string memory metadataURI,
+        string memory nftName,
+        string memory nftSymbol,
+        ITokenURIProvider tokenURIProvider,
+        IAccessControl accessControl
+    ) external;
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 

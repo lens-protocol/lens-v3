@@ -18,7 +18,8 @@ import {GroupFactory} from "./GroupFactory.sol";
 import {FeedFactory} from "./FeedFactory.sol";
 import {GraphFactory} from "./GraphFactory.sol";
 import {NamespaceFactory} from "./NamespaceFactory.sol";
-import {AppFactory, AppInitialProperties} from "./AppFactory.sol";
+import {AppFactory} from "./AppFactory.sol";
+import {AppInitialProperties} from "../primitives/app/App.sol";
 import {AccessControlFactory} from "./AccessControlFactory.sol";
 import {AccountFactory} from "./AccountFactory.sol";
 import {IAccount, AccountManagerPermissions} from "./../account/IAccount.sol";
@@ -140,7 +141,7 @@ contract LensFactory {
         KeyValue[] calldata feedExtraData
     ) external returns (address, address) {
         address group =
-            GROUP_FACTORY.deployGroup(groupMetadataURI, _factoryOwnedAccessControl, groupRules, groupExtraData);
+            GROUP_FACTORY.deployGroup(groupMetadataURI, _factoryOwnedAccessControl, owner, groupRules, groupExtraData);
 
         RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
 
@@ -173,7 +174,7 @@ contract LensFactory {
         }
 
         address feed = FEED_FACTORY.deployFeed(
-            feedMetadataURI, _deployAccessControl(owner, admins), modifiedFeedRules, feedExtraData
+            feedMetadataURI, _deployAccessControl(owner, admins), owner, modifiedFeedRules, feedExtraData
         );
 
         IRoleBasedAccessControl groupAccessControl = _deployAccessControl(owner, admins);
@@ -209,6 +210,7 @@ contract LensFactory {
             metadataURI,
             sourceStampVerificationEnabled,
             _deployAccessControl(owner, admins),
+            owner,
             initialProperties,
             extraData
         );
@@ -221,7 +223,7 @@ contract LensFactory {
         RuleChange[] calldata rules,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), rules, extraData);
+        return GROUP_FACTORY.deployGroup(metadataURI, _deployAccessControl(owner, admins), owner, rules, extraData);
     }
 
     function deployFeed(
@@ -234,6 +236,7 @@ contract LensFactory {
         return FEED_FACTORY.deployFeed(
             metadataURI,
             _deployAccessControl(owner, admins),
+            owner,
             _prependAccountBlocking(rules, IFeedRule.processCreatePost.selector),
             extraData
         );
@@ -273,6 +276,7 @@ contract LensFactory {
         return GRAPH_FACTORY.deployGraph(
             metadataURI,
             _deployAccessControl(owner, admins),
+            owner,
             _prependAccountBlocking(rules, IGraphRule.processFollow.selector),
             extraData
         );
@@ -293,6 +297,7 @@ contract LensFactory {
             namespace,
             metadataURI,
             _deployAccessControl(owner, admins),
+            owner,
             rules,
             extraData,
             nftName,

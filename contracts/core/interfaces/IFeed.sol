@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {KeyValue, Rule, RuleProcessingParams, RuleChange} from "./../types/Types.sol";
 import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
+import {IAccessControl} from "./IAccessControl.sol";
 
 struct EditPostParams {
     string contentURI;
@@ -116,6 +117,8 @@ interface IFeed is IMetadataBased {
     event Lens_Feed_Post_ExtraDataRemoved(uint256 indexed postId, bytes32 indexed key);
 
     event Lens_Feed_MetadataURISet(string metadataURI);
+
+    function initialize(string memory metadataURI, IAccessControl accessControl) external;
 
     function changeFeedRules(RuleChange[] calldata ruleChanges) external;
 

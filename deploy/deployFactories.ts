@@ -1,16 +1,57 @@
-import { deployLensContract, ContractType, ContractInfo } from './lensUtils';
+import {
+  deployLensContract,
+  ContractType,
+  ContractInfo,
+  loadContractAddressFromAddressBook,
+} from './lensUtils';
 
 export default async function deployFactories(): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
+
   const contracts: ContractInfo[] = [
     // Factories
     { contractName: 'AccessControlFactory', contractType: ContractType.Factory },
     { contractName: 'AccountFactory', contractType: ContractType.Factory },
-    { contractName: 'AppFactory', contractType: ContractType.Factory },
-    { contractName: 'FeedFactory', contractType: ContractType.Factory },
-    { contractName: 'GraphFactory', contractType: ContractType.Factory },
-    { contractName: 'GroupFactory', contractType: ContractType.Factory },
-    { contractName: 'NamespaceFactory', contractType: ContractType.Factory },
+    {
+      contractName: 'AppFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('AppBeacon'),
+        loadContractAddressFromAddressBook('Lock'),
+      ],
+    },
+    {
+      contractName: 'FeedFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('FeedBeacon'),
+        loadContractAddressFromAddressBook('Lock'),
+      ],
+    },
+    {
+      contractName: 'GraphFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('GraphBeacon'),
+        loadContractAddressFromAddressBook('Lock'),
+      ],
+    },
+    {
+      contractName: 'GroupFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('GroupBeacon'),
+        loadContractAddressFromAddressBook('Lock'),
+      ],
+    },
+    {
+      contractName: 'NamespaceFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('NamespaceBeacon'),
+        loadContractAddressFromAddressBook('Lock'),
+      ],
+    },
     {
       contractName: 'AccountBlockingRule',
       contractType: ContractType.Rule,

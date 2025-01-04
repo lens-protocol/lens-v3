@@ -11,8 +11,6 @@ import {IAccessControl} from "./../core/interfaces/IAccessControl.sol";
  * Special Graph implementation to allow data migrations from Lens V2 to Lens V3
  */
 contract MigrationGraph is Graph {
-    constructor(string memory metadataURI, IAccessControl accessControl) Graph(metadataURI, accessControl) {}
-
     function follow(
         address followerAccount,
         address accountToFollow,

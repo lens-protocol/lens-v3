@@ -1,7 +1,6 @@
 import { Contract, Wallet } from 'zksync-ethers';
 import { deployContract, getWallet, LOCAL_RICH_WALLETS } from '../../deploy/utils';
-import { assert, ethers } from 'ethers';
-import { artifacts } from 'hardhat';
+import { ethers } from 'ethers';
 import { expect } from 'chai';
 
 describe('Account', function () {
@@ -13,6 +12,8 @@ describe('Account', function () {
   before(async function () {
     ownerWallet = getWallet(LOCAL_RICH_WALLETS[0].privateKey);
     console.log('Owner:', await ownerWallet.getAddress());
+
+    // Global Rules for primitives
 
     accountBlockingRule = await deployContract('AccountBlockingRule', ['uri://any'], {
       wallet: ownerWallet,
@@ -28,32 +29,55 @@ describe('Account', function () {
     let groupGatedFeedRuleAddress = await groupGatedFeedRule.getAddress();
     console.log('GroupGatedFeedRule:', groupGatedFeedRuleAddress);
 
+    // Proxy stuff
+
+    const proxyAdminLock = await deployContract('Lock', [await ownerWallet.getAddress(), true], { wallet: ownerWallet, silent: true });
+
+    const appImplementation = await deployContract('App', [], { wallet: ownerWallet, silent: true });
+    const feedImplementation = await deployContract('Feed', [], { wallet: ownerWallet, silent: true });
+    const graphImplementation = await deployContract('Graph', [], { wallet: ownerWallet, silent: true });
+    const groupImplementation = await deployContract('Group', [], { wallet: ownerWallet, silent: true });
+    const namespaceImplementation = await deployContract('Namespace', [], { wallet: ownerWallet, silent: true });
+
+    const appBeacon = await deployContract('Beacon', [await ownerWallet.getAddress(), 1, await appImplementation.getAddress()], { wallet: ownerWallet, silent: true });
+    const feedBeacon = await deployContract('Beacon', [await ownerWallet.getAddress(), 1, await feedImplementation.getAddress()], { wallet: ownerWallet, silent: true });
+    const graphBeacon = await deployContract('Beacon', [await ownerWallet.getAddress(), 1, await graphImplementation.getAddress()], { wallet: ownerWallet, silent: true });
+    const groupBeacon = await deployContract('Beacon', [await ownerWallet.getAddress(), 1, await groupImplementation.getAddress()], { wallet: ownerWallet, silent: true });
+    const namespaceBeacon = await deployContract('Beacon', [await ownerWallet.getAddress(), 1, await namespaceImplementation.getAddress()], { wallet: ownerWallet, silent: true });
+
+    // Extension primitives
+
     let accessControlFactoryAddress = await (
       await deployContract('AccessControlFactory', [], { wallet: ownerWallet, silent: true })
     ).getAddress();
     console.log('AccessControlFactory:', accessControlFactoryAddress);
+
     let accountFactoryAddress = await (
       await deployContract('AccountFactory', [], { wallet: ownerWallet, silent: true })
     ).getAddress();
     console.log('AccountFactory:', accountFactoryAddress);
+
     let appFactoryAddress = await (
-      await deployContract('AppFactory', [], { wallet: ownerWallet, silent: true })
+      await deployContract('AppFactory', [await appBeacon.getAddress(), await proxyAdminLock.getAddress()], { wallet: ownerWallet, silent: true })
     ).getAddress();
     console.log('AppFactory:', appFactoryAddress);
-    let groupFactoryAddress = await (
-      await deployContract('GroupFactory', [], { wallet: ownerWallet, silent: true })
-    ).getAddress();
-    console.log('GroupFactory:', groupFactoryAddress);
+
+    // Main primitives
+
     let feedFactoryAddress = await (
-      await deployContract('FeedFactory', [], { wallet: ownerWallet, silent: true })
+      await deployContract('FeedFactory', [await feedBeacon.getAddress(), await proxyAdminLock.getAddress()], { wallet: ownerWallet, silent: true })
     ).getAddress();
     console.log('FeedFactory:', feedFactoryAddress);
     let graphFactoryAddress = await (
-      await deployContract('GraphFactory', [], { wallet: ownerWallet, silent: true })
+      await deployContract('GraphFactory', [await graphBeacon.getAddress(), await proxyAdminLock.getAddress()], { wallet: ownerWallet, silent: true })
     ).getAddress();
     console.log('GraphFactory:', graphFactoryAddress);
+    let groupFactoryAddress = await (
+      await deployContract('GroupFactory', [await groupBeacon.getAddress(), await proxyAdminLock.getAddress()], { wallet: ownerWallet, silent: true })
+    ).getAddress();
+    console.log('GroupFactory:', groupFactoryAddress);
     let namespaceFactoryAddress = await (
-      await deployContract('NamespaceFactory', [], { wallet: ownerWallet, silent: true })
+      await deployContract('NamespaceFactory', [await namespaceBeacon.getAddress(), await proxyAdminLock.getAddress()], { wallet: ownerWallet, silent: true })
     ).getAddress();
     console.log('NamespaceFactory:', namespaceFactoryAddress);
 

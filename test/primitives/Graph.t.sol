@@ -8,17 +8,27 @@ import {OwnerAdminOnlyAccessControl} from "../../contracts/dashboard/access/Owne
 import {IGraph} from "../../contracts/core/interfaces/IGraph.sol";
 import {Graph} from "../../contracts/core/primitives/graph/Graph.sol";
 import "../helpers/TypeHelpers.sol";
+import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
 
-contract GraphTest is Test {
-    IAccessControl accessControl;
+contract GraphTest is Test, BaseDeployments {
     IGraph graph;
 
     address sourceAccount = makeAddr("SOURCE");
     address targetAccount = makeAddr("TARGET");
+    address graphOwner = makeAddr("GRAPH_OWNER");
 
-    function setUp() public {
-        accessControl = new OwnerAdminOnlyAccessControl(address(this));
-        graph = new Graph({metadataURI: "uri://graph-metadata", accessControl: IAccessControl(accessControl)});
+    function setUp() public override {
+        super.setUp();
+
+        graph = IGraph(
+            lensFactory.deployGraph({
+                metadataURI: "some metadata uri",
+                owner: graphOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
     }
 
     function testFollowAndUnfollow() public {

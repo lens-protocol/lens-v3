@@ -13,8 +13,17 @@ import {Events} from "./../../types/Events.sol";
 import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
 import {SourceStampBased} from "./../../base/SourceStampBased.sol";
 import {MetadataBased} from "./../../base/MetadataBased.sol";
+import {Initializable} from "./../../upgradeability/Initializable.sol";
 
-contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, SourceStampBased, MetadataBased {
+contract Group is
+    IGroup,
+    Initializable,
+    RuleBasedGroup,
+    AccessControlled,
+    ExtraStorageBased,
+    SourceStampBased,
+    MetadataBased
+{
     // Resource IDs involved in the contract
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
@@ -27,7 +36,16 @@ contract Group is IGroup, RuleBasedGroup, AccessControlled, ExtraStorageBased, S
     /// @custom:keccak lens.permission.RemoveMember
     uint256 constant PID__REMOVE_MEMBER = uint256(0x8c204b72f1086f607fac077224053e94d5f8a69311195889c42430ffa8646e23);
 
-    constructor(string memory metadataURI, IAccessControl accessControl) AccessControlled(accessControl) {
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(string memory metadataURI, IAccessControl accessControl) external override initializer {
+        _initialize(metadataURI);
+        AccessControlled._initialize(accessControl);
+    }
+
+    function _initialize(string memory metadataURI) internal onlyInitializing {
         _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("group", "lens.group", "group", "lens.group");

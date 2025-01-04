@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 // Modified from OpenZeppelin's v4.9.0 contracts
+pragma solidity ^0.8.0;
 
 import "./../interfaces/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "./../interfaces/ITokenURIProvider.sol";
 import "./../interfaces/IERC4906Events.sol";
+import "./../upgradeability/Initializable.sol";
 
-pragma solidity ^0.8.0;
-
-contract LensERC721 is IERC721 {
+abstract contract LensERC721 is IERC721, Initializable {
     using AddressUpgradeable for address;
 
     event Lens_ERC721_TokenURIProviderSet(address indexed tokenURIProvider);
@@ -41,7 +41,10 @@ contract LensERC721 is IERC721 {
         }
     }
 
-    constructor(string memory nftName, string memory nftSymbol, ITokenURIProvider tokenURIProvider) {
+    function _initialize(string memory nftName, string memory nftSymbol, ITokenURIProvider tokenURIProvider)
+        internal
+        onlyInitializing
+    {
         $erc721Storage().name = nftName;
         $erc721Storage().symbol = nftSymbol;
         $erc721Storage().tokenURIProvider = tokenURIProvider;

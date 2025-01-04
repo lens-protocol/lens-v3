@@ -8,16 +8,26 @@ import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAcces
 import "../helpers/TypeHelpers.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";
+import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
 
-contract FeedTest is Test {
-    IAccessControl accessControl;
+contract FeedTest is Test, BaseDeployments {
     IFeed feed;
 
     address author = makeAddr("AUTHOR");
+    address feedOwner = makeAddr("FEED_OWNER");
 
-    function setUp() public {
-        accessControl = new OwnerAdminOnlyAccessControl(address(this));
-        feed = new Feed({metadataURI: "uri://feed-metadata", accessControl: IAccessControl(accessControl)});
+    function setUp() public override {
+        super.setUp();
+
+        feed = IFeed(
+            lensFactory.deployFeed({
+                metadataURI: "some metadata uri",
+                owner: author,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
     }
 
     function testPost() public {

@@ -4,15 +4,19 @@ import { keccak256 } from 'ethers';
 import * as hre from 'hardhat';
 
 export enum ContractType {
+  Implementation,
+  Beacon,
   Factory,
   Primitive,
   Aux,
   Action,
   Rule,
-  Misc
+  Misc,
+  Address
 }
 
 export interface ContractInfo {
+  name?: string;
   contractName: string;
   contractType: ContractType;
   address?: string;
@@ -20,7 +24,7 @@ export interface ContractInfo {
   bytecodeHash?: string;
 }
 
-export type AddressBook = Record<string, Omit<ContractInfo, 'contractName'>>;
+export type AddressBook = Record<string, Omit<ContractInfo, 'name'>>;
 
 export function loadAddressBook() {
   try {
@@ -37,51 +41,56 @@ export function saveAddressBook(addressBook: any) {
 
 export function saveContractToAddressBook(contract: ContractInfo) {
   const addressBook = loadAddressBook();
-  addressBook[contract.contractName] = contract;
+  addressBook[contract.name ?? contract.contractName] = contract;
   saveAddressBook(addressBook);
 }
 
-export function loadContractFromAddressBook(contractName: string): ContractInfo | undefined {
+export function loadContractFromAddressBook(name: string): ContractInfo | undefined {
   const addressBook = loadAddressBook();
-  return addressBook[contractName];
+  return addressBook[name];
 }
 
-export function loadContractAddressFromAddressBook(contractName: string): string | undefined {
+export function loadContractAddressFromAddressBook(name: string): string | undefined {
   const addressBook = loadAddressBook();
-  return addressBook[contractName]?.address;
+  return addressBook[name]?.address;
 }
 
 export async function deployLensContract(contractToDeploy: ContractInfo): Promise<ContractInfo> {
+  const name = contractToDeploy.name ?? contractToDeploy.contractName;
+
   const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
   const bytecodeHash = keccak256(artifact.bytecode);
 
   // Check address book for existing contract
   const addressBook = loadAddressBook();
-  const existingContract = addressBook[contractToDeploy.contractName];
+  const existingContract = addressBook[name];
 
   if (existingContract && existingContract.bytecodeHash === bytecodeHash) {
-    console.log(`${contractToDeploy.contractName} already deployed at ${existingContract.address}. Skipping...`);
+    console.log(`${name} already deployed at ${existingContract.address}. Skipping...`);
     return {
-      contractName: contractToDeploy.contractName,
+      name: contractToDeploy.name,
       ...existingContract,
     };
+  } else {
+    console.log(`Deploying ${name}...`);
   }
 
   const deployedContract = await deployContract(
     contractToDeploy.contractName,
     contractToDeploy.constructorArguments
   );
-  const contractInfo = {
+  const contractInfo: ContractInfo = {
+    contractName: contractToDeploy.contractName,
     contractType: contractToDeploy.contractType,
     address: await deployedContract.getAddress(),
     bytecodeHash,
   };
 
-  addressBook[contractToDeploy.contractName] = contractInfo;
+  addressBook[name] = contractInfo;
   saveAddressBook(addressBook);
 
   return {
-    contractName: contractToDeploy.contractName,
+    name: contractToDeploy.name,
     ...contractInfo,
   };
 }
