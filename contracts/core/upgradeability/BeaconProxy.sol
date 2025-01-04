@@ -5,10 +5,10 @@ pragma solidity ^0.8.0;
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 
 contract BeaconProxy {
-    event ProxyAdminChanged(address indexed proxyAdmin);
     event Upgraded(address indexed implementation);
-    event BeaconChanged(address indexed beacon);
-    event AutoUpgrade(bool enabled);
+    event BeaconUpgraded(address indexed beacon);
+    event AdminChanged(address previousAdmin, address newAdmin);
+    event AutoUpgradeChanged(bool enabled);
 
     struct BoolStorage {
         bool value;
@@ -53,30 +53,30 @@ contract BeaconProxy {
 
     constructor(address proxyAdmin, address beacon) {
         $proxyAdmin().value = proxyAdmin;
-        emit ProxyAdminChanged(proxyAdmin);
+        emit AdminChanged(address(0), proxyAdmin);
         $autoUpgrade().value = true;
-        emit AutoUpgrade(true);
+        emit AutoUpgradeChanged(true);
         $beacon().value = beacon;
-        emit BeaconChanged(beacon);
+        emit BeaconUpgraded(beacon);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
     function changeProxyAdmin(address proxyAdmin) external {
         require(msg.sender == $proxyAdmin().value);
         $proxyAdmin().value = proxyAdmin;
-        emit ProxyAdminChanged(proxyAdmin);
+        emit AdminChanged(msg.sender, proxyAdmin);
     }
 
     function optOutFromAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value);
         $autoUpgrade().value = false;
-        emit AutoUpgrade(false);
+        emit AutoUpgradeChanged(false);
     }
 
     function optInToAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value);
         $autoUpgrade().value = true;
-        emit AutoUpgrade(true);
+        emit AutoUpgradeChanged(true);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
@@ -93,7 +93,7 @@ contract BeaconProxy {
         require(msg.sender == $proxyAdmin().value);
         if (beacon != $beacon().value) {
             $beacon().value = beacon;
-            emit BeaconChanged(beacon);
+            emit BeaconUpgraded(beacon);
         }
         if ($autoUpgrade().value) {
             _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
