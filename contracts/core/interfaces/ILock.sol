@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 interface ILock {
     /**
-     * @dev Returns true if restricted, false if not.
+     * @dev Returns true if locked, false if not.
      */
-    function isRestricted() external view returns (bool);
+    function isLocked() external view returns (bool);
 }
