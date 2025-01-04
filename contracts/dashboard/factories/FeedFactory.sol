@@ -15,12 +15,12 @@ contract FeedFactory {
 
     IAccessControl internal immutable _factoryOwnedAccessControl;
     address internal immutable _beacon;
-    address internal immutable _proxyAdminLock;
+    address internal immutable _lock;
 
-    constructor(address beacon, address proxyAdminLock) {
+    constructor(address beacon, address lock) {
         _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
         _beacon = beacon;
-        _proxyAdminLock = proxyAdminLock;
+        _lock = lock;
     }
 
     function deployFeed(
@@ -30,7 +30,7 @@ contract FeedFactory {
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _proxyAdminLock));
+        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _lock));
         Feed feed = Feed(address(new BeaconProxy(proxyAdmin, _beacon)));
         feed.initialize(metadataURI, _factoryOwnedAccessControl);
         feed.changeFeedRules(ruleChanges);

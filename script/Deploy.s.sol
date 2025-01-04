@@ -27,7 +27,7 @@ import {GroupFactory} from "./../contracts/dashboard/factories/GroupFactory.sol"
 import {NamespaceFactory} from "./../contracts/dashboard/factories/NamespaceFactory.sol";
 import {LensFactory} from "./../contracts/dashboard/factories/LensFactory.sol";
 
-import {ProxyAdminLock} from "./../contracts/core/upgradeability/ProxyAdminLock.sol";
+import {Lock} from "./../contracts/core/upgradeability/Lock.sol";
 import {Beacon} from "./../contracts/core/upgradeability/Beacon.sol";
 
 import {AccountBlockingRule} from "./../contracts/rules/base/AccountBlockingRule.sol";
@@ -63,7 +63,7 @@ contract MyScript is Script {
     address groupGatedFeedRule;
 
     function run() external {
-        proxyAdminLock = address(new ProxyAdminLock(lockOwner, true));
+        proxyAdminLock = address(new Lock(lockOwner, true));
         _deployImplementations();
         _deployBeacons();
         _deployFactories();

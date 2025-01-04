@@ -17,7 +17,7 @@ export default async function deployFactories(): Promise<void> {
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('AppBeacon'),
-        loadContractAddressFromAddressBook('ProxyAdminLock'),
+        loadContractAddressFromAddressBook('Lock'),
       ],
     },
     {
@@ -25,7 +25,7 @@ export default async function deployFactories(): Promise<void> {
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('FeedBeacon'),
-        loadContractAddressFromAddressBook('ProxyAdminLock'),
+        loadContractAddressFromAddressBook('Lock'),
       ],
     },
     {
@@ -33,7 +33,7 @@ export default async function deployFactories(): Promise<void> {
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GraphBeacon'),
-        loadContractAddressFromAddressBook('ProxyAdminLock'),
+        loadContractAddressFromAddressBook('Lock'),
       ],
     },
     {
@@ -41,7 +41,7 @@ export default async function deployFactories(): Promise<void> {
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GroupBeacon'),
-        loadContractAddressFromAddressBook('ProxyAdminLock'),
+        loadContractAddressFromAddressBook('Lock'),
       ],
     },
     {
@@ -49,7 +49,7 @@ export default async function deployFactories(): Promise<void> {
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('NamespaceBeacon'),
-        loadContractAddressFromAddressBook('ProxyAdminLock'),
+        loadContractAddressFromAddressBook('Lock'),
       ],
     },
     {

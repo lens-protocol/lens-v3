@@ -6,7 +6,7 @@
   "license": "UNLICENSED. Copyright (C) 2024 Lens Labs. All Rights Reserved.",
   "scripts": {
     "deploy": "hardhat deploy-zksync --script deploy.ts",
-    "deploy:local": "anvil-zksync && hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
+    "deploy:local": "hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
     "interact": "hardhat deploy-zksync --script interact.ts",
     "compile": "hardhat compile",
     "clean": "hardhat clean",

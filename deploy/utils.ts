@@ -55,6 +55,11 @@ export const verifyContract = async (data: {
   constructorArguments: string;
   bytecode: string;
 }) => {
+  // Skip verification for local networks
+  if (hre.network.name === 'inMemoryNode') {
+    console.log('Skipping contract verification on local network');
+    return 0;
+  }
   const verificationRequestId: number = await hre.run('verify:verify', {
     ...data,
     noCompile: true,

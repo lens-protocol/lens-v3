@@ -31,7 +31,7 @@ describe('Account', function () {
 
     // Proxy stuff
 
-    const proxyAdminLock = await deployContract('ProxyAdminLock', [await ownerWallet.getAddress(), true], { wallet: ownerWallet, silent: true });
+    const proxyAdminLock = await deployContract('Lock', [await ownerWallet.getAddress(), true], { wallet: ownerWallet, silent: true });
 
     const appImplementation = await deployContract('App', [], { wallet: ownerWallet, silent: true });
     const feedImplementation = await deployContract('Feed', [], { wallet: ownerWallet, silent: true });
