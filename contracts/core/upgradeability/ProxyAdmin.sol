@@ -4,26 +4,21 @@ pragma solidity ^0.8.0;
 
 import {ILock} from "contracts/core/interfaces/ILock.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-contract ProxyAdmin {
+contract ProxyAdmin is Ownable2Step {
     ILock immutable LOCK;
-    address internal _proxyAdmin;
 
-    constructor(address proxyAdmin, address lock) {
-        _proxyAdmin = proxyAdmin;
+    constructor(address proxyAdminOwner, address lock) Ownable2Step() {
+        _transferOwnership(proxyAdminOwner);
         LOCK = ILock(lock);
+        LOCK.isLocked(); // Aims to verify the given address follows ILock interface
     }
 
-    function ProxyAdmin__changeProxyAdmin(address proxyAdmin) external {
-        require(msg.sender == _proxyAdmin);
-        _proxyAdmin = proxyAdmin;
-        // Event
-    }
-
-    function ProxyAdmin__call(address to, uint256 value, bytes calldata data) external payable returns (bytes memory) {
+    function call(address to, uint256 value, bytes calldata data) external onlyOwner returns (bytes memory) {
         bytes4 selector = bytes4(data[0]);
-        if (LOCK.isRestricted()) {
-            // While the Proxy Admin is restricted:
+        if (LOCK.isLocked()) {
+            // While the Proxy Admin is locked it:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
             require(selector != BeaconProxy.changeProxyAdmin.selector);
             // - Cannot change the Beacon in the Proxy
@@ -48,13 +43,5 @@ contract ProxyAdmin {
             }
         }
         return ret;
-    }
-
-    fallback() external payable {
-        revert();
-    }
-
-    receive() external payable {
-        revert();
     }
 }
