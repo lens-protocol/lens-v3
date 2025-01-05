@@ -1,4 +1,9 @@
-import { deployLensContract, ContractType, ContractInfo, loadContractAddressFromAddressBook } from './lensUtils';
+import {
+  deployLensContract,
+  ContractType,
+  ContractInfo,
+  loadContractAddressFromAddressBook,
+} from './lensUtils';
 
 export async function deployProxyAdminLock(lockOwner: string): Promise<void> {
   const proxyAdminLock = await deployLensContract({
@@ -15,6 +20,12 @@ export async function deployBeacons(beaconOwner: string): Promise<void> {
       contractName: 'Beacon',
       contractType: ContractType.Beacon,
       constructorArguments: [beaconOwner, 1, loadContractAddressFromAddressBook('AppImpl')],
+    },
+    {
+      name: 'AccountBeacon',
+      contractName: 'Beacon',
+      contractType: ContractType.Beacon,
+      constructorArguments: [beaconOwner, 1, loadContractAddressFromAddressBook('AccountImpl')],
     },
     {
       name: 'FeedBeacon',

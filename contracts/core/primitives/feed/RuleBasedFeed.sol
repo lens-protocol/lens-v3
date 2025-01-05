@@ -2,13 +2,13 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IPostRule} from "./../../interfaces/IPostRule.sol";
-import {IFeedRule} from "./../../interfaces/IFeedRule.sol";
-import {IFeed} from "./../../interfaces/IFeed.sol";
-import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "./../../types/Types.sol";
-import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
-import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
+import {IPostRule} from "contracts/core/interfaces/IPostRule.sol";
+import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
+import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "contracts/core/types/Types.sol";
+import {EditPostParams, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
+import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 
 abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     using RulesLib for RulesStorage;

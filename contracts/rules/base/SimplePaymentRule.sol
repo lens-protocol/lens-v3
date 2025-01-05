@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 abstract contract SimplePaymentRule is MetadataBased {
     using SafeERC20 for IERC20;

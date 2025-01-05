@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {IAccessControl} from "./../interfaces/IAccessControl.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 
 library AccessControlLib {
     function requireAccess(address accessControl, address account, uint256 permissionId) internal view {

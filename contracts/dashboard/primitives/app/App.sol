@@ -2,15 +2,15 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IAccessControl} from "./../../../core/interfaces/IAccessControl.sol";
-import {IApp} from "./IApp.sol";
-import {AppCore as Core} from "./AppCore.sol";
-import {KeyValue, SourceStamp} from "./../../../core/types/Types.sol";
-import {AccessControlled} from "./../../../core/access/AccessControlled.sol";
-import {Events} from "./../../../core/types/Events.sol";
-import {BaseSource} from "./../../../core/base/BaseSource.sol";
-import {ISource} from "./../../../core/interfaces/ISource.sol";
-import {Initializable} from "./../../../core/upgradeability/Initializable.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {IApp} from "contracts/dashboard/primitives/app/IApp.sol";
+import {AppCore as Core} from "contracts/dashboard/primitives/app/AppCore.sol";
+import {KeyValue, SourceStamp} from "contracts/core/types/Types.sol";
+import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {BaseSource} from "contracts/core/base/BaseSource.sol";
+import {ISource} from "contracts/core/interfaces/ISource.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 struct AppInitialProperties {
     address graph;

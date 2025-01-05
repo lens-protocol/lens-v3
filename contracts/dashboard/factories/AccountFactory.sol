@@ -2,8 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {Account, AccountManagerPermissions} from "./../account/Account.sol";
-import {KeyValue, SourceStamp} from "./../../core/types/Types.sol";
+import {Account, AccountManagerPermissions} from "contracts/dashboard/account/Account.sol";
+import {KeyValue, SourceStamp} from "contracts/core/types/Types.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
 
@@ -46,6 +46,6 @@ contract AccountFactory {
             sourceStamp.source,
             extraData
         );
-        return address(account);
+        return payable(account);
     }
 }

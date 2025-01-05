@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue} from "./../../core/types/Types.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
 
 interface IPostAction {
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)

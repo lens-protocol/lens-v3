@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {KeyValue} from "./../types/Types.sol";
-import {ExtraDataLib} from "../libraries/ExtraDataLib.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
+import {ExtraDataLib} from "contracts/core/libraries/ExtraDataLib.sol";
 
 abstract contract ExtraStorageBased {
     using ExtraDataLib for mapping(bytes32 => bytes);

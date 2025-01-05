@@ -3,11 +3,11 @@
 // Modified from OpenZeppelin's v4.9.0 contracts
 pragma solidity ^0.8.0;
 
-import "./../interfaces/IERC721.sol";
+import "contracts/core/interfaces/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "./../interfaces/ITokenURIProvider.sol";
-import "./../interfaces/IERC4906Events.sol";
+import "contracts/core/interfaces/ITokenURIProvider.sol";
+import "contracts/core/interfaces/IERC4906Events.sol";
 
 abstract contract LensERC721 is IERC721 {
     using AddressUpgradeable for address;

@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import "./../../../core/base/LensERC721.sol";
-import {IERC7572} from "./IERC7572.sol";
-import {IFeed} from "./../../../core/interfaces/IFeed.sol";
-import {ITokenURIProvider} from "./../../../core/interfaces/ITokenURIProvider.sol";
+import "contracts/core/base/LensERC721.sol";
+import {IERC7572} from "contracts/actions/post/collect/IERC7572.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 
 /**
  * @notice A contract that represents a Lens Collected Post.

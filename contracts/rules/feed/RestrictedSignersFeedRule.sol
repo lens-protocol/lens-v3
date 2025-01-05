@@ -2,11 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {RestrictedSignersRule, EIP712Signature} from "./../base/RestrictedSignersRule.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
+import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
+import {RestrictedSignersRule, EIP712Signature} from "contracts/rules/base/RestrictedSignersRule.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {EIP712EncodingLib} from "contracts/core/libraries/EIP712EncodingLib.sol";
 
 contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
     constructor(string memory metadataURI) RestrictedSignersRule(metadataURI) {}

@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
-import {TokenGatedRule} from "./../base/TokenGatedRule.sol";
-import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {Events} from "./../../core/types/Events.sol";
+import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {TokenGatedRule} from "contracts/rules/base/TokenGatedRule.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {Events} from "contracts/core/types/Events.sol";
 
 contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
     using AccessControlLib for IAccessControl;

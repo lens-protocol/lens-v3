@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IRoleBasedAccessControl} from "./../../core/interfaces/IRoleBasedAccessControl.sol";
-import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {Group} from "./../../core/primitives/group/Group.sol";
-import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
+import {IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {Group} from "contracts/core/primitives/group/Group.sol";
+import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
 import {
     RuleChange,
     RuleProcessingParams,
@@ -13,24 +13,24 @@ import {
     RuleConfigurationChange,
     KeyValue,
     SourceStamp
-} from "./../../core/types/Types.sol";
-import {GroupFactory} from "./GroupFactory.sol";
-import {FeedFactory} from "./FeedFactory.sol";
-import {GraphFactory} from "./GraphFactory.sol";
-import {NamespaceFactory} from "./NamespaceFactory.sol";
-import {AppFactory} from "./AppFactory.sol";
-import {AppInitialProperties} from "../primitives/app/App.sol";
-import {AccessControlFactory} from "./AccessControlFactory.sol";
-import {AccountFactory} from "./AccountFactory.sol";
-import {IAccount, AccountManagerPermissions} from "./../account/IAccount.sol";
-import {INamespace} from "./../../core/interfaces/INamespace.sol";
-import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
-import {LensUsernameTokenURIProvider} from "./../../core/primitives/namespace/LensUsernameTokenURIProvider.sol";
-import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
-import {PARAM__GROUP} from "./../../rules/feed/GroupGatedFeedRule.sol";
-import {AccessControlled} from "./../../core/access/AccessControlled.sol";
-import {IGroup} from "./../../core/interfaces/IGroup.sol";
+} from "contracts/core/types/Types.sol";
+import {GroupFactory} from "contracts/dashboard/factories/GroupFactory.sol";
+import {FeedFactory} from "contracts/dashboard/factories/FeedFactory.sol";
+import {GraphFactory} from "contracts/dashboard/factories/GraphFactory.sol";
+import {NamespaceFactory} from "contracts/dashboard/factories/NamespaceFactory.sol";
+import {AppFactory} from "contracts/dashboard/factories/AppFactory.sol";
+import {AppInitialProperties} from "contracts/dashboard/primitives/app/App.sol";
+import {AccessControlFactory} from "contracts/dashboard/factories/AccessControlFactory.sol";
+import {AccountFactory} from "contracts/dashboard/factories/AccountFactory.sol";
+import {IAccount, AccountManagerPermissions} from "contracts/dashboard/account/IAccount.sol";
+import {INamespace} from "contracts/core/interfaces/INamespace.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
+import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
+import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
+import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
+import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {

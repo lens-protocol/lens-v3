@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "./../types/Types.sol";
-import {IMetadataBased} from "./IMetadataBased.sol";
-import {IAccessControl} from "./IAccessControl.sol";
-import {ITokenURIProvider} from "./ITokenURIProvider.sol";
+import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "contracts/core/types/Types.sol";
+import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 
 interface INamespace is IMetadataBased {
     event Lens_Namespace_RuleConfigured(address indexed rule, bytes32 indexed configSalt, KeyValue[] configParams);

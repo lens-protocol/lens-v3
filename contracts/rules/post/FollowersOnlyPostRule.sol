@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IPostRule} from "./../../core/interfaces/IPostRule.sol";
-import {IGraph} from "./../../core/interfaces/IGraph.sol";
-import {IFeed} from "./../../core/interfaces/IFeed.sol";
-import {KeyValue} from "./../../core/types/Types.sol";
-import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {IPostRule} from "contracts/core/interfaces/IPostRule.sol";
+import {IGraph} from "contracts/core/interfaces/IGraph.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 contract FollowersOnlyPostRule is IPostRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);

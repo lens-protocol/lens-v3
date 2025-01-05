@@ -2,17 +2,17 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {ISimpleCollectAction, CollectActionData} from "./ISimpleCollectAction.sol";
-import {IFeed} from "./../../../core/interfaces/IFeed.sol";
-import {IGraph} from "./../../../core/interfaces/IGraph.sol";
+import {ISimpleCollectAction, CollectActionData} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 
-import {LensCollectedPost} from "./LensCollectedPost.sol";
-import {BasePostAction} from "./../base/BasePostAction.sol";
+import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
+import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {MetadataBased} from "./../../../core/base/MetadataBased.sol";
-import {KeyValue} from "./../../../core/types/Types.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
 
 contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;

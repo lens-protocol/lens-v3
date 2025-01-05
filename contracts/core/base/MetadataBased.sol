@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
+import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
 
 abstract contract MetadataBased is IMetadataBased {
     struct MetadataURIStorage {

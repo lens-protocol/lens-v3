@@ -5,12 +5,12 @@ pragma solidity 0.8.17;
 import "forge-std/Test.sol";
 import "./helpers/TypeHelpers.sol";
 import {IAccount, AccountManagerPermissions} from "@dashboard/account/IAccount.sol";
-import {Account as AccountA} from "@dashboard/account/Account.sol";
+import {Account} from "@dashboard/account/Account.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {BaseDeployments} from "./helpers/BaseDeployments.sol";
+import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 
 contract AccountTest is Test, BaseDeployments {
     address owner = makeAddr("OWNER");
@@ -25,18 +25,20 @@ contract AccountTest is Test, BaseDeployments {
         address[] memory accountManagers = new address[](1);
         accountManagers[0] = manager;
 
-        AccountManagerPermissions[] memory accountManagerPermissions = new AccountManagerPermissions[](1);
-        accountManagerPermissions[0] = AccountManagerPermissions(true, true, true, true);
+        AccountManagerPermissions[] memory accountManagersPermissions = new AccountManagerPermissions[](1);
+        accountManagersPermissions[0] = AccountManagerPermissions(true, true, true, true);
 
         account = IAccount(
-            new AccountA({
-                owner: owner,
-                metadataURI: "uri://account-metadata",
-                accountManagers: accountManagers,
-                accountManagerPermissions: accountManagerPermissions,
-                sourceStamp: _emptySourceStamp(),
-                extraData: _emptyKeyValueArray()
-            })
+            payable(
+                lensFactory.deployAccount({
+                    metadataURI: "uri://account-metadata",
+                    owner: owner,
+                    accountManagers: accountManagers,
+                    accountManagersPermissions: accountManagersPermissions,
+                    sourceStamp: _emptySourceStamp(),
+                    extraData: _emptyKeyValueArray()
+                })
+            )
         );
 
         feed = IFeed(

@@ -2,17 +2,17 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IFeed, Post, EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
-import {FeedCore as Core} from "./FeedCore.sol";
-import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {RuleBasedFeed} from "./RuleBasedFeed.sol";
-import {AccessControlled} from "./../../access/AccessControlled.sol";
-import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
-import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
-import {Events} from "./../../types/Events.sol";
-import {SourceStampBased} from "./../../base/SourceStampBased.sol";
-import {MetadataBased} from "./../../base/MetadataBased.sol";
-import {Initializable} from "./../../upgradeability/Initializable.sol";
+import {IFeed, Post, EditPostParams, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
+import {FeedCore as Core} from "contracts/core/primitives/feed/FeedCore.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {RuleBasedFeed} from "contracts/core/primitives/feed/RuleBasedFeed.sol";
+import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
+import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 contract Feed is
     IFeed,

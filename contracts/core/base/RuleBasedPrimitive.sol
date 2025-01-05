@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {RulesStorage, RulesLib} from "./../libraries/RulesLib.sol";
+import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {
     RuleChange,
     RuleConfigurationChange,
@@ -10,7 +10,7 @@ import {
     RuleProcessingParams,
     Rule,
     KeyValue
-} from "./../types/Types.sol";
+} from "contracts/core/types/Types.sol";
 
 abstract contract RuleBasedPrimitive {
     using RulesLib for RulesStorage;

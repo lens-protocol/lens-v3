@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {BasePostAction} from "./base/BasePostAction.sol";
+import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {KeyValue} from "./../../core/types/Types.sol";
-import {IFeed} from "./../../core/interfaces/IFeed.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 contract TippingPostAction is BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;

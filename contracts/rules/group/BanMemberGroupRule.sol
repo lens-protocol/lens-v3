@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IGroupRule} from "./../../core/interfaces/IGroupRule.sol";
-import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {Events} from "./../../core/types/Events.sol";
-import {KeyValue} from "./../../core/types/Types.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 contract BanMemberGroupRule is IGroupRule, MetadataBased {
     using AccessControlLib for IAccessControl;

@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {SourceStamp} from "./../types/Types.sol";
+import {SourceStamp} from "contracts/core/types/Types.sol";
 
 interface ISource {
     function getTreasury() external view returns (address);

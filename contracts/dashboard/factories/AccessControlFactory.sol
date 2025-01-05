@@ -2,8 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IRoleBasedAccessControl} from "./../../core/interfaces/IRoleBasedAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "./../access/OwnerAdminOnlyAccessControl.sol";
+import {IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "contracts/dashboard/access/OwnerAdminOnlyAccessControl.sol";
 
 contract AccessControlFactory {
     /// @custom:keccak lens.role.Admin

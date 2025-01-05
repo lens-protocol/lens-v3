@@ -2,8 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {ISource} from "./../interfaces/ISource.sol";
-import {SourceStamp} from "./../types/Types.sol";
+import {ISource} from "contracts/core/interfaces/ISource.sol";
+import {SourceStamp} from "contracts/core/types/Types.sol";
 
 abstract contract BaseSource is ISource {
     bytes2 internal immutable EIP191_VERSION_BYTE_0X01_HEADER = 0x1901;

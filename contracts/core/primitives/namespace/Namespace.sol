@@ -2,20 +2,20 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {NamespaceCore as Core} from "./NamespaceCore.sol";
-import {INamespace} from "./../../interfaces/INamespace.sol";
-import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
-import {RuleBasedNamespace} from "./RuleBasedNamespace.sol";
-import {AccessControlled} from "./../../access/AccessControlled.sol";
-import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
-import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {Events} from "./../../types/Events.sol";
-import {LensERC721} from "./../../base/LensERC721.sol";
-import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
-import {SourceStampBased} from "./../../base/SourceStampBased.sol";
-import {MetadataBased} from "./../../base/MetadataBased.sol";
-import {Initializable} from "./../../upgradeability/Initializable.sol";
+import {NamespaceCore as Core} from "contracts/core/primitives/namespace/NamespaceCore.sol";
+import {INamespace} from "contracts/core/interfaces/INamespace.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
+import {RuleBasedNamespace} from "contracts/core/primitives/namespace/RuleBasedNamespace.sol";
+import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
+import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {LensERC721} from "contracts/core/base/LensERC721.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
+import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 contract Namespace is
     INamespace,

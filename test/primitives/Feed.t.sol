@@ -8,7 +8,7 @@ import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAcces
 import "../helpers/TypeHelpers.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";
-import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
+import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 
 contract FeedTest is Test, BaseDeployments {
     IFeed feed;

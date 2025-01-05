@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue} from "./../types/Types.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
 
 interface IFollowRule {
     function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external;

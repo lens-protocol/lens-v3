@@ -2,8 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IAccessControl} from "./../interfaces/IAccessControl.sol";
-import {AccessControlLib} from "./../libraries/AccessControlLib.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 
 abstract contract AccessControlled {
     using AccessControlLib for IAccessControl;

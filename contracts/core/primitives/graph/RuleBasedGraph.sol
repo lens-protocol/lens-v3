@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IFollowRule} from "./../../interfaces/IFollowRule.sol";
-import {IGraphRule} from "./../../interfaces/IGraphRule.sol";
-import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {RuleProcessingParams, RuleChange, Rule, KeyValue} from "./../../types/Types.sol";
-import {IGraph} from "./../../interfaces/IGraph.sol";
-import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
+import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
+import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
+import {RuleProcessingParams, RuleChange, Rule, KeyValue} from "contracts/core/types/Types.sol";
+import {IGraph} from "contracts/core/interfaces/IGraph.sol";
+import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 
 abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     using RulesLib for RulesStorage;

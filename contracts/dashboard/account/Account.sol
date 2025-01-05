@@ -5,13 +5,13 @@ pragma solidity ^0.8.12;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-import {Events} from "./../../core/types/Events.sol";
-import {IAccount, AccountManagerPermissions} from "./IAccount.sol";
-import {SourceStamp, KeyValue} from "./../../core/types/Types.sol";
-import {ISource} from "./../../core/interfaces/ISource.sol";
-import {ExtraStorageBased} from "./../../core/base/ExtraStorageBased.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
-import {Initializable} from "./../../core/upgradeability/Initializable.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {IAccount, AccountManagerPermissions} from "contracts/dashboard/account/IAccount.sol";
+import {SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
+import {ISource} from "contracts/core/interfaces/ISource.sol";
+import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStorageBased, MetadataBased {
     // TODO: Think how long the timelock should be and should it be configurable
@@ -43,12 +43,11 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
         SourceStamp memory sourceStamp,
         KeyValue[] memory extraData
     ) external initializer {
-        _initialize(owner, metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
+        _initialize(metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
         _transferOwnership(owner);
     }
 
     function _initialize(
-        address owner,
         string memory metadataURI,
         address[] memory accountManagers,
         AccountManagerPermissions[] memory accountManagerPermissions,

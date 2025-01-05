@@ -9,7 +9,7 @@ import {INamespace} from "@core/interfaces/INamespace.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import "../helpers/TypeHelpers.sol";
-import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
+import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 
 contract NamespaceTest is Test, BaseDeployments {
     INamespace namespace;

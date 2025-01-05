@@ -3,12 +3,12 @@
 pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
-import {IAccessControl} from "../../contracts/core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "../../contracts/dashboard/access/OwnerAdminOnlyAccessControl.sol";
-import {IGraph} from "../../contracts/core/interfaces/IGraph.sol";
-import {Graph} from "../../contracts/core/primitives/graph/Graph.sol";
-import "../helpers/TypeHelpers.sol";
-import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
+import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {IGraph} from "@core/interfaces/IGraph.sol";
+import {Graph} from "@core/primitives/graph/Graph.sol";
+import "test/helpers/TypeHelpers.sol";
+import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 
 contract GraphTest is Test, BaseDeployments {
     IGraph graph;

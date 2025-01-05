@@ -4,33 +4,34 @@ pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
 
-import {IAccessControl} from "./../../contracts/core/interfaces/IAccessControl.sol";
-import {ITokenURIProvider} from "./../../contracts/core/interfaces/ITokenURIProvider.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 
-import {RoleBasedAccessControl} from "./../../contracts/core/access/RoleBasedAccessControl.sol";
-import {LensUsernameTokenURIProvider} from "./../../contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
+import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 
-import {App} from "./../../contracts/dashboard/primitives/app/App.sol";
-import {Feed} from "./../../contracts/core/primitives/feed/Feed.sol";
-import {Graph} from "./../../contracts/core/primitives/graph/Graph.sol";
-import {Group} from "./../../contracts/core/primitives/group/Group.sol";
-import {Namespace} from "./../../contracts/core/primitives/namespace/Namespace.sol";
+import {App} from "@dashboard/primitives/app/App.sol";
+import {Account} from "@dashboard/account/Account.sol";
+import {Feed} from "contracts/core/primitives/feed/Feed.sol";
+import {Graph} from "contracts/core/primitives/graph/Graph.sol";
+import {Group} from "contracts/core/primitives/group/Group.sol";
+import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
-import {AccessControlFactory} from "./../../contracts/dashboard/factories/AccessControlFactory.sol";
-import {AccountFactory} from "./../../contracts/dashboard/factories/AccountFactory.sol";
+import {AccessControlFactory} from "@dashboard/factories/AccessControlFactory.sol";
+import {AccountFactory} from "@dashboard/factories/AccountFactory.sol";
 
-import {AppFactory} from "./../../contracts/dashboard/factories/AppFactory.sol";
-import {FeedFactory} from "./../../contracts/dashboard/factories/FeedFactory.sol";
-import {GraphFactory} from "./../../contracts/dashboard/factories/GraphFactory.sol";
-import {GroupFactory} from "./../../contracts/dashboard/factories/GroupFactory.sol";
-import {NamespaceFactory} from "./../../contracts/dashboard/factories/NamespaceFactory.sol";
-import {LensFactory} from "./../../contracts/dashboard/factories/LensFactory.sol";
+import {AppFactory} from "@dashboard/factories/AppFactory.sol";
+import {FeedFactory} from "@dashboard/factories/FeedFactory.sol";
+import {GraphFactory} from "@dashboard/factories/GraphFactory.sol";
+import {GroupFactory} from "@dashboard/factories/GroupFactory.sol";
+import {NamespaceFactory} from "@dashboard/factories/NamespaceFactory.sol";
+import {LensFactory} from "@dashboard/factories/LensFactory.sol";
 
-import {Lock} from "./../../contracts/core/upgradeability/Lock.sol";
-import {Beacon} from "./../../contracts/core/upgradeability/Beacon.sol";
+import {Lock} from "contracts/core/upgradeability/Lock.sol";
+import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 
-import {AccountBlockingRule} from "./../../contracts/rules/base/AccountBlockingRule.sol";
-import {GroupGatedFeedRule} from "./../../contracts/rules/feed/GroupGatedFeedRule.sol";
+import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
+import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 
 contract BaseDeployments is Test {
     IAccessControl simpleAccessControl;
@@ -39,18 +40,21 @@ contract BaseDeployments is Test {
     address lockOwner = makeAddr("LOCK_OWNER");
 
     address appImpl;
+    address accountImpl;
     address feedImpl;
     address graphImpl;
     address groupImpl;
     address namespaceImpl;
 
     address appBeacon;
+    address accountBeacon;
     address feedBeacon;
     address graphBeacon;
     address groupBeacon;
     address namespaceBeacon;
 
     AppFactory appFactory;
+    AccountFactory accountFactory;
     FeedFactory feedFactory;
     GraphFactory graphFactory;
     GroupFactory groupFactory;
@@ -72,7 +76,7 @@ contract BaseDeployments is Test {
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(),
-            accountFactory: new AccountFactory(),
+            accountFactory: accountFactory,
             appFactory: appFactory,
             groupFactory: groupFactory,
             feedFactory: feedFactory,

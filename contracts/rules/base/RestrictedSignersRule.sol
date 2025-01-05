@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
+import {EIP712EncodingLib} from "contracts/core/libraries/EIP712EncodingLib.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
-import {KeyValue} from "./../../core/types/Types.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 // Move to types
 
 struct EIP712Signature {

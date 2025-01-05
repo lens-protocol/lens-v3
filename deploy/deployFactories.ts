@@ -11,7 +11,14 @@ export default async function deployFactories(): Promise<void> {
   const contracts: ContractInfo[] = [
     // Factories
     { contractName: 'AccessControlFactory', contractType: ContractType.Factory },
-    { contractName: 'AccountFactory', contractType: ContractType.Factory },
+    {
+      contractName: 'AccountFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('AccountBeacon'),
+        loadContractAddressFromAddressBook('Lock'),
+      ],
+    },
     {
       contractName: 'AppFactory',
       contractType: ContractType.Factory,

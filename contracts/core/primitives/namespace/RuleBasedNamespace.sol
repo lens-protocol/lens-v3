@@ -2,11 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {INamespaceRule} from "./../../interfaces/INamespaceRule.sol";
-import {RulesStorage, RulesLib} from "./../../libraries/RulesLib.sol";
-import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "./../../types/Types.sol";
-import {INamespace} from "./../../interfaces/INamespace.sol";
-import {RuleBasedPrimitive} from "./../../base/RuleBasedPrimitive.sol";
+import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
+import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
+import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "contracts/core/types/Types.sol";
+import {INamespace} from "contracts/core/interfaces/INamespace.sol";
+import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 
 abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     using RulesLib for RulesStorage;

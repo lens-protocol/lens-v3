@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import "./../../../core/libraries/ExtraDataLib.sol";
+import "contracts/core/libraries/ExtraDataLib.sol";
 
 struct ArrayStorageHelper {
     uint8 index;

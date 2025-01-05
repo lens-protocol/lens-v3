@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
-import {RestrictedSignersRule, EIP712Signature} from "./../base/RestrictedSignersRule.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {EIP712EncodingLib} from "./../../core/libraries/EIP712EncodingLib.sol";
+import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {RestrictedSignersRule, EIP712Signature} from "contracts/rules/base/RestrictedSignersRule.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {EIP712EncodingLib} from "contracts/core/libraries/EIP712EncodingLib.sol";
 
 contract RestrictedSignersGraphRule is RestrictedSignersRule, IGraphRule {
     constructor(string memory metadataURI) RestrictedSignersRule(metadataURI) {}

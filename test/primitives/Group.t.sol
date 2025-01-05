@@ -3,12 +3,12 @@
 pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
-import {IAccessControl} from "../../contracts/core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "../../contracts/dashboard/access/OwnerAdminOnlyAccessControl.sol";
-import {IGroup} from "../../contracts/core/interfaces/IGroup.sol";
-import {Group} from "../../contracts/core/primitives/group/Group.sol";
-import "../helpers/TypeHelpers.sol";
-import {BaseDeployments} from "./../helpers/BaseDeployments.sol";
+import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {IGroup} from "@core/interfaces/IGroup.sol";
+import {Group} from "@core/primitives/group/Group.sol";
+import "test/helpers/TypeHelpers.sol";
+import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 
 contract GroupTest is Test, BaseDeployments {
     IGroup group;

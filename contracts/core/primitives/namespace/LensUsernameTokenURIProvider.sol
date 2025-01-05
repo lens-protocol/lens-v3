@@ -2,9 +2,9 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {ITokenURIProvider} from "./../../interfaces/ITokenURIProvider.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import {Events} from "./../../types/Events.sol";
+import {Events} from "contracts/core/types/Events.sol";
 
 contract LensUsernameTokenURIProvider is ITokenURIProvider {
     using StringsUpgradeable for uint256;

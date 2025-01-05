@@ -2,11 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, RuleProcessingParams} from "./../core/types/Types.sol";
-import {CreatePostParams} from "./../core/interfaces/IFeed.sol";
-import {FeedCore as Core, PostStorage} from "./../core/primitives/feed/FeedCore.sol";
-import {Feed} from "./../core/primitives/feed/Feed.sol";
-import {IAccessControl} from "./../core/interfaces/IAccessControl.sol";
+import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
+import {CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
+import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/FeedCore.sol";
+import {Feed} from "contracts/core/primitives/feed/Feed.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 
 contract MigrationFeed is Feed {
     function createPost(

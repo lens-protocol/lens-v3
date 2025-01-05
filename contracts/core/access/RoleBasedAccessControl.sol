@@ -2,8 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {Access, IRoleBasedAccessControl} from "./../interfaces/IRoleBasedAccessControl.sol";
-import {Events} from "./../types/Events.sol";
+import {Access, IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
+import {Events} from "contracts/core/types/Events.sol";
 
 /**
  * This Access Control:

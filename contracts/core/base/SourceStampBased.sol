@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {KeyValue, SourceStamp} from "./../types/Types.sol";
-import {ExtraStorageBased} from "./ExtraStorageBased.sol";
-import {ISource} from "./../interfaces/ISource.sol";
+import {KeyValue, SourceStamp} from "contracts/core/types/Types.sol";
+import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ISource} from "contracts/core/interfaces/ISource.sol";
 
 abstract contract SourceStampBased is ExtraStorageBased {
     /// @custom:keccak lens.param.sourceStamp

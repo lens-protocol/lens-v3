@@ -2,12 +2,12 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
-import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {IFeed} from "./../../core/interfaces/IFeed.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
+import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
     event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target, uint256 timestamp);

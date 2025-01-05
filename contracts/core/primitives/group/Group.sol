@@ -2,18 +2,18 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {Membership, IGroup} from "./../../interfaces/IGroup.sol";
-import {GroupCore as Core} from "./GroupCore.sol";
-import {IAccessControl} from "./../../interfaces/IAccessControl.sol";
-import {RuleChange, RuleProcessingParams, KeyValue} from "./../../types/Types.sol";
-import {RuleBasedGroup} from "./RuleBasedGroup.sol";
-import {AccessControlled} from "./../../access//AccessControlled.sol";
-import {ExtraStorageBased} from "./../../base/ExtraStorageBased.sol";
-import {Events} from "./../../types/Events.sol";
-import {IGroupRule} from "./../../interfaces/IGroupRule.sol";
-import {SourceStampBased} from "./../../base/SourceStampBased.sol";
-import {MetadataBased} from "./../../base/MetadataBased.sol";
-import {Initializable} from "./../../upgradeability/Initializable.sol";
+import {Membership, IGroup} from "contracts/core/interfaces/IGroup.sol";
+import {GroupCore as Core} from "contracts/core/primitives/group/GroupCore.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
+import {RuleBasedGroup} from "contracts/core/primitives/group/RuleBasedGroup.sol";
+import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
+import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
+import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 contract Group is
     IGroup,

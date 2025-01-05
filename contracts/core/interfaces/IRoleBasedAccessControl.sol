@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IAccessControl} from "./IAccessControl.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 
 enum Access {
     UNDEFINED,

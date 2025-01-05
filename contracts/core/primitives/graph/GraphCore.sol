@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {Follow} from "./../../interfaces/IGraph.sol";
+import {Follow} from "contracts/core/interfaces/IGraph.sol";
 
 library GraphCore {
     // Storage

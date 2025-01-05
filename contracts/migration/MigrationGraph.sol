@@ -2,10 +2,10 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {GraphCore as Core} from "./../core/primitives/graph/GraphCore.sol";
-import {Graph} from "./../core/primitives/graph/Graph.sol";
-import {RuleProcessingParams, KeyValue} from "./../core/types/Types.sol";
-import {IAccessControl} from "./../core/interfaces/IAccessControl.sol";
+import {GraphCore as Core} from "contracts/core/primitives/graph/GraphCore.sol";
+import {Graph} from "contracts/core/primitives/graph/Graph.sol";
+import {RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 
 /**
  * Special Graph implementation to allow data migrations from Lens V2 to Lens V3

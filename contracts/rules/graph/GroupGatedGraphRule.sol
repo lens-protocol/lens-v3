@@ -2,13 +2,13 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IGraphRule} from "./../../core/interfaces/IGraphRule.sol";
-import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {Events} from "./../../core/types/Events.sol";
-import {IGroup} from "./../../core/interfaces/IGroup.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {Events} from "contracts/core/types/Events.sol";
+import {IGroup} from "contracts/core/interfaces/IGroup.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 contract GroupGatedGraphRule is IGraphRule, MetadataBased {
     using AccessControlLib for IAccessControl;

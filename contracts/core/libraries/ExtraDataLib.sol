@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {KeyValue} from "./../types/Types.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
 
 library ExtraDataLib {
     function set(mapping(bytes32 => bytes) storage _extraDataStorage, KeyValue memory extraKeyValueToSet)

@@ -2,9 +2,9 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue} from "./../../../core/types/Types.sol";
-import {BaseAction} from "./../../base/BaseAction.sol";
-import {IAccountAction} from "./../../../dashboard/actions/ActionHub.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
+import {BaseAction} from "contracts/actions/base/BaseAction.sol";
+import {IAccountAction} from "contracts/dashboard/actions/ActionHub.sol";
 
 abstract contract BaseAccountAction is BaseAction, IAccountAction {
     constructor(address actionHub) BaseAction(actionHub) {}

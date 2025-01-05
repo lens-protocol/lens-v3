@@ -2,8 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {KeyValue, RuleChange, RuleConfigurationChange, RuleSelectorChange} from "../types/Types.sol";
-import {CreatePostParams, EditPostParams} from "../interfaces/IFeed.sol";
+import {KeyValue, RuleChange, RuleConfigurationChange, RuleSelectorChange} from "contracts/core/types/Types.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 
 library EIP712EncodingLib {
     function encodeForEIP712(bytes[] memory bytesArray) internal pure returns (bytes32) {

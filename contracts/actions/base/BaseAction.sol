@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {UNIVERSAL_ACTION_MAGIC_VALUE} from "./../../dashboard/actions/ActionHub.sol";
+import {UNIVERSAL_ACTION_MAGIC_VALUE} from "contracts/dashboard/actions/ActionHub.sol";
 
 abstract contract BaseAction {
     address immutable ACTION_HUB;

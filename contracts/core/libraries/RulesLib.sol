@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {Rule} from "./../types/Types.sol";
+import {Rule} from "contracts/core/types/Types.sol";
 
 struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;

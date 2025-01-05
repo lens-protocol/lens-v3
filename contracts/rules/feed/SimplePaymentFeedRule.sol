@@ -2,13 +2,13 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {SimplePaymentRule} from "./../base/SimplePaymentRule.sol";
-import {AccessControlLib} from "./../../core/libraries/AccessControlLib.sol";
-import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {Events} from "./../../core/types/Events.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
+import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
+import {SimplePaymentRule} from "contracts/rules/base/SimplePaymentRule.sol";
+import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {Events} from "contracts/core/types/Events.sol";
 
 contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
     using AccessControlLib for IAccessControl;

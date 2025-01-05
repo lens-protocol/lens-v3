@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.17;
 
-import {EditPostParams, CreatePostParams} from "./../../interfaces/IFeed.sol";
+import {EditPostParams, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 
 struct PostStorage {
     address author;

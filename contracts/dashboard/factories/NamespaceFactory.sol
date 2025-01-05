@@ -2,11 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {IAccessControl} from "./../../core/interfaces/IAccessControl.sol";
-import {Namespace} from "./../../core/primitives/namespace/Namespace.sol";
-import {RoleBasedAccessControl} from "./../../core/access/RoleBasedAccessControl.sol";
-import {RuleChange, KeyValue} from "./../../core/types/Types.sol";
-import {ITokenURIProvider} from "./../../core/interfaces/ITokenURIProvider.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
+import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
+import {RuleChange, KeyValue} from "contracts/core/types/Types.sol";
+import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";

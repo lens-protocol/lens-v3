@@ -2,11 +2,11 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {CreatePostParams, EditPostParams} from "./../../core/interfaces/IFeed.sol";
-import {IFeedRule} from "./../../core/interfaces/IFeedRule.sol";
-import {IGroup} from "./../../core/interfaces/IGroup.sol";
-import {KeyValue, RuleChange} from "./../../core/types/Types.sol";
-import {MetadataBased} from "./../../core/base/MetadataBased.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
+import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
+import {IGroup} from "contracts/core/interfaces/IGroup.sol";
+import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 /// @custom:keccak lens.param.group
 bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;

@@ -2,9 +2,9 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {KeyValue, Rule, RuleProcessingParams, RuleChange} from "./../types/Types.sol";
-import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
-import {IAccessControl} from "./IAccessControl.sol";
+import {KeyValue, Rule, RuleProcessingParams, RuleChange} from "contracts/core/types/Types.sol";
+import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 
 struct EditPostParams {
     string contentURI;
