@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 
 import {ILock} from "contracts/core/interfaces/ILock.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Ownable} from "contracts/core/access/Ownable.sol";
 
-contract ProxyAdmin is Ownable2Step {
+contract ProxyAdmin is Ownable {
     ILock immutable LOCK;
 
-    constructor(address proxyAdminOwner, address lock) Ownable2Step() {
+    constructor(address proxyAdminOwner, address lock) Ownable() {
         _transferOwnership(proxyAdminOwner);
         LOCK = ILock(lock);
         LOCK.isLocked(); // Aims to verify the given address follows ILock interface

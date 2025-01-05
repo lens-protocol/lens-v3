@@ -2,17 +2,17 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.0;
 
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Ownable} from "contracts/core/access/Ownable.sol";
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 
-contract Beacon is Ownable2Step, IVersionedBeacon {
+contract Beacon is Ownable, IVersionedBeacon {
     event ImplementationSetForVersion(uint256 indexed version, address indexed implementation);
     event DefaultVersionSet(uint256 indexed version);
 
     mapping(uint256 => address) internal _implementations;
     uint256 internal _defaultVersion;
 
-    constructor(address owner, uint256 version, address initialImplementation) Ownable2Step() {
+    constructor(address owner, uint256 version, address initialImplementation) Ownable() {
         _transferOwnership(owner);
         require(initialImplementation != address(0));
         _implementations[version] = initialImplementation;

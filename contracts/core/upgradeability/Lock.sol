@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 
 import {ILock} from "contracts/core/interfaces/ILock.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Ownable} from "contracts/core/access/Ownable.sol";
 
-contract Lock is Ownable2Step, ILock {
+contract Lock is Ownable, ILock {
     event LockStatusSet(bool indexed locked);
 
     bool internal _locked;
 
-    constructor(address owner, bool locked) Ownable2Step() {
+    constructor(address owner, bool locked) Ownable() {
         _transferOwnership(owner);
         _setLockStatus(locked);
     }
