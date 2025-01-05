@@ -3,7 +3,7 @@
 pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
-import {OwnerAdminOnlyAccessControl} from "contracts/dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "contracts/extensions/access/OwnerAdminOnlyAccessControl.sol";
 
 contract OwnerAdminOnlyAccessControlTest is Test {
     OwnerAdminOnlyAccessControl accessControl;

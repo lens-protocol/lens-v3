@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
-import {IApp} from "contracts/dashboard/primitives/app/IApp.sol";
-import {AppCore as Core} from "contracts/dashboard/primitives/app/AppCore.sol";
+import {IApp} from "contracts/extensions/primitives/app/IApp.sol";
+import {AppCore as Core} from "contracts/extensions/primitives/app/AppCore.sol";
 import {KeyValue, SourceStamp} from "contracts/core/types/Types.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {Events} from "contracts/core/types/Events.sol";

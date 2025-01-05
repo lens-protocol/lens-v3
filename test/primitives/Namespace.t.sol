@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import {INamespace} from "@core/interfaces/INamespace.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";

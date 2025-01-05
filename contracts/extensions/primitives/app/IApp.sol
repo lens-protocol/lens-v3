@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
-import {AppInitialProperties} from "contracts/dashboard/primitives/app/App.sol";
+import {AppInitialProperties} from "contracts/extensions/primitives/app/App.sol";
 
 interface IApp is IMetadataBased {
     // Graph

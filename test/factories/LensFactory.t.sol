@@ -3,17 +3,17 @@
 pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
-import {LensFactory} from "@dashboard/factories/LensFactory.sol";
-import {AccountFactory} from "@dashboard/factories/AccountFactory.sol";
-import {AppFactory} from "@dashboard/factories/AppFactory.sol";
-import {GroupFactory} from "@dashboard/factories/GroupFactory.sol";
-import {FeedFactory} from "@dashboard/factories/FeedFactory.sol";
-import {GraphFactory} from "@dashboard/factories/GraphFactory.sol";
-import {NamespaceFactory} from "@dashboard/factories/NamespaceFactory.sol";
+import {LensFactory} from "@extensions/factories/LensFactory.sol";
+import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
+import {AppFactory} from "@extensions/factories/AppFactory.sol";
+import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
+import {FeedFactory} from "@extensions/factories/FeedFactory.sol";
+import {GraphFactory} from "@extensions/factories/GraphFactory.sol";
+import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {RuleChange, KeyValue} from "@core/types/Types.sol";
-import {AccountManagerPermissions} from "@dashboard/account/Account.sol";
-import {AccessControlFactory} from "@dashboard/factories/AccessControlFactory.sol";
+import {AccountManagerPermissions} from "@extensions/account/Account.sol";
+import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
 import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
 import {IGraph} from "@core/interfaces/IGraph.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";

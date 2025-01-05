@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import {IGraph} from "@core/interfaces/IGraph.sol";
 import {Graph} from "@core/primitives/graph/Graph.sol";
 import "test/helpers/TypeHelpers.sol";

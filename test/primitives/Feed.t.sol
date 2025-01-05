@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import "../helpers/TypeHelpers.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";

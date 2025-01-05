@@ -4,4 +4,4 @@ forge-std/=lib/forge-std/src/
 hardhat/=node_modules/hardhat/
 contracts/=contracts/
 @core/=contracts/core/
-@dashboard/=contracts/dashboard/
+@extensions/=contracts/extensions/

@@ -6,7 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import {Events} from "contracts/core/types/Events.sol";
-import {IAccount, AccountManagerPermissions} from "contracts/dashboard/account/IAccount.sol";
+import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
 import {SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";

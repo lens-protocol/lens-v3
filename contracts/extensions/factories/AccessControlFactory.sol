@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "contracts/dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "contracts/extensions/access/OwnerAdminOnlyAccessControl.sol";
 
 contract AccessControlFactory {
     /// @custom:keccak lens.role.Admin

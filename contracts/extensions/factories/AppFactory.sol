@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
-import {AppInitialProperties, App} from "contracts/dashboard/primitives/app/App.sol";
+import {AppInitialProperties, App} from "contracts/extensions/primitives/app/App.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";

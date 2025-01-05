@@ -14,15 +14,15 @@ import {
     KeyValue,
     SourceStamp
 } from "contracts/core/types/Types.sol";
-import {GroupFactory} from "contracts/dashboard/factories/GroupFactory.sol";
-import {FeedFactory} from "contracts/dashboard/factories/FeedFactory.sol";
-import {GraphFactory} from "contracts/dashboard/factories/GraphFactory.sol";
-import {NamespaceFactory} from "contracts/dashboard/factories/NamespaceFactory.sol";
-import {AppFactory} from "contracts/dashboard/factories/AppFactory.sol";
-import {AppInitialProperties} from "contracts/dashboard/primitives/app/App.sol";
-import {AccessControlFactory} from "contracts/dashboard/factories/AccessControlFactory.sol";
-import {AccountFactory} from "contracts/dashboard/factories/AccountFactory.sol";
-import {IAccount, AccountManagerPermissions} from "contracts/dashboard/account/IAccount.sol";
+import {GroupFactory} from "contracts/extensions/factories/GroupFactory.sol";
+import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
+import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
+import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
+import {AppFactory} from "contracts/extensions/factories/AppFactory.sol";
+import {AppInitialProperties} from "contracts/extensions/primitives/app/App.sol";
+import {AccessControlFactory} from "contracts/extensions/factories/AccessControlFactory.sol";
+import {AccountFactory} from "contracts/extensions/factories/AccountFactory.sol";
+import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";

@@ -4,11 +4,11 @@ pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
 import "./helpers/TypeHelpers.sol";
-import {IAccount, AccountManagerPermissions} from "@dashboard/account/IAccount.sol";
-import {Account} from "@dashboard/account/Account.sol";
+import {IAccount, AccountManagerPermissions} from "@extensions/account/IAccount.sol";
+import {Account} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
-import {OwnerAdminOnlyAccessControl} from "@dashboard/access/OwnerAdminOnlyAccessControl.sol";
+import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 
