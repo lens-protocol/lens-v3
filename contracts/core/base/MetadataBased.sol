@@ -5,7 +5,7 @@ import {IMetadataBased} from "./../interfaces/IMetadataBased.sol";
 
 abstract contract MetadataBased is IMetadataBased {
     struct MetadataURIStorage {
-        string metadataURI;
+        mapping(address => string) metadataURI;
     }
 
     /// @custom:keccak lens.storage.metadataURI
@@ -23,7 +23,12 @@ abstract contract MetadataBased is IMetadataBased {
     }
 
     function _setMetadataURI(string memory metadataURI) internal {
-        $metadataStorage().metadataURI = metadataURI;
+        $metadataStorage().metadataURI[address(this)] = metadataURI;
+        _emitMetadataURISet(metadataURI);
+    }
+
+    function _setMetadataURI(string memory metadataURI, address source) internal {
+        $metadataStorage().metadataURI[source] = metadataURI;
         _emitMetadataURISet(metadataURI);
     }
 
@@ -34,6 +39,10 @@ abstract contract MetadataBased is IMetadataBased {
     function _emitMetadataURISet(string memory /* metadataURI */ ) internal virtual;
 
     function getMetadataURI() external view override returns (string memory) {
-        return $metadataStorage().metadataURI;
+        return $metadataStorage().metadataURI[address(this)];
+    }
+
+    function getMetadataURI(address source) external view returns (string memory) {
+        return $metadataStorage().metadataURI[source];
     }
 }
