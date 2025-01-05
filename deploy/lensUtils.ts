@@ -12,7 +12,7 @@ export enum ContractType {
   Action,
   Rule,
   Misc,
-  Address
+  Address,
 }
 
 export interface ContractInfo {
@@ -96,85 +96,115 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
 }
 
 export function camelToAllCaps(camelCase: string): string {
-    return camelCase
-      .replace(/([a-z])([A-Z])/g, '$1_$2') // Insert underscore between lowercase and uppercase letters
-      .toUpperCase(); // Convert to uppercase
-  }
+  return camelCase
+    .replace(/([a-z])([A-Z])/g, '$1_$2') // Insert underscore between lowercase and uppercase letters
+    .toUpperCase(); // Convert to uppercase
+}
 
 export function generateEnvFile() {
-    console.log('Generating env file...');
-    const addressBook = loadAddressBook();
-    let output = '';
+  console.log('Generating env file...');
+  const addressBook = loadAddressBook();
+  let output = '';
 
-    // Group contracts by type
-    const factories: string[] = [];
-    const actions: string[] = [];
-    const rules: string[] = [];
-    const primitives: string[] = [];
-    const aux: string[] = [];
-    const misc: string[] = [];
-    for (const [contractName, info] of Object.entries(addressBook as AddressBook)) {
-      if (!info.address) continue;
+  // Group contracts by type
+  const factories: string[] = [];
+  const implementations: string[] = [];
+  const beacons: string[] = [];
+  const actions: string[] = [];
+  const rules: string[] = [];
+  const primitives: string[] = [];
+  const aux: string[] = [];
+  const misc: string[] = [];
+  const addresses: string[] = [];
+  for (const [contractName, info] of Object.entries(addressBook as AddressBook)) {
+    if (!info.address) continue;
 
-      const envVarName = camelToAllCaps(contractName);
-      const line = `${envVarName}="${info.address}"`;
+    const envVarName = camelToAllCaps(contractName);
+    const line = `${envVarName}="${info.address}"`;
 
-      switch (info.contractType) {
-        case ContractType.Factory: // Using enum instead of magic numbers
-          factories.push(line);
-          break;
-        case ContractType.Primitive:
-          primitives.push(line);
-          break;
-        case ContractType.Aux:
-          aux.push(line);
-          break;
-        case ContractType.Action:
-          actions.push(line);
-          break;
-        case ContractType.Rule:
-          rules.push(line);
-          break;
-        case ContractType.Misc:
-          misc.push(line);
-          break;
-      }
+    switch (info.contractType) {
+      case ContractType.Factory: // Using enum instead of magic numbers
+        factories.push(line);
+        break;
+      case ContractType.Implementation:
+        implementations.push(line);
+        break;
+      case ContractType.Beacon:
+        beacons.push(line);
+        break;
+      case ContractType.Primitive:
+        primitives.push(line);
+        break;
+      case ContractType.Aux:
+        aux.push(line);
+        break;
+      case ContractType.Action:
+        actions.push(line);
+        break;
+      case ContractType.Rule:
+        rules.push(line);
+        break;
+      case ContractType.Misc:
+        misc.push(line);
+        break;
+      case ContractType.Address:
+        addresses.push(line);
+        break;
     }
-
-    // Build output string
-    output += '# CONTRACTS\n';
-    output += factories.join('\n');
-    output += '\n\n';
-
-    if (primitives.length > 0) {
-      output += '# LENS GLOBAL PRIMITIVES\n';
-      output += primitives.join('\n');
-      output += '\n\n';
-    }
-
-    if (aux.length > 0) {
-      output += '# AUX\n';
-      output += aux.join('\n');
-      output += '\n\n';
-    }
-
-    if (actions.length > 0) {
-      output += '# ACTIONS\n';
-      output += actions.join('\n');
-      output += '\n\n';
-    }
-
-    if (rules.length > 0) {
-      output += '# RULES\n';
-      output += rules.join('\n');
-      output += '\n\n';
-    }
-
-    if (misc.length > 0) {
-      output += '# MISC\n';
-      output += misc.join('\n');
-      output += '\n';
-    }
-
-    fs.writeFileSync('contracts.env', output);
   }
+
+  // Build output string
+  output += '# FACTORIES\n';
+  output += factories.join('\n');
+  output += '\n\n';
+
+  if (primitives.length > 0) {
+    output += '# IMPLEMENTATIONS\n';
+    output += implementations.join('\n');
+    output += '\n\n';
+  }
+
+  if (primitives.length > 0) {
+    output += '# BEACONS\n';
+    output += implementations.join('\n');
+    output += '\n\n';
+  }
+
+  if (primitives.length > 0) {
+    output += '# LENS GLOBAL PRIMITIVES\n';
+    output += primitives.join('\n');
+    output += '\n\n';
+  }
+
+  if (aux.length > 0) {
+    output += '# AUX\n';
+    output += aux.join('\n');
+    output += '\n\n';
+  }
+
+  if (actions.length > 0) {
+    output += '# ACTIONS\n';
+    output += actions.join('\n');
+    output += '\n\n';
+  }
+
+  if (rules.length > 0) {
+    output += '# RULES\n';
+    output += rules.join('\n');
+    output += '\n\n';
+  }
+
+  if (misc.length > 0) {
+    output += '# MISC\n';
+    output += misc.join('\n');
+    output += '\n';
+  }
+
+  if (addresses.length > 0) {
+    output += '# CONSTANTS / ADDRESSES\n';
+    output += addresses.join('\n');
+    output += '\n';
+  }
+
+  fs.writeFileSync('contracts.env', output);
+}

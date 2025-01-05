@@ -27,6 +27,11 @@ export async function deployRules(): Promise<void> {
     },
     // Graph Rules
     {
+      contractName: 'GroupGatedGraphRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [metadataURI],
+    },
+    {
       contractName: 'RestrictedSignersGraphRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],

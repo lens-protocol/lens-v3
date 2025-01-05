@@ -11,7 +11,7 @@ import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessContr
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 
 import {App} from "@extensions/primitives/app/App.sol";
-import {Account} from "@extensions/account/Account.sol";
+import {Account as AccountContract} from "@extensions/account/Account.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
@@ -92,6 +92,7 @@ contract BaseDeployments is Test {
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
         appImpl = address(new App());
+        accountImpl = address(new AccountContract());
         feedImpl = address(new Feed());
         graphImpl = address(new Graph());
         groupImpl = address(new Group());
@@ -100,6 +101,7 @@ contract BaseDeployments is Test {
 
     function _deployBeacons() internal {
         appBeacon = address(new Beacon(lockOwner, 1, appImpl));
+        accountBeacon = address(new Beacon(lockOwner, 1, accountImpl));
         feedBeacon = address(new Beacon(lockOwner, 1, feedImpl));
         graphBeacon = address(new Beacon(lockOwner, 1, graphImpl));
         groupBeacon = address(new Beacon(lockOwner, 1, groupImpl));
@@ -108,6 +110,7 @@ contract BaseDeployments is Test {
 
     function _deployFactories() internal {
         appFactory = new AppFactory(appBeacon, proxyAdminLock);
+        accountFactory = new AccountFactory(accountBeacon, proxyAdminLock);
         feedFactory = new FeedFactory(feedBeacon, proxyAdminLock);
         graphFactory = new GraphFactory(graphBeacon, proxyAdminLock);
         groupFactory = new GroupFactory(groupBeacon, proxyAdminLock);

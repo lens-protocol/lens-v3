@@ -11,22 +11,22 @@ import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol
 import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 
-import {App} from "@dashboard/primitives/app/App.sol";
-import {Account} from "@dashboard/account/Account.sol";
+import {App} from "@extensions/primitives/app/App.sol";
+import {Account} from "@extensions/account/Account.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
-import {AccessControlFactory} from "@dashboard/factories/AccessControlFactory.sol";
-import {AccountFactory} from "@dashboard/factories/AccountFactory.sol";
+import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
+import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
 
-import {AppFactory} from "@dashboard/factories/AppFactory.sol";
-import {FeedFactory} from "@dashboard/factories/FeedFactory.sol";
-import {GraphFactory} from "@dashboard/factories/GraphFactory.sol";
-import {GroupFactory} from "@dashboard/factories/GroupFactory.sol";
-import {NamespaceFactory} from "@dashboard/factories/NamespaceFactory.sol";
-import {LensFactory} from "@dashboard/factories/LensFactory.sol";
+import {AppFactory} from "@extensions/factories/AppFactory.sol";
+import {FeedFactory} from "@extensions/factories/FeedFactory.sol";
+import {GraphFactory} from "@extensions/factories/GraphFactory.sol";
+import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
+import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
+import {LensFactory} from "@extensions/factories/LensFactory.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
