@@ -62,7 +62,7 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
         bool isSourceStampVerificationEnabled,
         AppInitialProperties memory initialProps,
         KeyValue[] memory extraData
-    ) internal onlyInitializing {
+    ) internal {
         _setMetadataURI(metadataURI);
         _setSourceStampVerification(isSourceStampVerificationEnabled);
         _setTreasury(initialProps.treasury);

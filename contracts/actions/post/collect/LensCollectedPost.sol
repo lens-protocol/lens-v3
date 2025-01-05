@@ -28,11 +28,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     address internal immutable _collectAction;
 
     constructor(address feed, uint256 postId, bool isImmutable) {
-        // TODO: This is a hack to make it compile for now. Redo properly.
-        Initializable.$storage().initializing = true;
         LensERC721._initialize("Lens Collected Post", "LCP", ITokenURIProvider(address(0)));
-        Initializable.$storage().initializing = false;
-        _disableInitializers();
         string memory contentURI = IFeed(feed).getPost(postId).contentURI;
         require(bytes(contentURI).length > 0, "Post content URI is empty");
         _feed = feed;

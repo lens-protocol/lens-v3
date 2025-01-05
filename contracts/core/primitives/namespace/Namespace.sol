@@ -59,7 +59,7 @@ contract Namespace is
         LensERC721._initialize(nftName, nftSymbol, tokenURIProvider);
     }
 
-    function _initialize(string memory namespace, string memory metadataURI) internal onlyInitializing {
+    function _initialize(string memory namespace, string memory metadataURI) internal {
         Core.$storage().namespace = namespace;
         _setMetadataURI(metadataURI);
         _emitPIDs();

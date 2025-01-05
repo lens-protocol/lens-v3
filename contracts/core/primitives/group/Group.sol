@@ -45,7 +45,7 @@ contract Group is
         AccessControlled._initialize(accessControl);
     }
 
-    function _initialize(string memory metadataURI) internal onlyInitializing {
+    function _initialize(string memory metadataURI) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("group", "lens.group", "group", "lens.group");

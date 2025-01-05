@@ -41,7 +41,7 @@ contract Graph is
         AccessControlled._initialize(accessControl);
     }
 
-    function _initialize(string memory metadataURI) internal onlyInitializing {
+    function _initialize(string memory metadataURI) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed("graph", "lens.graph", "graph", "lens.graph");

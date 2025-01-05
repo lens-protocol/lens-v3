@@ -8,9 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradea
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "./../interfaces/ITokenURIProvider.sol";
 import "./../interfaces/IERC4906Events.sol";
-import "./../upgradeability/Initializable.sol";
 
-abstract contract LensERC721 is IERC721, Initializable {
+abstract contract LensERC721 is IERC721 {
     using AddressUpgradeable for address;
 
     event Lens_ERC721_TokenURIProviderSet(address indexed tokenURIProvider);
@@ -41,10 +40,7 @@ abstract contract LensERC721 is IERC721, Initializable {
         }
     }
 
-    function _initialize(string memory nftName, string memory nftSymbol, ITokenURIProvider tokenURIProvider)
-        internal
-        onlyInitializing
-    {
+    function _initialize(string memory nftName, string memory nftSymbol, ITokenURIProvider tokenURIProvider) internal {
         $erc721Storage().name = nftName;
         $erc721Storage().symbol = nftSymbol;
         $erc721Storage().tokenURIProvider = tokenURIProvider;

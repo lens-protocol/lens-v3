@@ -7,7 +7,6 @@ abstract contract Initializable {
 
     struct Storage {
         bool initialized;
-        bool initializing;
     }
 
     /// @custom:keccak lens.storage.Initializable
@@ -21,14 +20,7 @@ abstract contract Initializable {
 
     modifier initializer() {
         require(!$storage().initialized, "ALREADY_INITIALIZED");
-        $storage().initializing = true;
-        _;
         $storage().initialized = true;
-        $storage().initializing = false;
-    }
-
-    modifier onlyInitializing() {
-        require($storage().initializing, "NOT_INITIALIZING");
         _;
     }
 
