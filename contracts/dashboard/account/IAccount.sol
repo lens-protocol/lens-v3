@@ -3,6 +3,7 @@
 pragma solidity ^0.8.17;
 
 import {SourceStamp, KeyValue} from "./../../core/types/Types.sol";
+import {IMetadataBased} from "./../../core/interfaces/IMetadataBased.sol";
 
 struct AccountManagerPermissions {
     bool canExecuteTransactions;
@@ -11,7 +12,8 @@ struct AccountManagerPermissions {
     bool canSetMetadataURI;
 }
 
-interface IAccount {
+interface IAccount is IMetadataBased {
+    event Lens_Account_MetadataURISet(string metadataURI);
     event Lens_Account_MetadataURISet(string metadataURI, address indexed source);
     event Lens_Account_OwnerTransferred(address indexed newOwner);
     event Lens_Account_TransactionExecuted(address indexed to, uint256 value, bytes data, address indexed executor);
@@ -41,8 +43,6 @@ interface IAccount {
         external
         payable
         returns (bytes memory);
-
-    function getMetadataURI(address source) external view returns (string memory);
 
     function getAccountManagerPermissions(address accountManager)
         external

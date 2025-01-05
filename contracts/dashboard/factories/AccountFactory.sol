@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {Account, AccountManagerPermissions} from "./../account/Account.sol";
 import {KeyValue, SourceStamp} from "./../../core/types/Types.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
 
 contract AccountFactory {
     event Lens_Account_Created(
@@ -16,6 +18,14 @@ contract AccountFactory {
         KeyValue[] extraData
     );
 
+    address internal immutable _beacon;
+    address internal immutable _lock;
+
+    constructor(address beacon, address lock) {
+        _beacon = beacon;
+        _lock = lock;
+    }
+
     function deployAccount(
         address owner,
         string calldata metadataURI,
@@ -24,9 +34,9 @@ contract AccountFactory {
         SourceStamp calldata sourceStamp,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        // TODO: Make it a proxy
-        Account account =
-            new Account(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
+        address proxyAdmin = address(new ProxyAdmin(owner, _lock)); // TODO: Owner of Proxy Admin same as owner of Account
+        Account account = Account(payable(new BeaconProxy(proxyAdmin, _beacon)));
+        account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
         emit Lens_Account_Created(
             address(account),
             owner,
