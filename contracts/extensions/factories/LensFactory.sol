@@ -308,7 +308,7 @@ contract LensFactory {
         returns (RuleChange memory)
     {
         bool found;
-        if (!rule.configurationChanges.configure) {
+        if (rule.configurationChanges.configure) {
             for (uint256 i = 0; i < rule.configurationChanges.ruleParams.length; i++) {
                 if (rule.configurationChanges.ruleParams[i].key == PARAM__ACCESS_CONTROL) {
                     require(!found);
