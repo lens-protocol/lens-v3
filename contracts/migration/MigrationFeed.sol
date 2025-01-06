@@ -6,7 +6,6 @@ import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/FeedCore.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
-import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 
 contract MigrationFeed is Feed {
     function createPost(
@@ -25,6 +24,11 @@ contract MigrationFeed is Feed {
             address source
         ) = abi.decode(customParams[0].value, (uint256, uint256, uint256, uint256, uint80, address));
         _createPost(postParams, postId, rootPostId, postSequentialId, authorPostSequentialId, creationTimestamp);
+
+        if (customParams.length > 1 && abi.decode(customParams[1].value, (bool))) {
+            // If customParams[1] is present, it must be an ABI-encoded bool representing `forceChecks`
+            _forceChecks(postId, rootPostId, postParams);
+        }
 
         if (source != address(0)) {
             // Trust the migrator, no source verification
@@ -76,5 +80,23 @@ contract MigrationFeed is Feed {
         _newPost.rootPostId = rootPostId;
         _newPost.creationTimestamp = creationTimestamp;
         _newPost.lastUpdatedTimestamp = creationTimestamp;
+    }
+
+    function _forceChecks(uint256 postId, uint256 rootPostId, CreatePostParams calldata postParams) internal view {
+        if (rootPostId != postId) {
+            require(Core._postExists(rootPostId));
+        }
+        if (postParams.quotedPostId != 0) {
+            require(Core._postExists(postParams.quotedPostId));
+        }
+        if (postParams.repliedPostId != 0) {
+            require(Core._postExists(postParams.repliedPostId));
+            require(rootPostId == Core.$storage().posts[postParams.repliedPostId].rootPostId);
+        }
+        if (postParams.repostedPostId != 0) {
+            require(Core._postExists(postParams.repostedPostId));
+            require(postParams.quotedPostId == 0 && postParams.repliedPostId == 0);
+            require(rootPostId == Core.$storage().posts[postParams.repostedPostId].rootPostId);
+        }
     }
 }
