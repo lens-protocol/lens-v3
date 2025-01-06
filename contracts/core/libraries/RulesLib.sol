@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Rule} from "contracts/core/types/Types.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;
@@ -19,6 +20,8 @@ struct RuleState {
 }
 
 library RulesLib {
+    using CallLib for address;
+
     uint256 constant MAX_AMOUNT_OF_RULES = 20;
 
     function generateOrValidateConfigSalt(
@@ -42,7 +45,7 @@ library RulesLib {
     ) internal returns (bool) {
         bool wasAlreadyConfigured = rulesStorage.isConfigured[ruleAddress][configSalt];
         rulesStorage.isConfigured[ruleAddress][configSalt] = true;
-        (bool success,) = ruleAddress.call(encodedConfigureCall);
+        (bool success,) = ruleAddress.safecall(encodedConfigureCall);
         require(success);
         return wasAlreadyConfigured;
     }

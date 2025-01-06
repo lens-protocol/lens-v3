@@ -8,9 +8,11 @@ import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {RuleProcessingParams, RuleChange, Rule, KeyValue} from "contracts/core/types/Types.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
+    using CallLib for address;
 
     struct RuleBasedStorage {
         RulesStorage graphRulesStorage;
@@ -144,7 +146,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.ruleAddress.call(
+                (bool callNotReverted,) = rule.ruleAddress.safecall(
                     abi.encodeCall(
                         IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
@@ -163,7 +165,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.ruleAddress.call(
+                (bool callNotReverted,) = rule.ruleAddress.safecall(
                     abi.encodeCall(
                         IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
@@ -186,7 +188,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IGraphRule.processFollow,
                 (
@@ -229,7 +231,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IGraphRule.processUnfollow,
                 (
@@ -271,7 +273,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IFollowRule.processFollow,
                 (

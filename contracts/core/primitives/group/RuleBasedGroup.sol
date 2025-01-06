@@ -7,9 +7,11 @@ import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
+    using CallLib for address;
 
     struct RuleBasedStorage {
         RulesStorage groupRulesStorage;
@@ -104,7 +106,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IGroupRule.processRemoval,
                 (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
@@ -136,7 +138,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IGroupRule.processAddition,
                 (configSalt, originalMsgSender, account, primitiveCustomParams, ruleCustomParams)
@@ -168,7 +170,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(IGroupRule.processJoining, (configSalt, account, primitiveCustomParams, ruleCustomParams))
         );
     }
@@ -197,7 +199,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(IGroupRule.processLeaving, (configSalt, account, primitiveCustomParams, ruleCustomParams))
         );
     }

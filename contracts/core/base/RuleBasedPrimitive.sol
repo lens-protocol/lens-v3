@@ -11,9 +11,11 @@ import {
     Rule,
     KeyValue
 } from "contracts/core/types/Types.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 abstract contract RuleBasedPrimitive {
     using RulesLib for RulesStorage;
+    using CallLib for address;
 
     function _changePrimitiveRules(RulesStorage storage rulesStorage, RuleChange[] calldata ruleChanges)
         internal

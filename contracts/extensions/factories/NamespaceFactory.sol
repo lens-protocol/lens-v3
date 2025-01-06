@@ -4,25 +4,16 @@ pragma solidity ^0.8.0;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
-import {PermissionlessAccessControl} from "contracts/extensions/access/PermissionlessAccessControl.sol";
 import {RuleChange, KeyValue} from "contracts/core/types/Types.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
-import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
+import {PrimitiveFactory} from "contracts/extensions/factories/PrimitiveFactory.sol";
 
-contract NamespaceFactory {
+contract NamespaceFactory is PrimitiveFactory {
     event Lens_NamespaceFactory_Deployment(address indexed namespaceAddress, string namespace, string metadataURI);
 
-    IAccessControl internal immutable _temporaryAccessControl;
-    address internal immutable _beacon;
-    address internal immutable _proxyBeaconLock;
-
-    constructor(address beacon, address proxyBeaconLock) {
-        _temporaryAccessControl = new PermissionlessAccessControl();
-        _beacon = beacon;
-        _proxyBeaconLock = proxyBeaconLock;
-    }
+    constructor(address primitiveBeacon, address proxyAdminLock) PrimitiveFactory(primitiveBeacon, proxyAdminLock) {}
 
     function deployNamespace(
         string memory namespace,
@@ -35,10 +26,10 @@ contract NamespaceFactory {
         string memory nftSymbol,
         ITokenURIProvider tokenURIProvider
     ) external returns (address) {
-        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _proxyBeaconLock));
-        Namespace namespacePrimitive = Namespace(address(new BeaconProxy(proxyAdmin, _beacon)));
+        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, PROXY_ADMIN_LOCK));
+        Namespace namespacePrimitive = Namespace(address(new BeaconProxy(proxyAdmin, PRIMITIVE_BEACON)));
         namespacePrimitive.initialize(
-            namespace, metadataURI, nftName, nftSymbol, tokenURIProvider, _temporaryAccessControl
+            namespace, metadataURI, nftName, nftSymbol, tokenURIProvider, TEMPORARY_ACCESS_CONTROL
         );
         namespacePrimitive.changeNamespaceRules(ruleChanges);
         namespacePrimitive.setExtraData(extraData);
