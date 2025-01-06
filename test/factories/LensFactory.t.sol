@@ -39,6 +39,16 @@ contract LensFactoryTest is Test, BaseDeployments {
         );
     }
 
+    function testCanDeployFeed() public {
+        lensFactory.deployFeed({
+            metadataURI: "uri://any",
+            owner: address(this),
+            admins: _emptyAddressArray(),
+            rules: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
     function testCreateAccountWithUsernameFree() public {
         lensFactory.createAccountWithUsernameFree({
             metadataURI: "someMetadataURI",

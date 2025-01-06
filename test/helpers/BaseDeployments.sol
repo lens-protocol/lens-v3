@@ -33,6 +33,8 @@ import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 contract BaseDeployments is Test {
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
@@ -111,7 +113,12 @@ contract BaseDeployments is Test {
     function _deployFactories() internal {
         appFactory = new AppFactory(appBeacon, proxyAdminLock);
         accountFactory = new AccountFactory(accountBeacon, proxyAdminLock);
-        feedFactory = new FeedFactory(feedBeacon, proxyAdminLock);
+
+        address feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock));
+        TransparentUpgradeableProxy feedFactoryProxy =
+            new TransparentUpgradeableProxy(address(feedFactoryImpl), proxyAdminLock, "");
+        feedFactory = FeedFactory(address(feedFactoryProxy));
+
         graphFactory = new GraphFactory(graphBeacon, proxyAdminLock);
         groupFactory = new GroupFactory(groupBeacon, proxyAdminLock);
         namespaceFactory = new NamespaceFactory(namespaceBeacon, proxyAdminLock);

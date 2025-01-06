@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
-import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
+import {PermissionlessAccessControl} from "contracts/extensions/access/PermissionlessAccessControl.sol";
 import {RuleChange, KeyValue} from "contracts/core/types/Types.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
@@ -14,12 +14,12 @@ import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
 contract NamespaceFactory {
     event Lens_NamespaceFactory_Deployment(address indexed namespaceAddress, string namespace, string metadataURI);
 
-    IAccessControl internal immutable _factoryOwnedAccessControl;
+    IAccessControl internal immutable _temporaryAccessControl;
     address internal immutable _beacon;
     address internal immutable _proxyBeaconLock;
 
     constructor(address beacon, address proxyBeaconLock) {
-        _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
+        _temporaryAccessControl = new PermissionlessAccessControl();
         _beacon = beacon;
         _proxyBeaconLock = proxyBeaconLock;
     }
@@ -38,7 +38,7 @@ contract NamespaceFactory {
         address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _proxyBeaconLock));
         Namespace namespacePrimitive = Namespace(address(new BeaconProxy(proxyAdmin, _beacon)));
         namespacePrimitive.initialize(
-            namespace, metadataURI, nftName, nftSymbol, tokenURIProvider, _factoryOwnedAccessControl
+            namespace, metadataURI, nftName, nftSymbol, tokenURIProvider, _temporaryAccessControl
         );
         namespacePrimitive.changeNamespaceRules(ruleChanges);
         namespacePrimitive.setExtraData(extraData);

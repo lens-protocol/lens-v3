@@ -73,6 +73,12 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
     };
   } else {
     console.log(`Deploying ${name}...`);
+    if (contractToDeploy.constructorArguments) {
+      console.log('\tUsing the following Constructor arguments:');
+      for (const arg of contractToDeploy.constructorArguments) {
+        console.log('\t\t', arg);
+      }
+    }
   }
 
   const deployedContract = await deployContract(
@@ -84,6 +90,7 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
     contractType: contractToDeploy.contractType,
     address: await deployedContract.getAddress(),
     bytecodeHash,
+    constructorArguments: contractToDeploy.constructorArguments,
   };
 
   addressBook[name] = contractInfo;
@@ -93,6 +100,67 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
     name: contractToDeploy.name,
     ...contractInfo,
   };
+}
+
+export async function deployLensContractAsProxy(contractToDeploy: ContractInfo, proxyOwner: string): Promise<ContractInfo> {
+  const name = contractToDeploy.name ?? contractToDeploy.contractName;
+
+  const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
+  // const bytecodeHash = keccak256(artifact.bytecode);
+
+  // Check address book for existing contract
+  const addressBook = loadAddressBook();
+  const existingContract = addressBook[name];
+
+  if (existingContract) {
+    console.log(`${name} already deployed at ${existingContract.address}. Skipping...`);
+    return {
+      name: contractToDeploy.name,
+      ...existingContract,
+    };
+  } else {
+    console.log(`Deploying ${name} (as upgradeable proxy)...`);
+  }
+
+    const deployedImplementation = await deployContract(
+      contractToDeploy.contractName,
+      contractToDeploy.constructorArguments
+    );
+
+    const contractInfo: ContractInfo = {
+      name: contractToDeploy.name ?? contractToDeploy.contractName + 'Impl',
+      contractName: contractToDeploy.contractName,
+      contractType: ContractType.Implementation,
+      address: await deployedImplementation.getAddress(),
+      // bytecodeHash,
+      constructorArguments: contractToDeploy.constructorArguments,
+    };
+
+    addressBook[contractToDeploy.name ?? contractToDeploy.contractName + 'Impl'] = contractInfo;
+    saveAddressBook(addressBook);
+
+    const constructorArguments = [
+      await deployedImplementation.getAddress(),
+      proxyOwner,
+      '0x'
+    ];
+    const deployedProxy = await deployContract('TransparentUpgradeableProxy', constructorArguments);
+
+    const proxyInfo: ContractInfo = {
+      name: contractToDeploy.name,
+      contractName: 'TransparentUpgradeableProxy',
+      contractType: contractToDeploy.contractType,
+      constructorArguments,
+      address: await deployedProxy.getAddress(),
+    };
+
+    addressBook[name] = proxyInfo;
+    saveAddressBook(addressBook);
+
+    return {
+      name: contractToDeploy.name,
+      ...proxyInfo,
+    };
 }
 
 export function camelToAllCaps(camelCase: string): string {

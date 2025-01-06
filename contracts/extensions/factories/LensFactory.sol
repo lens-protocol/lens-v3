@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
-import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
+import {PermissionlessAccessControl} from "contracts/extensions/access/PermissionlessAccessControl.sol";
 import {
     RuleChange,
     RuleProcessingParams,
@@ -56,7 +56,7 @@ contract LensFactory {
     FeedFactory internal immutable FEED_FACTORY;
     GraphFactory internal immutable GRAPH_FACTORY;
     NamespaceFactory internal immutable NAMESPACE_FACTORY;
-    IAccessControl internal immutable _factoryOwnedAccessControl;
+    IAccessControl internal immutable _temporaryAccessControl;
     address internal immutable _accountBlockingRule;
     address internal immutable _groupGatedFeedRule;
 
@@ -78,7 +78,7 @@ contract LensFactory {
         FEED_FACTORY = feedFactory;
         GRAPH_FACTORY = graphFactory;
         NAMESPACE_FACTORY = namespaceFactory;
-        _factoryOwnedAccessControl = new RoleBasedAccessControl({owner: address(this)});
+        _temporaryAccessControl = new PermissionlessAccessControl();
         _accountBlockingRule = accountBlockingRule;
         _groupGatedFeedRule = groupGatedFeedRule;
     }
@@ -141,7 +141,7 @@ contract LensFactory {
         KeyValue[] calldata feedExtraData
     ) external returns (address, address) {
         address group =
-            GROUP_FACTORY.deployGroup(groupMetadataURI, _factoryOwnedAccessControl, owner, groupRules, groupExtraData);
+            GROUP_FACTORY.deployGroup(groupMetadataURI, _temporaryAccessControl, owner, groupRules, groupExtraData);
 
         RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
 

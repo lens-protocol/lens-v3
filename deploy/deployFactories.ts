@@ -1,14 +1,15 @@
 import {
   deployLensContract,
+  deployLensContractAsProxy,
   ContractType,
   ContractInfo,
   loadContractAddressFromAddressBook,
 } from './lensUtils';
 
-export default async function deployFactories(): Promise<void> {
+export default async function deployFactories(factoriesProxyOwner: string): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
 
-  const contracts: ContractInfo[] = [
+  const factories: ContractInfo[] = [
     // Factories
     { contractName: 'AccessControlFactory', contractType: ContractType.Factory },
     {
@@ -58,7 +59,10 @@ export default async function deployFactories(): Promise<void> {
         loadContractAddressFromAddressBook('NamespaceBeacon'),
         loadContractAddressFromAddressBook('Lock'),
       ],
-    },
+    }]
+
+  const rules: ContractInfo[] = [
+    // Prerequisite rules for LensFactory
     {
       contractName: 'AccountBlockingRule',
       contractType: ContractType.Rule,
@@ -70,9 +74,15 @@ export default async function deployFactories(): Promise<void> {
       constructorArguments: [metadataURI],
     },
   ];
+
   const deployedContracts: Record<string, ContractInfo> = {};
-  for (const contract of contracts) {
-    deployedContracts[contract.contractName] = await deployLensContract(contract);
+
+  for (const factory of factories) {
+    deployedContracts[factory.contractName] = await deployLensContractAsProxy(factory, factoriesProxyOwner);
+  }
+
+  for (const rule of rules) {
+    deployedContracts[rule.contractName] = await deployLensContract(rule);
   }
 
   // lens factory
