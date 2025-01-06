@@ -5,8 +5,11 @@ pragma solidity ^0.8.0;
 import {ILock} from "contracts/core/interfaces/ILock.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {Ownable} from "contracts/core/access/Ownable.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 contract ProxyAdmin is Ownable {
+    using CallLib for address;
+
     ILock immutable LOCK;
 
     constructor(address proxyAdminOwner, address lock) Ownable() {
@@ -34,7 +37,7 @@ contract ProxyAdmin is Ownable {
             require(selector != BeaconProxy.optInToAutoUpgrade.selector);
         }
         // Do the call
-        (bool success, bytes memory ret) = to.call{value: value}(data);
+        (bool success, bytes memory ret) = to.safecall(value, data);
         if (!success) {
             assembly {
                 // Equivalent to reverting with the returned error selector if the length is not zero.

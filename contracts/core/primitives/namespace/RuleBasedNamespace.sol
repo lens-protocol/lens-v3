@@ -7,9 +7,11 @@ import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "contracts/core/types/Types.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
+    using CallLib for address;
 
     struct RuleBasedStorage {
         RulesStorage namespaceRulesStorage;
@@ -105,7 +107,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 INamespaceRule.processCreation,
                 (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
@@ -140,7 +142,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 INamespaceRule.processRemoval,
                 (configSalt, originalMsgSender, username, primitiveCustomParams, ruleCustomParams)
@@ -174,7 +176,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 INamespaceRule.processAssigning,
                 (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
@@ -209,7 +211,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 INamespaceRule.processUnassigning,
                 (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)

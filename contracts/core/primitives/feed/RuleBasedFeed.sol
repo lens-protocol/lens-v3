@@ -9,9 +9,11 @@ import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "contracts/core/types/Types.sol";
 import {EditPostParams, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
+    using CallLib for address;
 
     struct RuleBasedStorage {
         RulesStorage feedRulesStorage;
@@ -141,7 +143,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IFeedRule.processCreatePost, (configSalt, postId, postParams, primitiveCustomParams, ruleCustomParams)
             )
@@ -157,7 +159,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IPostRule.processCreatePost,
                 (configSalt, rootPostId, postId, postParams, primitiveCustomParams, ruleCustomParams)
@@ -295,7 +297,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IFeedRule.processEditPost, (configSalt, postId, postParams, primitiveCustomParams, ruleCustomParams)
             )
@@ -311,7 +313,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         KeyValue[] calldata primitiveCustomParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.call(
+        return rule.safecall(
             abi.encodeCall(
                 IPostRule.processEditPost,
                 (configSalt, rootPostId, postId, postParams, primitiveCustomParams, ruleCustomParams)
@@ -387,7 +389,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.ruleAddress.call(
+                (bool callNotReverted,) = rule.ruleAddress.safecall(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
@@ -406,7 +408,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.ruleAddress.call(
+                (bool callNotReverted,) = rule.ruleAddress.safecall(
                     abi.encodeCall(
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
@@ -437,7 +439,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.ruleAddress.call(
+                (bool callNotReverted,) = rule.ruleAddress.safecall(
                     abi.encodeCall(
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
@@ -456,7 +458,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = rule.ruleAddress.call(
+                (bool callNotReverted,) = rule.ruleAddress.safecall(
                     abi.encodeCall(
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
