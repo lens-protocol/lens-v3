@@ -4,24 +4,15 @@ pragma solidity ^0.8.0;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
-import {PermissionlessAccessControl} from "contracts/extensions/access/PermissionlessAccessControl.sol";
 import {RuleChange, KeyValue} from "contracts/core/types/Types.sol";
-import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
+import {PrimitiveFactory} from "contracts/extensions/factories/PrimitiveFactory.sol";
 
-contract FeedFactory {
+contract FeedFactory is PrimitiveFactory {
     event Lens_FeedFactory_Deployment(address indexed feed, string metadataURI);
 
-    IAccessControl internal immutable _temporaryAccessControl;
-    address internal immutable _beacon;
-    address internal immutable _lock;
-
-    constructor(address beacon, address lock) {
-        _temporaryAccessControl = new PermissionlessAccessControl();
-        _beacon = beacon;
-        _lock = lock;
-    }
+    constructor(address primitiveBeacon, address proxyAdminLock) PrimitiveFactory(primitiveBeacon, proxyAdminLock) {}
 
     function deployFeed(
         string memory metadataURI,
@@ -30,9 +21,9 @@ contract FeedFactory {
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, _lock));
-        Feed feed = Feed(address(new BeaconProxy(proxyAdmin, _beacon)));
-        feed.initialize(metadataURI, _temporaryAccessControl);
+        address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, PROXY_ADMIN_LOCK));
+        Feed feed = Feed(address(new BeaconProxy(proxyAdmin, PRIMITIVE_BEACON)));
+        feed.initialize(metadataURI, TEMPORARY_ACCESS_CONTROL);
         feed.changeFeedRules(ruleChanges);
         feed.setExtraData(extraData);
         feed.setAccessControl(accessControl);
