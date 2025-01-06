@@ -83,6 +83,7 @@ contract MigrationFeed is Feed {
     }
 
     function _forceChecks(uint256 postId, uint256 rootPostId, CreatePostParams calldata postParams) internal view {
+        // TODO: Check if the rootPostId == postId case (not a reply, not a repost)
         if (rootPostId != postId) {
             require(Core._postExists(rootPostId));
         }
@@ -97,6 +98,7 @@ contract MigrationFeed is Feed {
             require(Core._postExists(postParams.repostedPostId));
             require(postParams.quotedPostId == 0 && postParams.repliedPostId == 0);
             require(rootPostId == Core.$storage().posts[postParams.repostedPostId].rootPostId);
+            require(bytes(postParams.contentURI).length == 0, "REPOST_CANNOT_HAVE_CONTENT");
         }
     }
 }
