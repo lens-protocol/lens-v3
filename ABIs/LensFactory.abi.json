@@ -1,0 +1,1194 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "accessControlFactory",
+        "type": "address",
+        "internalType": "contract AccessControlFactory"
+      },
+      {
+        "name": "accountFactory",
+        "type": "address",
+        "internalType": "contract AccountFactory"
+      },
+      {
+        "name": "appFactory",
+        "type": "address",
+        "internalType": "contract AppFactory"
+      },
+      {
+        "name": "groupFactory",
+        "type": "address",
+        "internalType": "contract GroupFactory"
+      },
+      {
+        "name": "feedFactory",
+        "type": "address",
+        "internalType": "contract FeedFactory"
+      },
+      {
+        "name": "graphFactory",
+        "type": "address",
+        "internalType": "contract GraphFactory"
+      },
+      {
+        "name": "namespaceFactory",
+        "type": "address",
+        "internalType": "contract NamespaceFactory"
+      },
+      {
+        "name": "accountBlockingRule",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupGatedFeedRule",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createAccountWithUsernameFree",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "accountManagers",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "accountManagersPermissions",
+        "type": "tuple[]",
+        "internalType": "struct AccountManagerPermissions[]",
+        "components": [
+          {
+            "name": "canExecuteTransactions",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferTokens",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferNative",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canSetMetadataURI",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "namespacePrimitiveAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "accountCreationSourceStamp",
+        "type": "tuple",
+        "internalType": "struct SourceStamp",
+        "components": [
+          {
+            "name": "source",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "createUsernameCustomParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "createUsernameRuleProcessingParams",
+        "type": "tuple[]",
+        "internalType": "struct RuleProcessingParams[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "ruleParams",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "assignUsernameCustomParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "unassignAccountRuleProcessingParams",
+        "type": "tuple[]",
+        "internalType": "struct RuleProcessingParams[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "ruleParams",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "assignRuleProcessingParams",
+        "type": "tuple[]",
+        "internalType": "struct RuleProcessingParams[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "ruleParams",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "accountExtraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "usernameExtraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createGroupWithFeed",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "admins",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "groupMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "groupRules",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "groupExtraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "feedMetadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "feedRules",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "feedExtraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployAccount",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "accountManagers",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "accountManagersPermissions",
+        "type": "tuple[]",
+        "internalType": "struct AccountManagerPermissions[]",
+        "components": [
+          {
+            "name": "canExecuteTransactions",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferTokens",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferNative",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canSetMetadataURI",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "sourceStamp",
+        "type": "tuple",
+        "internalType": "struct SourceStamp",
+        "components": [
+          {
+            "name": "source",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployApp",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "sourceStampVerificationEnabled",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "admins",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "initialProperties",
+        "type": "tuple",
+        "internalType": "struct AppInitialProperties",
+        "components": [
+          {
+            "name": "graph",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "feeds",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "namespace",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "groups",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "defaultFeed",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "signers",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "paymaster",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "treasury",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployFeed",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "admins",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "rules",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployGraph",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "admins",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "rules",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployGroup",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "admins",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "rules",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployNamespace",
+    "inputs": [
+      {
+        "name": "namespace",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "admins",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "rules",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "nftName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "nftSymbol",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

@@ -1,0 +1,297 @@
+[
+  {
+    "type": "function",
+    "name": "configure",
+    "inputs": [
+      {
+        "name": "configSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "postId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ruleParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "processCreatePost",
+    "inputs": [
+      {
+        "name": "configSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootPostId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "postId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "postParams",
+        "type": "tuple",
+        "internalType": "struct CreatePostParams",
+        "components": [
+          {
+            "name": "author",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "contentURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "repostedPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "quotedPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "repliedPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "ruleChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleChange[]",
+            "components": [
+              {
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "configurationChanges",
+                "type": "tuple",
+                "internalType": "struct RuleConfigurationChange",
+                "components": [
+                  {
+                    "name": "configure",
+                    "type": "bool",
+                    "internalType": "bool"
+                  },
+                  {
+                    "name": "ruleParams",
+                    "type": "tuple[]",
+                    "internalType": "struct KeyValue[]",
+                    "components": [
+                      {
+                        "name": "key",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                      },
+                      {
+                        "name": "value",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "selectorChanges",
+                "type": "tuple[]",
+                "internalType": "struct RuleSelectorChange[]",
+                "components": [
+                  {
+                    "name": "ruleSelector",
+                    "type": "bytes4",
+                    "internalType": "bytes4"
+                  },
+                  {
+                    "name": "isRequired",
+                    "type": "bool",
+                    "internalType": "bool"
+                  },
+                  {
+                    "name": "enabled",
+                    "type": "bool",
+                    "internalType": "bool"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "extraData",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "primitiveParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "ruleParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "processEditPost",
+    "inputs": [
+      {
+        "name": "configSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "rootPostId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "postId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "postParams",
+        "type": "tuple",
+        "internalType": "struct EditPostParams",
+        "components": [
+          {
+            "name": "contentURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "extraData",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "primitiveParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "ruleParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]
