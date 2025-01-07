@@ -24,7 +24,6 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     string internal _contractURI;
     address internal immutable _feed;
     uint256 internal immutable _postId;
-    bool internal immutable _isImmutable; // TODO: This can be replaced with bytes(_contentURISnapshot).length
     address internal immutable _collectAction;
 
     constructor(address feed, uint256 postId, bool isImmutable) {
@@ -33,7 +32,6 @@ contract LensCollectedPost is LensERC721, IERC7572 {
         require(bytes(contentURI).length > 0, "Post content URI is empty");
         _feed = feed;
         _postId = postId;
-        _isImmutable = isImmutable;
         _contractURI = contentURI;
         _collectAction = msg.sender;
         if (isImmutable) {
@@ -54,7 +52,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     }
 
     function tokenURI(uint256 /*tokenId*/ ) public view override returns (string memory) {
-        if (_isImmutable) {
+        if (bytes(_contentURISnapshot).length > 0) {
             return _contentURISnapshot;
         } else {
             string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
