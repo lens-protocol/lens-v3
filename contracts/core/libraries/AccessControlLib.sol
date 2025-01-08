@@ -10,7 +10,10 @@ library AccessControlLib {
     }
 
     function requireAccess(IAccessControl accessControl, address account, uint256 permissionId) internal view {
-        require(accessControl.hasAccess({account: account, contractAddress: address(this), permissionId: permissionId}));
+        require(
+            accessControl.hasAccess({account: account, contractAddress: address(this), permissionId: permissionId}),
+            "PID_ACCESS_DENIED"
+        );
     }
 
     function hasAccess(address accessControl, address account, uint256 permissionId) internal view returns (bool) {
