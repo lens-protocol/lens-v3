@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {BaseAction} from "contracts/actions/base/BaseAction.sol";
 import {IPostAction} from "contracts/extensions/actions/ActionHub.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract BasePostAction is BaseAction, IPostAction {
     constructor(address actionHub) BaseAction(actionHub) {}
@@ -58,6 +59,6 @@ abstract contract BasePostAction is BaseAction, IPostAction {
         bool, /* isDisabled */
         KeyValue[] calldata /* params */
     ) internal virtual returns (bytes memory) {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

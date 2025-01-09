@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 // Modified from OpenZeppelin's v4.9.0 contracts
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 /**
  * @dev Required interface of an ERC721 compliant contract.

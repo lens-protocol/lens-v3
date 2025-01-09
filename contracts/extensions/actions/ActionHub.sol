@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {KeyValue} from "contracts/core/types/Types.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 interface IPostAction {
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
@@ -98,7 +99,7 @@ contract ActionHub {
 
     function signalUniversalPostAction(address action) external {
         bytes memory returnData = IPostAction(action).configure(address(0), address(0), 0, new KeyValue[](0));
-        require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE);
+        require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE, Errors.UnexpectedContractImpl());
         emit Lens_ActionHub_PostAction_Universal(action);
     }
 
@@ -144,7 +145,7 @@ contract ActionHub {
 
     function signalUniversalAccountAction(address action) external {
         bytes memory returnData = IAccountAction(action).configure(address(0), address(0), new KeyValue[](0));
-        require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE);
+        require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE, Errors.UnexpectedContractImpl());
         emit Lens_ActionHub_AccountAction_Universal(action);
     }
 

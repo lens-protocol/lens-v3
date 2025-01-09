@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {Follow, IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {GraphCore as Core} from "contracts/core/primitives/graph/GraphCore.sol";
@@ -13,6 +13,7 @@ import {Events} from "contracts/core/types/Events.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract Graph is
     IGraph,
@@ -73,7 +74,7 @@ contract Graph is
         virtual
         override
     {
-        require(msg.sender == address(uint160(entityId))); // Follow rules can only be changed in your own account
+        require(msg.sender == address(uint160(entityId)), Errors.InvalidMsgSender()); // Follow rules can only be changed in your own account
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
@@ -105,7 +106,7 @@ contract Graph is
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
     ) external virtual override returns (uint256) {
-        require(msg.sender == followerAccount);
+        require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
         uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);
         address source = _processSourceStamp(assignedFollowId, customParams);
@@ -130,7 +131,7 @@ contract Graph is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external virtual override returns (uint256) {
-        require(msg.sender == followerAccount);
+        require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(followId, customParams);
         _graphProcessUnfollow(msg.sender, followerAccount, accountToUnfollow, customParams, graphRulesProcessingParams);
@@ -148,13 +149,13 @@ contract Graph is
 
     function getFollowerById(address account, uint256 followId) external view override returns (address) {
         address follower = Core.$storage().followers[account][followId];
-        require(follower != address(0), "FOLLOWER_DOES_NOT_EXIST");
+        require(follower != address(0), Errors.DoesNotExist());
         return follower;
     }
 
     function getFollow(address followerAccount, address targetAccount) external view override returns (Follow memory) {
         Follow memory followData = Core.$storage().follows[followerAccount][targetAccount];
-        require(followData.id != 0, "FOLLOW_DOES_NOT_EXIST");
+        require(followData.id != 0, Errors.DoesNotExist());
         return followData;
     }
 

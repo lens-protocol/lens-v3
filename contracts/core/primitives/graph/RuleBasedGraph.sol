@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
@@ -9,6 +9,7 @@ import {RuleProcessingParams, RuleChange, Rule, KeyValue} from "contracts/core/t
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -151,7 +152,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                         IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
                     )
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -176,7 +177,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
     function _encodeAndCallGraphProcessFollow(
@@ -339,7 +340,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                     primitiveCustomParams,
                     ruleCustomParams
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
@@ -367,7 +368,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
     function _processFollow(
@@ -402,7 +403,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                     primitiveCustomParams,
                     ruleCustomParams
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
@@ -430,6 +431,6 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 }

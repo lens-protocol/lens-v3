@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {ISimpleCollectAction, CollectActionData} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
-
 import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
 import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;
@@ -107,7 +106,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
             // Editing existing collect action config
             if (storedData.isImmutable) {
                 // TODO: Should we have two different bools? isImmutableConfig & isImmutableContentURI?
-                revert("Cannot edit immutable collect");
+                revert Errors.Immutable();
             } else {
                 storedData.amount = configData.amount;
                 storedData.collectLimit = configData.collectLimit;
@@ -152,9 +151,9 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         _validateSenderIsAuthor(originalMsgSender, feed, postId);
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
         // We don't check for existence of collect before disabling, because it might be useful to disable it initially
-        // require(storedData.collectionAddress != address(0), "Collect not configured for this post");
-        require(!storedData.isImmutable, "Cannot modify immutable collect");
-        require(storedData.isDisabled != isDisabled, "Already in desired state");
+        // require(storedData.collectionAddress != address(0), Errors.DoesNotExist());
+        require(!storedData.isImmutable, Errors.Immutable());
+        require(storedData.isDisabled != isDisabled, Errors.RedundantStateChange());
         storedData.isDisabled = isDisabled;
         return abi.encode(isDisabled);
     }
@@ -165,18 +164,18 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
 
     function _validateSenderIsAuthor(address sender, address feed, uint256 postId) internal virtual {
         if (sender != IFeed(feed).getPostAuthor(postId)) {
-            revert("Sender is not the author");
+            revert Errors.InvalidMsgSender();
         }
     }
 
     function _validateConfigureParams(CollectActionConfigureParams memory configData) internal virtual {
         if (configData.amount == 0) {
-            require(configData.token == address(0), "Invalid token");
+            require(configData.token == address(0), Errors.InvalidParameter());
         } else {
-            require(configData.token != address(0), "Invalid token");
+            require(configData.token != address(0), Errors.InvalidParameter());
         }
         if (configData.endTimestamp != 0 && configData.endTimestamp < block.timestamp) {
-            revert("Invalid params");
+            revert Errors.InvalidParameter();
         }
         if (configData.followerOnlyGraph != address(0)) {
             // Check if the Graph supports isFollowing() interface with two random addresses
@@ -209,24 +208,24 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
     ) internal virtual {
         CollectActionData storage data = $collectDataStorage().collectData[feed][postId];
 
-        require(data.collectionAddress != address(0), "Collect not configured for this post");
+        require(data.collectionAddress != address(0), Errors.DoesNotExist());
 
         if (data.endTimestamp != 0 && block.timestamp > data.endTimestamp) {
-            revert("Collect expired");
+            revert Errors.Expired();
         }
 
         if (data.collectLimit != 0 && data.currentCollects + 1 > data.collectLimit) {
-            revert("Collect limit exceeded");
+            revert Errors.LimitReached();
         }
 
         if (expectedParams.amount != data.amount || expectedParams.token != data.token) {
-            revert("Invalid expected amount and/or token");
+            revert Errors.InvalidParameter();
         }
 
         if (data.followerOnlyGraph != address(0)) {
             require(
                 IGraph(data.followerOnlyGraph).isFollowing(originalMsgSender, IFeed(feed).getPostAuthor(postId)),
-                "Not following"
+                Errors.NotFollowing()
             );
         }
 
@@ -236,12 +235,12 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
             require(
                 keccak256(bytes(contentURI))
                     == keccak256(bytes(LensCollectedPost(data.collectionAddress).tokenURI(data.currentCollects))),
-                "Invalid content URI"
+                Errors.InvalidParameter()
             );
         }
 
         if (data.isDisabled) {
-            revert("Collect is disabled");
+            revert Errors.Disabled();
         }
     }
 

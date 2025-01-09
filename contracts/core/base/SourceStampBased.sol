@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {KeyValue, SourceStamp} from "contracts/core/types/Types.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";

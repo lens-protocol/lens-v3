@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {TokenGatedRule} from "contracts/rules/base/TokenGatedRule.sol";
@@ -8,6 +8,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
     using AccessControlLib for IAccessControl;
@@ -44,7 +45,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processRemoval(
@@ -55,7 +56,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         KeyValue[] calldata /* ruleParams */
     ) external view {
         // Anyone can kick out member of the group if they no longer hold the required token balance:
-        require(!_checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account));
+        require(!_checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account), Errors.NotAllowed());
     }
 
     function processJoining(
@@ -77,7 +78,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _validateTokenBalance(

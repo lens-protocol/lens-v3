@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
 import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
@@ -8,6 +8,7 @@ import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "contracts/core/t
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -267,7 +268,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                     primitiveCustomParams,
                     ruleParams
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -296,6 +297,6 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($namespaceRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($namespaceRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 }

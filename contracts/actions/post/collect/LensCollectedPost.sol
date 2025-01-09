@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import "contracts/core/base/LensERC721.sol";
 import {IERC7572} from "contracts/actions/post/collect/IERC7572.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 /**
  * @notice A contract that represents a Lens Collected Post.
@@ -29,7 +30,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     constructor(address feed, uint256 postId, bool isImmutable) {
         LensERC721._initialize("Lens Collected Post", "LCP", ITokenURIProvider(address(0)));
         string memory contentURI = IFeed(feed).getPost(postId).contentURI;
-        require(bytes(contentURI).length > 0, "Post content URI is empty");
+        require(bytes(contentURI).length > 0, Errors.InvalidParameter());
         _feed = feed;
         _postId = postId;
         _contractURI = contentURI;
@@ -41,7 +42,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     }
 
     function mint(address to, uint256 tokenId) external {
-        require(msg.sender == _collectAction, "Only CollectAction can mint");
+        require(msg.sender == _collectAction, Errors.InvalidMsgSender());
         _mint(to, tokenId);
     }
 
@@ -57,7 +58,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
         } else {
             string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
             // TODO: If content was deleted - should we fail or return empty string?
-            require(bytes(contentURI).length > 0);
+            require(bytes(contentURI).length > 0, Errors.DoesNotExist());
             return contentURI;
         }
     }
@@ -67,6 +68,6 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     // Disabling integrated LensERC721 tokenURIProvider
     // TODO: Is this approach more favorable than deploying the LensCollectedPostTokenURIProvider over and over?
     function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

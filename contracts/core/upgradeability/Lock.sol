@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {ILock} from "contracts/core/interfaces/ILock.sol";
 import {Ownable} from "contracts/core/access/Ownable.sol";

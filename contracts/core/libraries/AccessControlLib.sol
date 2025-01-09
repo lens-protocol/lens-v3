@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.26;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 library AccessControlLib {
     function requireAccess(address accessControl, address account, uint256 permissionId) internal view {
@@ -12,7 +13,7 @@ library AccessControlLib {
     function requireAccess(IAccessControl accessControl, address account, uint256 permissionId) internal view {
         require(
             accessControl.hasAccess({account: account, contractAddress: address(this), permissionId: permissionId}),
-            "PID_ACCESS_DENIED"
+            Errors.AccessDenied()
         );
     }
 
@@ -41,6 +42,9 @@ library AccessControlLib {
     }
 
     function requireCanChangeAccessControl(IAccessControl accessControl, address account) internal view {
-        require(accessControl.canChangeAccessControl({account: account, contractAddress: address(this)}));
+        require(
+            accessControl.canChangeAccessControl({account: account, contractAddress: address(this)}),
+            Errors.AccessDenied()
+        );
     }
 }

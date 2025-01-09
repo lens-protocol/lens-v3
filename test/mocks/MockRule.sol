@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity 0.8.17;
+pragma solidity ^0.8.26;
 
 import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
 import {IGraphRule} from "@core/interfaces/IGraphRule.sol";

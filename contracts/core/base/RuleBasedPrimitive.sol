@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {
@@ -12,6 +12,7 @@ import {
     KeyValue
 } from "contracts/core/types/Types.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -165,6 +166,10 @@ abstract contract RuleBasedPrimitive {
                 );
             }
             for (uint256 j = 0; j < ruleChange.selectorChanges.length; j++) {
+                _validateIsSupportedRuleSelector(
+                    ruleChange.selectorChanges[j].ruleSelector,
+                    entityId == 0 ? _supportedPrimitiveRuleSelectors() : _supportedEntityRuleSelectors()
+                );
                 rulesStorage._changeRulesSelectors(
                     ruleChanges[i].ruleAddress,
                     ruleChange.configSalt,
@@ -190,6 +195,18 @@ abstract contract RuleBasedPrimitive {
         return new bytes4[](0);
     }
 
+    function _validateIsSupportedRuleSelector(bytes4 ruleSelectorToValidate, bytes4[] memory supportedRuleSelectors)
+        internal
+        pure
+    {
+        for (uint256 i = 0; i < supportedRuleSelectors.length; i++) {
+            if (ruleSelectorToValidate == supportedRuleSelectors[i]) {
+                return;
+            }
+        }
+        revert Errors.UnsupportedSelector();
+    }
+
     function _beforeChangeRules(uint256 entityId, RuleChange[] calldata ruleChanges) internal virtual {
         if (entityId == 0) {
             _beforeChangePrimitiveRules(ruleChanges);
@@ -212,8 +229,8 @@ abstract contract RuleBasedPrimitive {
             bytes4 ruleSelector = selectorsToValidate[i];
             uint256 requiredRulesLength = rulesStorage._getRulesArray(ruleSelector, true).length;
             uint256 anyOfRulesLength = rulesStorage._getRulesArray(ruleSelector, false).length;
-            require(anyOfRulesLength != 1, "Cannot have exactly one single any-of rule");
-            require(requiredRulesLength + anyOfRulesLength <= RulesLib.MAX_AMOUNT_OF_RULES, "Amount of rules exceeded");
+            require(anyOfRulesLength != 1, Errors.SingleAnyOfRule());
+            require(requiredRulesLength + anyOfRulesLength <= RulesLib.MAX_AMOUNT_OF_RULES, Errors.LimitReached());
         }
     }
 

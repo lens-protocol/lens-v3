@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {EIP712EncodingLib} from "contracts/core/libraries/EIP712EncodingLib.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
-// Move to types
+import {Errors} from "contracts/core/types/Errors.sol";
 
+// Move to types
 struct EIP712Signature {
     address signer;
     uint8 v;
@@ -81,12 +82,12 @@ abstract contract RestrictedSignersRule is MetadataBased {
     }
 
     function _configure(bytes32 configSalt, KeyValue[] calldata ruleParams) internal virtual {
-        require(ruleParams.length > 0);
-        require(ruleParams[0].key == PARAM__RESTRICTED_SIGNERS);
+        require(ruleParams.length > 0, Errors.InvalidParameter());
+        require(ruleParams[0].key == PARAM__RESTRICTED_SIGNERS, Errors.InvalidParameter());
         (address[] memory signers, string[] memory labels, bool[] memory isWhitelisted) =
             abi.decode(ruleParams[0].value, (address[], string[], bool[]));
-        require(signers.length == isWhitelisted.length);
-        require(signers.length == labels.length);
+        require(signers.length == isWhitelisted.length, Errors.InvalidParameter());
+        require(signers.length == labels.length, Errors.InvalidParameter());
         for (uint256 i = 0; i < signers.length; i++) {
             bool wasWhitelisted = $rulesStorage(msg.sender, configSalt).isWhitelistedSigner[signers[i]];
             if (wasWhitelisted == isWhitelisted[i]) {
@@ -115,15 +116,15 @@ abstract contract RestrictedSignersRule is MetadataBased {
         RestrictedSignerMessage memory message =
             RestrictedSignerMessage(functionSelector, abiEncodedFunctionParams, signature.nonce, signature.deadline);
         if (block.timestamp > signature.deadline) {
-            revert("Errors.SignatureExpired()");
+            revert Errors.Expired();
         }
         if ($rulesStorage(msg.sender, configSalt).wasSignerNonceUsed[signature.signer][signature.nonce]) {
-            revert("Errors.SignatureNonceUsed()");
+            revert Errors.NonceUsed();
         }
         $rulesStorage(msg.sender, configSalt).wasSignerNonceUsed[signature.signer][signature.nonce] = true;
         emit Lens_RestrictedSignersRule_SignerNonceUsed(signature.signer, signature.nonce);
         if (!$rulesStorage(msg.sender, configSalt).isWhitelistedSigner[signature.signer]) {
-            revert("Errors.SignerNotWhitelisted()");
+            revert Errors.WrongSigner();
         }
         bytes32 hashStruct = _calculateMessageHashStruct(message);
         bytes32 digest = _calculateDigest(hashStruct);
@@ -160,18 +161,18 @@ abstract contract RestrictedSignersRule is MetadataBased {
 
     function _validateRecoveredAddress(bytes32 digest, EIP712Signature memory signature) private view {
         if (block.timestamp > signature.deadline) {
-            revert("Errors.SignatureExpired()");
+            revert Errors.Expired();
         }
         // If the expected address is a contract, check the signature there.
         if (signature.signer.code.length != 0) {
             bytes memory concatenatedSig = abi.encodePacked(signature.r, signature.s, signature.v);
             if (IERC1271(signature.signer).isValidSignature(digest, concatenatedSig) != EIP1271_MAGIC_VALUE) {
-                revert("Errors.SignatureInvalid()");
+                revert Errors.InvalidSignature();
             }
         } else {
             address recoveredAddress = ecrecover(digest, signature.v, signature.r, signature.s);
             if (recoveredAddress == address(0) || recoveredAddress != signature.signer) {
-                revert("Errors.SignatureInvalid()");
+                revert Errors.WrongSigner();
             }
         }
     }

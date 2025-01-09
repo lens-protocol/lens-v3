@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
@@ -9,6 +9,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
     using AccessControlLib for IAccessControl;
@@ -59,7 +60,7 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processRemovePost(
@@ -68,7 +69,7 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processPostRuleChanges(
@@ -77,7 +78,7 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _validateTokenBalance(

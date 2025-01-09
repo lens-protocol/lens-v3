@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
 import {TokenGatedRule} from "contracts/rules/base/TokenGatedRule.sol";
@@ -8,6 +8,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
     using AccessControlLib for IAccessControl;
@@ -69,7 +70,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processFollowRuleChanges(
@@ -78,7 +79,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _validateTokenBalance(

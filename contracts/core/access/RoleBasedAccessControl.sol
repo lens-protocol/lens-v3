@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {Access, IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
 import {Events} from "contracts/core/types/Events.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 /**
  * This Access Control:
@@ -40,7 +41,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
 
     function transferOwnership(address newOwner) external virtual {
         address oldOwner = _owner;
-        require(msg.sender == oldOwner, "Only owner can transfer ownership");
+        require(msg.sender == oldOwner, Errors.InvalidMsgSender());
         _owner = newOwner;
         _revokeRole(oldOwner, OWNER_ROLE_ID);
         _grantRole(newOwner, OWNER_ROLE_ID);
@@ -77,12 +78,12 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
     }
 
     function _beforeGrantingRole(address, /* account */ uint256 roleId) internal virtual {
-        require(msg.sender == _owner, "Only owner can assign roles");
-        require(roleId != OWNER_ROLE_ID, "Cannot grant owner role");
+        require(msg.sender == _owner, Errors.InvalidMsgSender());
+        require(roleId != OWNER_ROLE_ID, Errors.InvalidParameter());
     }
 
     function _grantRole(address account, uint256 roleId) internal virtual {
-        require(!_hasRole(account, roleId));
+        require(!_hasRole(account, roleId), Errors.RedundantStateChange());
         _roles[account].push(roleId);
         emit Lens_AccessControl_RoleGranted(account, roleId);
     }
@@ -93,13 +94,13 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
     }
 
     function _beforeRevokingRole(address, /* account */ uint256 roleId) internal virtual {
-        require(msg.sender == _owner, "Only owner can revoke roles");
-        require(roleId != OWNER_ROLE_ID, "Cannot revoke owner role");
+        require(msg.sender == _owner, Errors.InvalidMsgSender());
+        require(roleId != OWNER_ROLE_ID, Errors.InvalidParameter());
     }
 
     function _revokeRole(address account, uint256 roleId) internal virtual {
         uint256 accountRolesLength = _roles[account].length;
-        require(accountRolesLength > 0);
+        require(accountRolesLength > 0, Errors.InvalidParameter());
         uint256 roleIndex = 0;
         while (roleIndex < accountRolesLength) {
             if (_roles[account][roleIndex] == roleId) {
@@ -108,7 +109,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
                 roleIndex++;
             }
         }
-        require(roleIndex < accountRolesLength); // Index must be found before reaching the end of the array
+        require(roleIndex < accountRolesLength, Errors.NotFound()); // Index must be found before reaching the end of the array
         _roles[account][roleIndex] = _roles[account][accountRolesLength - 1];
         _roles[account].pop();
         emit Lens_AccessControl_RoleRevoked(account, roleId);
@@ -133,15 +134,15 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         uint256, /* permissionId */
         Access /* access */
     ) internal virtual {
-        require(msg.sender == _owner, "Only owner can set access");
-        require(roleId != OWNER_ROLE_ID, "Cannot set access for owner role");
+        require(msg.sender == _owner, Errors.InvalidMsgSender());
+        require(roleId != OWNER_ROLE_ID, Errors.InvalidParameter());
     }
 
     function _setAccess(uint256 roleId, address contractAddress, uint256 permissionId, Access access) internal virtual {
         Access perviousAccess = _access[roleId][contractAddress][permissionId];
         _access[roleId][contractAddress][permissionId] = access;
         if (perviousAccess == Access.UNDEFINED) {
-            require(access != Access.UNDEFINED);
+            require(access != Access.UNDEFINED, Errors.RedundantStateChange());
             emit Lens_AccessControl_AccessAdded(roleId, contractAddress, permissionId, access == Access.GRANTED);
         } else if (access == Access.UNDEFINED) {
             emit Lens_AccessControl_AccessRemoved(roleId, contractAddress, permissionId);
@@ -171,8 +172,8 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         virtual
         returns (bool)
     {
-        require(contractAddress != ANY_CONTRACT_ADDRESS);
-        require(permissionId != ANY_PERMISSION_ID);
+        require(contractAddress != ANY_CONTRACT_ADDRESS, Errors.InvalidParameter());
+        require(permissionId != ANY_PERMISSION_ID, Errors.InvalidParameter());
 
         Access fullySpecifiedAccess = _access[roleId][contractAddress][permissionId];
 

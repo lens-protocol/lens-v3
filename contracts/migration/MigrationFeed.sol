@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/FeedCore.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract MigrationFeed is Feed {
     function createPost(
@@ -85,20 +86,20 @@ contract MigrationFeed is Feed {
     function _forceChecks(uint256 postId, uint256 rootPostId, CreatePostParams calldata postParams) internal view {
         // TODO: Check if the rootPostId == postId case (not a reply, not a repost)
         if (rootPostId != postId) {
-            require(Core._postExists(rootPostId));
+            require(Core._postExists(rootPostId), Errors.DoesNotExist());
         }
         if (postParams.quotedPostId != 0) {
-            require(Core._postExists(postParams.quotedPostId));
+            require(Core._postExists(postParams.quotedPostId), Errors.DoesNotExist());
         }
         if (postParams.repliedPostId != 0) {
-            require(Core._postExists(postParams.repliedPostId));
-            require(rootPostId == Core.$storage().posts[postParams.repliedPostId].rootPostId);
+            require(Core._postExists(postParams.repliedPostId), Errors.DoesNotExist());
+            require(rootPostId == Core.$storage().posts[postParams.repliedPostId].rootPostId, Errors.InvalidParameter());
         }
         if (postParams.repostedPostId != 0) {
-            require(Core._postExists(postParams.repostedPostId));
-            require(postParams.quotedPostId == 0 && postParams.repliedPostId == 0);
-            require(rootPostId == Core.$storage().posts[postParams.repostedPostId].rootPostId);
-            require(bytes(postParams.contentURI).length == 0, "REPOST_CANNOT_HAVE_CONTENT");
+            require(Core._postExists(postParams.repostedPostId), Errors.DoesNotExist());
+            require(postParams.quotedPostId == 0 && postParams.repliedPostId == 0, Errors.InvalidParameter());
+            require(rootPostId == Core.$storage().posts[postParams.repostedPostId].rootPostId, Errors.InvalidParameter());
+            require(bytes(postParams.contentURI).length == 0, Errors.InvalidParameter());
         }
     }
 }

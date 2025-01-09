@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.26;
 
 import "contracts/core/libraries/ExtraDataLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 struct ArrayStorageHelper {
     uint8 index;
@@ -50,8 +51,8 @@ library AppCore {
     function _add(address element, address[] storage array, mapping(address => ArrayStorageHelper) storage arrayHelper)
         internal
     {
-        require(element != address(0), "INVALID_ELEMENT");
-        require(!arrayHelper[element].isSet, "ALREADY_ADDED");
+        require(element != address(0), Errors.InvalidParameter());
+        require(!arrayHelper[element].isSet, Errors.RedundantStateChange());
         array.push(element);
         arrayHelper[element] = ArrayStorageHelper({index: uint8(array.length - 1), isSet: true});
     }
@@ -61,7 +62,7 @@ library AppCore {
         address[] storage array,
         mapping(address => ArrayStorageHelper) storage arrayHelper
     ) internal {
-        require(arrayHelper[element].isSet, "NOT_FOUND");
+        require(arrayHelper[element].isSet, Errors.NotFound());
         uint256 index = arrayHelper[element].index;
         array[index] = array[array.length - 1];
         arrayHelper[array[index]].index = uint8(index);
@@ -83,7 +84,7 @@ library AppCore {
         bool wasAValuePreviouslySet = $storage().defaultGraph != address(0);
         if (graph != address(0)) {
             // address(0) allowed as a way to remove the default graph
-            require($storage().graphStorageHelper[graph].isSet, "NOT_FOUND");
+            require($storage().graphStorageHelper[graph].isSet, Errors.NotFound());
         }
         $storage().defaultGraph = graph;
         return wasAValuePreviouslySet;
@@ -103,7 +104,7 @@ library AppCore {
         bool wasAValuePreviouslySet = $storage().defaultFeed != address(0);
         if (feed != address(0)) {
             // address(0) allowed as a way to remove the default feed
-            require($storage().feedStorageHelper[feed].isSet, "NOT_FOUND");
+            require($storage().feedStorageHelper[feed].isSet, Errors.NotFound());
         }
         $storage().defaultFeed = feed;
         return wasAValuePreviouslySet;
@@ -127,7 +128,7 @@ library AppCore {
         bool wasAValuePreviouslySet = $storage().defaultNamespace != address(0);
         if (namespace != address(0)) {
             // address(0) allowed as a way to remove the default namespace
-            require($storage().namespaceStorageHelper[namespace].isSet, "NOT_FOUND");
+            require($storage().namespaceStorageHelper[namespace].isSet, Errors.NotFound());
         }
         $storage().defaultNamespace = namespace;
         return wasAValuePreviouslySet;
@@ -146,7 +147,7 @@ library AppCore {
     function _setDefaultGroup(address group) internal {
         if (group != address(0)) {
             // address(0) allowed as a way to remove the default group
-            require($storage().groupStorageHelper[group].isSet, "NOT_FOUND");
+            require($storage().groupStorageHelper[group].isSet, Errors.NotFound());
         }
         $storage().defaultGroup = group;
     }
@@ -165,7 +166,7 @@ library AppCore {
         bool wasAValuePreviouslySet = $storage().defaultPaymaster != address(0);
         if (paymaster != address(0)) {
             // address(0) allowed as a way to remove the default paymaster
-            require($storage().paymasterStorageHelper[paymaster].isSet, "NOT_FOUND");
+            require($storage().paymasterStorageHelper[paymaster].isSet, Errors.NotFound());
         }
         $storage().defaultPaymaster = paymaster;
         return wasAValuePreviouslySet;

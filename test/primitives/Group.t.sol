@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity 0.8.17;
+pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import {IGroup} from "@core/interfaces/IGroup.sol";
 import {Group, PID__ADD_MEMBER, PID__REMOVE_MEMBER} from "@core/primitives/group/Group.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {AccessControlled} from "@core/access/AccessControlled.sol";
+import {Errors} from "@core/types/Errors.sol";
 
 contract GroupTest is Test, BaseDeployments {
     IGroup group;
@@ -89,7 +89,7 @@ contract GroupTest is Test, BaseDeployments {
     function testCannot_AddMember_viaPID_noAccess(address newMember) public {
         address accountWithoutPID = _getAccountWithoutPID(PID__ADD_MEMBER);
 
-        vm.expectRevert("PID_ACCESS_DENIED");
+        vm.expectRevert(Errors.AccessDenied.selector);
         vm.prank(accountWithoutPID);
         group.addMember({
             account: newMember,
@@ -146,7 +146,7 @@ contract GroupTest is Test, BaseDeployments {
         _setGroupMember(memberToRemove);
         assertTrue(group.isMember(memberToRemove));
 
-        vm.expectRevert("PID_ACCESS_DENIED");
+        vm.expectRevert(Errors.AccessDenied.selector);
         vm.prank(accountWithoutPID);
         group.removeMember({
             account: memberToRemove,

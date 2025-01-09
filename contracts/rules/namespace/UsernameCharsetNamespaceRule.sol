@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
@@ -8,6 +8,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
@@ -91,7 +92,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processAssigning(
@@ -102,7 +103,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processUnassigning(
@@ -113,7 +114,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _processRestrictions(string calldata username, CharsetRestrictions memory charsetRestrictions)
@@ -121,39 +122,24 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, MetadataBased {
         pure
     {
         // Cannot start with a character in the cannotStartWith charset
-        require(
-            !_isInCharset(bytes(username)[0], charsetRestrictions.cannotStartWith),
-            "UsernameCharsetRule: Username cannot start with specified character"
-        );
+        require(!_isInCharset(bytes(username)[0], charsetRestrictions.cannotStartWith), Errors.CannotStartWithThat());
         // Check if the username contains only allowed characters
         for (uint256 i = 0; i < bytes(username).length; i++) {
             bytes1 char = bytes(username)[i];
             // Check disallowed chars first
-            require(
-                !_isInCharset(char, charsetRestrictions.customDisallowedCharset),
-                "UsernameCharsetRule: Username contains disallowed character"
-            );
+            require(!_isInCharset(char, charsetRestrictions.customDisallowedCharset), Errors.NotAllowed());
             // Check allowed charsets next
             if (_isNumeric(char)) {
-                require(charsetRestrictions.allowNumeric, "UsernameCharsetRule: Username cannot contain numbers");
+                require(charsetRestrictions.allowNumeric, Errors.NotAllowed());
             } else if (_isLatinLowercase(char)) {
-                require(
-                    charsetRestrictions.allowLatinLowercase,
-                    "UsernameCharsetRule: Username cannot contain lowercase latin characters"
-                );
+                require(charsetRestrictions.allowLatinLowercase, Errors.NotAllowed());
             } else if (_isLatinUppercase(char)) {
-                require(
-                    charsetRestrictions.allowLatinUppercase,
-                    "UsernameCharsetRule: Username cannot contain uppercase latin characters"
-                );
+                require(charsetRestrictions.allowLatinUppercase, Errors.NotAllowed());
             } else if (bytes(charsetRestrictions.customAllowedCharset).length > 0) {
-                require(
-                    _isInCharset(char, charsetRestrictions.customAllowedCharset),
-                    "UsernameCharsetRule: Username contains disallowed character"
-                );
+                require(_isInCharset(char, charsetRestrictions.customAllowedCharset), Errors.NotAllowed());
             } else {
                 // If not in any of the above charsets, reject
-                revert("UsernameCharsetRule: Username contains disallowed character");
+                revert Errors.NotAllowed();
             }
         }
     }

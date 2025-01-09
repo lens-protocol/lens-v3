@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
@@ -9,6 +9,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
     using AccessControlLib for IAccessControl;
@@ -60,7 +61,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processRemovePost(
@@ -69,7 +70,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processPostRuleChanges(
@@ -78,7 +79,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _processPayment(
