@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
 import {MockAccessControlLib} from "test/helpers/MockAccessControlLib.sol";
 import {MockRule, IPrimitiveRule} from "test/mocks/MockRule.sol";
+import {Errors} from "@core/types/Errors.sol";
 
 abstract contract RulesTest is Test {
     using MockAccessControlLib for address;
@@ -54,7 +55,7 @@ abstract contract RulesTest is Test {
             selectorChanges: new RuleSelectorChange[](0)
         });
 
-        vm.expectRevert();
+        vm.expectRevert(Errors.AccessDenied.selector);
         _changeRules(ruleChanges);
     }
 
@@ -76,7 +77,7 @@ abstract contract RulesTest is Test {
             selectorChanges: new RuleSelectorChange[](0)
         });
 
-        vm.expectRevert();
+        vm.expectRevert(Errors.InvalidConfigSalt.selector);
         _changeRules(ruleChanges);
     }
 
@@ -100,7 +101,7 @@ abstract contract RulesTest is Test {
         ruleChanges[0].selectorChanges[0] =
             RuleSelectorChange({ruleSelector: bytes4(0x12345678), isRequired: true, enabled: true});
 
-        vm.expectRevert();
+        vm.expectRevert(Errors.UnsupportedSelector.selector);
         _changeRules(ruleChanges);
     }
 
@@ -125,7 +126,7 @@ abstract contract RulesTest is Test {
         ruleChanges[0].selectorChanges[0] =
             RuleSelectorChange({ruleSelector: _aValidSelector(), isRequired: true, enabled: true});
 
-        vm.expectRevert();
+        vm.expectRevert(Errors.ConfigureCallReverted.selector);
         _changeRules(ruleChanges);
     }
 
