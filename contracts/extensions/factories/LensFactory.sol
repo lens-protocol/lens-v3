@@ -273,32 +273,32 @@ contract LensFactory {
         );
     }
 
-    // function deployNamespace(
-    //     string calldata namespace,
-    //     string calldata metadataURI,
-    //     address owner,
-    //     address[] calldata admins,
-    //     RuleChange[] calldata rules,
-    //     KeyValue[] calldata extraData,
-    //     string calldata nftName,
-    //     string calldata nftSymbol
-    // ) external returns (address) {
-    //     ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
-    //     IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
-    //     return NAMESPACE_FACTORY.deployNamespace(
-    //         namespace,
-    //         metadataURI,
-    //         accessControl,
-    //         owner,
-    //         _injectRuleAccessControl(rules, address(accessControl)),
-    //         extraData,
-    //         nftName,
-    //         nftSymbol,
-    //         tokenURIProvider
-    //     );
-    // }
+    function deployNamespace(
+        string memory namespace,
+        string memory metadataURI,
+        address owner,
+        address[] memory admins,
+        RuleChange[] calldata rules,
+        KeyValue[] calldata extraData,
+        string memory nftName,
+        string memory nftSymbol
+    ) external returns (address) {
+        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
+        IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
+        return NAMESPACE_FACTORY.deployNamespace(
+            namespace,
+            metadataURI,
+            accessControl,
+            owner,
+            _injectRuleAccessControl(rules, address(accessControl)),
+            extraData,
+            nftName,
+            nftSymbol,
+            tokenURIProvider
+        );
+    }
 
-    function _deployAccessControl(address owner, address[] calldata admins) internal returns (IRoleBasedAccessControl) {
+    function _deployAccessControl(address owner, address[] memory admins) internal returns (IRoleBasedAccessControl) {
         return ACCESS_CONTROL_FACTORY.deployOwnerAdminOnlyAccessControl(owner, admins);
     }
 
