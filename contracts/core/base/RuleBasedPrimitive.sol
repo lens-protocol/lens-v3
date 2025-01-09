@@ -165,15 +165,15 @@ abstract contract RuleBasedPrimitive {
                 );
             }
             for (uint256 j = 0; j < ruleChange.selectorChanges.length; j++) {
-                rulesStorage._changeRulesSelectors(
-                    ruleChanges[i].ruleAddress,
-                    ruleChange.configSalt,
-                    entityId,
-                    ruleChanges[i].selectorChanges[j].ruleSelector,
-                    ruleChanges[i].selectorChanges[j].isRequired,
-                    ruleChanges[i].selectorChanges[j].enabled,
-                    fn_emitSelectorEvent
-                );
+                // rulesStorage._changeRulesSelectors(
+                //     ruleChanges[i].ruleAddress,
+                //     ruleChange.configSalt,
+                //     entityId,
+                //     ruleChanges[i].selectorChanges[j].ruleSelector,
+                //     ruleChanges[i].selectorChanges[j].isRequired,
+                //     ruleChanges[i].selectorChanges[j].enabled,
+                //     fn_emitSelectorEvent
+                // );
             }
         }
         if (entityId == 0) {

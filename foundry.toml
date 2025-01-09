@@ -5,7 +5,9 @@ libs = ['node_modules', 'lib']
 test = 'test'
 cache_path  = 'cache_forge'
 solc_version = '0.8.17'
-via_ir = true
+# via_ir = true
+optimizer = false
+# optimizer_runs = 10
 
 [profile.default.fuzz]
 runs = 1024
@@ -13,9 +15,9 @@ no_zksync_reserved_addresses = true
 
 [profile.default.zksync]
 # Compile contracts for zkVM
-compile = true
+# compile = true
 # Enable zkVM at startup, needs `compile = true` to have effect
-startup = true
+# startup = true
 # # By default the latest version is used
 # zksolc = "1.5.0"
 # # By default the corresponding solc patched version from matter-labs is used

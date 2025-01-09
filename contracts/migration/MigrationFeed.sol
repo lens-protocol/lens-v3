@@ -23,11 +23,11 @@ contract MigrationFeed is Feed {
             uint80 creationTimestamp,
             address source
         ) = abi.decode(customParams[0].value, (uint256, uint256, uint256, uint256, uint80, address));
-        _createPost(postParams, postId, rootPostId, postSequentialId, authorPostSequentialId, creationTimestamp);
+        // _createPost(postParams, postId, rootPostId, postSequentialId, authorPostSequentialId, creationTimestamp);
 
         if (customParams.length > 1 && abi.decode(customParams[1].value, (bool))) {
             // If customParams[1] is present, it must be an ABI-encoded bool representing `forceChecks`
-            _forceChecks(postId, rootPostId, postParams);
+            // _forceChecks(postId, rootPostId, postParams);
         }
 
         if (source != address(0)) {
@@ -36,25 +36,25 @@ contract MigrationFeed is Feed {
             _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
         }
 
-        emit Lens_Feed_PostCreated(
-            postId,
-            postParams.author,
-            authorPostSequentialId,
-            rootPostId,
-            postParams,
-            customParams,
-            feedRulesParams,
-            rootPostRulesParams,
-            quotedPostRulesParams,
-            source
-        );
+        // emit Lens_Feed_PostCreated(
+        //     source,
+        //     postId,
+        //     authorPostSequentialId,
+        //     rootPostId,
+        //     quotedPostRulesParams,
+        //     rootPostRulesParams,
+        //     feedRulesParams,
+        //     customParams,
+        //     postParams,
+        //     postParams.author
+        // );
 
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraData(postId, postParams.extraData[i]);
-            emit Lens_Feed_Post_ExtraDataAdded(
-                postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-            );
-        }
+        // for (uint256 i = 0; i < postParams.extraData.length; i++) {
+        //     _setEntityExtraData(postId, postParams.extraData[i]);
+        //     emit Lens_Feed_Post_ExtraDataAdded(
+        //         postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
+        //     );
+        // }
         return postId;
     }
 

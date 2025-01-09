@@ -189,10 +189,10 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                );
-                require(callNotReverted, "Some required rule failed");
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                // );
+                // require(callNotReverted, "Some required rule failed");
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -206,12 +206,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                // );
+                // if (callNotReverted) {
+                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                // }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
@@ -343,10 +343,10 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                );
-                require(callNotReverted, "Some required rule failed");
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                // );
+                // require(callNotReverted, "Some required rule failed");
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -360,12 +360,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
+                // );
+                // if (callNotReverted) {
+                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                // }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.

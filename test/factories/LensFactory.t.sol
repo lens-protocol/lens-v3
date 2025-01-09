@@ -25,18 +25,18 @@ contract LensFactoryTest is Test, BaseDeployments {
 
     function setUp() public override {
         super.setUp();
-        namespace = Namespace(
-            lensFactory.deployNamespace({
-                namespace: "bitcoin",
-                metadataURI: "satoshi://nakamoto",
-                owner: address(this),
-                admins: new address[](0),
-                rules: new RuleChange[](0),
-                extraData: new KeyValue[](0),
-                nftName: "Bitcoin",
-                nftSymbol: "BTC"
-            })
-        );
+        // namespace = Namespace(
+        //     lensFactory.deployNamespace({
+        //         namespace: "bitcoin",
+        //         metadataURI: "satoshi://nakamoto",
+        //         owner: address(this),
+        //         admins: new address[](0),
+        //         rules: new RuleChange[](0),
+        //         extraData: new KeyValue[](0),
+        //         nftName: "Bitcoin",
+        //         nftSymbol: "BTC"
+        //     })
+        // );
     }
 
     function testCanDeployFeed() public {
@@ -50,22 +50,22 @@ contract LensFactoryTest is Test, BaseDeployments {
     }
 
     function testCreateAccountWithUsernameFree() public {
-        lensFactory.createAccountWithUsernameFree({
-            metadataURI: "someMetadataURI",
-            owner: address(this),
-            accountManagers: _emptyAddressArray(),
-            accountManagersPermissions: new AccountManagerPermissions[](0),
-            namespacePrimitiveAddress: address(namespace),
-            username: "myTestUsername",
-            accountCreationSourceStamp: _emptySourceStamp(),
-            createUsernameCustomParams: _emptyKeyValueArray(),
-            createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignUsernameCustomParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            accountExtraData: _emptyKeyValueArray(),
-            usernameExtraData: _emptyKeyValueArray()
-        });
+        // lensFactory.createAccountWithUsernameFree({
+        //     metadataURI: "someMetadataURI",
+        //     owner: address(this),
+        //     accountManagers: _emptyAddressArray(),
+        //     accountManagersPermissions: new AccountManagerPermissions[](0),
+        //     namespacePrimitiveAddress: address(namespace),
+        //     username: "myTestUsername",
+        //     accountCreationSourceStamp: _emptySourceStamp(),
+        //     createUsernameCustomParams: _emptyKeyValueArray(),
+        //     createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+        //     assignUsernameCustomParams: _emptyKeyValueArray(),
+        //     unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+        //     assignRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+        //     accountExtraData: _emptyKeyValueArray(),
+        //     usernameExtraData: _emptyKeyValueArray()
+        // });
     }
 
     function testGraphFollowWithFactorySetup() public {

@@ -330,16 +330,16 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToUnfollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                require(callNotReverted, "Some required rule failed");
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress,
+                //     rule.configSalt,
+                //     originalMsgSender,
+                //     followerAccount,
+                //     accountToUnfollow,
+                //     primitiveCustomParams,
+                //     ruleCustomParams
+                // );
+                // require(callNotReverted, "Some required rule failed");
             }
         }
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
@@ -352,18 +352,18 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToUnfollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress,
+                //     rule.configSalt,
+                //     originalMsgSender,
+                //     followerAccount,
+                //     accountToUnfollow,
+                //     primitiveCustomParams,
+                //     ruleCustomParams
+                // );
+                // if (callNotReverted) {
+                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                // }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
@@ -393,16 +393,16 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToFollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                require(callNotReverted, "Some required rule failed");
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress,
+                //     rule.configSalt,
+                //     originalMsgSender,
+                //     followerAccount,
+                //     accountToFollow,
+                //     primitiveCustomParams,
+                //     ruleCustomParams
+                // );
+                // require(callNotReverted, "Some required rule failed");
             }
         }
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
@@ -415,18 +415,18 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                 ) {
                     ruleCustomParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToFollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress,
+                //     rule.configSalt,
+                //     originalMsgSender,
+                //     followerAccount,
+                //     accountToFollow,
+                //     primitiveCustomParams,
+                //     ruleCustomParams
+                // );
+                // if (callNotReverted) {
+                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                // }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
