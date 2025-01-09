@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {Events} from "contracts/core/types/Events.sol";
 import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";

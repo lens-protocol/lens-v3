@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {ExtraDataLib} from "contracts/core/libraries/ExtraDataLib.sol";

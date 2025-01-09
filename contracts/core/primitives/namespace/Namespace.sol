@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {NamespaceCore as Core} from "contracts/core/primitives/namespace/NamespaceCore.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
@@ -95,12 +95,12 @@ contract Namespace is
 
     function createAndAssignUsername(
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningProcessingParams,
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams,
-        KeyValue[] calldata extraData
+        KeyValue[] memory extraData
     ) external {
         require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);

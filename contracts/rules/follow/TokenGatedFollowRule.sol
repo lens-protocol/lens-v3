@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {TokenGatedRule} from "contracts/rules/base/TokenGatedRule.sol";

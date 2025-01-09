@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import "contracts/core/base/LensERC721.sol";
 import {IERC7572} from "contracts/actions/post/collect/IERC7572.sol";

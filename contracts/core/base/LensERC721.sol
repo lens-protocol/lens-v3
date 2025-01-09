@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 // Modified from OpenZeppelin's v4.9.0 contracts
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import "contracts/core/interfaces/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
