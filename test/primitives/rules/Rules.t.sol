@@ -5,13 +5,36 @@ pragma solidity 0.8.17;
 import "forge-std/Test.sol";
 import {RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
 import {MockAccessControlLib} from "test/helpers/MockAccessControlLib.sol";
-import {MockRule} from "test/mocks/MockRule.sol";
+import {MockRule, IPrimitiveRule} from "test/mocks/MockRule.sol";
 
 abstract contract RulesTest is Test {
     using MockAccessControlLib for address;
 
     MockRule rule = new MockRule();
     MockRule otherRule = new MockRule();
+
+    function test_ChangeRules() public {
+        // Mock Access Control to allow changing rules
+        uint256 changeRulesPid = uint256(keccak256("lens.permission.ChangeRules"));
+        _primitiveAddress().mockAccess({
+            account: address(this),
+            contractAddress: _primitiveAddress(),
+            permissionId: changeRulesPid,
+            access: true
+        });
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: _aValidSelector(), isRequired: true, enabled: true});
+
+        _changeRules(ruleChanges);
+    }
 
     function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public {
         // Mock Access Control to disallow changing rules
@@ -75,7 +98,7 @@ abstract contract RulesTest is Test {
             selectorChanges: new RuleSelectorChange[](1)
         });
         ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: bytes4(0x12345678), isRequired: false, enabled: false});
+            RuleSelectorChange({ruleSelector: bytes4(0x12345678), isRequired: true, enabled: true});
 
         vm.expectRevert();
         _changeRules(ruleChanges);
@@ -91,7 +114,7 @@ abstract contract RulesTest is Test {
             access: true
         });
 
-        rule.mockToRevertOn(bytes4(keccak256("configure(bytes32,KeyValue[] calldata")));
+        rule.mockToRevertOn(IPrimitiveRule.configure.selector);
         RuleChange[] memory ruleChanges = new RuleChange[](1);
         ruleChanges[0] = RuleChange({
             ruleAddress: address(rule),
@@ -100,7 +123,7 @@ abstract contract RulesTest is Test {
             selectorChanges: new RuleSelectorChange[](1)
         });
         ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: _aValidSelector(), isRequired: false, enabled: false});
+            RuleSelectorChange({ruleSelector: _aValidSelector(), isRequired: true, enabled: true});
 
         vm.expectRevert();
         _changeRules(ruleChanges);

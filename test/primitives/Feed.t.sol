@@ -86,7 +86,7 @@ contract FeedTest is RulesTest, BaseDeployments {
         IFeed(feedForRules).changeFeedRules(ruleChanges);
     }
 
-    function _primitiveAddress() internal override returns (address) {
+    function _primitiveAddress() internal view override returns (address) {
         return feedForRules;
     }
 
