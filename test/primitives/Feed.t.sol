@@ -9,15 +9,21 @@ import "../helpers/TypeHelpers.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
+import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {IFeedRule} from "@core/interfaces/IFeedRule.sol";
 
-contract FeedTest is Test, BaseDeployments {
+contract FeedTest is RulesTest, BaseDeployments {
     IFeed feed;
+
+    address feedForRules;
+    MockAccessControl mockAccessControl;
 
     address author = makeAddr("AUTHOR");
     address feedOwner = makeAddr("FEED_OWNER");
 
-    function setUp() public override {
-        super.setUp();
+    function setUp() public override(BaseDeployments) {
+        BaseDeployments.setUp();
 
         feed = IFeed(
             lensFactory.deployFeed({
@@ -28,6 +34,16 @@ contract FeedTest is Test, BaseDeployments {
                 extraData: _emptyKeyValueArray()
             })
         );
+
+        mockAccessControl = new MockAccessControl();
+
+        feedForRules = feedFactory.deployFeed({
+            metadataURI: "uri://feed",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
     }
 
     function testPost() public {
@@ -64,5 +80,17 @@ contract FeedTest is Test, BaseDeployments {
             customParams: _emptyKeyValueArray(),
             feedRulesParams: _emptyRuleProcessingParamsArray()
         });
+    }
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal override returns (address) {
+        return feedForRules;
+    }
+
+    function _aValidSelector() internal pure override returns (bytes4) {
+        return IFeedRule.processCreatePost.selector;
     }
 }

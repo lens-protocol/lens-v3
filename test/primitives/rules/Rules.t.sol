@@ -4,22 +4,19 @@ pragma solidity 0.8.17;
 
 import "forge-std/Test.sol";
 import {RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
-import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {MockAccessControlLib} from "test/helpers/MockAccessControlLib.sol";
+import {MockRule} from "test/mocks/MockRule.sol";
 
 abstract contract RulesTest is Test {
-    // address author = makeAddr("AUTHOR");
-    // address feedOwner = makeAddr("FEED_OWNER");
+    using MockAccessControlLib for address;
 
-    MockAccessControl internal _accessControl;
-
-    function setUp() public {
-        _accessControl = new MockAccessControl();
-    }
+    MockRule rule = new MockRule();
+    MockRule otherRule = new MockRule();
 
     function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public {
         // Mock Access Control to disallow changing rules
         uint256 changeRulesPid = uint256(keccak256("lens.permission.ChangeRules"));
-        _accessControl.mockAccess({
+        _primitiveAddress().mockAccess({
             account: address(this),
             contractAddress: _primitiveAddress(),
             permissionId: changeRulesPid,
@@ -28,20 +25,90 @@ abstract contract RulesTest is Test {
 
         RuleChange[] memory ruleChanges = new RuleChange[](1);
         ruleChanges[0] = RuleChange({
-            ruleAddress: address(this),
+            ruleAddress: address(rule),
             configSalt: bytes32(0),
             configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
             selectorChanges: new RuleSelectorChange[](0)
         });
 
-        _beforeChangeRules(ruleChanges);
-
+        vm.expectRevert();
         _changeRules(ruleChanges);
     }
 
-    function _beforeChangeRules(RuleChange[] memory ruleChanges) internal virtual;
+    function test_Cannot_ChangeRules_IfNonZeroConfigSaltIsPassed_ForARuleThatWasNotConfiguredYet() public {
+        // Mock Access Control to allow changing rules
+        uint256 changeRulesPid = uint256(keccak256("lens.permission.ChangeRules"));
+        _primitiveAddress().mockAccess({
+            account: address(this),
+            contractAddress: _primitiveAddress(),
+            permissionId: changeRulesPid,
+            access: true
+        });
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(bytes2(0x5A17)),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](0)
+        });
+
+        vm.expectRevert();
+        _changeRules(ruleChanges);
+    }
+
+    function test_Cannot_ChangeRules_IfSelectorNotAllowed() public {
+        // Mock Access Control to allow changing rules
+        uint256 changeRulesPid = uint256(keccak256("lens.permission.ChangeRules"));
+        _primitiveAddress().mockAccess({
+            account: address(this),
+            contractAddress: _primitiveAddress(),
+            permissionId: changeRulesPid,
+            access: true
+        });
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: bytes4(0x12345678), isRequired: false, enabled: false});
+
+        vm.expectRevert();
+        _changeRules(ruleChanges);
+    }
+
+    function test_Cannot_ChangeRules_IfConfigureCallReverts() public {
+        // Mock Access Control to allow changing rules
+        uint256 changeRulesPid = uint256(keccak256("lens.permission.ChangeRules"));
+        _primitiveAddress().mockAccess({
+            account: address(this),
+            contractAddress: _primitiveAddress(),
+            permissionId: changeRulesPid,
+            access: true
+        });
+
+        rule.mockToRevertOn(bytes4(keccak256("configure(bytes32,KeyValue[] calldata")));
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: _aValidSelector(), isRequired: false, enabled: false});
+
+        vm.expectRevert();
+        _changeRules(ruleChanges);
+    }
 
     function _changeRules(RuleChange[] memory ruleChanges) internal virtual;
 
     function _primitiveAddress() internal virtual returns (address);
+
+    function _aValidSelector() internal virtual returns (bytes4);
 }
