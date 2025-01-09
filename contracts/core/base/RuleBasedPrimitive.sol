@@ -170,15 +170,15 @@ abstract contract RuleBasedPrimitive {
                     ruleChange.selectorChanges[j].ruleSelector,
                     entityId == 0 ? _supportedPrimitiveRuleSelectors() : _supportedEntityRuleSelectors()
                 );
-                rulesStorage._changeRulesSelectors(
-                    ruleChanges[i].ruleAddress,
-                    ruleChange.configSalt,
-                    entityId,
-                    ruleChanges[i].selectorChanges[j].ruleSelector,
-                    ruleChanges[i].selectorChanges[j].isRequired,
-                    ruleChanges[i].selectorChanges[j].enabled,
-                    fn_emitSelectorEvent
-                );
+                // rulesStorage._changeRulesSelectors(
+                //     ruleChanges[i].ruleAddress,
+                //     ruleChange.configSalt,
+                //     entityId,
+                //     ruleChanges[i].selectorChanges[j].ruleSelector,
+                //     ruleChanges[i].selectorChanges[j].isRequired,
+                //     ruleChanges[i].selectorChanges[j].enabled,
+                //     fn_emitSelectorEvent
+                // );
             }
         }
         if (entityId == 0) {

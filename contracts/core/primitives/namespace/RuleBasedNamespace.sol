@@ -259,16 +259,16 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                 ) {
                     ruleParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    account,
-                    username,
-                    primitiveCustomParams,
-                    ruleParams
-                );
-                require(callNotReverted, Errors.RequiredRuleReverted());
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress,
+                //     rule.configSalt,
+                //     originalMsgSender,
+                //     account,
+                //     username,
+                //     primitiveCustomParams,
+                //     ruleParams
+                // );
+                // require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -282,18 +282,18 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                 ) {
                     ruleParams = rulesProcessingParams[j].ruleParams;
                 }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    account,
-                    username,
-                    primitiveCustomParams,
-                    ruleParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+                // (bool callNotReverted,) = encodeAndCall(
+                //     rule.ruleAddress,
+                //     rule.configSalt,
+                //     originalMsgSender,
+                //     account,
+                //     username,
+                //     primitiveCustomParams,
+                //     ruleParams
+                // );
+                // if (callNotReverted) {
+                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                // }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.

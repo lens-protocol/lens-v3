@@ -100,22 +100,22 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningProcessingParams,
         RuleProcessingParams[] calldata creationProcessingParams,
-        RuleProcessingParams[] calldata assigningProcessingParams,
+        RuleProcessingParams[] memory assigningProcessingParams,
         KeyValue[] memory extraData
     ) external {
-        require(msg.sender == account, Errors.InvalidMsgSender());
-        uint256 id = _computeId(username);
-        _safeMint(account, id);
-        _idToUsername[id] = username;
-        Core._createUsername(username);
-        address source = _processSourceStamp(id, customParams);
-        _decodeAndSetUsernameExtraData(id, extraData);
-        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source, extraData);
-        _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
-        Core._assignUsername(account, username);
-        emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
-        _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
-        _processAssigning(msg.sender, account, username, customParams, assigningProcessingParams);
+        // require(msg.sender == account, Errors.InvalidMsgSender());
+        // uint256 id = _computeId(username);
+        // _safeMint(account, id);
+        // _idToUsername[id] = username;
+        // Core._createUsername(username);
+        // address source = _processSourceStamp(id, customParams);
+        // _decodeAndSetUsernameExtraData(id, extraData);
+        // emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source, extraData);
+        // _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
+        // Core._assignUsername(account, username);
+        // emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
+        // _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
+        // _processAssigning(msg.sender, account, username, customParams, assigningProcessingParams);
     }
 
     function createUsername(

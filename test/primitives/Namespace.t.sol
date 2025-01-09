@@ -20,18 +20,18 @@ contract NamespaceTest is Test, BaseDeployments {
     function setUp() public override {
         super.setUp();
 
-        namespace = INamespace(
-            lensFactory.deployNamespace({
-                namespace: "bitcoin",
-                metadataURI: "satoshi://nakamoto",
-                owner: namespaceOwner,
-                admins: _emptyAddressArray(),
-                rules: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray(),
-                nftName: "Bitcoin",
-                nftSymbol: "BTC"
-            })
-        );
+        // namespace = INamespace(
+        //     lensFactory.deployNamespace({
+        //         namespace: "bitcoin",
+        //         metadataURI: "satoshi://nakamoto",
+        //         owner: namespaceOwner,
+        //         admins: _emptyAddressArray(),
+        //         rules: _emptyRuleChangeArray(),
+        //         extraData: _emptyKeyValueArray(),
+        //         nftName: "Bitcoin",
+        //         nftSymbol: "BTC"
+        //     })
+        // );
     }
 
     function testCreateAssignUnassignDelete() public {
