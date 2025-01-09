@@ -165,6 +165,10 @@ abstract contract RuleBasedPrimitive {
                 );
             }
             for (uint256 j = 0; j < ruleChange.selectorChanges.length; j++) {
+                _validateIsSupportedRuleSelector(
+                    ruleChange.selectorChanges[j].ruleSelector,
+                    entityId == 0 ? _supportedPrimitiveRuleSelectors() : _supportedEntityRuleSelectors()
+                );
                 rulesStorage._changeRulesSelectors(
                     ruleChanges[i].ruleAddress,
                     ruleChange.configSalt,
@@ -188,6 +192,18 @@ abstract contract RuleBasedPrimitive {
 
     function _supportedEntityRuleSelectors() internal view virtual returns (bytes4[] memory) {
         return new bytes4[](0);
+    }
+
+    function _validateIsSupportedRuleSelector(bytes4 ruleSelectorToValidate, bytes4[] memory supportedRuleSelectors)
+        internal
+        pure
+    {
+        for (uint256 i = 0; i < supportedRuleSelectors.length; i++) {
+            if (ruleSelectorToValidate == supportedRuleSelectors[i]) {
+                return;
+            }
+        }
+        revert();
     }
 
     function _beforeChangeRules(uint256 entityId, RuleChange[] calldata ruleChanges) internal virtual {
