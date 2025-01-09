@@ -100,18 +100,21 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     ////////////////////////////  PROCESSING FUNCTIONS  ////////////////////////////
 
     function _encodeAndCallProcessCreation(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address account,
-        string memory username,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 INamespaceRule.processCreation,
-                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+                (
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.account,
+                    processParams.username,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
@@ -125,28 +128,32 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     ) internal {
         _processNamespaceRule(
             _encodeAndCallProcessCreation,
-            INamespaceRule.processCreation.selector,
-            originalMsgSender,
-            account,
-            username,
-            primitiveCustomParams,
-            rulesProcessingParams
+            ProcessParams({
+                ruleSelector: INamespaceRule.processCreation.selector,
+                originalMsgSender: originalMsgSender,
+                account: account,
+                username: username,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
     function _encodeAndCallProcessRemoval(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address, /* account */
-        string memory username,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 INamespaceRule.processRemoval,
-                (configSalt, originalMsgSender, username, primitiveCustomParams, ruleCustomParams)
+                (
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.username,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
@@ -159,28 +166,33 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     ) internal {
         _processNamespaceRule(
             _encodeAndCallProcessRemoval,
-            INamespaceRule.processRemoval.selector,
-            originalMsgSender,
-            address(0),
-            username,
-            primitiveCustomParams,
-            rulesProcessingParams
+            ProcessParams({
+                ruleSelector: INamespaceRule.processRemoval.selector,
+                originalMsgSender: originalMsgSender,
+                account: address(0),
+                username: username,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
     function _encodeAndCallProcessAssigning(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address account,
-        string memory username,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 INamespaceRule.processAssigning,
-                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+                (
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.account,
+                    processParams.username,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
@@ -194,28 +206,33 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     ) internal {
         _processNamespaceRule(
             _encodeAndCallProcessAssigning,
-            INamespaceRule.processAssigning.selector,
-            originalMsgSender,
-            account,
-            username,
-            primitiveCustomParams,
-            rulesProcessingParams
+            ProcessParams({
+                ruleSelector: INamespaceRule.processAssigning.selector,
+                originalMsgSender: originalMsgSender,
+                account: account,
+                username: username,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
     function _encodeAndCallProcessUnassigning(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address account,
-        string memory username,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 INamespaceRule.processUnassigning,
-                (configSalt, originalMsgSender, account, username, primitiveCustomParams, ruleCustomParams)
+                (
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.account,
+                    processParams.username,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
@@ -229,74 +246,65 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     ) internal {
         _processNamespaceRule(
             _encodeAndCallProcessUnassigning,
-            INamespaceRule.processUnassigning.selector,
-            originalMsgSender,
-            account,
-            username,
-            primitiveCustomParams,
-            rulesProcessingParams
+            ProcessParams({
+                ruleSelector: INamespaceRule.processUnassigning.selector,
+                originalMsgSender: originalMsgSender,
+                account: account,
+                username: username,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
+    struct ProcessParams {
+        bytes4 ruleSelector;
+        address originalMsgSender;
+        address account;
+        string username;
+        KeyValue[] primitiveCustomParams;
+        RuleProcessingParams[] rulesProcessingParams;
+    }
+
     function _processNamespaceRule(
-        function(address,bytes32,address,address,string memory,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
-            encodeAndCall,
-        bytes4 ruleSelector,
-        address originalMsgSender,
-        address account,
-        string memory username,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata rulesProcessingParams
+        function(Rule memory,ProcessParams memory,KeyValue[] memory) internal returns (bool,bytes memory) encodeAndCall,
+        ProcessParams memory processParams
     ) private {
         // Check required rules (AND-combined rules)
-        for (uint256 i = 0; i < $namespaceRulesStorage().requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = $namespaceRulesStorage().requiredRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+        for (uint256 i = 0; i < $namespaceRulesStorage().requiredRules[processParams.ruleSelector].length; i++) {
+            Rule memory rule = $namespaceRulesStorage().requiredRules[processParams.ruleSelector][i];
+            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
+                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleParams = rulesProcessingParams[j].ruleParams;
+                    ruleParams = processParams.rulesProcessingParams[j].ruleParams;
                 }
-                // (bool callNotReverted,) = encodeAndCall(
-                //     rule.ruleAddress,
-                //     rule.configSalt,
-                //     originalMsgSender,
-                //     account,
-                //     username,
-                //     primitiveCustomParams,
-                //     ruleParams
-                // );
-                // require(callNotReverted, Errors.RequiredRuleReverted());
+                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleParams);
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
-        for (uint256 i = 0; i < $namespaceRulesStorage().anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = $namespaceRulesStorage().anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+        for (uint256 i = 0; i < $namespaceRulesStorage().anyOfRules[processParams.ruleSelector].length; i++) {
+            Rule memory rule = $namespaceRulesStorage().anyOfRules[processParams.ruleSelector][i];
+            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
+                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleParams = rulesProcessingParams[j].ruleParams;
+                    ruleParams = processParams.rulesProcessingParams[j].ruleParams;
                 }
-                // (bool callNotReverted,) = encodeAndCall(
-                //     rule.ruleAddress,
-                //     rule.configSalt,
-                //     originalMsgSender,
-                //     account,
-                //     username,
-                //     primitiveCustomParams,
-                //     ruleParams
-                // );
-                // if (callNotReverted) {
-                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                // }
+                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleParams);
+                if (callNotReverted) {
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($namespaceRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
+        require(
+            $namespaceRulesStorage().anyOfRules[processParams.ruleSelector].length == 0, Errors.AllAnyOfRulesReverted()
+        );
     }
 }
