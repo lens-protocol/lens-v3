@@ -12,6 +12,10 @@ import {KeyValue} from "@core/types/Types.sol";
 import {RuleChange} from "@core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";
 
+interface IPrimitiveRule {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
+}
+
 contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowRule, IPostRule {
     mapping(bytes4 => bool) internal _shouldSelectorRevert;
 
@@ -32,7 +36,7 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         view
         override(IFeedRule, IGraphRule, IGroupRule, INamespaceRule)
     {
-        require(!_shouldSelectorRevert[IFeedRule.configure.selector]);
+        require(!_shouldSelectorRevert[IPrimitiveRule.configure.selector]);
     }
 
     function processCreation(
