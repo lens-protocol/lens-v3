@@ -8,6 +8,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
     using AccessControlLib for IAccessControl;
@@ -44,7 +45,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processRemoval(
@@ -54,7 +55,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processJoining(
@@ -77,7 +78,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _processPayment(

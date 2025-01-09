@@ -3,6 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {EditPostParams, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 struct PostStorage {
     address author;
@@ -52,22 +53,20 @@ library FeedCore {
         _newPost.contentURI = postParams.contentURI;
         uint256 rootPostId = postId;
         if (postParams.quotedPostId != 0) {
-            require(_postExists(postParams.quotedPostId), "QUOTED_POST_DOES_NOT_EXIST");
+            require(_postExists(postParams.quotedPostId), Errors.DoesNotExist());
             _newPost.quotedPostId = postParams.quotedPostId;
         }
         if (postParams.repliedPostId != 0) {
-            require(_postExists(postParams.repliedPostId), "REPLIED_POST_DOES_NOT_EXIST");
+            require(_postExists(postParams.repliedPostId), Errors.DoesNotExist());
             _newPost.repliedPostId = postParams.repliedPostId;
             rootPostId = $storage().posts[postParams.repliedPostId].rootPostId;
         }
         if (postParams.repostedPostId != 0) {
-            require(_postExists(postParams.repostedPostId), "REPOSTED_POST_DOES_NOT_EXIST");
+            require(_postExists(postParams.repostedPostId), Errors.DoesNotExist());
             _newPost.repostedPostId = postParams.repostedPostId;
             rootPostId = $storage().posts[postParams.repostedPostId].rootPostId;
-            require(
-                postParams.quotedPostId == 0 && postParams.repliedPostId == 0, "REPOST_CANNOT_HAVE_QUOTED_OR_REPLIED"
-            );
-            require(bytes(postParams.contentURI).length == 0, "REPOST_CANNOT_HAVE_CONTENT");
+            require(postParams.quotedPostId == 0 && postParams.repliedPostId == 0, Errors.InvalidParameter());
+            require(bytes(postParams.contentURI).length == 0, Errors.InvalidParameter());
         }
         _newPost.rootPostId = rootPostId;
         _newPost.creationTimestamp = uint80(block.timestamp);
@@ -77,9 +76,9 @@ library FeedCore {
 
     function _editPost(uint256 postId, EditPostParams calldata postParams) internal {
         PostStorage storage _post = $storage().posts[postId];
-        require(_post.creationTimestamp != 0, "CANNOT_EDIT_NON_EXISTENT_POST"); // Post must exist
+        require(_post.creationTimestamp != 0, Errors.DoesNotExist()); // Post must exist
         if (_post.repostedPostId != 0) {
-            require(bytes(postParams.contentURI).length == 0, "REPOST_CANNOT_HAVE_CONTENT");
+            require(bytes(postParams.contentURI).length == 0, Errors.InvalidParameter());
         } else {
             _post.contentURI = postParams.contentURI;
         }

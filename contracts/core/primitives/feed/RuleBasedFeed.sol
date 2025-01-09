@@ -10,6 +10,7 @@ import {RuleProcessingParams, Rule, RuleChange, KeyValue} from "contracts/core/t
 import {EditPostParams, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -192,7 +193,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 (bool callNotReverted,) = encodeAndCall(
                     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -215,7 +216,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
     function _processPostCreationOnRootPost(
@@ -346,7 +347,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                 (bool callNotReverted,) = encodeAndCall(
                     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -369,7 +370,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
     function _processPostRemoval(
@@ -394,7 +395,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                         IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleCustomParams)
                     )
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -419,7 +420,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
     function _processPostRulesChanges(
@@ -444,7 +445,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
                         IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleCustomParams)
                     )
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -469,6 +470,6 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($feedRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 }

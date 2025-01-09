@@ -13,6 +13,7 @@ import {Events} from "contracts/core/types/Events.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract Feed is
     IFeed,
@@ -77,7 +78,7 @@ contract Feed is
         virtual
         override
     {
-        require(msg.sender == Core.$storage().posts[entityId].author);
+        require(msg.sender == Core.$storage().posts[entityId].author, Errors.InvalidMsgSender());
     }
 
     // Public user functions
@@ -89,7 +90,7 @@ contract Feed is
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
     ) external virtual override returns (uint256) {
-        require(msg.sender == postParams.author, "MSG_SENDER_NOT_AUTHOR");
+        require(msg.sender == postParams.author, Errors.InvalidMsgSender());
         (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         address source = _processSourceStamp(postId, customParams);
         _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
@@ -103,7 +104,7 @@ contract Feed is
             }
         }
         if (postId != rootPostId) {
-            require(postParams.ruleChanges.length == 0, "ONLY_ROOT_POSTS_CAN_HAVE_RULES");
+            require(postParams.ruleChanges.length == 0, Errors.CannotHaveRules());
             // This covers the Reply or Repost cases
             _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         } else {
@@ -141,7 +142,7 @@ contract Feed is
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
-        require(msg.sender == author, "MSG_SENDER_NOT_AUTHOR");
+        require(msg.sender == author, Errors.InvalidMsgSender());
 
         bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
@@ -186,7 +187,7 @@ contract Feed is
         RuleProcessingParams[] calldata feedRulesParams
     ) external virtual override {
         address author = Core.$storage().posts[postId].author;
-        require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), "MSG_SENDER_NOT_AUTHOR_NOR_HAS_ACCESS");
+        require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());
         Core._removePost(postId);
         _processPostRemoval(postId, customParams, feedRulesParams);
         address source = _processSourceStamp(postId, customParams);
@@ -215,7 +216,7 @@ contract Feed is
     // Getters
 
     function getPost(uint256 postId) external view override returns (Post memory) {
-        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
+        require(Core._postExists(postId), Errors.DoesNotExist());
         return Post({
             author: Core.$storage().posts[postId].author,
             authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
@@ -237,7 +238,7 @@ contract Feed is
     }
 
     function getPostAuthor(uint256 postId) external view override returns (address) {
-        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
+        require(Core._postExists(postId), Errors.DoesNotExist());
         return Core.$storage().posts[postId].author;
     }
 
@@ -250,7 +251,7 @@ contract Feed is
     }
 
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
-        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
+        require(Core._postExists(postId), Errors.DoesNotExist());
         address postAuthor = Core.$storage().posts[postId].author;
         return _getEntityExtraData(postAuthor, postId, key);
     }
@@ -260,12 +261,12 @@ contract Feed is
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {
-        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
+        require(Core._postExists(postId), Errors.DoesNotExist());
         return Core.$storage().posts[postId].postSequentialId;
     }
 
     function getAuthorPostSequentialId(uint256 postId) external view override returns (uint256) {
-        require(Core._postExists(postId), "POST_DOES_NOT_EXIST");
+        require(Core._postExists(postId), Errors.DoesNotExist());
         return Core.$storage().posts[postId].authorPostSequentialId;
     }
 

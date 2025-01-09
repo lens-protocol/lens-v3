@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 
 import {Rule} from "contracts/core/types/Types.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;
@@ -32,7 +33,7 @@ library RulesLib {
         if (providedConfigSalt == 0x00) {
             return bytes32(++rulesStorage.lastConfigSaltGenerated);
         } else {
-            require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt]);
+            require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt], Errors.InvalidConfigSalt());
             return providedConfigSalt;
         }
     }
@@ -46,7 +47,7 @@ library RulesLib {
         bool wasAlreadyConfigured = rulesStorage.isConfigured[ruleAddress][configSalt];
         rulesStorage.isConfigured[ruleAddress][configSalt] = true;
         (bool success,) = ruleAddress.safecall(encodedConfigureCall);
-        require(success);
+        require(success, Errors.ConfigureCallReverted());
         return wasAlreadyConfigured;
     }
 
@@ -57,8 +58,11 @@ library RulesLib {
         bytes32 configSalt,
         bytes4 ruleSelector
     ) internal {
-        require(rulesStorage.isConfigured[ruleAddress][configSalt]);
-        require(!_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt));
+        require(rulesStorage.isConfigured[ruleAddress][configSalt], Errors.RuleNotConfigured());
+        require(
+            !_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt),
+            Errors.RedundantStateChange()
+        );
         _addRuleSelectorToStorage(rulesStorage, ruleSelector, ruleAddress, configSalt, isRequired);
     }
 
@@ -69,7 +73,9 @@ library RulesLib {
         bytes32 configSalt,
         bytes4 ruleSelector
     ) internal {
-        require(_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt));
+        require(
+            _isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt), Errors.RedundantStateChange()
+        );
         _removeRuleSelectorFromStorage(rulesStorage, ruleSelector, ruleAddress, configSalt);
     }
 

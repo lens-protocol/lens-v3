@@ -8,6 +8,7 @@ import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract FollowersOnlyPostRule is IPostRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
@@ -52,7 +53,10 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
             }
         }
         IGraph(configuration.graph).isFollowing(address(this), msg.sender); // Verifies the provided address is a graph
-        require(configuration.repliesRestricted || configuration.repostsRestricted || configuration.quotesRestricted);
+        require(
+            configuration.repliesRestricted || configuration.repostsRestricted || configuration.quotesRestricted,
+            Errors.InvalidParameter()
+        );
         _configuration[msg.sender][configSalt][postId] = configuration;
     }
 
@@ -70,7 +74,9 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
             IGraph graph = IGraph(configuration.graph);
             address rootPostAuthor = feed.getPostAuthor(rootPostId);
             address newPostAuthor = feed.getPostAuthor(postId);
-            require(graph.isFollowing({followerAccount: newPostAuthor, targetAccount: rootPostAuthor}));
+            require(
+                graph.isFollowing({followerAccount: newPostAuthor, targetAccount: rootPostAuthor}), Errors.NotFollowing()
+            );
         }
     }
 
@@ -82,7 +88,7 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     // TODO: This function smells weird, we should reconsider going back to the processQuote/Reply/Repost selectors...

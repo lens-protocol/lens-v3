@@ -3,6 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {Membership} from "contracts/core/interfaces/IGroup.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 library GroupCore {
     // Storage
@@ -35,14 +36,14 @@ library GroupCore {
     function _grantMembership(address account) internal returns (uint256) {
         uint256 membershipId = ++$storage().lastMemberIdAssigned;
         $storage().numberOfMembers++;
-        require($storage().memberships[account].id == 0); // Must not be a member yet
+        require($storage().memberships[account].id == 0, Errors.RedundantStateChange()); // Must not be a member yet
         $storage().memberships[account] = Membership(membershipId, block.timestamp);
         return membershipId;
     }
 
     function _revokeMembership(address account) internal returns (uint256) {
         uint256 membershipId = $storage().memberships[account].id;
-        require(membershipId != 0); // Must be a member
+        require(membershipId != 0, Errors.RedundantStateChange()); // Must be a member
         $storage().numberOfMembers--;
         delete $storage().memberships[account];
         return membershipId;

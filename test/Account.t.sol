@@ -8,9 +8,8 @@ import {IAccount, AccountManagerPermissions} from "@extensions/account/IAccount.
 import {Account} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/Feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
-import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
-import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
+import {Errors} from "@core/types/Errors.sol";
 
 contract AccountTest is Test, BaseDeployments {
     address owner = makeAddr("OWNER");
@@ -135,19 +134,19 @@ contract AccountTest is Test, BaseDeployments {
 
     function testCannotAddAccountManager_Twice() public {
         vm.prank(owner);
-        vm.expectRevert("Account manager already exists");
+        vm.expectRevert(Errors.RedundantStateChange.selector);
         account.addAccountManager(manager, AccountManagerPermissions(true, true, true, true));
     }
 
     function testCannotAdd_Owner_AsAccountManager() public {
         vm.prank(owner);
-        vm.expectRevert("Cannot add owner as account manager");
+        vm.expectRevert(Errors.InvalidParameter.selector);
         account.addAccountManager(owner, AccountManagerPermissions(true, true, true, true));
     }
 
     function testCannotAdd_ZeroAddress_AsManagerTwiceOrWrongly() public {
         vm.prank(owner);
-        vm.expectRevert("Cannot add zero address as account manager");
+        vm.expectRevert(Errors.InvalidParameter.selector);
         account.addAccountManager(address(0), AccountManagerPermissions(true, true, true, true));
     }
 

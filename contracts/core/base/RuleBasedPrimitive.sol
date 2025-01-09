@@ -12,6 +12,7 @@ import {
     KeyValue
 } from "contracts/core/types/Types.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -203,7 +204,7 @@ abstract contract RuleBasedPrimitive {
                 return;
             }
         }
-        revert();
+        revert Errors.UnsupportedSelector();
     }
 
     function _beforeChangeRules(uint256 entityId, RuleChange[] calldata ruleChanges) internal virtual {
@@ -228,8 +229,8 @@ abstract contract RuleBasedPrimitive {
             bytes4 ruleSelector = selectorsToValidate[i];
             uint256 requiredRulesLength = rulesStorage._getRulesArray(ruleSelector, true).length;
             uint256 anyOfRulesLength = rulesStorage._getRulesArray(ruleSelector, false).length;
-            require(anyOfRulesLength != 1, "Cannot have exactly one single any-of rule");
-            require(requiredRulesLength + anyOfRulesLength <= RulesLib.MAX_AMOUNT_OF_RULES, "Amount of rules exceeded");
+            require(anyOfRulesLength != 1, Errors.SingleAnyOfRule());
+            require(requiredRulesLength + anyOfRulesLength <= RulesLib.MAX_AMOUNT_OF_RULES, Errors.LimitReached());
         }
     }
 

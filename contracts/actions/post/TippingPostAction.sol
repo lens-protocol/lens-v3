@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract TippingPostAction is BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;
@@ -41,7 +42,7 @@ contract TippingPostAction is BasePostAction, MetadataBased {
                 erc20Token = abi.decode(params[i].value, (address));
             }
         }
-        require(tipAmount > 0);
+        require(tipAmount > 0, Errors.InvalidParameter());
         address account = IFeed(feed).getPostAuthor(postId);
         IERC20(erc20Token).safeTransferFrom(originalMsgSender, account, tipAmount);
         return abi.encode(account);

@@ -31,6 +31,7 @@ import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
 import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 // TODO: Move this some place else or remove
 interface IOwnable {
@@ -180,8 +181,8 @@ contract LensFactory {
         IRoleBasedAccessControl feedAccessControl = _deployAccessControl(owner, admins);
 
         for (uint256 i = 0; i < feedRules.length; i++) {
-            require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, "ACCOUNT_BLOCKING_RULE WAS ALREADY PREPENDED");
-            require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, "GroupGatedRule was already prepended");
+            require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
+            require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
             modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(feedAccessControl));
         }
 
@@ -311,9 +312,9 @@ contract LensFactory {
         if (rule.configurationChanges.configure) {
             for (uint256 i = 0; i < rule.configurationChanges.ruleParams.length; i++) {
                 if (rule.configurationChanges.ruleParams[i].key == PARAM__ACCESS_CONTROL) {
-                    require(!found);
+                    require(!found, Errors.DuplicatedValue());
                     found = true;
-                    require(rule.configurationChanges.ruleParams[i].value.length == 0);
+                    require(rule.configurationChanges.ruleParams[i].value.length == 0, Errors.InvalidParameter());
                     rule.configurationChanges.ruleParams[i].value = abi.encode(accessControl);
                 }
             }
@@ -348,7 +349,7 @@ contract LensFactory {
             selectorChanges: selectorChanges
         });
         for (uint256 i = 0; i < rules.length; i++) {
-            require(rules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, "ACCOUNT_BLOCKING_RULE WAS ALREADY PREPENDED");
+            require(rules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
             modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
         }
         return modifiedRules;

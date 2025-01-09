@@ -8,6 +8,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract BanMemberGroupRule is IGroupRule, MetadataBased {
     using AccessControlLib for IAccessControl;
@@ -80,7 +81,7 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
         if (_isMemberBanned[msg.sender][configSalt][account]) {
             for (uint256 i = 0; i < ruleParams.length; i++) {
                 if (ruleParams[i].key == PARAM__BAN_MEMBER) {
-                    require(!abi.decode(ruleParams[i].value, (bool))); // Cannot ban while adding to the group.
+                    require(!abi.decode(ruleParams[i].value, (bool)), Errors.InvalidParameter()); // Cannot ban while adding to the group.
                     _isMemberBanned[msg.sender][configSalt][account] = false;
                     _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__UNBAN_MEMBER);
                     emit Lens_BanMemberGroupRule_MemberUnbanned(msg.sender, configSalt, account, originalMsgSender);
@@ -88,7 +89,7 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
                 }
             }
             // If member is banned and the param to unban was not passed, revert.
-            revert();
+            revert Errors.Banned();
         }
     }
 
@@ -107,7 +108,7 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
                     emit Lens_BanMemberGroupRule_MemberBanned(msg.sender, configSalt, account, originalMsgSender);
                 } else {
                     // Cannot unban while kicking from the group.
-                    require(!_isMemberBanned[msg.sender][configSalt][account]);
+                    require(!_isMemberBanned[msg.sender][configSalt][account], Errors.InvalidParameter());
                 }
                 return;
             }
@@ -120,7 +121,7 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(!_isMemberBanned[msg.sender][configSalt][account]);
+        require(!_isMemberBanned[msg.sender][configSalt][account], Errors.Banned());
     }
 
     function processLeaving(
@@ -129,6 +130,6 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

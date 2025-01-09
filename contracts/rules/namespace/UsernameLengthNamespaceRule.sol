@@ -8,6 +8,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
@@ -60,7 +61,8 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
         configuration.accessControl.verifyHasAccessFunction();
         require(
             configuration.lengthRestrictions.max == 0
-                || configuration.lengthRestrictions.min <= configuration.lengthRestrictions.max
+                || configuration.lengthRestrictions.min <= configuration.lengthRestrictions.max,
+            Errors.InvalidParameter()
         ); // Min length cannot be greater than max length
         _configuration[msg.sender][configSalt] = configuration;
     }
@@ -79,13 +81,13 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
             configuration.lengthRestrictions.min != 0
                 && !configuration.accessControl.hasAccess(originalMsgSender, PID__SKIP_MIN_LENGTH_RESTRICTION)
         ) {
-            require(usernameLength >= configuration.lengthRestrictions.min, "Username: too short");
+            require(usernameLength >= configuration.lengthRestrictions.min, Errors.InvalidParameter());
         }
         if (
             configuration.lengthRestrictions.max != 0
                 && !configuration.accessControl.hasAccess(originalMsgSender, PID__SKIP_MAX_LENGTH_RESTRICTION)
         ) {
-            require(usernameLength <= configuration.lengthRestrictions.max, "Username: too long");
+            require(usernameLength <= configuration.lengthRestrictions.max, Errors.InvalidParameter());
         }
     }
 
@@ -96,7 +98,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processAssigning(
@@ -107,7 +109,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processUnassigning(
@@ -118,7 +120,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {

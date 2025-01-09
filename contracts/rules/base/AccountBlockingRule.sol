@@ -8,6 +8,7 @@ import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
     event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target, uint256 timestamp);
@@ -32,13 +33,13 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
     {}
 
     function blockUser(address source, address target) external {
-        require(msg.sender == source, "Only the source can block a user");
-        require(source != target, "Cannot block self");
+        require(msg.sender == source, Errors.InvalidMsgSender());
+        require(source != target, Errors.Self());
         accountBlocks[source][target] = block.timestamp;
     }
 
     function unblockUser(address source, address target) external {
-        require(msg.sender == source, "Only the source can unblock a user");
+        require(msg.sender == source, Errors.InvalidMsgSender());
         accountBlocks[msg.sender][target] = 0;
     }
 
@@ -55,10 +56,10 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
             uint256 rootPostId = IFeed(msg.sender).getPost(postId).rootPostId;
             address rootAuthor = IFeed(msg.sender).getPostAuthor(rootPostId);
             if (_isBlocked({source: repliedToAuthor, blockTarget: author})) {
-                revert("User is blocked from replying to this user");
+                revert Errors.Blocked();
             }
             if (_isBlocked({source: rootAuthor, blockTarget: author})) {
-                revert("User is blocked from commenting on this author's posts");
+                revert Errors.Blocked();
             }
         }
     }
@@ -72,7 +73,7 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         KeyValue[] calldata /* ruleExecutionParams */
     ) external view {
         if (_isBlocked({source: accountToFollow, blockTarget: followerAccount})) {
-            revert("User is blocked from following this user");
+            revert Errors.Blocked();
         }
     }
 
@@ -93,7 +94,7 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processRemovePost(
@@ -102,7 +103,7 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processPostRuleChanges(
@@ -111,7 +112,7 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processUnfollow(
@@ -122,7 +123,7 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processFollowRuleChanges(
@@ -131,6 +132,6 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external pure {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

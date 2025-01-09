@@ -14,6 +14,7 @@ import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract Group is
     IGroup,
@@ -127,7 +128,7 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        require(msg.sender == account);
+        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._grantMembership(account);
         _processMemberJoining(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(membershipId, customParams);
@@ -139,7 +140,7 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        require(msg.sender == account);
+        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(membershipId, customParams);
@@ -158,19 +159,19 @@ contract Group is
 
     function getMembership(address account) external view override returns (Membership memory) {
         Membership memory membership = Core._getMembership(account);
-        require(membership.id != 0, "NOT_A_MEMBER");
+        require(membership.id != 0, Errors.DoesNotExist());
         return membership;
     }
 
     function getMembershipTimestamp(address account) external view override returns (uint256) {
         Membership memory membership = Core._getMembership(account);
-        require(membership.id != 0, "NOT_A_MEMBER");
+        require(membership.id != 0, Errors.DoesNotExist());
         return membership.timestamp;
     }
 
     function getMembershipId(address account) external view override returns (uint256) {
         uint256 membershipId = Core.$storage().memberships[account].id;
-        require(membershipId != 0, "NOT_A_MEMBER");
+        require(membershipId != 0, Errors.DoesNotExist());
         return membershipId;
     }
 

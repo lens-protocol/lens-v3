@@ -2,6 +2,7 @@
 pragma solidity ^0.8.26;
 
 import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract MetadataBased is IMetadataBased {
     struct MetadataURIStorage {
@@ -33,7 +34,7 @@ abstract contract MetadataBased is IMetadataBased {
     }
 
     function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal virtual {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _emitMetadataURISet(string memory /* metadataURI */ ) internal virtual;

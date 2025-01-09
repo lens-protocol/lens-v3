@@ -2,6 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
+import {Errors} from "contracts/core/types/Errors.sol";
+
 abstract contract Ownable {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -19,7 +21,7 @@ abstract contract Ownable {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == $ownableStorage().owner);
+        require(msg.sender == $ownableStorage().owner, Errors.InvalidMsgSender());
         _;
     }
 

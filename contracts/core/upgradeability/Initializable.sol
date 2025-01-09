@@ -2,6 +2,8 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
+import {Errors} from "contracts/core/types/Errors.sol";
+
 abstract contract Initializable {
     // Storage
 
@@ -19,7 +21,7 @@ abstract contract Initializable {
     }
 
     modifier initializer() {
-        require(!$initializableStorage().initialized, "ALREADY_INITIALIZED");
+        require(!$initializableStorage().initialized, Errors.AlreadyInitialized());
         $initializableStorage().initialized = true;
         _;
     }

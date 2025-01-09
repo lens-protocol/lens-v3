@@ -8,6 +8,7 @@ import {RulesStorage, RulesLib} from "contracts/core/libraries/RulesLib.sol";
 import {RuleChange, RuleProcessingParams, Rule, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -243,7 +244,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
                 (bool callNotReverted,) = encodeAndCall(
                     rule.ruleAddress, rule.configSalt, originalMsgSender, account, primitiveCustomParams, ruleParams
                 );
-                require(callNotReverted, "Some required rule failed");
+                require(callNotReverted, Errors.RequiredRuleReverted());
             }
         }
         // Check any-of rules (OR-combined rules)
@@ -266,6 +267,6 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($groupRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($groupRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 }
