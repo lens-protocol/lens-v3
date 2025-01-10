@@ -4,7 +4,8 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {IGroup} from "@core/interfaces/IGroup.sol";
+import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
+import {IGroup, Membership} from "@core/interfaces/IGroup.sol";
 import {Group, PID__ADD_MEMBER, PID__REMOVE_MEMBER} from "@core/primitives/group/Group.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
@@ -86,7 +87,7 @@ contract GroupTest is Test, BaseDeployments {
         assertTrue(group.isMember(newMember));
     }
 
-    function testCannot_AddMember_viaPID_noAccess(address newMember) public {
+    function test_CannotAddMember_viaPID_noAccess(address newMember) public {
         address accountWithoutPID = _getAccountWithoutPID(PID__ADD_MEMBER);
 
         vm.expectRevert(Errors.AccessDenied.selector);
@@ -109,6 +110,19 @@ contract GroupTest is Test, BaseDeployments {
             });
         }
         assertTrue(group.isMember(member));
+    }
+
+    // TODO: Add this to GroupHelpers or something
+    function _setGroupNotMember(address member) internal {
+        if (group.isMember(member)) {
+            vm.prank(groupOwner);
+            group.removeMember({
+                account: member,
+                customParams: _emptyKeyValueArray(),
+                ruleProcessingParams: _emptyRuleProcessingParamsArray()
+            });
+        }
+        assertFalse(group.isMember(member));
     }
 
     event Lens_Group_MemberRemoved(
@@ -140,7 +154,7 @@ contract GroupTest is Test, BaseDeployments {
         assertFalse(group.isMember(memberToRemove));
     }
 
-    function testCannot_removeMember_viaPID_noAccess(address memberToRemove) public {
+    function test_CannotRemoveMember_viaPID_noAccess(address memberToRemove) public {
         address accountWithoutPID = _getAccountWithoutPID(PID__REMOVE_MEMBER);
 
         _setGroupMember(memberToRemove);
@@ -211,34 +225,253 @@ contract GroupTest is Test, BaseDeployments {
         assertFalse(group.isMember(memberToLeave));
     }
 
-    // TODO: Additional test cases to implement:
-    /*
-    Membership Addition Validations:
-    - testCannot_AddMember_AlreadyMember
-    - testCannot_JoinGroup_AlreadyMember
-    - testCannot_AddMember_ZeroAddress
-    - testCannot_JoinGroup_ZeroAddress
-    - testCannot_JoinGroup_DifferentSender (when msg.sender != account param)
+    function test_CannotAddMemberIf_AlreadyMember(address member) public {
+        vm.assume(member != address(0));
 
-    Membership Removal Validations:
-    - testCannot_RemoveMember_NotMember
-    - testCannot_LeaveGroup_NotMember
-    - testCannot_RemoveMember_ZeroAddress
-    - testCannot_LeaveGroup_ZeroAddress
-    - testCannot_LeaveGroup_DifferentSender (when msg.sender != account param)
+        // First add the member
+        _setGroupMember(member);
 
-    Membership Status Checks:
-    - test_GetMembershipId_Success
-    - testCannot_GetMembershipId_NotMember
-    - test_GetMembershipTimestamp_Success
-    - testCannot_GetMembershipTimestamp_NotMember
-    - test_GetMembership_Success
-    - testCannot_GetMembership_NotMember
+        // Try to add the same member again
+        vm.prank(groupOwner);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        group.addMember({
+            account: member,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
 
-    Member Count Validations:
-    - test_NumberOfMembers_IncreasesOnAdd
-    - test_NumberOfMembers_DecreasesOnRemove
-    - test_NumberOfMembers_IncreasesOnJoin
-    - test_NumberOfMembers_DecreasesOnLeave
-    */
+    function test_CannotJoinGroupIf_AlreadyMember(address member) public {
+        vm.assume(member != address(0));
+
+        // First add the member
+        _setGroupMember(member);
+
+        // Try to join the group again
+        vm.prank(member);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        group.joinGroup({
+            account: member,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotAddMemberIf_ZeroAddress() public {
+        vm.prank(groupOwner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        group.addMember({
+            account: address(0),
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotJoinGroupIf_ZeroAddress() public {
+        vm.prank(groupOwner);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        group.joinGroup({
+            account: address(0),
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotJoinGroupIf_DifferentSender(address sender, address differentAccount) public {
+        vm.assume(sender != address(0));
+        vm.assume(differentAccount != address(0));
+        vm.assume(sender != differentAccount);
+
+        vm.prank(sender);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        group.joinGroup({
+            account: differentAccount,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotRemoveMemberIf_NotMember(address nonMember) public {
+        vm.assume(nonMember != address(0));
+        _setGroupNotMember(nonMember);
+
+        vm.prank(groupOwner);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        group.removeMember({
+            account: nonMember,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotLeaveGroupIf_NotMember(address nonMember) public {
+        vm.assume(nonMember != address(0));
+        _setGroupNotMember(nonMember);
+
+        vm.prank(nonMember);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        group.leaveGroup({
+            account: nonMember,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotRemoveMemberIf_ZeroAddress() public {
+        vm.prank(groupOwner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        group.removeMember({
+            account: address(0),
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotLeaveGroupIf_ZeroAddress() public {
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        group.leaveGroup(address(0), new KeyValue[](0), new RuleProcessingParams[](0));
+    }
+
+    function test_CannotLeaveGroupIf_DifferentSender(address sender, address differentAccount) public {
+        vm.assume(sender != address(0));
+        vm.assume(differentAccount != address(0));
+        vm.assume(sender != differentAccount);
+
+        // Add the member first
+        _setGroupMember(differentAccount);
+
+        vm.prank(sender);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        group.leaveGroup({
+            account: differentAccount,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_GetMembershipId_Success(address member) public {
+        vm.assume(member != address(0));
+        uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
+
+        _setGroupMember(member);
+
+        uint256 membershipId = group.getMembershipId(member);
+        assertTrue(membershipId != 0);
+        assertEq(membershipId, expectedMembershipId);
+    }
+
+    function test_GetMembershipId_NotMember(address nonMember) public {
+        vm.assume(nonMember != address(0));
+
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        group.getMembershipId(nonMember);
+    }
+
+    function test_GetMembershipTimestamp_Success(address member) public {
+        vm.assume(member != address(0));
+
+        uint256 expectedTimestamp = block.timestamp;
+
+        _setGroupMember(member);
+
+        uint256 membershipTimestamp = group.getMembershipTimestamp(member);
+
+        // Assert timestamp is after or equal to the timestamp before adding
+        assertGe(membershipTimestamp, expectedTimestamp);
+    }
+
+    function test_CannotGetMembershipTimestampIf_NotMember(address nonMember) public {
+        vm.assume(nonMember != address(0));
+        _setGroupNotMember(nonMember);
+
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        group.getMembershipTimestamp(nonMember);
+    }
+
+    function test_NumberOfMembers_IncreasesOnAdd(uint8 numberOfMembers) public {
+        numberOfMembers = uint8(bound(numberOfMembers, 1, 10));
+        uint256 startingNumberOfMembers = group.getNumberOfMembers();
+
+        for (uint256 i = 0; i < numberOfMembers; i++) {
+            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            assertEq(group.getNumberOfMembers(), startingNumberOfMembers + i + 1);
+        }
+    }
+
+    function test_NumberOfMembers_DecreasesOnRemove() public {
+        for (uint256 i = 0; i < 10; i++) {
+            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+        }
+
+        uint256 startingNumberOfMembers = group.getNumberOfMembers();
+
+        vm.prank(groupOwner);
+        group.removeMember({
+            account: makeAddr("MEMBER_0"),
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertEq(group.getNumberOfMembers(), startingNumberOfMembers - 1);
+    }
+
+    function test_GetMembership_Success(address member) public {
+        vm.assume(member != address(0));
+
+        uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
+        uint256 expectedTimestamp = block.timestamp;
+
+        _setGroupMember(member);
+
+        Membership memory membership = group.getMembership(member);
+
+        assertEq(membership.id, expectedMembershipId);
+        assertEq(membership.timestamp, expectedTimestamp);
+    }
+
+    function test_CannotGetMembershipIf_NotMember(address nonMember) public {
+        vm.assume(nonMember != address(0));
+        _setGroupNotMember(nonMember);
+
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        group.getMembership(nonMember);
+    }
+
+    function test_NumberOfMembers_IncreasesOnJoin() public {
+        for (uint256 i = 0; i < 10; i++) {
+            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+        }
+
+        uint256 memberCountBefore = group.getNumberOfMembers();
+
+        address member = makeAddr("ANOTHER_MEMBER");
+
+        vm.prank(member);
+        group.joinGroup({
+            account: member,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        uint256 memberCountAfter = group.getNumberOfMembers();
+        assertEq(memberCountAfter, memberCountBefore + 1);
+    }
+
+    function test_NumberOfMembers_DecreasesOnLeave(address member) public {
+        for (uint256 i = 0; i < 10; i++) {
+            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+        }
+
+        uint256 memberCountBefore = group.getNumberOfMembers();
+
+        vm.prank(makeAddr(string.concat("MEMBER_1")));
+        group.leaveGroup({
+            account: makeAddr(string.concat("MEMBER_1")),
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        uint256 memberCountAfter = group.getNumberOfMembers();
+        assertEq(memberCountAfter, memberCountBefore - 1);
+    }
 }
