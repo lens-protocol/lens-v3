@@ -84,11 +84,11 @@ contract Feed is
     // Public user functions
 
     function createPost(
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata rootPostRulesParams,
-        RuleProcessingParams[] calldata quotedPostRulesParams
+        CreatePostParams memory postParams,
+        KeyValue[] memory customParams,
+        RuleProcessingParams[] memory feedRulesParams,
+        RuleProcessingParams[] memory rootPostRulesParams,
+        RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
         (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
@@ -98,46 +98,46 @@ contract Feed is
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
             // TODO: Maybe quotes shouldn't be limited by rules... Just a brave thought. Like quotations in real life.
-            // uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
-            // if (rootOfQuotedPost != rootPostId) {
-            //     _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
-            // }
+            uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
+            if (rootOfQuotedPost != rootPostId) {
+                _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            }
         }
         if (postId != rootPostId) {
             require(postParams.ruleChanges.length == 0, Errors.CannotHaveRules());
             // This covers the Reply or Repost cases
-            // _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
+            _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         } else {
             _addPostRulesAtCreation(postId, postParams, feedRulesParams);
         }
-        // emit Lens_Feed_PostCreated(
-        //     postId,
-        //     postParams.author,
-        //     authorPostSequentialId,
-        //     rootPostId,
-        //     postParams,
-        //     customParams,
-        //     feedRulesParams,
-        //     rootPostRulesParams,
-        //     quotedPostRulesParams,
-        //     source
-        // );
-        // for (uint256 i = 0; i < postParams.extraData.length; i++) {
-        //     _setEntityExtraData(postId, postParams.extraData[i]);
-        //     emit Lens_Feed_Post_ExtraDataAdded(
-        //         postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-        //     );
-        // }
+        emit Lens_Feed_PostCreated(
+            postId,
+            postParams.author,
+            authorPostSequentialId,
+            rootPostId,
+            postParams,
+            customParams,
+            feedRulesParams,
+            rootPostRulesParams,
+            quotedPostRulesParams,
+            source
+        );
+        for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            _setEntityExtraData(postId, postParams.extraData[i]);
+            emit Lens_Feed_Post_ExtraDataAdded(
+                postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
+            );
+        }
         return postId;
     }
 
     function editPost(
         uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata rootPostRulesParams,
-        RuleProcessingParams[] calldata quotedPostRulesParams
+        EditPostParams memory postParams,
+        KeyValue[] memory customParams,
+        RuleProcessingParams[] memory feedRulesParams,
+        RuleProcessingParams[] memory rootPostRulesParams,
+        RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
@@ -165,18 +165,18 @@ contract Feed is
             storeSource: true,
             lastUpdatedSourceType: true
         });
-        // emit Lens_Feed_PostEdited(
-        //     postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
-        // );
+        emit Lens_Feed_PostEdited(
+            postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
+        );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
             if (wereExtraDataValuesSet[i]) {
-                // emit Lens_Feed_Post_ExtraDataUpdated(
-                //     postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-                // );
+                emit Lens_Feed_Post_ExtraDataUpdated(
+                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
+                );
             } else {
-                // emit Lens_Feed_Post_ExtraDataAdded(
-                //     postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-                // );
+                emit Lens_Feed_Post_ExtraDataAdded(
+                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
+                );
             }
         }
     }
