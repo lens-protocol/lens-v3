@@ -86,114 +86,144 @@ contract LensFactory {
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
     }
 
-    // // TODO: This function belongs to an App probably.
-    // function createAccountWithUsernameFree(
-    //     string calldata metadataURI,
-    //     address owner,
-    //     address[] calldata accountManagers,
-    //     AccountManagerPermissions[] calldata accountManagersPermissions,
-    //     address namespacePrimitiveAddress,
-    //     string calldata username,
-    //     SourceStamp calldata accountCreationSourceStamp,
-    //     KeyValue[] calldata createUsernameCustomParams,
-    //     RuleProcessingParams[] calldata createUsernameRuleProcessingParams,
-    //     KeyValue[] calldata assignUsernameCustomParams,
-    //     RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
-    //     RuleProcessingParams[] calldata assignRuleProcessingParams,
-    //     KeyValue[] calldata accountExtraData,
-    //     KeyValue[] calldata usernameExtraData
-    // ) external returns (address) {
-    //     address account = ACCOUNT_FACTORY.deployAccount(
-    //         address(this),
-    //         metadataURI,
-    //         accountManagers,
-    //         accountManagersPermissions,
-    //         accountCreationSourceStamp,
-    //         accountExtraData
-    //     );
-    //     INamespace namespacePrimitive = INamespace(namespacePrimitiveAddress);
-    //     bytes memory txData = abi.encodeCall(
-    //         namespacePrimitive.createUsername,
-    //         (account, username, createUsernameCustomParams, createUsernameRuleProcessingParams, usernameExtraData)
-    //     );
-    //     IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
-    //     txData = abi.encodeCall(
-    //         namespacePrimitive.assignUsername,
-    //         (
-    //             account,
-    //             username,
-    //             assignUsernameCustomParams,
-    //             unassignAccountRuleProcessingParams,
-    //             new RuleProcessingParams[](0),
-    //             assignRuleProcessingParams
-    //         )
-    //     );
-    //     IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
-    //     IOwnable(account).transferOwnership(owner);
-    //     return account;
-    // }
+    struct CreateAccountParams {
+        string metadataURI;
+        address owner;
+        address[] accountManagers;
+        AccountManagerPermissions[] accountManagersPermissions;
+        SourceStamp accountCreationSourceStamp;
+        KeyValue[] accountExtraData;
+    }
 
-    // function createGroupWithFeed(
-    //     address owner,
-    //     address[] calldata admins,
-    //     string calldata groupMetadataURI,
-    //     RuleChange[] calldata groupRules,
-    //     KeyValue[] calldata groupExtraData,
-    //     string calldata feedMetadataURI,
-    //     RuleChange[] calldata feedRules,
-    //     KeyValue[] calldata feedExtraData
-    // ) external returns (address, address) {
-    //     IRoleBasedAccessControl groupAccessControl = _deployAccessControl(owner, admins);
+    struct CreateUsernameParams {
+        string username;
+        KeyValue[] createUsernameCustomParams;
+        RuleProcessingParams[] createUsernameRuleProcessingParams;
+        KeyValue[] assignUsernameCustomParams;
+        RuleProcessingParams[] unassignAccountRuleProcessingParams;
+        RuleProcessingParams[] assignRuleProcessingParams;
+        KeyValue[] usernameExtraData;
+    }
 
-    //     address group = GROUP_FACTORY.deployGroup(
-    //         groupMetadataURI,
-    //         TEMPORARY_ACCESS_CONTROL,
-    //         owner,
-    //         _injectRuleAccessControl(groupRules, address(groupAccessControl)),
-    //         groupExtraData
-    //     );
+    // TODO: This function belongs to an App probably.
+    function createAccountWithUsernameFree(
+        address namespacePrimitiveAddress,
+        CreateAccountParams calldata accountParams,
+        CreateUsernameParams calldata usernameParams
+    ) external returns (address) {
+        address account = ACCOUNT_FACTORY.deployAccount(
+            address(this),
+            accountParams.metadataURI,
+            accountParams.accountManagers,
+            accountParams.accountManagersPermissions,
+            accountParams.accountCreationSourceStamp,
+            accountParams.accountExtraData
+        );
+        INamespace namespacePrimitive = INamespace(namespacePrimitiveAddress);
+        bytes memory txData = abi.encodeCall(
+            namespacePrimitive.createUsername,
+            (
+                account,
+                usernameParams.username,
+                usernameParams.createUsernameCustomParams,
+                usernameParams.createUsernameRuleProcessingParams,
+                usernameParams.usernameExtraData
+            )
+        );
+        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
+        txData = abi.encodeCall(
+            namespacePrimitive.assignUsername,
+            (
+                account,
+                usernameParams.username,
+                usernameParams.assignUsernameCustomParams,
+                usernameParams.unassignAccountRuleProcessingParams,
+                new RuleProcessingParams[](0),
+                usernameParams.assignRuleProcessingParams
+            )
+        );
+        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
+        IOwnable(account).transferOwnership(accountParams.owner);
+        return account;
+    }
 
-    //     RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
+    struct CreateGroupWithFeedParams {
+        address group;
+        IRoleBasedAccessControl groupAccessControl;
+        IRoleBasedAccessControl feedAccessControl;
+        RuleChange[] modifiedFeedRules;
+        KeyValue[] feedExtraData;
+    }
 
-    //     RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
-    //     // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
-    //     selectorChanges[0] =
-    //         RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
+    function createGroupWithFeed(
+        address owner,
+        address[] memory admins,
+        string memory groupMetadataURI,
+        RuleChange[] memory groupRules,
+        KeyValue[] memory groupExtraData,
+        string memory feedMetadataURI,
+        RuleChange[] memory feedRules,
+        KeyValue[] memory feedExtraData
+    ) external returns (address, address) {
+        CreateGroupWithFeedParams memory s;
+        s.feedExtraData = feedExtraData;
+        s.feedAccessControl = _deployAccessControl(owner, admins);
 
-    //     modifiedFeedRules[0] = RuleChange({
-    //         ruleAddress: ACCOUNT_BLOCKING_RULE,
-    //         configSalt: bytes32(0),
-    //         configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-    //         selectorChanges: selectorChanges
-    //     });
+        {
+            s.groupAccessControl = _deployAccessControl(owner, admins);
 
-    //     KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
-    //     groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(group)});
+            s.group = GROUP_FACTORY.deployGroup(
+                groupMetadataURI,
+                TEMPORARY_ACCESS_CONTROL,
+                owner,
+                _injectRuleAccessControl(groupRules, address(s.groupAccessControl)),
+                groupExtraData
+            );
+        }
 
-    //     modifiedFeedRules[1] = RuleChange({
-    //         ruleAddress: GROUP_GATED_FEED_RULE,
-    //         configSalt: bytes32(0),
-    //         configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
-    //         selectorChanges: selectorChanges
-    //     });
+        s.modifiedFeedRules = new RuleChange[](feedRules.length + 2);
 
-    //     IRoleBasedAccessControl feedAccessControl = _deployAccessControl(owner, admins);
+        {
+            RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+            // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
+            selectorChanges[0] =
+                RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
 
-    //     for (uint256 i = 0; i < feedRules.length; i++) {
-    //         require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, "ACCOUNT_BLOCKING_RULE WAS ALREADY PREPENDED");
-    //         require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, "GroupGatedRule was already prepended");
-    //         modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(feedAccessControl));
-    //     }
+            s.modifiedFeedRules[0] = RuleChange({
+                ruleAddress: ACCOUNT_BLOCKING_RULE,
+                configSalt: bytes32(0),
+                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+                selectorChanges: selectorChanges
+            });
 
-    //     address feed =
-    //         FEED_FACTORY.deployFeed(feedMetadataURI, feedAccessControl, owner, modifiedFeedRules, feedExtraData);
+            KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
+            groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(s.group)});
 
-    //     KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
-    //     groupExtraDataWithFeed[0] = KeyValue({key: DATA__GROUP_LINKED_FEED, value: abi.encode(feed)});
-    //     IGroup(group).setExtraData(groupExtraDataWithFeed);
-    //     AccessControlled(group).setAccessControl(groupAccessControl);
-    //     return (group, feed);
-    // }
+            s.modifiedFeedRules[1] = RuleChange({
+                ruleAddress: GROUP_GATED_FEED_RULE,
+                configSalt: bytes32(0),
+                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
+                selectorChanges: selectorChanges
+            });
+        }
+
+        {
+            for (uint256 i = 0; i < feedRules.length; i++) {
+                require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, "ACCOUNT_BLOCKING_RULE WAS ALREADY PREPENDED");
+                require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, "GroupGatedRule was already prepended");
+                s.modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(s.feedAccessControl));
+            }
+        }
+
+        address feed =
+            FEED_FACTORY.deployFeed(feedMetadataURI, s.feedAccessControl, owner, s.modifiedFeedRules, s.feedExtraData);
+
+        KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
+        groupExtraDataWithFeed[0] = KeyValue({key: DATA__GROUP_LINKED_FEED, value: abi.encode(feed)});
+        IGroup(s.group).setExtraData(groupExtraDataWithFeed);
+        AccessControlled(s.group).setAccessControl(s.groupAccessControl);
+        return (s.group, feed);
+    }
 
     function deployAccount(
         string calldata metadataURI,
@@ -321,7 +351,7 @@ contract LensFactory {
         return rule;
     }
 
-    function _injectRuleAccessControl(RuleChange[] calldata rules, address accessControl)
+    function _injectRuleAccessControl(RuleChange[] memory rules, address accessControl)
         internal
         pure
         returns (RuleChange[] memory)
@@ -333,7 +363,7 @@ contract LensFactory {
         return modifiedRules;
     }
 
-    function _prepareRules(RuleChange[] calldata rules, bytes4 ruleSelector, address accessControl)
+    function _prepareRules(RuleChange[] memory rules, bytes4 ruleSelector, address accessControl)
         internal
         view
         returns (RuleChange[] memory)
