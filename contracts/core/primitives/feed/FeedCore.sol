@@ -42,7 +42,7 @@ library FeedCore {
         return uint256(keccak256(abi.encode("evm:", block.chainid, address(this), author, authorPostSequentialId)));
     }
 
-    function _createPost(CreatePostParams calldata postParams) internal returns (uint256, uint256, uint256) {
+    function _createPost(CreatePostParams memory postParams) internal returns (uint256, uint256, uint256) {
         uint256 postSequentialId = ++$storage().postCount;
         uint256 authorPostSequentialId = ++$storage().authorPostCount[postParams.author];
         uint256 postId = _generatePostId(postParams.author, authorPostSequentialId);

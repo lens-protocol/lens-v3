@@ -69,11 +69,11 @@ contract Feed is
         _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 
-    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata /* ruleChanges */ )
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory /* ruleChanges */ )
         internal
         virtual
         override
@@ -84,11 +84,11 @@ contract Feed is
     // Public user functions
 
     function createPost(
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata rootPostRulesParams,
-        RuleProcessingParams[] calldata quotedPostRulesParams
+        CreatePostParams memory postParams,
+        KeyValue[] memory customParams,
+        RuleProcessingParams[] memory feedRulesParams,
+        RuleProcessingParams[] memory rootPostRulesParams,
+        RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
         (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
@@ -133,11 +133,11 @@ contract Feed is
 
     function editPost(
         uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata feedRulesParams,
-        RuleProcessingParams[] calldata rootPostRulesParams,
-        RuleProcessingParams[] calldata quotedPostRulesParams
+        EditPostParams memory postParams,
+        KeyValue[] memory customParams,
+        RuleProcessingParams[] memory feedRulesParams,
+        RuleProcessingParams[] memory rootPostRulesParams,
+        RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override {
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
