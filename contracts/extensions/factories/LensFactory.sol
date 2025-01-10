@@ -52,6 +52,25 @@ bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92
 /// @custom:keccak lens.param.accessControl
 bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
+struct CreateAccountParams {
+    string metadataURI;
+    address owner;
+    address[] accountManagers;
+    AccountManagerPermissions[] accountManagersPermissions;
+    SourceStamp accountCreationSourceStamp;
+    KeyValue[] accountExtraData;
+}
+
+struct CreateUsernameParams {
+    string username;
+    KeyValue[] createUsernameCustomParams;
+    RuleProcessingParams[] createUsernameRuleProcessingParams;
+    KeyValue[] assignUsernameCustomParams;
+    RuleProcessingParams[] unassignAccountRuleProcessingParams;
+    RuleProcessingParams[] assignRuleProcessingParams;
+    KeyValue[] usernameExtraData;
+}
+
 contract LensFactory {
     AccessControlFactory internal immutable ACCESS_CONTROL_FACTORY;
     AccountFactory internal immutable ACCOUNT_FACTORY;
@@ -85,25 +104,6 @@ contract LensFactory {
         TEMPORARY_ACCESS_CONTROL = new PermissionlessAccessControl();
         ACCOUNT_BLOCKING_RULE = accountBlockingRule;
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
-    }
-
-    struct CreateAccountParams {
-        string metadataURI;
-        address owner;
-        address[] accountManagers;
-        AccountManagerPermissions[] accountManagersPermissions;
-        SourceStamp accountCreationSourceStamp;
-        KeyValue[] accountExtraData;
-    }
-
-    struct CreateUsernameParams {
-        string username;
-        KeyValue[] createUsernameCustomParams;
-        RuleProcessingParams[] createUsernameRuleProcessingParams;
-        KeyValue[] assignUsernameCustomParams;
-        RuleProcessingParams[] unassignAccountRuleProcessingParams;
-        RuleProcessingParams[] assignRuleProcessingParams;
-        KeyValue[] usernameExtraData;
     }
 
     // TODO: This function belongs to an App probably.
