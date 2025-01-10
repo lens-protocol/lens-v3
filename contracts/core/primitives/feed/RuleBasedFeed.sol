@@ -135,121 +135,132 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     // Internal
 
     function _encodeAndCallProcessCreatePostOnFeed(
-        address rule,
-        bytes32 configSalt,
-        uint256, /* rootPostId */
-        uint256 postId,
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessPostCreationParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
-                IFeedRule.processCreatePost, (configSalt, postId, postParams, primitiveCustomParams, ruleCustomParams)
+                IFeedRule.processCreatePost,
+                (
+                    rule.configSalt,
+                    processParams.postId,
+                    processParams.postParams,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
 
     function _encodeAndCallProcessCreatePostOnRootPost(
-        address rule,
-        bytes32 configSalt,
-        uint256 rootPostId,
-        uint256 postId,
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessPostCreationParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IPostRule.processCreatePost,
-                (configSalt, rootPostId, postId, postParams, primitiveCustomParams, ruleCustomParams)
+                (
+                    rule.configSalt,
+                    processParams.rootPostId,
+                    processParams.postId,
+                    processParams.postParams,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
 
+    struct ProcessPostCreationParams {
+        bytes4 ruleSelector;
+        uint256 rootPostId;
+        uint256 postId;
+        CreatePostParams postParams;
+        KeyValue[] primitiveCustomParams;
+        RuleProcessingParams[] rulesProcessingParams;
+    }
+
     function _processPostCreation(
-        function(address,bytes32,uint256,uint256,CreatePostParams calldata,KeyValue[] calldata,KeyValue[] memory) internal returns (bool, bytes memory)
+        function(Rule memory,ProcessPostCreationParams memory,KeyValue[] memory) internal returns (bool, bytes memory)
             encodeAndCall,
-        bytes4 ruleSelector,
-        uint256 rootPostId,
-        uint256 postId,
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata rulesProcessingParams
+        ProcessPostCreationParams memory processParams
     ) internal {
-        RulesStorage storage _rulesStorage = rootPostId == 0 ? $feedRulesStorage() : $postRulesStorage(rootPostId);
+        RulesStorage storage _rulesStorage =
+            processParams.rootPostId == 0 ? $feedRulesStorage() : $postRulesStorage(processParams.rootPostId);
         // Check required rules (AND-combined rules)
-        for (uint256 i = 0; i < _rulesStorage.requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = _rulesStorage.requiredRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+        for (uint256 i = 0; i < _rulesStorage.requiredRules[processParams.ruleSelector].length; i++) {
+            Rule memory rule = _rulesStorage.requiredRules[processParams.ruleSelector][i];
+            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
+                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
+                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
                 }
-                // (bool callNotReverted,) = encodeAndCall(
-                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                // );
-                // require(callNotReverted, "Some required rule failed");
+                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
+                require(callNotReverted, "Some required rule failed");
             }
         }
         // Check any-of rules (OR-combined rules)
-        for (uint256 i = 0; i < _rulesStorage.anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = _rulesStorage.anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+        for (uint256 i = 0; i < _rulesStorage.anyOfRules[processParams.ruleSelector].length; i++) {
+            Rule memory rule = _rulesStorage.anyOfRules[processParams.ruleSelector][i];
+            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
+                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
+                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
                 }
-                // (bool callNotReverted,) = encodeAndCall(
-                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                // );
-                // if (callNotReverted) {
-                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                // }
+                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
+                if (callNotReverted) {
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[processParams.ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostCreationOnRootPost(
         uint256 rootPostId,
         uint256 postId,
         CreatePostParams calldata postParams,
-        KeyValue[] calldata customParams,
+        KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata postRulesParams
     ) internal {
         _processPostCreation(
             _encodeAndCallProcessCreatePostOnRootPost,
-            IPostRule.processCreatePost.selector,
-            rootPostId,
-            postId,
-            postParams,
-            customParams,
-            postRulesParams
+            ProcessPostCreationParams({
+                ruleSelector: IPostRule.processCreatePost.selector,
+                rootPostId: rootPostId,
+                postId: postId,
+                postParams: postParams,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: postRulesParams
+            })
         );
     }
 
     function _processPostCreationOnFeed(
         uint256 postId,
         CreatePostParams calldata postParams,
-        KeyValue[] calldata customParams,
+        KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) internal {
         _processPostCreation(
             _encodeAndCallProcessCreatePostOnFeed,
-            IFeedRule.processCreatePost.selector,
-            0,
-            postId,
-            postParams,
-            customParams,
-            feedRulesParams
+            ProcessPostCreationParams({
+                ruleSelector: IFeedRule.processCreatePost.selector,
+                rootPostId: 0,
+                postId: postId,
+                postParams: postParams,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: feedRulesParams
+            })
         );
     }
 
@@ -257,119 +268,130 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         uint256 rootPostId,
         uint256 postId,
         EditPostParams calldata postParams,
-        KeyValue[] calldata customParams,
+        KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata postRulesParams
     ) internal {
         _processPostEditing(
             _encodeAndCallProcessEditPostOnRootPost,
-            IPostRule.processEditPost.selector,
-            rootPostId,
-            postId,
-            postParams,
-            customParams,
-            postRulesParams
+            ProcessPostEditingParams({
+                ruleSelector: IPostRule.processEditPost.selector,
+                rootPostId: rootPostId,
+                postId: postId,
+                postParams: postParams,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: postRulesParams
+            })
         );
     }
 
     function _processPostEditingOnFeed(
         uint256 postId,
         EditPostParams calldata postParams,
-        KeyValue[] calldata customParams,
+        KeyValue[] calldata primitiveCustomParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) internal {
         _processPostEditing(
             _encodeAndCallProcessEditPostOnFeed,
-            IFeedRule.processEditPost.selector,
-            0,
-            postId,
-            postParams,
-            customParams,
-            feedRulesParams
+            ProcessPostEditingParams({
+                ruleSelector: IFeedRule.processEditPost.selector,
+                rootPostId: 0,
+                postId: postId,
+                postParams: postParams,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: feedRulesParams
+            })
         );
     }
 
     function _encodeAndCallProcessEditPostOnFeed(
-        address rule,
-        bytes32 configSalt,
-        uint256, /* rootPostId */
-        uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessPostEditingParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
-                IFeedRule.processEditPost, (configSalt, postId, postParams, primitiveCustomParams, ruleCustomParams)
+                IFeedRule.processEditPost,
+                (
+                    rule.configSalt,
+                    processParams.postId,
+                    processParams.postParams,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
 
     function _encodeAndCallProcessEditPostOnRootPost(
-        address rule,
-        bytes32 configSalt,
-        uint256 rootPostId,
-        uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
+        Rule memory rule,
+        ProcessPostEditingParams memory processParams,
         KeyValue[] memory ruleCustomParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IPostRule.processEditPost,
-                (configSalt, rootPostId, postId, postParams, primitiveCustomParams, ruleCustomParams)
+                (
+                    rule.configSalt,
+                    processParams.rootPostId,
+                    processParams.postId,
+                    processParams.postParams,
+                    processParams.primitiveCustomParams,
+                    ruleCustomParams
+                )
             )
         );
     }
 
+    struct ProcessPostEditingParams {
+        bytes4 ruleSelector;
+        uint256 rootPostId;
+        uint256 postId;
+        EditPostParams postParams;
+        KeyValue[] primitiveCustomParams;
+        RuleProcessingParams[] rulesProcessingParams;
+    }
+
     function _processPostEditing(
-        function(address,bytes32,uint256,uint256,EditPostParams calldata,KeyValue[] calldata,KeyValue[] memory) internal returns (bool, bytes memory)
+        function(Rule memory,ProcessPostEditingParams memory,KeyValue[] memory) internal returns (bool,bytes memory)
             encodeAndCall,
-        bytes4 ruleSelector,
-        uint256 rootPostId,
-        uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata rulesProcessingParams
+        ProcessPostEditingParams memory processParams
     ) internal {
-        RulesStorage storage _rulesStorage = rootPostId == 0 ? $feedRulesStorage() : $postRulesStorage(rootPostId);
+        RulesStorage storage _rulesStorage =
+            processParams.rootPostId == 0 ? $feedRulesStorage() : $postRulesStorage(processParams.rootPostId);
         // Check required rules (AND-combined rules)
-        for (uint256 i = 0; i < _rulesStorage.requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = _rulesStorage.requiredRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+        for (uint256 i = 0; i < _rulesStorage.requiredRules[processParams.ruleSelector].length; i++) {
+            Rule memory rule = _rulesStorage.requiredRules[processParams.ruleSelector][i];
+            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
+                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
+                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
                 }
-                // (bool callNotReverted,) = encodeAndCall(
-                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                // );
-                // require(callNotReverted, "Some required rule failed");
+                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
+                require(callNotReverted, "Some required rule failed");
             }
         }
         // Check any-of rules (OR-combined rules)
-        for (uint256 i = 0; i < _rulesStorage.anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = _rulesStorage.anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
+        for (uint256 i = 0; i < _rulesStorage.anyOfRules[processParams.ruleSelector].length; i++) {
+            Rule memory rule = _rulesStorage.anyOfRules[processParams.ruleSelector][i];
+            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
                 KeyValue[] memory ruleCustomParams = new KeyValue[](0);
                 if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
+                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
+                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
                 ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
+                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
                 }
-                // (bool callNotReverted,) = encodeAndCall(
-                //     rule.ruleAddress, rule.configSalt, rootPostId, postId, postParams, customParams, ruleCustomParams
-                // );
-                // if (callNotReverted) {
-                //     return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                // }
+                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
+                if (callNotReverted) {
+                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
+                }
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require(_rulesStorage.anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require(_rulesStorage.anyOfRules[processParams.ruleSelector].length == 0, "All of the any-of rules failed");
     }
 
     function _processPostRemoval(
