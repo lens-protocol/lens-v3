@@ -126,8 +126,8 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     function _addPostRulesAtCreation(
         uint256 postId,
-        CreatePostParams calldata postParams,
-        RuleProcessingParams[] calldata feedRulesParams
+        CreatePostParams memory postParams,
+        RuleProcessingParams[] memory feedRulesParams
     ) internal {
         _changeEntityRules($postRulesStorage(postId), postId, postParams.ruleChanges, feedRulesParams);
     }
@@ -228,9 +228,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function _processPostCreationOnRootPost(
         uint256 rootPostId,
         uint256 postId,
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata postRulesParams
+        CreatePostParams memory postParams,
+        KeyValue[] memory primitiveCustomParams,
+        RuleProcessingParams[] memory postRulesParams
     ) internal {
         _processPostCreation(
             _encodeAndCallProcessCreatePostOnRootPost,
@@ -247,9 +247,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     function _processPostCreationOnFeed(
         uint256 postId,
-        CreatePostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata feedRulesParams
+        CreatePostParams memory postParams,
+        KeyValue[] memory primitiveCustomParams,
+        RuleProcessingParams[] memory feedRulesParams
     ) internal {
         _processPostCreation(
             _encodeAndCallProcessCreatePostOnFeed,
@@ -267,9 +267,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function _processPostEditingOnRootPost(
         uint256 rootPostId,
         uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata postRulesParams
+        EditPostParams memory postParams,
+        KeyValue[] memory primitiveCustomParams,
+        RuleProcessingParams[] memory postRulesParams
     ) internal {
         _processPostEditing(
             _encodeAndCallProcessEditPostOnRootPost,
@@ -286,9 +286,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     function _processPostEditingOnFeed(
         uint256 postId,
-        EditPostParams calldata postParams,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata feedRulesParams
+        EditPostParams memory postParams,
+        KeyValue[] memory primitiveCustomParams,
+        RuleProcessingParams[] memory feedRulesParams
     ) internal {
         _processPostEditing(
             _encodeAndCallProcessEditPostOnFeed,
