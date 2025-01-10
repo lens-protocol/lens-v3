@@ -6,6 +6,10 @@ import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 
 library MockAccessControlLib {
+    function testMockAccessControlLib() public {
+        // Prevents being counted in Foundry Coverage
+    }
+
     function mockAccess(
         address accessControlledContract,
         address account,

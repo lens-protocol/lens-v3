@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import "../helpers/TypeHelpers.sol";
-import {Feed} from "@core/primitives/Feed/Feed.sol";
+import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
