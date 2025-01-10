@@ -18,7 +18,7 @@ abstract contract RuleBasedPrimitive {
     using RulesLib for RulesStorage;
     using CallLib for address;
 
-    function _changePrimitiveRules(RulesStorage storage rulesStorage, RuleChange[] calldata ruleChanges)
+    function _changePrimitiveRules(RulesStorage storage rulesStorage, RuleChange[] memory ruleChanges)
         internal
         virtual
     {
@@ -36,8 +36,8 @@ abstract contract RuleBasedPrimitive {
     function _changeEntityRules(
         RulesStorage storage rulesStorage,
         uint256 entityId,
-        RuleChange[] calldata ruleChanges,
-        RuleProcessingParams[] calldata ruleChangesProcessingParams
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory ruleChangesProcessingParams
     ) internal virtual {
         _changeRules(
             rulesStorage,
@@ -50,7 +50,7 @@ abstract contract RuleBasedPrimitive {
         );
     }
 
-    function _encodeConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodeConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         returns (bytes memory)
@@ -67,7 +67,7 @@ abstract contract RuleBasedPrimitive {
         uint256 entityId,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal {
         if (entityId == 0) {
             _emitPrimitiveRuleConfiguredEvent(wasAlreadyConfigured, ruleAddress, configSalt, ruleParams);
@@ -93,7 +93,7 @@ abstract contract RuleBasedPrimitive {
 
     // Primitive functions:
 
-    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         virtual
@@ -103,7 +103,7 @@ abstract contract RuleBasedPrimitive {
         bool wasAlreadyConfigured,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal virtual;
 
     function _emitPrimitiveRuleSelectorEvent(
@@ -116,7 +116,7 @@ abstract contract RuleBasedPrimitive {
 
     // Entity functions:
 
-    function _encodeEntityConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodeEntityConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         virtual
@@ -128,7 +128,7 @@ abstract contract RuleBasedPrimitive {
         uint256 entityId,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal virtual {}
 
     function _emitEntityRuleSelectorEvent(
@@ -145,25 +145,18 @@ abstract contract RuleBasedPrimitive {
     function _changeRules(
         RulesStorage storage rulesStorage,
         uint256 entityId,
-        RuleChange[] calldata ruleChanges,
+        RuleChange[] memory ruleChanges,
         RuleProcessingParams[] memory ruleChangesProcessingParams,
-        function(uint256,bytes32,KeyValue[] calldata) internal returns (bytes memory) fn_encodeConfigureCall,
-        function(bool,uint256,address,bytes32,KeyValue[] calldata) internal fn_emitConfiguredEvent,
+        function(uint256,bytes32,KeyValue[] memory) internal returns (bytes memory) fn_encodeConfigureCall,
+        function(bool,uint256,address,bytes32,KeyValue[] memory) internal fn_emitConfiguredEvent,
         function(bool,uint256,address,bytes32,bool,bytes4) internal fn_emitSelectorEvent
     ) private {
         _beforeChangeRules(entityId, ruleChanges);
         for (uint256 i = 0; i < ruleChanges.length; i++) {
             RuleChange memory ruleChange = ruleChanges[i];
             if (ruleChange.configurationChanges.configure) {
-                ruleChange.configSalt = _configureRule(
-                    rulesStorage,
-                    ruleChanges[i].ruleAddress,
-                    ruleChanges[i].configSalt,
-                    entityId,
-                    ruleChanges[i].configurationChanges.ruleParams,
-                    fn_encodeConfigureCall,
-                    fn_emitConfiguredEvent
-                );
+                ruleChange.configSalt =
+                    _configureRule(rulesStorage, ruleChange, entityId, fn_encodeConfigureCall, fn_emitConfiguredEvent);
             }
             for (uint256 j = 0; j < ruleChange.selectorChanges.length; j++) {
                 _validateIsSupportedRuleSelector(
@@ -171,13 +164,7 @@ abstract contract RuleBasedPrimitive {
                     entityId == 0 ? _supportedPrimitiveRuleSelectors() : _supportedEntityRuleSelectors()
                 );
                 rulesStorage._changeRulesSelectors(
-                    ruleChanges[i].ruleAddress,
-                    ruleChange.configSalt,
-                    entityId,
-                    ruleChanges[i].selectorChanges[j].ruleSelector,
-                    ruleChanges[i].selectorChanges[j].isRequired,
-                    ruleChanges[i].selectorChanges[j].enabled,
-                    fn_emitSelectorEvent
+                    ruleChange, entityId, ruleChange.selectorChanges[j], fn_emitSelectorEvent
                 );
             }
         }
@@ -207,7 +194,7 @@ abstract contract RuleBasedPrimitive {
         revert Errors.UnsupportedSelector();
     }
 
-    function _beforeChangeRules(uint256 entityId, RuleChange[] calldata ruleChanges) internal virtual {
+    function _beforeChangeRules(uint256 entityId, RuleChange[] memory ruleChanges) internal virtual {
         if (entityId == 0) {
             _beforeChangePrimitiveRules(ruleChanges);
         } else {
@@ -217,7 +204,7 @@ abstract contract RuleBasedPrimitive {
 
     function _processEntityRulesChanges(
         uint256 entityId,
-        RuleChange[] calldata ruleChanges,
+        RuleChange[] memory ruleChanges,
         RuleProcessingParams[] memory ruleChangesProcessingParams
     ) internal virtual {}
 
@@ -234,23 +221,30 @@ abstract contract RuleBasedPrimitive {
         }
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata ruleChanges) internal virtual {}
+    function _beforeChangePrimitiveRules(RuleChange[] memory ruleChanges) internal virtual {}
 
-    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata ruleChanges) internal virtual {}
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges) internal virtual {}
 
     function _configureRule(
         RulesStorage storage rulesStorage,
-        address ruleAddress,
-        bytes32 providedConfigSalt,
+        RuleChange memory ruleChange,
         uint256 entityId,
-        KeyValue[] calldata ruleParams,
-        function(uint256,bytes32,KeyValue[] calldata) internal returns (bytes memory) fn_encodeConfigureCall,
-        function(bool,uint256,address,bytes32,KeyValue[] calldata) internal fn_emitEvent
+        function(uint256,bytes32,KeyValue[] memory) internal returns (bytes memory) fn_encodeConfigureCall,
+        function(bool,uint256,address,bytes32,KeyValue[] memory) internal fn_emitEvent
     ) internal returns (bytes32) {
-        bytes32 configSalt = rulesStorage.generateOrValidateConfigSalt(ruleAddress, providedConfigSalt);
-        bool wasAlreadyConfigured =
-            rulesStorage.configureRule(ruleAddress, configSalt, fn_encodeConfigureCall(entityId, configSalt, ruleParams));
-        fn_emitEvent(wasAlreadyConfigured, entityId, ruleAddress, configSalt, ruleParams);
+        bytes32 configSalt = rulesStorage.generateOrValidateConfigSalt(ruleChange.ruleAddress, ruleChange.configSalt);
+        bool wasAlreadyConfigured = rulesStorage.configureRule(
+            ruleChange.ruleAddress,
+            configSalt,
+            fn_encodeConfigureCall(entityId, configSalt, ruleChange.configurationChanges.ruleParams)
+        );
+        fn_emitEvent(
+            wasAlreadyConfigured,
+            entityId,
+            ruleChange.ruleAddress,
+            configSalt,
+            ruleChange.configurationChanges.ruleParams
+        );
         return configSalt;
     }
 }

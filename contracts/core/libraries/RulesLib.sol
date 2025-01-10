@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {Rule} from "contracts/core/types/Types.sol";
+import {Rule, RuleChange, RuleSelectorChange} from "contracts/core/types/Types.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
@@ -89,18 +89,28 @@ library RulesLib {
 
     function _changeRulesSelectors(
         RulesStorage storage rulesStorage,
-        address ruleAddress,
-        bytes32 configSalt,
+        RuleChange memory ruleChange,
         uint256 entityId,
-        bytes4 ruleSelector,
-        bool isRequired,
-        bool enabled,
+        RuleSelectorChange memory ruleSelectorChange,
         function(bool,uint256,address,bytes32,bool,bytes4) internal fn_emitEvent
     ) internal {
         function(RulesStorage storage, bool, address, bytes32, bytes4) internal fn_changeRuleSelector =
-            enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
-        fn_changeRuleSelector(rulesStorage, isRequired, ruleAddress, configSalt, ruleSelector);
-        fn_emitEvent(enabled, entityId, ruleAddress, configSalt, isRequired, ruleSelector);
+            ruleSelectorChange.enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
+        fn_changeRuleSelector(
+            rulesStorage,
+            ruleSelectorChange.isRequired,
+            ruleChange.ruleAddress,
+            ruleChange.configSalt,
+            ruleSelectorChange.ruleSelector
+        );
+        fn_emitEvent(
+            ruleSelectorChange.enabled,
+            entityId,
+            ruleChange.ruleAddress,
+            ruleChange.configSalt,
+            ruleSelectorChange.isRequired,
+            ruleSelectorChange.ruleSelector
+        );
     }
 
     // Private
