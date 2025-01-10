@@ -45,7 +45,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         override
@@ -58,7 +58,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         bool wasAlreadyConfigured,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal override {
         if (wasAlreadyConfigured) {
             emit IGroup.Lens_Group_RuleReconfigured(ruleAddress, configSalt, ruleParams);

@@ -66,7 +66,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         override
@@ -79,7 +79,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         bool wasAlreadyConfigured,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal override {
         if (wasAlreadyConfigured) {
             emit IGraph.Lens_Graph_RuleReconfigured(ruleAddress, configSalt, ruleParams);

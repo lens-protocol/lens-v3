@@ -70,7 +70,7 @@ contract Group is
         _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 

@@ -67,7 +67,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         override
@@ -80,7 +80,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         bool wasAlreadyConfigured,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal override {
         if (wasAlreadyConfigured) {
             emit IFeed.Lens_Feed_RuleReconfigured(ruleAddress, configSalt, ruleParams);

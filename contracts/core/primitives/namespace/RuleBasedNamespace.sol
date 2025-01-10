@@ -45,7 +45,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         override
@@ -58,7 +58,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         bool wasAlreadyConfigured,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal override {
         if (wasAlreadyConfigured) {
             emit INamespace.Lens_Namespace_RuleReconfigured(ruleAddress, configSalt, ruleParams);

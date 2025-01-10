@@ -64,11 +64,11 @@ contract Graph is
         _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 
-    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] calldata /* ruleChanges */ )
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory /* ruleChanges */ )
         internal
         virtual
         override
