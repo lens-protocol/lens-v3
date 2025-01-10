@@ -24,6 +24,12 @@ const config: HardhatUserConfig = {
       ethNetwork: 'localhost', // in-memory node doesn't support eth node; removing this line will cause an error
       zksync: true,
     },
+    zkstackMigrationNode: {
+      url: 'http://localhost:3050',
+      chainId: 271,
+      zksync: true,
+      ethNetwork: 'sepolia',
+    },
     hardhat: {
       zksync: true,
     },

@@ -13,6 +13,7 @@
     "deploy:local:fr": "DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
     "deploy:local:migration": "DEPLOY_MIGRATION=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
     "deploy:local:migration:fr": "DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
+    "deploy:zkstack::migration": "DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network zkstackMigrationNode",
     "interact": "hardhat deploy-zksync --script interact.ts",
     "compile": "hardhat compile",
     "clean": "hardhat clean",
