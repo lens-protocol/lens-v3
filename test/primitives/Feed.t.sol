@@ -12,6 +12,7 @@ import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {IFeedRule} from "@core/interfaces/IFeedRule.sol";
+import {Rule} from "@core/types/Types.sol";
 
 contract FeedTest is RulesTest, BaseDeployments {
     IFeed feed;
@@ -22,7 +23,7 @@ contract FeedTest is RulesTest, BaseDeployments {
     address author = makeAddr("AUTHOR");
     address feedOwner = makeAddr("FEED_OWNER");
 
-    function setUp() public override(BaseDeployments) {
+    function setUp() public virtual override(RulesTest, BaseDeployments) {
         BaseDeployments.setUp();
 
         feed = IFeed(
@@ -44,6 +45,8 @@ contract FeedTest is RulesTest, BaseDeployments {
             ruleChanges: _emptyRuleChangeArray(),
             extraData: _emptyKeyValueArray()
         });
+
+        RulesTest.setUp();
     }
 
     function testPost() public {
@@ -90,7 +93,20 @@ contract FeedTest is RulesTest, BaseDeployments {
         return feedForRules;
     }
 
-    function _aValidSelector() internal pure override returns (bytes4) {
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
         return IFeedRule.processCreatePost.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IFeedRule.processCreatePost.selector;
+        selectors[1] = IFeedRule.processEditPost.selector;
+        selectors[2] = IFeedRule.processRemovePost.selector;
+        selectors[3] = IFeedRule.processPostRuleChanges.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return IFeed(feedForRules).getFeedRules(selector, required);
     }
 }
