@@ -143,7 +143,7 @@ contract Namespace is
         RuleProcessingParams[] calldata removalRuleProcessingParams
     ) external override {
         uint256 id = _computeId(username);
-        address owner = _ownerOf(id);
+        address owner = ownerOf(id);
         require(msg.sender == owner, Errors.InvalidMsgSender()); // msg.sender must be the owner of the username
         _processRemoval(msg.sender, username, customParams, removalRuleProcessingParams);
         address source = _processSourceStamp(id, customParams);
@@ -161,9 +161,11 @@ contract Namespace is
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external override {
-        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
-        require(account == _ownerOf(id), Errors.InvalidMsgSender()); // account should own the tokenized username
+        // account should own the tokenized username and be the msg.sender
+        require(msg.sender == ownerOf(id) && msg.sender == account, Errors.InvalidMsgSender());
+        // Check if username is not already assigned to this account
+        require(account != Core.$storage().usernameToAccount[username], Errors.RedundantStateChange());
         address source = _processSourceStamp(id, customParams);
         _unassignIfAssigned(account, customParams, unassignAccountRuleProcessingParams, source);
         _unassignIfAssigned(username, customParams, unassignUsernameRuleProcessingParams, source);
@@ -179,7 +181,7 @@ contract Namespace is
     ) external override {
         address account = Core.$storage().usernameToAccount[username];
         uint256 id = _computeId(username);
-        require(msg.sender == account || msg.sender == _ownerOf(id), Errors.InvalidMsgSender());
+        require(msg.sender == ownerOf(id) || msg.sender == account, Errors.InvalidMsgSender());
         Core._unassignUsername(username);
         _processUnassigning(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
@@ -298,5 +300,18 @@ contract Namespace is
         uint256 tokenId = _computeId(username);
         address owner = ownerOf(tokenId);
         return _getEntityExtraData(owner, tokenId, key);
+    }
+
+    function exists(string calldata username) external view override returns (bool) {
+        uint256 tokenId = _computeId(username);
+        return _exists(tokenId);
+    }
+
+    function exists(uint256 tokenId) external view override returns (bool) {
+        return _exists(tokenId);
+    }
+
+    function getUsernameTokenId(string calldata username) external view returns (uint256) {
+        return _computeId(username);
     }
 }
