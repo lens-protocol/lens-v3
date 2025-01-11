@@ -66,6 +66,8 @@ contract GroupTest is Test, BaseDeployments {
     }
 
     function test_AddMember_viaPID(address newMember) public {
+        vm.assume(newMember != address(0));
+
         address accountWithPID = _getAccountWithPID(PID__ADD_MEMBER);
 
         vm.assume(group.isMember(newMember) == false);
@@ -88,6 +90,8 @@ contract GroupTest is Test, BaseDeployments {
     }
 
     function test_CannotAddMember_viaPID_noAccess(address newMember) public {
+        vm.assume(newMember != address(0));
+
         address accountWithoutPID = _getAccountWithoutPID(PID__ADD_MEMBER);
 
         vm.expectRevert(Errors.AccessDenied.selector);
@@ -134,6 +138,8 @@ contract GroupTest is Test, BaseDeployments {
     );
 
     function test_removeMember_viaPID(address memberToRemove) public {
+        vm.assume(memberToRemove != address(0));
+
         address accountWithPID = _getAccountWithPID(PID__REMOVE_MEMBER);
 
         _setGroupMember(memberToRemove);
@@ -155,6 +161,8 @@ contract GroupTest is Test, BaseDeployments {
     }
 
     function test_CannotRemoveMember_viaPID_noAccess(address memberToRemove) public {
+        vm.assume(memberToRemove != address(0));
+
         address accountWithoutPID = _getAccountWithoutPID(PID__REMOVE_MEMBER);
 
         _setGroupMember(memberToRemove);
@@ -178,6 +186,7 @@ contract GroupTest is Test, BaseDeployments {
     );
 
     function test_joinGroup(address newMember) public {
+        vm.assume(newMember != address(0));
         vm.assume(group.isMember(newMember) == false);
 
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
@@ -206,6 +215,8 @@ contract GroupTest is Test, BaseDeployments {
     );
 
     function test_leaveGroup(address memberToLeave) public {
+        vm.assume(memberToLeave != address(0));
+
         _setGroupMember(memberToLeave);
 
         uint256 expectedMembershipId = group.getMembershipId(memberToLeave);
