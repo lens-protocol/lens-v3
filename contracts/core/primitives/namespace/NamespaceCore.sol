@@ -23,25 +23,7 @@ library NamespaceCore {
         }
     }
 
-    // External functions - Use these functions to be called through DELEGATECALL
-
-    function createUsername(string memory username) external {
-        _createUsername(username);
-    }
-
-    function removeUsername(string memory username) external {
-        _removeUsername(username);
-    }
-
-    function assignUsername(address account, string memory username) external {
-        _assignUsername(account, username);
-    }
-
-    function unassignUsername(string memory username) external {
-        _unassignUsername(username);
-    }
-
-    // Internal functions - Use these functions to be called as an inlined library
+    // Internal functions
 
     function _createUsername(string memory username) internal {
         require(!$storage().usernameExists[username], Errors.AlreadyExists()); // Username must not exist yet

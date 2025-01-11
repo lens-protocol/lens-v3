@@ -35,6 +35,10 @@ import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol"
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 
 contract MyScript is Script {
+    function testMyScript() public {
+        // Prevents being counted in Foundry Coverage
+    }
+
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
     address proxyAdminLock;
