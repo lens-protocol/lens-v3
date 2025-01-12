@@ -144,7 +144,7 @@ async function deployGraph(lensFactory: ethers.Contract): Promise<string> {
 
 export async function deployUsername(
   lensFactory: ethers.Contract,
-  noVerify: Boolean = false
+  noVerify: boolean = false
 ): Promise<string> {
   console.log('Deploying Username');
   const namespace = 'lens';
