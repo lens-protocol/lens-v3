@@ -12,16 +12,20 @@ import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {AccessControlled} from "@core/access/AccessControlled.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
+import {Rule} from "@core/types/Types.sol";
+import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
 
-contract GroupTest is Test, BaseDeployments {
+contract GroupTest is RulesTest, BaseDeployments {
     IGroup group;
 
     address account = makeAddr("ACCOUNT");
     address groupOwner = makeAddr("GROUP_OWNER");
     MockAccessControl mockAccessControl;
+    address groupForRules;
 
-    function setUp() public override {
-        super.setUp();
+    function setUp() public override(RulesTest, BaseDeployments) {
+        BaseDeployments.setUp();
 
         group = IGroup(
             lensFactory.deployGroup({
@@ -35,11 +39,21 @@ contract GroupTest is Test, BaseDeployments {
 
         mockAccessControl = new MockAccessControl();
 
+        groupForRules = groupFactory.deployGroup({
+            metadataURI: "uri://group",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
         vm.prank(groupOwner);
         AccessControlled(address(group)).setAccessControl(IAccessControl(address(mockAccessControl)));
 
         mockAccessControl.mockAccess(groupOwner, address(group), PID__ADD_MEMBER, true);
         mockAccessControl.mockAccess(groupOwner, address(group), PID__REMOVE_MEMBER, true);
+
+        RulesTest.setUp();
     }
 
     event Lens_Group_MemberAdded(
@@ -484,5 +498,32 @@ contract GroupTest is Test, BaseDeployments {
 
         uint256 memberCountAfter = group.getNumberOfMembers();
         assertEq(memberCountAfter, memberCountBefore - 1);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+        IGroup(groupForRules).changeGroupRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override returns (address) {
+        return groupForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
+        return IGroupRule.processAddition.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IGroupRule.processAddition.selector;
+        selectors[1] = IGroupRule.processRemoval.selector;
+        selectors[2] = IGroupRule.processJoining.selector;
+        selectors[3] = IGroupRule.processLeaving.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return IGroup(groupForRules).getGroupRules(selector, required);
     }
 }

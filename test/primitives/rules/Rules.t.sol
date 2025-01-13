@@ -70,6 +70,14 @@ abstract contract RulesTest is Test {
         }
     }
 
+    function test_ChangeRules_Reconfigure() public {
+        return; // TODO: Implement
+    }
+
+    function test_Cannot_ChangeRules_EnableSelectorForUnconfiguredRule() public {
+        return; // TODO: Implement
+    }
+
     function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public {
         // Mock Access Control to disallow changing rules
         _primitiveAddress().mockAccess({

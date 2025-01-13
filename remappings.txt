@@ -5,3 +5,5 @@ hardhat/=node_modules/hardhat/
 contracts/=contracts/
 @core/=contracts/core/
 @extensions/=contracts/extensions/
+@actions/=contracts/actions/
+@rules/=contracts/rules/

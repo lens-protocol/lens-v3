@@ -85,6 +85,8 @@ contract FeedTest is RulesTest, BaseDeployments {
         });
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     function _changeRules(RuleChange[] memory ruleChanges) internal override {
         IFeed(feedForRules).changeFeedRules(ruleChanges);
     }

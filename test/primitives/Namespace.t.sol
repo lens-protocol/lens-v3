@@ -12,15 +12,22 @@ import {LensERC721} from "@core/base/LensERC721.sol";
 import {Errors} from "@core/types/Errors.sol";
 import "../helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
+import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
+import {Rule} from "@core/types/Types.sol";
+import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
 
-contract NamespaceTest is Test, BaseDeployments {
+contract NamespaceTest is RulesTest, BaseDeployments {
     INamespace namespace;
 
     address account = makeAddr("ACCOUNT");
     address namespaceOwner = makeAddr("NAMESPACE_OWNER");
 
-    function setUp() public override {
-        super.setUp();
+    MockAccessControl mockAccessControl;
+    address namespaceForRules;
+
+    function setUp() public override(RulesTest, BaseDeployments) {
+        BaseDeployments.setUp();
 
         namespace = INamespace(
             lensFactory.deployNamespace({
@@ -34,6 +41,22 @@ contract NamespaceTest is Test, BaseDeployments {
                 nftSymbol: "BTC"
             })
         );
+
+        mockAccessControl = new MockAccessControl();
+
+        namespaceForRules = namespaceFactory.deployNamespace({
+            namespace: "ethereum",
+            metadataURI: "vitalik://buterin",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray(),
+            nftName: "Ethereum",
+            nftSymbol: "ETH",
+            tokenURIProvider: new LensUsernameTokenURIProvider()
+        });
+
+        RulesTest.setUp();
     }
 
     function testCreateAssignUnassignDelete() public {
@@ -536,5 +559,32 @@ contract NamespaceTest is Test, BaseDeployments {
     function test_CannotGetAccountOfEmptyUsername() public {
         vm.expectRevert(Errors.DoesNotExist.selector);
         namespace.accountOf("");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+        INamespace(namespaceForRules).changeNamespaceRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override returns (address) {
+        return namespaceForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
+        return INamespaceRule.processCreation.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = INamespaceRule.processCreation.selector;
+        selectors[1] = INamespaceRule.processRemoval.selector;
+        selectors[2] = INamespaceRule.processAssigning.selector;
+        selectors[3] = INamespaceRule.processUnassigning.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return INamespace(namespaceForRules).getNamespaceRules(selector, required);
     }
 }
