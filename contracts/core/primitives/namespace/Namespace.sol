@@ -311,7 +311,7 @@ contract Namespace is
         return _exists(tokenId);
     }
 
-    function getUsernameTokenId(string calldata username) external view returns (uint256) {
+    function getUsernameTokenId(string calldata username) external pure returns (uint256) {
         return _computeId(username);
     }
 }
