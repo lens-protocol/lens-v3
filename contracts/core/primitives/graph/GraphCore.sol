@@ -31,6 +31,8 @@ library GraphCore {
         internal
         returns (uint256)
     {
+        require(followerAccount != address(0), Errors.InvalidParameter());
+        require(accountToFollow != address(0), Errors.InvalidParameter());
         require(followerAccount != accountToFollow, Errors.Self());
         require($storage().follows[followerAccount][accountToFollow].id == 0, Errors.CannotFollowAgain());
         if (followId == 0) {
@@ -47,6 +49,8 @@ library GraphCore {
     }
 
     function _unfollow(address followerAccount, address accountToUnfollow) internal returns (uint256) {
+        require(followerAccount != address(0), Errors.InvalidParameter());
+        require(accountToUnfollow != address(0), Errors.InvalidParameter());
         uint256 followId = $storage().follows[followerAccount][accountToUnfollow].id;
         require(followId != 0, Errors.NotFollowing()); // Must be following
         $storage().followersCount[accountToUnfollow]--;
