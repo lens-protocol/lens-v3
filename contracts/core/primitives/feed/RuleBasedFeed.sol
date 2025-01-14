@@ -52,6 +52,14 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, ruleChangesProcessingParams);
     }
 
+    function _processEntityRulesChanges(
+        uint256 entityId,
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory ruleChangesProcessingParams
+    ) internal virtual override {
+        _processPostRulesChanges(entityId, ruleChanges, ruleChangesProcessingParams);
+    }
+
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = IFeedRule.processCreatePost.selector;
@@ -447,8 +455,8 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     function _processPostRulesChanges(
         uint256 postId,
-        RuleChange[] calldata ruleChanges,
-        RuleProcessingParams[] calldata rulesProcessingParams
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory rulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IFeedRule.processPostRuleChanges.selector;
         // Check required rules (AND-combined rules)
