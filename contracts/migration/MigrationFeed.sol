@@ -64,7 +64,7 @@ contract MigrationFeed is Feed {
         );
 
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraData(postCreationParams.postId, postParams.extraData[i]);
+            _setExtraData(postParams.author, postCreationParams.postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postCreationParams.postId,
                 postParams.extraData[i].key,
@@ -84,8 +84,14 @@ contract MigrationFeed is Feed {
         uint256 authorPostSequentialId,
         uint80 creationTimestamp
     ) internal {
-        Core.$storage().postCount = postSequentialId;
-        Core.$storage().authorPostCount[postParams.author] = authorPostSequentialId;
+        require(postParams.author != address(0), Errors.InvalidParameter());
+        require(postId != 0, Errors.InvalidParameter());
+        require(postSequentialId != 0, Errors.InvalidParameter());
+        require(authorPostSequentialId != 0, Errors.InvalidParameter());
+        require(creationTimestamp != 0, Errors.InvalidParameter());
+
+        Core.$storage().postCount++;
+        Core.$storage().authorPostCount[postParams.author]++;
         PostStorage storage _newPost = Core.$storage().posts[postId];
         _newPost.author = postParams.author;
         _newPost.authorPostSequentialId = authorPostSequentialId;
