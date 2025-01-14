@@ -59,22 +59,27 @@ library RulesLib {
         bytes4 ruleSelector
     ) internal {
         require(rulesStorage.isConfigured[ruleAddress][configSalt], Errors.RuleNotConfigured());
-        require(
-            !_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt),
-            Errors.RedundantStateChange()
-        );
+        if (rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled) {
+            if (rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired == isRequired) {
+                revert Errors.RedundantStateChange();
+            } else {
+                revert Errors.SelectorEnabledForDifferentRuleType();
+            }
+        }
         _addRuleSelectorToStorage(rulesStorage, ruleSelector, ruleAddress, configSalt, isRequired);
     }
 
     function disableRuleSelector(
         RulesStorage storage rulesStorage,
-        bool, /* isRequired */
+        bool isRequired,
         address ruleAddress,
         bytes32 configSalt,
         bytes4 ruleSelector
     ) internal {
+        require(rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled, Errors.RedundantStateChange());
         require(
-            _isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt), Errors.RedundantStateChange()
+            rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired == isRequired,
+            Errors.SelectorEnabledForDifferentRuleType()
         );
         _removeRuleSelectorFromStorage(rulesStorage, ruleSelector, ruleAddress, configSalt);
     }
@@ -147,14 +152,5 @@ library RulesLib {
         }
         rules.pop();
         delete rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt];
-    }
-
-    function _isSelectorAlreadyEnabled(
-        RulesStorage storage rulesStorage,
-        bytes4 ruleSelector,
-        address ruleAddress,
-        bytes32 configSalt
-    ) private view returns (bool) {
-        return rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled;
     }
 }

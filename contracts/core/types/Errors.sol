@@ -36,6 +36,7 @@ library Errors {
     error RedundantStateChange();
     error RequiredRuleReverted();
     error RuleNotConfigured();
+    error SelectorEnabledForDifferentRuleType();
     error Self();
     error SingleAnyOfRule();
     error UnexpectedContractImpl();
