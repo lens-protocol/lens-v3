@@ -17,6 +17,9 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
+import {MigrationFeed} from "contracts/migration/MigrationFeed.sol";
+import {MigrationGraph} from "contracts/migration/MigrationGraph.sol";
+
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
 import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
 
@@ -71,6 +74,12 @@ contract BaseDeployments is Test {
     address accountBlockingRule;
     address groupGatedFeedRule;
 
+    bool migrationMode = false;
+
+    function switchMigrationMode(bool newMigrationMode) public {
+        migrationMode = newMigrationMode;
+    }
+
     function setUp() public virtual {
         proxyAdminLock = address(new Lock(lockOwner, true));
         _deployImplementations();
@@ -99,8 +108,8 @@ contract BaseDeployments is Test {
 
         appImpl = address(new App());
         accountImpl = address(new AccountContract());
-        feedImpl = address(new Feed());
-        graphImpl = address(new Graph());
+        feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
+        graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());
         namespaceImpl = address(new Namespace());
     }
