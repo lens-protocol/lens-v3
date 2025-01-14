@@ -3,7 +3,6 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 import {IGraph, Follow} from "@core/interfaces/IGraph.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
@@ -34,7 +33,7 @@ contract MigrationGraphTest is BaseDeployments {
         KeyValue[] memory customParams = new KeyValue[](1);
         customParams[0] = KeyValue(bytes32(0), abi.encode(followId, timestamp));
 
-        migrationGraph.follow({
+        uint256 returnedFollowId = migrationGraph.follow({
             followerAccount: makeAddr("FOLLOWER_1"),
             targetAccount: makeAddr("TARGET_1"),
             customParams: customParams,
@@ -43,6 +42,7 @@ contract MigrationGraphTest is BaseDeployments {
             extraData: _emptyKeyValueArray()
         });
 
+        assertEq(returnedFollowId, followId);
         assertTrue(migrationGraph.isFollowing(makeAddr("FOLLOWER_1"), makeAddr("TARGET_1")));
         assertFalse(migrationGraph.isFollowing(makeAddr("TARGET_1"), makeAddr("FOLLOWER_1")));
         Follow memory follow = migrationGraph.getFollow(makeAddr("FOLLOWER_1"), makeAddr("TARGET_1"));
