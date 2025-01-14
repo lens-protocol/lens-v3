@@ -53,6 +53,14 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         );
     }
 
+    function _processEntityRulesChanges(
+        uint256 entityId,
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory ruleChangesProcessingParams
+    ) internal virtual override {
+        _graphProcessFollowRuleChanges(address(uint160(entityId)), ruleChanges, ruleChangesProcessingParams);
+    }
+
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = IGraphRule.processFollow.selector;
@@ -132,8 +140,8 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     function _graphProcessFollowRuleChanges(
         address account,
-        RuleChange[] calldata ruleChanges,
-        RuleProcessingParams[] calldata graphRulesProcessingParams
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory graphRulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IGraphRule.processFollowRuleChanges.selector;
         // Check required rules (AND-combined rules)
