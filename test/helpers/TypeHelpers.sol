@@ -2,10 +2,16 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {RuleChange, RuleProcessingParams, SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
+import {
+    RuleSelectorChange, RuleChange, RuleProcessingParams, SourceStamp, KeyValue
+} from "contracts/core/types/Types.sol";
 
 function _emptyKeyValueArray() pure returns (KeyValue[] memory) {
     return new KeyValue[](0);
+}
+
+function _emptyRuleSelectorChangeArray() pure returns (RuleSelectorChange[] memory) {
+    return new RuleSelectorChange[](0);
 }
 
 function _emptyRuleProcessingParamsArray() pure returns (RuleProcessingParams[] memory) {
