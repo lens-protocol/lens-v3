@@ -9,6 +9,7 @@ export async function deployActions(actionHub: string): Promise<void> {
   const contracts: ContractInfo[] = [
     // Actions
     { contractName: 'TippingAccountAction', contractType: ContractType.Action, constructorArguments: [actionHub, metadataURI] },
+    { contractName: 'TippingPostAction', contractType: ContractType.Action, constructorArguments: [actionHub, metadataURI] },
     { contractName: 'SimpleCollectAction', contractType: ContractType.Action, constructorArguments: [actionHub, metadataURI] },
   ];
 
