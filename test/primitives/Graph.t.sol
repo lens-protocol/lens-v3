@@ -54,28 +54,6 @@ contract GraphTest is RulesTest, BaseDeployments {
         RulesTest.setUp();
     }
 
-    function testFollowAndUnfollow() public {
-        vm.prank(sourceAccount);
-        graph.follow({
-            followerAccount: sourceAccount,
-            targetAccount: targetAccount,
-            customParams: _emptyKeyValueArray(),
-            graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
-            followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        vm.prank(sourceAccount);
-        graph.unfollow({
-            followerAccount: sourceAccount,
-            targetAccount: targetAccount,
-            customParams: _emptyKeyValueArray(),
-            graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        RulesTest.setUp();
-    }
-
     function test_Follow(address follower, address target) public {
         vm.assume(follower != address(0));
         vm.assume(target != address(0));
