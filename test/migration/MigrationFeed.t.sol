@@ -26,29 +26,22 @@ contract MigrationFeedTest is BaseDeployments {
         );
     }
 
-    function testCreatePost_withoutForceChecks(
+    function testCreatePost_withForceChecks(
         address author,
-        uint256 postId,
-        uint256 postSequentialId,
         uint256 authorPostSequentialId,
         uint80 creationTimestamp,
         address source
     ) public {
         vm.assume(author != address(0));
-        vm.assume(postId != 0);
-        vm.assume(postSequentialId != 0);
         vm.assume(authorPostSequentialId != 0);
         vm.assume(creationTimestamp != 0);
         vm.assume(source != address(0));
 
         KeyValue[] memory extraData = new KeyValue[](2);
-        extraData[0] = KeyValue(keccak256("extraData1"), abi.encode(author, postId));
-        extraData[1] = KeyValue(keccak256("extraData2"), abi.encode(postSequentialId, authorPostSequentialId));
+        extraData[0] = KeyValue(keccak256("extraData1"), abi.encode(author, authorPostSequentialId));
+        extraData[1] = KeyValue(keccak256("extraData2"), abi.encode(authorPostSequentialId, creationTimestamp));
 
         PostCreationParams memory postCreationParams = PostCreationParams({
-            postId: postId,
-            rootPostId: postId,
-            postSequentialId: postSequentialId,
             authorPostSequentialId: authorPostSequentialId,
             creationTimestamp: creationTimestamp,
             source: source
@@ -59,7 +52,7 @@ contract MigrationFeedTest is BaseDeployments {
 
         CreatePostParams memory postParams = CreatePostParams({
             author: author,
-            contentURI: string.concat("some content uri: ", vm.toString(author), " ", vm.toString(postId)),
+            contentURI: string.concat("some content uri: ", vm.toString(author), " ", vm.toString(authorPostSequentialId)),
             repostedPostId: 0,
             quotedPostId: 0,
             repliedPostId: 0,
@@ -67,7 +60,7 @@ contract MigrationFeedTest is BaseDeployments {
             extraData: extraData
         });
 
-        uint256 returnedPostId = migrationFeed.createPost(
+        uint256 postId = migrationFeed.createPost(
             postParams,
             customParams,
             _emptyRuleProcessingParamsArray(),
@@ -75,14 +68,10 @@ contract MigrationFeedTest is BaseDeployments {
             _emptyRuleProcessingParamsArray()
         );
 
-        assertEq(returnedPostId, postId, "Post ID mismatch");
-
         Post memory post = migrationFeed.getPost(postId);
         assertEq(post.author, author, "Author mismatch");
         assertEq(post.authorPostSequentialId, authorPostSequentialId, "Author post sequential ID mismatch");
-        assertEq(post.postSequentialId, postSequentialId, "Post sequential ID mismatch");
         assertEq(post.contentURI, postParams.contentURI, "Content URI mismatch");
-        assertEq(post.rootPostId, postCreationParams.rootPostId, "Root post ID mismatch");
         assertEq(post.repostedPostId, postParams.repostedPostId, "Reposted post ID mismatch");
         assertEq(post.quotedPostId, postParams.quotedPostId, "Quoted post ID mismatch");
         assertEq(post.repliedPostId, postParams.repliedPostId, "Replied post ID mismatch");
@@ -98,7 +87,6 @@ contract MigrationFeedTest is BaseDeployments {
         assertEq(migrationFeed.getPostCount(), 1, "getPostCount() mismatch");
         assertEq(migrationFeed.getPostCount(author), 1, "getPostCount(author) mismatch");
         assertEq(migrationFeed.getPostAuthor(postId), author, "getPostAuthor()   mismatch");
-        assertEq(migrationFeed.getPostSequentialId(postId), postSequentialId, "getPostSequentialId() mismatch");
         assertEq(
             migrationFeed.getAuthorPostSequentialId(postId),
             authorPostSequentialId,
