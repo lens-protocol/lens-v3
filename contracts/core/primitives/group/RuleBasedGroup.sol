@@ -102,7 +102,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     function _encodeAndCallProcessMemberRemoval(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -112,7 +112,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
                     processParams.originalMsgSender,
                     processParams.account,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -139,7 +139,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     function _encodeAndCallProcessMemberAddition(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -149,7 +149,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
                     processParams.originalMsgSender,
                     processParams.account,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -176,12 +176,12 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     function _encodeAndCallProcessMemberJoining(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IGroupRule.processJoining,
-                (rule.configSalt, processParams.account, processParams.primitiveCustomParams, ruleCustomParams)
+                (rule.configSalt, processParams.account, processParams.primitiveCustomParams, ruleParams)
             )
         );
     }
@@ -207,12 +207,12 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     function _encodeAndCallProcessMemberLeaving(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IGroupRule.processLeaving,
-                (rule.configSalt, processParams.account, processParams.primitiveCustomParams, ruleCustomParams)
+                (rule.configSalt, processParams.account, processParams.primitiveCustomParams, ruleParams)
             )
         );
     }
@@ -247,36 +247,22 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         function(Rule memory,ProcessParams memory,KeyValue[] memory) internal returns (bool,bytes memory) encodeAndCall,
         ProcessParams memory processParams
     ) private {
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $groupRulesStorage().requiredRules[processParams.ruleSelector].length; i++) {
-            Rule memory rule = $groupRulesStorage().requiredRules[processParams.ruleSelector][i];
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleParams);
-                require(callNotReverted, Errors.RequiredRuleReverted());
-            }
+            rule = $groupRulesStorage().requiredRules[processParams.ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $groupRulesStorage().anyOfRules[processParams.ruleSelector].length; i++) {
-            Rule memory rule = $groupRulesStorage().anyOfRules[processParams.ruleSelector][i];
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleParams);
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = $groupRulesStorage().anyOfRules[processParams.ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.

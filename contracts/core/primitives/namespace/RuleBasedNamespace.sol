@@ -102,7 +102,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessCreation(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -113,7 +113,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                     processParams.account,
                     processParams.username,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -142,7 +142,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessRemoval(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -152,7 +152,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                     processParams.originalMsgSender,
                     processParams.username,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -180,7 +180,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessAssigning(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -191,7 +191,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                     processParams.account,
                     processParams.username,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -220,7 +220,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessUnassigning(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -231,7 +231,7 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
                     processParams.account,
                     processParams.username,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -270,36 +270,22 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         function(Rule memory,ProcessParams memory,KeyValue[] memory) internal returns (bool,bytes memory) encodeAndCall,
         ProcessParams memory processParams
     ) private {
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $namespaceRulesStorage().requiredRules[processParams.ruleSelector].length; i++) {
-            Rule memory rule = $namespaceRulesStorage().requiredRules[processParams.ruleSelector][i];
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleParams);
-                require(callNotReverted, Errors.RequiredRuleReverted());
-            }
+            rule = $namespaceRulesStorage().requiredRules[processParams.ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $namespaceRulesStorage().anyOfRules[processParams.ruleSelector].length; i++) {
-            Rule memory rule = $namespaceRulesStorage().anyOfRules[processParams.ruleSelector][i];
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleParams);
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = $namespaceRulesStorage().anyOfRules[processParams.ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.

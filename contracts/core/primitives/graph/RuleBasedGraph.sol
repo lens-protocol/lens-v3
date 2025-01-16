@@ -175,44 +175,26 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         RuleProcessingParams[] memory graphRulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IGraphRule.processFollowRuleChanges.selector;
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $graphRulesStorage().requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = $graphRulesStorage().requiredRules[ruleSelector][i];
-            for (uint256 j = 0; j < graphRulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    graphRulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && graphRulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = rule.ruleAddress.safecall(
-                    abi.encodeCall(
-                        IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
-                    )
-                );
-                require(callNotReverted, Errors.RequiredRuleReverted());
-            }
+            rule = $graphRulesStorage().requiredRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, graphRulesProcessingParams);
+            (bool callSucceeded,) = rule.ruleAddress.safecall(
+                abi.encodeCall(IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleParams))
+            );
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $graphRulesStorage().anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = $graphRulesStorage().anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < graphRulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    graphRulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && graphRulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = rule.ruleAddress.safecall(
-                    abi.encodeCall(
-                        IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
-                    )
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = $graphRulesStorage().anyOfRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, graphRulesProcessingParams);
+            (bool callSucceeded,) = rule.ruleAddress.safecall(
+                abi.encodeCall(IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleParams))
+            );
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
@@ -230,7 +212,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     function _encodeAndCallGraphProcessFollow(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -241,7 +223,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                     processParams.sourceAccount,
                     processParams.targetAccount,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -271,7 +253,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     function _encodeAndCallGraphProcessUnfollow(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -282,7 +264,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                     processParams.sourceAccount,
                     processParams.targetAccount,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -311,7 +293,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     function _encodeAndCallAccountProcessFollow(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleCustomParams
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
             abi.encodeCall(
@@ -322,7 +304,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
                     processParams.sourceAccount,
                     processParams.targetAccount,
                     processParams.primitiveCustomParams,
-                    ruleCustomParams
+                    ruleParams
                 )
             )
         );
@@ -355,36 +337,22 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         ProcessParams memory processParams
     ) internal {
         bytes4 ruleSelector = IGraphRule.processUnfollow.selector;
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.requiredRules[ruleSelector][i];
-            // TODO: Think how to put this loop into a library (all the rules use it)
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
-                require(callNotReverted, Errors.RequiredRuleReverted());
-            }
+            rule = rulesStorage.requiredRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
+        // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = rulesStorage.anyOfRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
@@ -397,36 +365,22 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         bytes4 ruleSelector,
         ProcessParams memory processParams
     ) internal {
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.requiredRules[ruleSelector][i];
-            // TODO: Think how to put this loop into a library (all the rules use it)
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
-                require(callNotReverted, Errors.RequiredRuleReverted());
-            }
+            rule = rulesStorage.requiredRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
+        // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < processParams.rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    processParams.rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && processParams.rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = processParams.rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(rule, processParams, ruleCustomParams);
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = rulesStorage.anyOfRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
