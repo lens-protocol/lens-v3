@@ -9,9 +9,6 @@ import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 struct PostCreationParams {
-    uint256 postId;
-    uint256 rootPostId;
-    uint256 postSequentialId;
     uint256 authorPostSequentialId;
     uint80 creationTimestamp;
     address source;
@@ -26,35 +23,24 @@ contract MigrationFeed is Feed {
         RuleProcessingParams[] memory quotedPostRulesParams
     ) external override returns (uint256) {
         PostCreationParams memory postCreationParams = abi.decode(customParams[0].value, (PostCreationParams));
-        _createPost(
-            postParams,
-            postCreationParams.postId,
-            postCreationParams.rootPostId,
-            postCreationParams.postSequentialId,
-            postCreationParams.authorPostSequentialId,
-            postCreationParams.creationTimestamp
-        );
-
-        if (customParams.length > 1 && abi.decode(customParams[1].value, (bool))) {
-            // If customParams[1] is present, it must be an ABI-encoded bool representing `forceChecks`
-            _forceChecks(postCreationParams.postId, postCreationParams.rootPostId, postParams);
-        }
+        (uint256 postId, uint256 rootPostId) =
+            _createPost(postParams, postCreationParams.authorPostSequentialId, postCreationParams.creationTimestamp);
 
         if (postCreationParams.source != address(0)) {
             // Trust the migrator, no source verification
             _setPrimitiveInternalExtraDataForEntity(
-                postCreationParams.postId, KeyValue(DATA__SOURCE, abi.encode(postCreationParams.source))
+                postId, KeyValue(DATA__SOURCE, abi.encode(postCreationParams.source))
             );
             _setPrimitiveInternalExtraDataForEntity(
-                postCreationParams.postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(postCreationParams.source))
+                postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(postCreationParams.source))
             );
         }
 
         emit Lens_Feed_PostCreated(
-            postCreationParams.postId,
+            postId,
             postParams.author,
             postCreationParams.authorPostSequentialId,
-            postCreationParams.rootPostId,
+            rootPostId,
             postParams,
             customParams,
             feedRulesParams,
@@ -64,64 +50,56 @@ contract MigrationFeed is Feed {
         );
 
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setExtraData(postParams.author, postCreationParams.postId, postParams.extraData[i]);
+            _setExtraData(postParams.author, postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
-                postCreationParams.postId,
-                postParams.extraData[i].key,
-                postParams.extraData[i].value,
-                postParams.extraData[i].value
+                postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
             );
         }
-        return postCreationParams.postId;
+        return postId;
     }
 
     // Overriding the FeedCore
-    function _createPost(
-        CreatePostParams memory postParams,
-        uint256 postId,
-        uint256 rootPostId,
-        uint256 postSequentialId,
-        uint256 authorPostSequentialId,
-        uint80 creationTimestamp
-    ) internal {
-        require(postParams.author != address(0), Errors.InvalidParameter());
-        require(postId != 0, Errors.InvalidParameter());
-        require(postSequentialId != 0, Errors.InvalidParameter());
+    function _createPost(CreatePostParams memory postParams, uint256 authorPostSequentialId, uint80 creationTimestamp)
+        internal
+        returns (uint256, uint256)
+    {
         require(authorPostSequentialId != 0, Errors.InvalidParameter());
         require(creationTimestamp != 0, Errors.InvalidParameter());
 
-        Core.$storage().postCount++;
+        uint256 postSequentialId = Core.$storage().postCount++;
         Core.$storage().authorPostCount[postParams.author]++;
+        uint256 postId = Core._generatePostId(postParams.author, authorPostSequentialId);
         PostStorage storage _newPost = Core.$storage().posts[postId];
+
         _newPost.author = postParams.author;
         _newPost.authorPostSequentialId = authorPostSequentialId;
         _newPost.postSequentialId = postSequentialId;
         _newPost.contentURI = postParams.contentURI;
-        _newPost.quotedPostId = postParams.quotedPostId;
-        _newPost.repliedPostId = postParams.repliedPostId;
-        _newPost.repostedPostId = postParams.repostedPostId;
-        _newPost.rootPostId = rootPostId;
-        _newPost.creationTimestamp = creationTimestamp;
-        _newPost.lastUpdatedTimestamp = creationTimestamp;
-    }
 
-    function _forceChecks(uint256 postId, uint256 rootPostId, CreatePostParams memory postParams) internal view {
-        // TODO: Check if the rootPostId == postId case (not a reply, not a repost)
-        if (rootPostId != postId) {
-            require(Core._postExists(rootPostId), Errors.DoesNotExist());
-        }
+        uint256 rootPostId = postId;
+
         if (postParams.quotedPostId != 0) {
             require(Core._postExists(postParams.quotedPostId), Errors.DoesNotExist());
+            _newPost.quotedPostId = postParams.quotedPostId;
         }
         if (postParams.repliedPostId != 0) {
             require(Core._postExists(postParams.repliedPostId), Errors.DoesNotExist());
-            require(rootPostId == Core.$storage().posts[postParams.repliedPostId].rootPostId, Errors.InvalidParameter());
+            _newPost.repliedPostId = postParams.repliedPostId;
+            rootPostId = Core.$storage().posts[postParams.repliedPostId].rootPostId;
         }
         if (postParams.repostedPostId != 0) {
             require(Core._postExists(postParams.repostedPostId), Errors.DoesNotExist());
+            _newPost.repostedPostId = postParams.repostedPostId;
+            rootPostId = Core.$storage().posts[postParams.repostedPostId].rootPostId;
             require(postParams.quotedPostId == 0 && postParams.repliedPostId == 0, Errors.InvalidParameter());
-            require(rootPostId == Core.$storage().posts[postParams.repostedPostId].rootPostId, Errors.InvalidParameter());
             require(bytes(postParams.contentURI).length == 0, Errors.InvalidParameter());
         }
+        if (rootPostId != postId) {
+            require(Core._postExists(rootPostId), Errors.DoesNotExist());
+        }
+        _newPost.rootPostId = rootPostId;
+        _newPost.creationTimestamp = creationTimestamp;
+        _newPost.lastUpdatedTimestamp = creationTimestamp;
+        return (postId, rootPostId);
     }
 }
