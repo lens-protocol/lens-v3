@@ -12,7 +12,7 @@ interface IAccessControl {
      * Returns true if the account is allowed to change the access control in the given contract address, false if not.
      *
      * @param account The account to check if is allowed to change the access control.
-     * @param contractAddress The address where the access control .
+     * @param contractAddress The address where the access control is being changed.
      */
     function canChangeAccessControl(address account, address contractAddress) external view returns (bool);
 
