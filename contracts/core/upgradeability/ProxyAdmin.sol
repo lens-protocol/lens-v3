@@ -38,8 +38,8 @@ contract ProxyAdmin is Ownable {
             require(selector != BeaconProxy.optInToAutoUpgrade.selector, Errors.Locked());
         }
         // Do the call
-        (bool success, bytes memory ret) = to.safecall(value, data);
-        if (!success) {
+        (bool callSucceeded, bytes memory ret) = to.safecall(value, data);
+        if (!callSucceeded) {
             assembly {
                 // Equivalent to reverting with the returned error selector if the length is not zero.
                 let length := mload(ret)

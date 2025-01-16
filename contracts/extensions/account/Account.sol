@@ -156,8 +156,8 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
                 require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
             }
         }
-        (bool success, bytes memory ret) = to.call{value: value}(data);
-        if (!success) {
+        (bool callSucceeded, bytes memory ret) = to.call{value: value}(data);
+        if (!callSucceeded) {
             assembly {
                 // Equivalent to reverting with the returned error selector if the length is not zero.
                 let length := mload(ret)
