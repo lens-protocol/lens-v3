@@ -46,8 +46,8 @@ library RulesLib {
     ) internal returns (bool) {
         bool wasAlreadyConfigured = rulesStorage.isConfigured[ruleAddress][configSalt];
         rulesStorage.isConfigured[ruleAddress][configSalt] = true;
-        (bool success,) = ruleAddress.safecall(encodedConfigureCall);
-        require(success, Errors.ConfigureCallReverted());
+        (bool callSucceeded,) = ruleAddress.safecall(encodedConfigureCall);
+        require(callSucceeded, Errors.ConfigureCallReverted());
         return wasAlreadyConfigured;
     }
 

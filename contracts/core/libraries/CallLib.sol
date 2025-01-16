@@ -6,18 +6,18 @@ import {Errors} from "contracts/core/types/Errors.sol";
 
 library CallLib {
     function safecall(address target, bytes memory data) internal returns (bool, bytes memory) {
-        (bool success, bytes memory returnData) = target.call(data);
-        if (success) {
+        (bool callSucceeded, bytes memory returnData) = target.call(data);
+        if (callSucceeded) {
             require(returnData.length != 0 || target.code.length != 0, Errors.NotAContract());
         }
-        return (success, returnData);
+        return (callSucceeded, returnData);
     }
 
     function safecall(address target, uint256 value, bytes memory data) internal returns (bool, bytes memory) {
-        (bool success, bytes memory returnData) = target.call{value: value}(data);
-        if (success) {
+        (bool callSucceeded, bytes memory returnData) = target.call{value: value}(data);
+        if (callSucceeded) {
             require(returnData.length != 0 || target.code.length != 0, Errors.NotAContract());
         }
-        return (success, returnData);
+        return (callSucceeded, returnData);
     }
 }
