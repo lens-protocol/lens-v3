@@ -133,16 +133,19 @@ contract Feed is
 
     function editPost(
         uint256 postId,
-        EditPostParams memory postParams,
+        EditPostParams calldata postParams,
         KeyValue[] memory customParams,
         RuleProcessingParams[] memory feedRulesParams,
         RuleProcessingParams[] memory rootPostRulesParams,
         RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override {
+        require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;
         // TODO: We can have this for moderators:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, Errors.InvalidMsgSender());
+
+        Core._editPost(postId, postParams);
 
         bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
@@ -186,6 +189,7 @@ contract Feed is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
     ) external virtual override {
+        require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());
         Core._removePost(postId);
