@@ -13,8 +13,9 @@ import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {AccessControlled} from "@core/access/AccessControlled.sol";
 import {Errors} from "@core/types/Errors.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {Rule} from "@core/types/Types.sol";
+import {Rule, RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
 import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
+import {MockRule} from "test/mocks/MockRule.sol";
 
 contract GroupTest is RulesTest, BaseDeployments {
     IGroup group;
@@ -482,7 +483,7 @@ contract GroupTest is RulesTest, BaseDeployments {
         assertEq(memberCountAfter, memberCountBefore + 1);
     }
 
-    function test_NumberOfMembers_DecreasesOnLeave(address member) public {
+    function test_NumberOfMembers_DecreasesOnLeave() public {
         for (uint256 i = 0; i < 10; i++) {
             _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
