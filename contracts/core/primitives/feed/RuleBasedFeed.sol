@@ -112,6 +112,39 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         }
     }
 
+    function _emitEntityRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] memory ruleParams
+    ) internal override {
+        if (wasAlreadyConfigured) {
+            emit IFeed.Lens_Feed_Post_RuleReconfigured(entityId, msg.sender, ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IFeed.Lens_Feed_Post_RuleConfigured(entityId, msg.sender, ruleAddress, configSalt, ruleParams);
+        }
+    }
+
+    function _emitEntityRuleSelectorEvent(
+        bool enabled,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 selector
+    ) internal override {
+        if (enabled) {
+            emit IFeed.Lens_Feed_Post_RuleSelectorEnabled(
+                entityId, msg.sender, ruleAddress, configSalt, isRequired, selector
+            );
+        } else {
+            emit IFeed.Lens_Feed_Post_RuleSelectorDisabled(
+                entityId, msg.sender, ruleAddress, configSalt, isRequired, selector
+            );
+        }
+    }
+
     function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
         return $feedRulesStorage()._getRulesArray(ruleSelector, false).length
             + $feedRulesStorage()._getRulesArray(ruleSelector, true).length;
