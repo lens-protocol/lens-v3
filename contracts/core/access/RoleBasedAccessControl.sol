@@ -100,7 +100,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
 
     function _revokeRole(address account, uint256 roleId) internal virtual {
         uint256 accountRolesLength = _roles[account].length;
-        require(accountRolesLength > 0, Errors.InvalidParameter());
+        require(accountRolesLength > 0, Errors.RedundantStateChange());
         uint256 roleIndex = 0;
         while (roleIndex < accountRolesLength) {
             if (_roles[account][roleIndex] == roleId) {
@@ -109,7 +109,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
                 roleIndex++;
             }
         }
-        require(roleIndex < accountRolesLength, Errors.NotFound()); // Index must be found before reaching the end of the array
+        require(roleIndex < accountRolesLength, Errors.RedundantStateChange()); // Index must be found before reaching the end of the array
         _roles[account][roleIndex] = _roles[account][accountRolesLength - 1];
         _roles[account].pop();
         emit Lens_AccessControl_RoleRevoked(account, roleId);
@@ -157,6 +157,8 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         virtual
         returns (bool)
     {
+        require(contractAddress != ANY_CONTRACT_ADDRESS, Errors.InvalidParameter());
+        require(permissionId != ANY_PERMISSION_ID, Errors.InvalidParameter());
         for (uint256 i = 0; i < _roles[account].length; i++) {
             if (_hasAccess(_roles[account][i], contractAddress, permissionId)) {
                 // GRANTED-overrides strategy
@@ -172,9 +174,6 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         virtual
         returns (bool)
     {
-        require(contractAddress != ANY_CONTRACT_ADDRESS, Errors.InvalidParameter());
-        require(permissionId != ANY_PERMISSION_ID, Errors.InvalidParameter());
-
         Access fullySpecifiedAccess = _access[roleId][contractAddress][permissionId];
 
         if (fullySpecifiedAccess != Access.UNDEFINED) {
