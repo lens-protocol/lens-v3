@@ -111,6 +111,37 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         }
     }
 
+    function _emitEntityRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] memory ruleParams
+    ) internal override {
+        address account = address(uint160(entityId));
+        if (wasAlreadyConfigured) {
+            emit IGraph.Lens_Graph_Follow_RuleReconfigured(account, ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IGraph.Lens_Graph_Follow_RuleConfigured(account, ruleAddress, configSalt, ruleParams);
+        }
+    }
+
+    function _emitEntityRuleSelectorEvent(
+        bool enabled,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 selector
+    ) internal override {
+        address account = address(uint160(entityId));
+        if (enabled) {
+            emit IGraph.Lens_Graph_Follow_RuleSelectorEnabled(account, ruleAddress, configSalt, isRequired, selector);
+        } else {
+            emit IGraph.Lens_Graph_Follow_RuleSelectorDisabled(account, ruleAddress, configSalt, isRequired, selector);
+        }
+    }
+
     function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
         return $graphRulesStorage()._getRulesArray(ruleSelector, false).length
             + $graphRulesStorage()._getRulesArray(ruleSelector, true).length;
