@@ -12,8 +12,17 @@ import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {IFeedRule} from "@core/interfaces/IFeedRule.sol";
-import {Rule, RuleChange, RuleConfigurationChange, RuleSelectorChange} from "@core/types/Types.sol";
+import {
+    Rule,
+    RuleChange,
+    RuleConfigurationChange,
+    RuleSelectorChange,
+    KeyValue,
+    RuleProcessingParams
+} from "@core/types/Types.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {IPostRule} from "@core/interfaces/IPostRule.sol";
+import {MockRule} from "test/mocks/MockRule.sol";
 
 contract FeedTest is RulesTest, BaseDeployments {
     IFeed feed;
@@ -1089,6 +1098,10 @@ contract FeedTest is RulesTest, BaseDeployments {
         // Verify that post IDs are different
         assertTrue(firstPostId != secondPostId, "Post IDs should be unique");
 
+        // Verify author post sequential IDs
+        assertEq(feed.getAuthorPostSequentialId(firstPostId), 1, "First post should have authorPostSequentialId = 1");
+        assertEq(feed.getAuthorPostSequentialId(secondPostId), 2, "Second post should have authorPostSequentialId = 2");
+
         // Create a post from a different author to verify post IDs are author-specific
         address differentAuthor = makeAddr("DIFFERENT_AUTHOR");
         uint256 expectedDifferentAuthorPostId = feed.getNextPostId(differentAuthor);
@@ -1116,6 +1129,13 @@ contract FeedTest is RulesTest, BaseDeployments {
         // Verify that post IDs from different authors are different
         assertTrue(firstPostId != differentAuthorPostId, "Post IDs should be unique across authors");
         assertTrue(secondPostId != differentAuthorPostId, "Post IDs should be unique across authors");
+
+        // Verify different author's post sequential ID starts at 1
+        assertEq(
+            feed.getAuthorPostSequentialId(differentAuthorPostId),
+            1,
+            "Different author's first post should have authorPostSequentialId = 1"
+        );
     }
 
     function test_PostSequentialId_Uniqueness(address firstAuthor, address secondAuthor) public {
@@ -1168,6 +1188,9 @@ contract FeedTest is RulesTest, BaseDeployments {
 
         assertEq(firstPost.postSequentialId, initialPostCount + 1, "First post should have sequential ID 1");
         assertEq(secondPost.postSequentialId, initialPostCount + 2, "Second post should have sequential ID 2");
+
+        assertEq(feed.getPostSequentialId(firstPostId), initialPostCount + 1, "First post sequential ID should match");
+        assertEq(feed.getPostSequentialId(secondPostId), initialPostCount + 2, "Second post sequential ID should match");
 
         // Verify global post count increased correctly
         assertEq(feed.getPostCount(), initialPostCount + 2, "Global post count should increase by 2");
@@ -1810,7 +1833,7 @@ contract FeedTest is RulesTest, BaseDeployments {
             selectorChanges: new RuleSelectorChange[](1)
         });
         ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
+            RuleSelectorChange({ruleSelector: IPostRule.processCreatePost.selector, isRequired: true, enabled: true});
 
         // Create a root post first
         vm.prank(postAuthor);
@@ -1867,6 +1890,1031 @@ contract FeedTest is RulesTest, BaseDeployments {
             rootPostRulesParams: _emptyRuleProcessingParamsArray(),
             quotedPostRulesParams: _emptyRuleProcessingParamsArray()
         });
+    }
+
+    function test_EditPost_WithExtraData_Add() public {
+        string memory contentURI = "ipfs://original";
+        bytes32 key = bytes32("test.key");
+        bytes memory value = abi.encode("test.value");
+
+        // Create post first
+        vm.prank(author);
+        uint256 postId = feed.createPost({
+            postParams: _getCreatePostParams(contentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Edit post and add extra data
+        KeyValue[] memory extraData = new KeyValue[](1);
+        extraData[0] = KeyValue(key, value);
+
+        vm.prank(author);
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_Post_ExtraDataAdded(postId, key, value, value);
+
+        feed.editPost({
+            postId: postId,
+            postParams: EditPostParams(contentURI, extraData),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify extra data was stored
+        assertEq(feed.getPostExtraData(postId, key), value);
+    }
+
+    function _getCreatePostParams(string memory contentURI) internal view returns (CreatePostParams memory) {
+        return CreatePostParams({
+            author: msg.sender,
+            contentURI: contentURI,
+            quotedPostId: 0,
+            repliedPostId: 0,
+            repostedPostId: 0,
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function _getCreatePostParams(string memory contentURI, address _author)
+        internal
+        pure
+        returns (CreatePostParams memory)
+    {
+        return CreatePostParams({
+            author: _author,
+            contentURI: contentURI,
+            quotedPostId: 0,
+            repliedPostId: 0,
+            repostedPostId: 0,
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function test_EditPost_WithExtraData_Update() public {
+        string memory contentURI = "ipfs://original";
+        bytes32 key = bytes32("test.key");
+        bytes memory initialValue = abi.encode("initial.value");
+        bytes memory updatedValue = abi.encode("updated.value");
+
+        // Create post with initial extra data
+        KeyValue[] memory initialExtraData = new KeyValue[](1);
+        initialExtraData[0] = KeyValue(key, initialValue);
+
+        vm.prank(author);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: contentURI,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                repostedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: initialExtraData
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify initial extra data was stored
+        assertEq(feed.getPostExtraData(postId, key), initialValue);
+
+        // Update extra data
+        KeyValue[] memory updatedExtraData = new KeyValue[](1);
+        updatedExtraData[0] = KeyValue(key, updatedValue);
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_Post_ExtraDataUpdated(postId, key, updatedValue, updatedValue);
+
+        vm.prank(author);
+        feed.editPost({
+            postId: postId,
+            postParams: EditPostParams(contentURI, updatedExtraData),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify extra data was updated
+        assertEq(feed.getPostExtraData(postId, key), updatedValue);
+    }
+
+    function test_CreatePost_WithExtraData() public {
+        string memory contentURI = "ipfs://original";
+        bytes32 key = bytes32("test.key");
+        bytes memory value = abi.encode("test.value");
+
+        // Create post with extra data
+        KeyValue[] memory extraData = new KeyValue[](1);
+        extraData[0] = KeyValue(key, value);
+
+        uint256 expectedPostId = uint256(keccak256(abi.encode("evm:", block.chainid, address(feed), author, 1)));
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_Post_ExtraDataAdded(expectedPostId, key, value, value);
+
+        vm.prank(author);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: contentURI,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                repostedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: extraData
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify extra data was stored
+        assertEq(postId, expectedPostId, "Post ID mismatch");
+        assertEq(feed.getPostExtraData(postId, key), value);
+    }
+
+    function test_CannotSetExtraData_NonexistentPost() public {
+        string memory contentURI = "ipfs://original";
+        bytes32 key = bytes32("test.key");
+        bytes memory value = abi.encode("test.value");
+
+        // Try to edit a non-existent post with extra data
+        KeyValue[] memory extraData = new KeyValue[](1);
+        extraData[0] = KeyValue(key, value);
+
+        uint256 nonExistentPostId = 123456789;
+
+        vm.prank(author);
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        feed.editPost({
+            postId: nonExistentPostId,
+            postParams: EditPostParams(contentURI, extraData),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotSetExtraData_DifferentSender() public {
+        string memory contentURI = "ipfs://original";
+        bytes32 key = bytes32("test.key");
+        bytes memory value = abi.encode("test.value");
+
+        // Create post as author
+        vm.prank(author);
+        uint256 postId = feed.createPost({
+            postParams: _getCreatePostParams(contentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Try to edit post with extra data as different sender
+        KeyValue[] memory extraData = new KeyValue[](1);
+        extraData[0] = KeyValue(key, value);
+
+        address differentSender = makeAddr("DIFFERENT_SENDER");
+        vm.prank(differentSender);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        feed.editPost({
+            postId: postId,
+            postParams: EditPostParams(contentURI, extraData),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CreatePost_WithReplyAndQuote() public {
+        string memory originalContentURI = "ipfs://original";
+        string memory replyContentURI = "ipfs://reply";
+        string memory quotedContentURI = "ipfs://quoted";
+
+        // Create original post (will be replied to)
+        vm.prank(author);
+        uint256 originalPostId = feed.createPost({
+            postParams: _getCreatePostParams(originalContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create another post (will be quoted)
+        vm.prank(author);
+        uint256 quotedPostId = feed.createPost({
+            postParams: _getCreatePostParams(quotedContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create reply post that also quotes another post
+        vm.prank(author);
+        uint256 replyPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: replyContentURI,
+                quotedPostId: quotedPostId,
+                repliedPostId: originalPostId,
+                repostedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get all posts
+        Post memory originalPost = feed.getPost(originalPostId);
+        Post memory quotedPost = feed.getPost(quotedPostId);
+        Post memory replyPost = feed.getPost(replyPostId);
+
+        // Verify reply post inherits root from replied post
+        assertEq(replyPost.rootPostId, originalPostId, "Reply post should inherit root from replied post");
+        assertEq(replyPost.repliedPostId, originalPostId, "Reply post should reference original post as replied");
+        assertEq(replyPost.quotedPostId, quotedPostId, "Reply post should reference quoted post");
+        assertEq(replyPost.repostedPostId, 0, "Reply post should not have reposted post ID");
+
+        // Verify original post remains unchanged
+        assertEq(originalPost.rootPostId, originalPostId, "Original post should remain its own root");
+        assertEq(originalPost.quotedPostId, 0, "Original post should not have quoted post ID");
+        assertEq(originalPost.repliedPostId, 0, "Original post should not have replied post ID");
+        assertEq(originalPost.repostedPostId, 0, "Original post should not have reposted post ID");
+
+        // Verify quoted post remains unchanged
+        assertEq(quotedPost.rootPostId, quotedPostId, "Quoted post should remain its own root");
+        assertEq(quotedPost.quotedPostId, 0, "Quoted post should not have quoted post ID");
+        assertEq(quotedPost.repliedPostId, 0, "Quoted post should not have replied post ID");
+        assertEq(quotedPost.repostedPostId, 0, "Quoted post should not have reposted post ID");
+    }
+
+    function test_CannotCreatePost_WithRepostAndQuote() public {
+        string memory originalContentURI = "ipfs://original";
+        string memory quotedContentURI = "ipfs://quoted";
+
+        // Create original post (will be reposted)
+        vm.prank(author);
+        uint256 originalPostId = feed.createPost({
+            postParams: _getCreatePostParams(originalContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create another post (will be quoted)
+        vm.prank(author);
+        uint256 quotedPostId = feed.createPost({
+            postParams: _getCreatePostParams(quotedContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Try to create a post that is both a repost and a quote (should fail)
+        vm.prank(author);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: "", // Repost has empty content URI
+                quotedPostId: quotedPostId,
+                repliedPostId: 0,
+                repostedPostId: originalPostId, // Cannot have both repostedPostId and quotedPostId
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotAddRules_ToReplyPost() public {
+        string memory originalContentURI = "ipfs://original";
+        string memory replyContentURI = "ipfs://reply";
+
+        // Create original post first
+        vm.prank(author);
+        uint256 originalPostId = feed.createPost({
+            postParams: _getCreatePostParams(originalContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare rule changes
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processCreatePost.selector, isRequired: true, enabled: true});
+
+        // Try to create a reply post with rules (should fail)
+        vm.prank(author);
+        vm.expectRevert(Errors.CannotHaveRules.selector);
+        feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: replyContentURI,
+                quotedPostId: 0,
+                repliedPostId: originalPostId,
+                repostedPostId: 0,
+                ruleChanges: ruleChanges, // Trying to add rules to a reply post
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotAddRules_ToReplyWithQuote() public {
+        string memory originalContentURI = "ipfs://original";
+        string memory quotedContentURI = "ipfs://quoted";
+        string memory replyContentURI = "ipfs://reply";
+
+        // Create original post (will be replied to)
+        vm.prank(author);
+        uint256 originalPostId = feed.createPost({
+            postParams: _getCreatePostParams(originalContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create another post (will be quoted)
+        vm.prank(author);
+        uint256 quotedPostId = feed.createPost({
+            postParams: _getCreatePostParams(quotedContentURI, author),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare rule changes
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processCreatePost.selector, isRequired: true, enabled: true});
+
+        // Try to create a reply post with quote and rules (should fail)
+        vm.prank(author);
+        vm.expectRevert(Errors.CannotHaveRules.selector);
+        feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: replyContentURI,
+                quotedPostId: quotedPostId,
+                repliedPostId: originalPostId,
+                repostedPostId: 0,
+                ruleChanges: ruleChanges, // Trying to add rules to a reply post with quote
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_EditQuote_ShouldProcessQuotedPostRules() public {
+        string memory originalContentURI = "ipfs://original";
+        string memory quoteContentURI = "ipfs://quote";
+        string memory newQuoteContentURI = "ipfs://quote_edited";
+
+        // Create original post with a mock rule
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 originalPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: originalContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: ruleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create quote post
+        vm.prank(author);
+        uint256 quotePostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: quoteContentURI,
+                repostedPostId: 0,
+                quotedPostId: originalPostId,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare for edit
+        EditPostParams memory editParams =
+            EditPostParams({contentURI: newQuoteContentURI, extraData: _emptyKeyValueArray()});
+
+        vm.expectCall(
+            address(rule),
+            abi.encodeCall(
+                IPostRule.processEditPost,
+                (
+                    bytes32(uint256(1)),
+                    originalPostId,
+                    quotePostId,
+                    editParams,
+                    _emptyKeyValueArray(),
+                    _emptyKeyValueArray()
+                )
+            )
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_PostEdited(
+            quotePostId,
+            author,
+            editParams,
+            _emptyKeyValueArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            address(0)
+        );
+
+        // Edit the quote post
+        vm.prank(author);
+        feed.editPost({
+            postId: quotePostId,
+            postParams: editParams,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post relationships remain intact
+        Post memory quotePost = feed.getPost(quotePostId);
+        assertEq(quotePost.quotedPostId, originalPostId, "Quoted post ID should remain unchanged");
+        assertEq(quotePost.contentURI, newQuoteContentURI, "Content URI should be updated");
+        assertEq(quotePost.rootPostId, quotePostId, "Root post ID should be self for quote");
+        assertEq(quotePost.repliedPostId, 0, "Reply post ID should remain 0");
+        assertEq(quotePost.repostedPostId, 0, "Repost post ID should remain 0");
+    }
+
+    function test_EditReply_ShouldProcessRootPostRules() public {
+        string memory originalContentURI = "ipfs://original";
+        string memory replyContentURI = "ipfs://reply";
+        string memory newReplyContentURI = "ipfs://reply_edited";
+
+        // Create original post with a mock rule
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 originalPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: originalContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: ruleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create reply post
+        vm.prank(author);
+        uint256 replyPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: replyContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: originalPostId,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare for edit
+        EditPostParams memory editParams =
+            EditPostParams({contentURI: newReplyContentURI, extraData: _emptyKeyValueArray()});
+
+        vm.expectCall(
+            address(rule),
+            abi.encodeCall(
+                IPostRule.processEditPost,
+                (
+                    bytes32(uint256(1)),
+                    originalPostId,
+                    replyPostId,
+                    editParams,
+                    _emptyKeyValueArray(),
+                    _emptyKeyValueArray()
+                )
+            )
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_PostEdited(
+            replyPostId,
+            author,
+            editParams,
+            _emptyKeyValueArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            address(0)
+        );
+
+        // Edit the reply post
+        vm.prank(author);
+        feed.editPost({
+            postId: replyPostId,
+            postParams: editParams,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post relationships remain intact
+        Post memory replyPost = feed.getPost(replyPostId);
+        assertEq(replyPost.repliedPostId, originalPostId, "Replied post ID should remain unchanged");
+        assertEq(replyPost.contentURI, newReplyContentURI, "Content URI should be updated");
+        assertEq(replyPost.rootPostId, originalPostId, "Root post ID should be original post");
+        assertEq(replyPost.quotedPostId, 0, "Quote post ID should remain 0");
+        assertEq(replyPost.repostedPostId, 0, "Repost post ID should remain 0");
+    }
+
+    function test_EditReplyWithQuote_ShouldProcessBothRules() public {
+        string memory rootContentURI = "ipfs://root";
+        string memory quotedContentURI = "ipfs://quoted";
+        string memory replyContentURI = "ipfs://reply";
+        string memory newReplyContentURI = "ipfs://reply_edited";
+
+        // Create root post with a mock rule
+        RuleChange[] memory rootRuleChanges = new RuleChange[](1);
+        rootRuleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        rootRuleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 rootPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: rootContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: rootRuleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create quoted post with a different mock rule
+        MockRule quotedRule = new MockRule();
+        RuleChange[] memory quotedRuleChanges = new RuleChange[](1);
+        quotedRuleChanges[0] = RuleChange({
+            ruleAddress: address(quotedRule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        quotedRuleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 quotedPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: quotedContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: quotedRuleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create reply post that also quotes another post
+        vm.prank(author);
+        uint256 replyPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: replyContentURI,
+                repostedPostId: 0,
+                quotedPostId: quotedPostId,
+                repliedPostId: rootPostId,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare for edit
+        EditPostParams memory editParams =
+            EditPostParams({contentURI: newReplyContentURI, extraData: _emptyKeyValueArray()});
+
+        // Expect both rules to be called
+        vm.expectCall(
+            address(rule),
+            abi.encodeCall(
+                IPostRule.processEditPost,
+                (bytes32(uint256(1)), rootPostId, replyPostId, editParams, _emptyKeyValueArray(), _emptyKeyValueArray())
+            )
+        );
+
+        vm.expectCall(
+            address(quotedRule),
+            abi.encodeCall(
+                IPostRule.processEditPost,
+                (
+                    bytes32(uint256(1)),
+                    quotedPostId,
+                    replyPostId,
+                    editParams,
+                    _emptyKeyValueArray(),
+                    _emptyKeyValueArray()
+                )
+            )
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_PostEdited(
+            replyPostId,
+            author,
+            editParams,
+            _emptyKeyValueArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            address(0)
+        );
+
+        // Edit the reply post
+        vm.prank(author);
+        feed.editPost({
+            postId: replyPostId,
+            postParams: editParams,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post relationships remain intact
+        Post memory replyPost = feed.getPost(replyPostId);
+        assertEq(replyPost.repliedPostId, rootPostId, "Replied post ID should remain unchanged");
+        assertEq(replyPost.quotedPostId, quotedPostId, "Quoted post ID should remain unchanged");
+        assertEq(replyPost.contentURI, newReplyContentURI, "Content URI should be updated");
+        assertEq(replyPost.rootPostId, rootPostId, "Root post ID should be root post");
+        assertEq(replyPost.repostedPostId, 0, "Repost post ID should remain 0");
+    }
+
+    function test_EditQuoteChain_ShouldProcessQuotedPostRules() public {
+        string memory firstContentURI = "ipfs://first";
+        string memory secondContentURI = "ipfs://second";
+        string memory thirdContentURI = "ipfs://third";
+        string memory newThirdContentURI = "ipfs://third_edited";
+
+        // Create first post with a mock rule
+        RuleChange[] memory firstRuleChanges = new RuleChange[](1);
+        firstRuleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        firstRuleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 firstPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: firstContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: firstRuleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create second post with a different mock rule
+        MockRule secondRule = new MockRule();
+        RuleChange[] memory secondRuleChanges = new RuleChange[](1);
+        secondRuleChanges[0] = RuleChange({
+            ruleAddress: address(secondRule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        secondRuleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 secondPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: secondContentURI,
+                repostedPostId: 0,
+                quotedPostId: firstPostId,
+                repliedPostId: 0,
+                ruleChanges: secondRuleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create third post quoting the second post
+        vm.prank(author);
+        uint256 thirdPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: thirdContentURI,
+                repostedPostId: 0,
+                quotedPostId: secondPostId,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare for edit
+        EditPostParams memory editParams =
+            EditPostParams({contentURI: newThirdContentURI, extraData: _emptyKeyValueArray()});
+
+        // Expect only the second post's rule to be called since it's the directly quoted post
+        vm.expectCall(
+            address(secondRule),
+            abi.encodeCall(
+                IPostRule.processEditPost,
+                (
+                    bytes32(uint256(1)),
+                    secondPostId,
+                    thirdPostId,
+                    editParams,
+                    _emptyKeyValueArray(),
+                    _emptyKeyValueArray()
+                )
+            )
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_PostEdited(
+            thirdPostId,
+            author,
+            editParams,
+            _emptyKeyValueArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            address(0)
+        );
+
+        // Edit the third post
+        vm.prank(author);
+        feed.editPost({
+            postId: thirdPostId,
+            postParams: editParams,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post relationships remain intact
+        Post memory thirdPost = feed.getPost(thirdPostId);
+        assertEq(thirdPost.quotedPostId, secondPostId, "Quoted post ID should remain unchanged");
+        assertEq(thirdPost.contentURI, newThirdContentURI, "Content URI should be updated");
+        assertEq(thirdPost.rootPostId, thirdPostId, "Root post ID should be self for quote");
+        assertEq(thirdPost.repliedPostId, 0, "Reply post ID should remain 0");
+        assertEq(thirdPost.repostedPostId, 0, "Repost post ID should remain 0");
+    }
+
+    function test_EditReplyChain_ShouldProcessRootRules() public {
+        string memory rootContentURI = "ipfs://root";
+        string memory firstReplyContentURI = "ipfs://first_reply";
+        string memory secondReplyContentURI = "ipfs://second_reply";
+        string memory newSecondReplyContentURI = "ipfs://second_reply_edited";
+
+        // Create root post with a mock rule
+        RuleChange[] memory rootRuleChanges = new RuleChange[](1);
+        rootRuleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        rootRuleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 rootPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: rootContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: rootRuleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create first reply post
+        vm.prank(author);
+        uint256 firstReplyId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: firstReplyContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: rootPostId,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create second reply post (replying to first reply)
+        vm.prank(author);
+        uint256 secondReplyId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: secondReplyContentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: firstReplyId,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Prepare for edit
+        EditPostParams memory editParams =
+            EditPostParams({contentURI: newSecondReplyContentURI, extraData: _emptyKeyValueArray()});
+
+        // Expect root post's rule to be called
+        vm.expectCall(
+            address(rule),
+            abi.encodeCall(
+                IPostRule.processEditPost,
+                (
+                    bytes32(uint256(1)),
+                    rootPostId,
+                    secondReplyId,
+                    editParams,
+                    _emptyKeyValueArray(),
+                    _emptyKeyValueArray()
+                )
+            )
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_PostEdited(
+            secondReplyId,
+            author,
+            editParams,
+            _emptyKeyValueArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            address(0)
+        );
+
+        // Edit the second reply post
+        vm.prank(author);
+        feed.editPost({
+            postId: secondReplyId,
+            postParams: editParams,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post relationships remain intact
+        Post memory secondReply = feed.getPost(secondReplyId);
+        assertEq(secondReply.repliedPostId, firstReplyId, "Replied post ID should remain unchanged");
+        assertEq(secondReply.contentURI, newSecondReplyContentURI, "Content URI should be updated");
+        assertEq(secondReply.rootPostId, rootPostId, "Root post ID should be root post");
+        assertEq(secondReply.quotedPostId, 0, "Quote post ID should remain 0");
+        assertEq(secondReply.repostedPostId, 0, "Repost post ID should remain 0");
+    }
+
+    function test_CannotGetAuthorPostSequentialId_ForNonExistentPost(uint256 nonExistentPostId) public {
+        // Try to get authorPostSequentialId for a non-existent post
+        vm.assume(feed.postExists(nonExistentPostId) == false);
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        feed.getAuthorPostSequentialId(nonExistentPostId);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
