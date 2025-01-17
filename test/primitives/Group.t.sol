@@ -16,8 +16,9 @@ import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 import {Rule, RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
 import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
 import {MockRule} from "test/mocks/MockRule.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 
-contract GroupTest is RulesTest, BaseDeployments {
+contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IGroup group;
 
     address account = makeAddr("ACCOUNT");
@@ -25,7 +26,7 @@ contract GroupTest is RulesTest, BaseDeployments {
     MockAccessControl mockAccessControl;
     address groupForRules;
 
-    function setUp() public override(RulesTest, BaseDeployments) {
+    function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
 
         group = IGroup(
@@ -55,6 +56,8 @@ contract GroupTest is RulesTest, BaseDeployments {
         mockAccessControl.mockAccess(groupOwner, address(group), PID__REMOVE_MEMBER, true);
 
         RulesTest.setUp();
+
+        RuleExecutionTest.setUp();
     }
 
     event Lens_Group_MemberAdded(
@@ -503,19 +506,19 @@ contract GroupTest is RulesTest, BaseDeployments {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
         IGroup(groupForRules).changeGroupRules(ruleChanges);
     }
 
-    function _primitiveAddress() internal view override returns (address) {
+    function _primitiveAddress() internal view override(RulesTest) returns (address) {
         return groupForRules;
     }
 
-    function _aValidRuleSelector() internal pure override returns (bytes4) {
+    function _aValidRuleSelector() internal pure override(RulesTest) returns (bytes4) {
         return IGroupRule.processAddition.selector;
     }
 
-    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override(RulesTest) returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = IGroupRule.processAddition.selector;
         selectors[1] = IGroupRule.processRemoval.selector;
@@ -524,7 +527,128 @@ contract GroupTest is RulesTest, BaseDeployments {
         return selectors;
     }
 
-    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+    function _getPrimitiveRules(bytes4 selector, bool required)
+        internal
+        view
+        virtual
+        override(RulesTest)
+        returns (Rule[] memory)
+    {
         return IGroup(groupForRules).getGroupRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IGroupRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testRuleExecution_JoinGroup(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = IGroupRule.processJoining.selector;
+        bytes memory executionFunctionCallData =
+            abi.encodeCall(IGroup.joinGroup, (address(this), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray()));
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGroupRule.processJoining, (bytes32(uint256(1)), address(this), _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(groupForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_LeaveGroup(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        IGroup(groupForRules).joinGroup(address(this), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray());
+
+        bytes4 executionSelector = IGroupRule.processLeaving.selector;
+        bytes memory executionFunctionCallData =
+            abi.encodeCall(IGroup.leaveGroup, (address(this), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray()));
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGroupRule.processLeaving, (bytes32(uint256(1)), address(this), _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(groupForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_AddMember(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        // If there are group rules on ADD_MEMBER selector then PID__ADD_MEMBER is skipped, giving control to the group rules
+        bytes4 executionSelector = IGroupRule.processAddition.selector;
+        bytes memory executionFunctionCallData =
+            abi.encodeCall(IGroup.addMember, (address(this), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray()));
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGroupRule.processAddition,
+            (bytes32(uint256(1)), address(this), address(this), _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(groupForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_RemoveMember(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        IGroup(groupForRules).joinGroup(address(this), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray());
+
+        bytes4 executionSelector = IGroupRule.processRemoval.selector;
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            IGroup.removeMember, (address(this), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGroupRule.processRemoval,
+            (bytes32(uint256(1)), groupOwner, address(this), _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        mockAccessControl.mockAccess(groupOwner, address(groupForRules), PID__REMOVE_MEMBER, true);
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(groupForRules),
+            executionFunctionCallData,
+            groupOwner,
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
     }
 }
