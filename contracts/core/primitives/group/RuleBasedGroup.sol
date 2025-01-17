@@ -55,6 +55,13 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         return abi.encodeCall(IGroupRule.configure, (configSalt, ruleParams));
     }
 
+    function _encodeEntityConfigureCall(uint256 entityId, bytes32 configSalt, KeyValue[] memory ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {}
+
     function _emitPrimitiveRuleConfiguredEvent(
         bool wasAlreadyConfigured,
         address ruleAddress,
@@ -81,6 +88,23 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
             emit Lens_Group_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
         }
     }
+
+    function _emitEntityRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] memory ruleParams
+    ) internal override {}
+
+    function _emitEntityRuleSelectorEvent(
+        bool enabled,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 selector
+    ) internal override {}
 
     function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
         return $groupRulesStorage()._getRulesArray(ruleSelector, false).length

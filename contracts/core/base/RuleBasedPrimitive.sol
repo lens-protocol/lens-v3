@@ -120,8 +120,7 @@ abstract contract RuleBasedPrimitive {
         internal
         pure
         virtual
-        returns (bytes memory)
-    {}
+        returns (bytes memory);
 
     function _emitEntityRuleConfiguredEvent(
         bool wasAlreadyConfigured,
@@ -129,7 +128,7 @@ abstract contract RuleBasedPrimitive {
         address ruleAddress,
         bytes32 configSalt,
         KeyValue[] memory ruleParams
-    ) internal virtual {}
+    ) internal virtual;
 
     function _emitEntityRuleSelectorEvent(
         bool enabled,
@@ -138,7 +137,7 @@ abstract contract RuleBasedPrimitive {
         bytes32 configSalt,
         bool isRequired,
         bytes4 selector
-    ) internal virtual {}
+    ) internal virtual;
 
     // Internal
 
@@ -221,9 +220,9 @@ abstract contract RuleBasedPrimitive {
         }
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] memory ruleChanges) internal virtual {}
+    function _beforeChangePrimitiveRules(RuleChange[] memory ruleChanges) internal virtual;
 
-    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges) internal virtual {}
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges) internal virtual;
 
     function _configureRule(
         RulesStorage storage rulesStorage,

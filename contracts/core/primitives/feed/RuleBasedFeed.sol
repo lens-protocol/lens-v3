@@ -47,17 +47,17 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function changePostRules(
         uint256 postId,
         RuleChange[] calldata ruleChanges,
-        RuleProcessingParams[] calldata ruleChangesProcessingParams
+        RuleProcessingParams[] calldata feedRulesParams
     ) external virtual override {
-        _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, ruleChangesProcessingParams);
+        _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, feedRulesParams);
     }
 
     function _processEntityRulesChanges(
-        uint256 entityId,
+        uint256 postId,
         RuleChange[] memory ruleChanges,
-        RuleProcessingParams[] memory ruleChangesProcessingParams
+        RuleProcessingParams[] memory feedRulesParams
     ) internal virtual override {
-        _processPostRulesChanges(entityId, ruleChanges, ruleChangesProcessingParams);
+        _processPostRulesChanges(postId, ruleChanges, feedRulesParams);
     }
 
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
@@ -83,6 +83,15 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         returns (bytes memory)
     {
         return abi.encodeCall(IFeedRule.configure, (configSalt, ruleParams));
+    }
+
+    function _encodeEntityConfigureCall(uint256 postId, bytes32 configSalt, KeyValue[] memory ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
+        return abi.encodeCall(IPostRule.configure, (configSalt, postId, ruleParams));
     }
 
     function _emitPrimitiveRuleConfiguredEvent(

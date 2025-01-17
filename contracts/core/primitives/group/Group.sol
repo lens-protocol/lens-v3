@@ -75,6 +75,13 @@ contract Group is
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
 
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges)
+        internal
+        pure
+        virtual
+        override
+    {}
+
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {

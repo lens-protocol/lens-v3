@@ -84,6 +84,15 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         return abi.encodeCall(IGraphRule.configure, (configSalt, ruleParams));
     }
 
+    function _encodeEntityConfigureCall(uint256 accountAsUint256, bytes32 configSalt, KeyValue[] memory ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
+        return abi.encodeCall(IFollowRule.configure, (configSalt, address(uint160(accountAsUint256)), ruleParams));
+    }
+
     function _emitPrimitiveRuleConfiguredEvent(
         bool wasAlreadyConfigured,
         address ruleAddress,
