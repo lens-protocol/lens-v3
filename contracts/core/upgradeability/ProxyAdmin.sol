@@ -20,7 +20,7 @@ contract ProxyAdmin is Ownable {
     }
 
     function call(address to, uint256 value, bytes calldata data) external onlyOwner returns (bytes memory) {
-        bytes4 selector = bytes4(data[0]);
+        bytes4 selector = bytes4(data);
         if (LOCK.isLocked()) {
             // While the Proxy Admin is locked it:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
@@ -37,15 +37,6 @@ contract ProxyAdmin is Ownable {
             // - Cannot opt-in to auto-upgrade in the Proxy
             require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
-        // Do the call
-        (bool callSucceeded, bytes memory ret) = to.safecall(value, data);
-        if (!callSucceeded) {
-            assembly {
-                // Equivalent to reverting with the returned error selector if the length is not zero.
-                let length := mload(ret)
-                if iszero(iszero(length)) { revert(add(ret, 32), length) }
-            }
-        }
-        return ret;
+        return to.handledsafecall(value, data);
     }
 }
