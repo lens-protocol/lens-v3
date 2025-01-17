@@ -587,4 +587,8 @@ contract NamespaceTest is RulesTest, BaseDeployments {
     function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
         return INamespace(namespaceForRules).getNamespaceRules(selector, required);
     }
+
+    function _configureRuleSelector() internal pure override returns (bytes4) {
+        return INamespaceRule.configure.selector;
+    }
 }

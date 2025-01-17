@@ -43,6 +43,24 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         require(!_shouldSelectorRevert[IPrimitiveRule.configure.selector]);
     }
 
+    function configure(bytes32, /* configSalt */ uint256, /* postId */ KeyValue[] calldata /* ruleParams */ )
+        external
+        view
+        override
+    {
+        console.log("configure post rule");
+        require(!_shouldSelectorRevert[IPostRule.configure.selector]);
+    }
+
+    function configure(bytes32, /* configSalt */ address, /* account */ KeyValue[] calldata /* ruleParams */ )
+        external
+        view
+        override
+    {
+        console.log("configure follow rule");
+        require(!_shouldSelectorRevert[IFollowRule.configure.selector]);
+    }
+
     function processCreation(
         bytes32, /* configSalt */
         address, /* originalMsgSender */
@@ -191,22 +209,6 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         KeyValue[] calldata /* ruleParams */
     ) external view override {
         require(!_shouldSelectorRevert[IGroupRule.processLeaving.selector]);
-    }
-
-    function configure(bytes32, /* configSalt */ address, /* account */ KeyValue[] calldata /* ruleParams */ )
-        external
-        view
-        override
-    {
-        require(!_shouldSelectorRevert[IGroupRule.configure.selector]);
-    }
-
-    function configure(bytes32, /* configSalt */ uint256, /* postId */ KeyValue[] calldata /* ruleParams */ )
-        external
-        view
-        override
-    {
-        require(!_shouldSelectorRevert[IPostRule.configure.selector]);
     }
 
     function processCreatePost(

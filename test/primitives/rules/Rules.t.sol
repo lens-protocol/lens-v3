@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identiier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "test/helpers/TypeHelpers.sol";
 import {Rule, RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
 import {MockAccessControlLib} from "test/helpers/MockAccessControlLib.sol";
-import {MockRule, IPrimitiveRule} from "test/mocks/MockRule.sol";
+import {MockRule} from "test/mocks/MockRule.sol";
 import {Errors} from "@core/types/Errors.sol";
 
 abstract contract RulesTest is Test {
@@ -19,6 +19,8 @@ abstract contract RulesTest is Test {
     function _getPrimitiveSupportedRuleSelectors() internal virtual returns (bytes4[] memory);
 
     function _getPrimitiveRules(bytes4 selector, bool required) internal virtual returns (Rule[] memory);
+
+    function _configureRuleSelector() internal virtual returns (bytes4);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -357,7 +359,7 @@ abstract contract RulesTest is Test {
         _changeRules(ruleChanges);
     }
 
-    function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public {
+    function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public virtual {
         // Mock Access Control to disallow changing rules
         _primitiveAddress().mockAccess({
             account: address(this),
@@ -407,7 +409,7 @@ abstract contract RulesTest is Test {
     }
 
     function test_Cannot_ChangeRules_IfConfigureCallReverts() public {
-        rule.mockToRevertOn(IPrimitiveRule.configure.selector);
+        rule.mockToRevertOn(_configureRuleSelector());
         RuleChange[] memory ruleChanges = new RuleChange[](1);
         ruleChanges[0] = RuleChange({
             ruleAddress: address(rule),
@@ -505,7 +507,7 @@ abstract contract RulesTest is Test {
         _changeRules(ruleChanges);
     }
 
-    function test_Cannot_ChangeRules_DisableSelectorThatIsNotEnabled() public {
+    function test_Cannot_ChangeRules_DisableSelectorThatIsNotEnabled() public virtual {
         bytes4 enabledSelector = _getPrimitiveSupportedRuleSelectors()[0];
         bytes4 disabledSelector = _getPrimitiveSupportedRuleSelectors()[1];
 

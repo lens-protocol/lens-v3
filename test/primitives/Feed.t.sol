@@ -48,12 +48,6 @@ contract FeedTest is RulesTest, BaseDeployments {
             })
         );
 
-        // Ensure no one has the REMOVE_POST permission
-        // PID__REMOVE_POST = keccak256("lens.permission.RemovePost")
-        mockAccessControl.mockAccess(
-            address(0), address(feed), uint256(0x25b86c749bcf827bec85b3f107e1d65771462eb329e68ff158d50a2f4b301c89), false
-        );
-
         feedForRules = feedFactory.deployFeed({
             metadataURI: "uri://feed",
             accessControl: mockAccessControl,
@@ -2917,6 +2911,49 @@ contract FeedTest is RulesTest, BaseDeployments {
         feed.getAuthorPostSequentialId(nonExistentPostId);
     }
 
+    function test_CannotChangePostRules_IfNotAuthor(address nonAuthor) public {
+        vm.assume(nonAuthor != address(0));
+        vm.assume(nonAuthor != author);
+
+        // Create original post with rules
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processEditPost.selector, isRequired: true, enabled: true});
+
+        vm.prank(author);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: author,
+                contentURI: "original content uri",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: ruleChanges,
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Try to change rules as non-author
+        vm.prank(nonAuthor);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+
+        feed.changePostRules({
+            postId: postId,
+            ruleChanges: ruleChanges,
+            feedRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function _changeRules(RuleChange[] memory ruleChanges) internal override {
@@ -2942,5 +2979,9 @@ contract FeedTest is RulesTest, BaseDeployments {
 
     function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
         return IFeed(feedForRules).getFeedRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override returns (bytes4) {
+        return IFeedRule.configure.selector;
     }
 }
