@@ -24,18 +24,18 @@ contract ProxyAdmin is Ownable {
         if (LOCK.isLocked()) {
             // While the Proxy Admin is locked it:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
-            require(selector != BeaconProxy.changeProxyAdmin.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__changeProxyAdmin.selector, Errors.Locked());
             // - Cannot change the Beacon in the Proxy
-            require(selector != BeaconProxy.setBeacon.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__setBeacon.selector, Errors.Locked());
             // - Cannot change the implementation in the Proxy
-            require(selector != BeaconProxy.setImplementation.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__setImplementation.selector, Errors.Locked());
             // - Cannot trigger an upgrade in the Proxy
-            require(selector != BeaconProxy.triggerUpgradeToVersion.selector, Errors.Locked());
-            require(selector != BeaconProxy.triggerUpgrade.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__triggerUpgradeToVersion.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__triggerUpgrade.selector, Errors.Locked());
             // - Cannot opt-out from auto-upgrade in the Proxy
-            require(selector != BeaconProxy.optOutFromAutoUpgrade.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__optOutFromAutoUpgrade.selector, Errors.Locked());
             // - Cannot opt-in to auto-upgrade in the Proxy
-            require(selector != BeaconProxy.optInToAutoUpgrade.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
         // Do the call
         (bool callSucceeded, bytes memory ret) = to.safecall(value, data);

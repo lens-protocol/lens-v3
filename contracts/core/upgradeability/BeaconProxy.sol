@@ -62,26 +62,26 @@ contract BeaconProxy {
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
-    function changeProxyAdmin(address proxyAdmin) external {
+    function proxy__changeProxyAdmin(address proxyAdmin) external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $proxyAdmin().value = proxyAdmin;
         emit AdminChanged(msg.sender, proxyAdmin);
     }
 
-    function optOutFromAutoUpgrade() external {
+    function proxy__optOutFromAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $autoUpgrade().value = false;
         emit AutoUpgradeChanged(false);
     }
 
-    function optInToAutoUpgrade() external {
+    function proxy__optInToAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $autoUpgrade().value = true;
         emit AutoUpgradeChanged(true);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
-    function setImplementation(address implementation) external {
+    function proxy__setImplementation(address implementation) external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         require($autoUpgrade().value == false, Errors.AutoUpgradeEnabled());
         if (implementation != $implementation().value) {
@@ -90,7 +90,7 @@ contract BeaconProxy {
         }
     }
 
-    function setBeacon(address beacon) external {
+    function proxy__setBeacon(address beacon) external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         if (beacon != $beacon().value) {
             $beacon().value = beacon;
@@ -101,7 +101,7 @@ contract BeaconProxy {
         }
     }
 
-    function triggerUpgradeToVersion(uint256 implementationVersion) external {
+    function proxy__triggerUpgradeToVersion(uint256 implementationVersion) external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         address implementationFromBeacon = IVersionedBeacon($beacon().value).implementation(implementationVersion);
         if (implementationFromBeacon != $implementation().value) {
@@ -110,7 +110,7 @@ contract BeaconProxy {
         }
     }
 
-    function triggerUpgrade() external {
+    function proxy__triggerUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
