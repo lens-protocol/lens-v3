@@ -16,8 +16,9 @@ import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 import {Rule} from "@core/types/Types.sol";
 import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 
-contract NamespaceTest is RulesTest, BaseDeployments {
+contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     INamespace namespace;
 
     address account = makeAddr("ACCOUNT");
@@ -26,7 +27,7 @@ contract NamespaceTest is RulesTest, BaseDeployments {
     MockAccessControl mockAccessControl;
     address namespaceForRules;
 
-    function setUp() public override(RulesTest, BaseDeployments) {
+    function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
 
         namespace = INamespace(
@@ -57,6 +58,8 @@ contract NamespaceTest is RulesTest, BaseDeployments {
         });
 
         RulesTest.setUp();
+
+        RuleExecutionTest.setUp();
     }
 
     function testCreateAssignUnassignDelete() public {
@@ -563,7 +566,7 @@ contract NamespaceTest is RulesTest, BaseDeployments {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
         INamespace(namespaceForRules).changeNamespaceRules(ruleChanges);
     }
 
@@ -588,7 +591,177 @@ contract NamespaceTest is RulesTest, BaseDeployments {
         return INamespace(namespaceForRules).getNamespaceRules(selector, required);
     }
 
-    function _configureRuleSelector() internal pure override returns (bytes4) {
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
         return INamespaceRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testRuleExecution_processCreation(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processCreation.selector;
+        string memory username = "satoshi";
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.createUsername,
+            (address(this), username, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), _emptyKeyValueArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processCreation,
+            (bytes32(uint256(1)), address(this), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_processRemoval(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processRemoval.selector;
+        string memory username = "satoshi";
+
+        INamespace(namespaceForRules).createUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.removeUsername,
+            (username, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), _emptyRuleProcessingParamsArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processRemoval,
+            (bytes32(uint256(1)), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_processAssigning(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processAssigning.selector;
+        string memory username = "satoshi";
+
+        INamespace(namespaceForRules).createUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.assignUsername,
+            (
+                address(this),
+                username,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            )
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processAssigning,
+            (bytes32(uint256(1)), address(this), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_processUnassigning(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processUnassigning.selector;
+        string memory username = "satoshi";
+
+        INamespace(namespaceForRules).createUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        vm.prank(address(this));
+        INamespace(namespaceForRules).assignUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.unassignUsername, (username, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processUnassigning,
+            (bytes32(uint256(1)), address(this), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function onERC721Received(
+        address, /* operator */
+        address, /* from */
+        uint256, /* tokenId */
+        bytes calldata /* data */
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }
