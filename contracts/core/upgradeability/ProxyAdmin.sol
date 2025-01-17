@@ -37,15 +37,6 @@ contract ProxyAdmin is Ownable {
             // - Cannot opt-in to auto-upgrade in the Proxy
             require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
-        // Do the call
-        (bool callSucceeded, bytes memory ret) = to.safecall(value, data);
-        if (!callSucceeded) {
-            assembly {
-                // Equivalent to reverting with the returned error selector if the length is not zero.
-                let length := mload(ret)
-                if iszero(iszero(length)) { revert(add(ret, 32), length) }
-            }
-        }
-        return ret;
+        return to.handledsafecall(value, data);
     }
 }

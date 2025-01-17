@@ -13,8 +13,11 @@ import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStorageBased, MetadataBased {
+    using CallLib for address;
+
     // TODO: Think how long the timelock should be and should it be configurable
     uint256 constant SPENDING_TIMELOCK = 1 hours;
 
@@ -156,16 +159,9 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
                 require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
             }
         }
-        (bool callSucceeded, bytes memory ret) = to.call{value: value}(data);
-        if (!callSucceeded) {
-            assembly {
-                // Equivalent to reverting with the returned error selector if the length is not zero.
-                let length := mload(ret)
-                if iszero(iszero(length)) { revert(add(ret, 32), length) }
-            }
-        }
+        bytes memory returnData = to.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(to, value, data, msg.sender);
-        return ret;
+        return returnData;
     }
 
     receive() external payable override {}
