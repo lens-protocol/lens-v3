@@ -48,7 +48,6 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         view
         override
     {
-        console.log("configure post rule");
         require(!_shouldSelectorRevert[IPostRule.configure.selector]);
     }
 
@@ -57,7 +56,6 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         view
         override
     {
-        console.log("configure follow rule");
         require(!_shouldSelectorRevert[IFollowRule.configure.selector]);
     }
 
