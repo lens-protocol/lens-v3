@@ -20,7 +20,7 @@ contract ProxyAdmin is Ownable {
     }
 
     function call(address to, uint256 value, bytes calldata data) external onlyOwner returns (bytes memory) {
-        bytes4 selector = bytes4(data[0]);
+        bytes4 selector = bytes4(data);
         if (LOCK.isLocked()) {
             // While the Proxy Admin is locked it:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
