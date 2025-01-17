@@ -85,13 +85,21 @@ contract Namespace is
         _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
-    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view override {
+    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view virtual override {
         _requireAccess(msg.sender, PID__SET_TOKEN_URI_PROVIDER);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal view virtual override {
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
+
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges)
+        internal
+        pure
+        virtual
+        override
+    {}
+
     // Permissionless functions
 
     function createAndAssignUsername(
