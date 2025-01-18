@@ -24,7 +24,7 @@ interface IFeedRule {
         KeyValue[] calldata ruleParams
     ) external;
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32 configSalt,
         uint256 postId,
         KeyValue[] calldata primitiveParams,

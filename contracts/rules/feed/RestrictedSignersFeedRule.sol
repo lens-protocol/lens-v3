@@ -49,7 +49,7 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
         });
     }
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32 configSalt,
         uint256 postId,
         KeyValue[] calldata primitiveParams,
@@ -57,7 +57,7 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
     ) external override {
         _validateRestrictedSignerMessage({
             configSalt: configSalt,
-            functionSelector: IFeedRule.processRemovePost.selector,
+            functionSelector: IFeedRule.processDeletePost.selector,
             abiEncodedFunctionParams: abi.encode(postId, EIP712EncodingLib.encodeForEIP712(primitiveParams)),
             signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });
