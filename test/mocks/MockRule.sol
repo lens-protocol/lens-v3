@@ -153,13 +153,13 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         require(!_shouldSelectorRevert[IFeedRule.processEditPost.selector]);
     }
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32, /* configSalt */
         uint256, /* postId */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(!_shouldSelectorRevert[IFeedRule.processRemovePost.selector]);
+        require(!_shouldSelectorRevert[IFeedRule.processDeletePost.selector]);
     }
 
     function processPostRuleChanges(
