@@ -37,7 +37,7 @@ library Errors {
     error RequiredRuleReverted();
     error RuleNotConfigured();
     error SelectorEnabledForDifferentRuleType();
-    error Self();
+    error ActionOnSelf();
     error SingleAnyOfRule();
     error UnexpectedContractImpl();
     error UnsupportedSelector();

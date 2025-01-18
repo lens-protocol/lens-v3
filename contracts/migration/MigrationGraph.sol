@@ -39,7 +39,7 @@ contract MigrationGraph is Graph {
     function _followWithoutChecks(address followerAccount, address accountToFollow, uint256 followId, uint256 timestamp)
         internal
     {
-        require(followerAccount != accountToFollow, Errors.Self());
+        require(followerAccount != accountToFollow, Errors.ActionOnSelf());
         require(followId != 0, Errors.InvalidParameter());
         require(followerAccount != address(0), Errors.InvalidParameter());
         require(accountToFollow != address(0), Errors.InvalidParameter());
