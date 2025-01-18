@@ -194,7 +194,7 @@ contract Feed is
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());
         Core._removePost(postId);
-        _processPostRemoval(postId, customParams, feedRulesParams);
+        _processPostDeletion(postId, customParams, feedRulesParams);
         address source = _processSourceStamp(postId, customParams);
         emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }

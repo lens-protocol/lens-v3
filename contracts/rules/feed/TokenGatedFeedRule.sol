@@ -63,7 +63,7 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
         revert Errors.NotImplemented();
     }
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32, /* configSalt */
         uint256, /* postId */
         KeyValue[] calldata, /* primitiveParams */

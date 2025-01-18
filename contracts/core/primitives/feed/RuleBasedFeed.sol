@@ -64,7 +64,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = IFeedRule.processCreatePost.selector;
         selectors[1] = IFeedRule.processEditPost.selector;
-        selectors[2] = IFeedRule.processRemovePost.selector;
+        selectors[2] = IFeedRule.processDeletePost.selector;
         selectors[3] = IFeedRule.processPostRuleChanges.selector;
         return selectors;
     }
@@ -417,12 +417,12 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         require(_rulesStorage.anyOfRules[processParams.ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
-    function _processPostRemoval(
+    function _processPostDeletion(
         uint256 postId,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
-        bytes4 ruleSelector = IFeedRule.processRemovePost.selector;
+        bytes4 ruleSelector = IFeedRule.processDeletePost.selector;
         Rule memory rule;
         KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
@@ -430,7 +430,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             rule = $feedRulesStorage().requiredRules[ruleSelector][i];
             ruleParams = _getRuleParamsOrEmptyArray(rule, rulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
-                abi.encodeCall(IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleParams))
+                abi.encodeCall(IFeedRule.processDeletePost, (rule.configSalt, postId, customParams, ruleParams))
             );
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
@@ -439,7 +439,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             rule = $feedRulesStorage().anyOfRules[ruleSelector][i];
             ruleParams = _getRuleParamsOrEmptyArray(rule, rulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
-                abi.encodeCall(IFeedRule.processRemovePost, (rule.configSalt, postId, customParams, ruleParams))
+                abi.encodeCall(IFeedRule.processDeletePost, (rule.configSalt, postId, customParams, ruleParams))
             );
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return
