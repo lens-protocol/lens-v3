@@ -15,10 +15,11 @@ import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {Rule} from "@core/types/Types.sol";
+import {Rule, RuleConfigurationChange} from "@core/types/Types.sol";
 import {IGraphRule} from "@core/interfaces/IGraphRule.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 
-contract GraphTest is RulesTest, BaseDeployments {
+contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IGraph graph;
 
     address sourceAccount = makeAddr("SOURCE");
@@ -28,7 +29,7 @@ contract GraphTest is RulesTest, BaseDeployments {
     MockAccessControl mockAccessControl;
     address graphForRules;
 
-    function setUp() public override(RulesTest, BaseDeployments) {
+    function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
 
         graph = IGraph(
@@ -52,6 +53,7 @@ contract GraphTest is RulesTest, BaseDeployments {
         });
 
         RulesTest.setUp();
+        RuleExecutionTest.setUp();
     }
 
     function test_Follow(address follower, address target) public {
@@ -1050,7 +1052,7 @@ contract GraphTest is RulesTest, BaseDeployments {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
         IGraph(graphForRules).changeGraphRules(ruleChanges);
     }
 
@@ -1058,7 +1060,7 @@ contract GraphTest is RulesTest, BaseDeployments {
         return graphForRules;
     }
 
-    function _aValidRuleSelector() internal pure override returns (bytes4) {
+    function _aValidRuleSelector() internal pure override(RulesTest) returns (bytes4) {
         return IGraphRule.processFollow.selector;
     }
 
@@ -1074,7 +1076,138 @@ contract GraphTest is RulesTest, BaseDeployments {
         return IGraph(graphForRules).getGraphRules(selector, required);
     }
 
-    function _configureRuleSelector() internal pure override returns (bytes4) {
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
         return IGraphRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testRuleExecution_Follow(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = IGraphRule.processFollow.selector;
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            IGraph.follow,
+            (
+                address(this),
+                makeAddr("TARGET"),
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyKeyValueArray()
+            )
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGraphRule.processFollow,
+            (
+                bytes32(uint256(1)),
+                address(this),
+                address(this),
+                makeAddr("TARGET"),
+                _emptyKeyValueArray(),
+                _emptyKeyValueArray()
+            )
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(graphForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_Unfollow(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        IGraph(graphForRules).follow(
+            address(this),
+            makeAddr("TARGET"),
+            _emptyKeyValueArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyKeyValueArray()
+        );
+
+        bytes4 executionSelector = IGraphRule.processUnfollow.selector;
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            IGraph.unfollow,
+            (address(this), makeAddr("TARGET"), _emptyKeyValueArray(), _emptyRuleProcessingParamsArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGraphRule.processUnfollow,
+            (
+                bytes32(uint256(1)),
+                address(this),
+                address(this),
+                makeAddr("TARGET"),
+                _emptyKeyValueArray(),
+                _emptyKeyValueArray()
+            )
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(graphForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_ProcessFollowRuleChanges(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule1),
+            configSalt: bytes32(uint256(0)),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IGraphRule.processFollow.selector, isRequired: true, enabled: true});
+
+        bytes4 executionSelector = IGraphRule.processFollowRuleChanges.selector;
+
+        bytes memory executionFunctionCallData =
+            abi.encodeCall(IGraph.changeFollowRules, (address(this), ruleChanges, _emptyRuleProcessingParamsArray()));
+
+        RuleChange[] memory expectedRuleChanges = new RuleChange[](1);
+        expectedRuleChanges[0] = ruleChanges[0];
+        expectedRuleChanges[0].configSalt = bytes32(uint256(1));
+
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IGraphRule.processFollowRuleChanges,
+            (bytes32(uint256(1)), address(this), expectedRuleChanges, _emptyKeyValueArray())
+        );
+
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(graphForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
     }
 }

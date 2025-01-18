@@ -23,8 +23,9 @@ import {
 import {Errors} from "@core/types/Errors.sol";
 import {IPostRule} from "@core/interfaces/IPostRule.sol";
 import {MockRule} from "test/mocks/MockRule.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 
-contract FeedTest is RulesTest, BaseDeployments {
+contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IFeed feed;
 
     address feedForRules;
@@ -33,7 +34,7 @@ contract FeedTest is RulesTest, BaseDeployments {
     address author = makeAddr("AUTHOR");
     address feedOwner = makeAddr("FEED_OWNER");
 
-    function setUp() public virtual override(RulesTest, BaseDeployments) {
+    function setUp() public virtual override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
 
         mockAccessControl = new MockAccessControl();
@@ -57,6 +58,7 @@ contract FeedTest is RulesTest, BaseDeployments {
         });
 
         RulesTest.setUp();
+        RuleExecutionTest.setUp();
     }
 
     function test_CreatePost(address postAuthor, string memory contentURI) public {
@@ -2010,7 +2012,7 @@ contract FeedTest is RulesTest, BaseDeployments {
         KeyValue[] memory extraData = new KeyValue[](1);
         extraData[0] = KeyValue(key, value);
 
-        uint256 expectedPostId = uint256(keccak256(abi.encode("evm:", block.chainid, address(feed), author, 1)));
+        uint256 expectedPostId = _generatePostId(address(feed), author, 1);
 
         vm.expectEmit(true, true, true, true);
         emit IFeed.Lens_Feed_Post_ExtraDataAdded(expectedPostId, key, value, value);
@@ -2956,7 +2958,7 @@ contract FeedTest is RulesTest, BaseDeployments {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
         IFeed(feedForRules).changeFeedRules(ruleChanges);
     }
 
@@ -2972,7 +2974,7 @@ contract FeedTest is RulesTest, BaseDeployments {
         bytes4[] memory selectors = new bytes4[](4);
         selectors[0] = IFeedRule.processCreatePost.selector;
         selectors[1] = IFeedRule.processEditPost.selector;
-        selectors[2] = IFeedRule.processRemovePost.selector;
+        selectors[2] = IFeedRule.processDeletePost.selector;
         selectors[3] = IFeedRule.processPostRuleChanges.selector;
         return selectors;
     }
@@ -2981,7 +2983,243 @@ contract FeedTest is RulesTest, BaseDeployments {
         return IFeed(feedForRules).getFeedRules(selector, required);
     }
 
-    function _configureRuleSelector() internal pure override returns (bytes4) {
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
         return IFeedRule.configure.selector;
+    }
+
+    function _generatePostId(address _feed, address _author, uint256 _authorPostSequentialId)
+        internal
+        view
+        returns (uint256)
+    {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(_feed), _author, _authorPostSequentialId)));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testRuleExecution_CreatePost(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = IFeedRule.processCreatePost.selector;
+
+        string memory contentURI = "ipfs://content";
+
+        CreatePostParams memory postParams = CreatePostParams({
+            author: address(this),
+            contentURI: contentURI,
+            repostedPostId: 0,
+            quotedPostId: 0,
+            repliedPostId: 0,
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            IFeed.createPost,
+            (
+                postParams,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            )
+        );
+
+        uint256 expectedPostId = _generatePostId(address(feedForRules), address(this), 1);
+
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IFeedRule.processCreatePost,
+            (bytes32(uint256(1)), expectedPostId, postParams, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(feedForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_EditPost(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = IFeedRule.processEditPost.selector;
+        uint256 postId;
+
+        {
+            CreatePostParams memory postParams = CreatePostParams({
+                author: address(this),
+                contentURI: "ipfs://content",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            });
+
+            postId = IFeed(feedForRules).createPost(
+                postParams,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            );
+        }
+
+        EditPostParams memory editParams =
+            EditPostParams({contentURI: "ipfs://content_edited", extraData: _emptyKeyValueArray()});
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            IFeed.editPost,
+            (
+                postId,
+                editParams,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            )
+        );
+
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IFeedRule.processEditPost,
+            (bytes32(uint256(1)), postId, editParams, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(feedForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_DeletePost(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = IFeedRule.processDeletePost.selector;
+        uint256 postId;
+
+        {
+            CreatePostParams memory postParams = CreatePostParams({
+                author: address(this),
+                contentURI: "ipfs://content",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            });
+
+            postId = IFeed(feedForRules).createPost(
+                postParams,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            );
+        }
+
+        bytes memory executionFunctionCallData =
+            abi.encodeCall(IFeed.deletePost, (postId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray()));
+
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IFeedRule.processDeletePost, (bytes32(uint256(1)), postId, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(feedForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_PostRuleChanges(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        uint256 postId;
+
+        {
+            CreatePostParams memory postParams = CreatePostParams({
+                author: address(this),
+                contentURI: "ipfs://content",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            });
+
+            postId = IFeed(feedForRules).createPost(
+                postParams,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            );
+        }
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule1),
+            configSalt: bytes32(uint256(0)),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IPostRule.processCreatePost.selector, isRequired: true, enabled: true});
+
+        bytes4 executionSelector = IFeedRule.processPostRuleChanges.selector;
+
+        bytes memory executionFunctionCallData =
+            abi.encodeCall(IFeed.changePostRules, (postId, ruleChanges, _emptyRuleProcessingParamsArray()));
+
+        RuleChange[] memory expectedRuleChanges = new RuleChange[](1);
+        expectedRuleChanges[0] = ruleChanges[0];
+        expectedRuleChanges[0].configSalt = bytes32(uint256(1));
+
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IFeedRule.processPostRuleChanges, (bytes32(uint256(1)), postId, expectedRuleChanges, _emptyKeyValueArray())
+        );
+
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(feedForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
     }
 }

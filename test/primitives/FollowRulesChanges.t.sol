@@ -11,12 +11,13 @@ import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {Rule, RuleConfigurationChange, RuleSelectorChange} from "@core/types/Types.sol";
 import {IFollowRule} from "@core/interfaces/IFollowRule.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 
-contract FollowRulesChangesTest is RulesTest, BaseDeployments {
+contract FollowRulesChangesTest is RulesTest, BaseDeployments, RuleExecutionTest {
     address graphForRules;
     MockAccessControl mockAccessControl;
 
-    function setUp() public virtual override(RulesTest, BaseDeployments) {
+    function setUp() public virtual override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
 
         mockAccessControl = new MockAccessControl();
@@ -30,6 +31,8 @@ contract FollowRulesChangesTest is RulesTest, BaseDeployments {
         });
 
         RulesTest.setUp();
+
+        RuleExecutionTest.setUp();
     }
 
     function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public override(RulesTest) {}
@@ -52,7 +55,7 @@ contract FollowRulesChangesTest is RulesTest, BaseDeployments {
         _changeRules(ruleChanges);
     }
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override {
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
         IGraph(graphForRules).changeFollowRules(address(this), ruleChanges, _emptyRuleProcessingParamsArray());
     }
 
@@ -64,7 +67,7 @@ contract FollowRulesChangesTest is RulesTest, BaseDeployments {
         return IFollowRule.processFollow.selector;
     }
 
-    function _configureRuleSelector() internal pure override returns (bytes4) {
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
         return IFollowRule.configure.selector;
     }
 
@@ -76,5 +79,49 @@ contract FollowRulesChangesTest is RulesTest, BaseDeployments {
 
     function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
         return IGraph(graphForRules).getFollowRules(address(this), selector, required);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testRuleExecution_FollowEntityRules(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = IFollowRule.processFollow.selector;
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            IGraph.follow,
+            (
+                makeAddr("TARGET"),
+                address(this),
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyKeyValueArray()
+            )
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            IFollowRule.processFollow,
+            (
+                bytes32(uint256(1)),
+                makeAddr("TARGET"),
+                makeAddr("TARGET"),
+                address(this),
+                _emptyKeyValueArray(),
+                _emptyKeyValueArray()
+            )
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(graphForRules),
+            executionFunctionCallData,
+            makeAddr("TARGET"),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
     }
 }
