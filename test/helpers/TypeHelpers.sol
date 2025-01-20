@@ -31,6 +31,19 @@ function _emptyUint256Array() pure returns (uint256[] memory) {
     return ret;
 }
 
+function _toKeyValueArray(KeyValue memory kv) pure returns (KeyValue[] memory) {
+    KeyValue[] memory ret = new KeyValue[](1);
+    ret[0] = kv;
+    return ret;
+}
+
+function _toKeyValueArray(KeyValue memory kv0, KeyValue memory kv1) pure returns (KeyValue[] memory) {
+    KeyValue[] memory ret = new KeyValue[](2);
+    ret[0] = kv0;
+    ret[1] = kv1;
+    return ret;
+}
+
 function _toUint256Array(uint256 n) pure returns (uint256[] memory) {
     uint256[] memory ret = new uint256[](1);
     ret[0] = n;

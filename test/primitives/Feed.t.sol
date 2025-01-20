@@ -127,6 +127,94 @@ contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertEq(post.lastUpdateSource, address(0), "Last update source should be 0 address");
     }
 
+    function test_CreatePost_MatchingExpectedPostId(address postAuthor, string memory contentURI) public {
+        vm.assume(postAuthor != address(0));
+        vm.assume(bytes(contentURI).length > 0);
+
+        uint256 expectedPostSequentialId = feed.getPostCount() + 1;
+        uint256 expectedAuthorPostSequentialId = feed.getPostCount(postAuthor) + 1;
+
+        uint256 expectedPostId = feed.getNextPostId(postAuthor);
+
+        KeyValue[] memory customParams =
+            _toKeyValueArray(KeyValue({key: keccak256("lens.param.expectedPostId"), value: abi.encode(expectedPostId)}));
+
+        vm.expectEmit(true, true, true, true);
+        emit IFeed.Lens_Feed_PostCreated(
+            expectedPostId,
+            postAuthor,
+            expectedAuthorPostSequentialId,
+            expectedPostId,
+            CreatePostParams({
+                author: postAuthor,
+                contentURI: contentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams,
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            address(0)
+        );
+
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: contentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: customParams,
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertTrue(feed.postExists(postId), "Post should exist");
+        assertEq(feed.getPostAuthor(postId), postAuthor, "Post author should match");
+        assertEq(feed.getPostCount(), expectedPostSequentialId, "Global post count should increment");
+        assertEq(feed.getPostCount(postAuthor), expectedAuthorPostSequentialId, "Author post count should increment");
+    }
+
+    function test_CannotCreatePost_IfExpectedPostIdDoesNotMatch(
+        address postAuthor,
+        uint256 wrongExpectedPostId,
+        string memory contentURI
+    ) public {
+        vm.assume(postAuthor != address(0));
+        vm.assume(bytes(contentURI).length > 0);
+        uint256 expectedPostId = feed.getNextPostId(postAuthor);
+        vm.assume(wrongExpectedPostId != expectedPostId);
+
+        vm.prank(postAuthor);
+        vm.expectRevert(Errors.UnexpectedValue.selector);
+        feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: contentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _toKeyValueArray(
+                KeyValue({key: keccak256("lens.param.expectedPostId"), value: abi.encode(wrongExpectedPostId)})
+            ),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
     function test_CannotCreatePost_DifferentSender(address postAuthor, address sender) public {
         vm.assume(postAuthor != address(0));
         vm.assume(sender != address(0));
