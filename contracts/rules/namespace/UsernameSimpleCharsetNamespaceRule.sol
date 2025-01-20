@@ -21,13 +21,13 @@ contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, MetadataBased {
     function configure(bytes32, /* configSalt */ KeyValue[] calldata /* ruleParams */ ) external override {}
 
     function processCreation(
-        bytes32 configSalt,
-        address originalMsgSender,
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
         address, /* account */
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external pure override {
         _processRestrictions(username);
     }
 
