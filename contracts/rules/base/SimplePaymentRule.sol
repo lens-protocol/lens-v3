@@ -6,12 +6,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {TrustBasedRule} from "contracts/rules/base/TrustBasedRule.sol";
 
-abstract contract SimplePaymentRule is MetadataBased {
+abstract contract SimplePaymentRule is TrustBasedRule, MetadataBased {
     using SafeERC20 for IERC20;
-
-    event Lens_SimplePaymentRule_Trusted(address indexed payer, address indexed trusted);
-    event Lens_SimplePaymentRule_Untrusted(address indexed payer, address indexed untrusted);
 
     event Lens_Rule_MetadataURISet(string metadataURI);
 
@@ -24,23 +22,12 @@ abstract contract SimplePaymentRule is MetadataBased {
         address recipient;
     }
 
-    mapping(address => mapping(address => bool)) internal _isTrusted;
-
     constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
         emit Lens_Rule_MetadataURISet(metadataURI);
-    }
-
-    function setTrust(address primitive, bool isTrusted) external virtual {
-        _isTrusted[msg.sender][primitive] = isTrusted;
-        if (isTrusted) {
-            emit Lens_SimplePaymentRule_Trusted(msg.sender, primitive);
-        } else {
-            emit Lens_SimplePaymentRule_Untrusted(msg.sender, primitive);
-        }
     }
 
     function _validatePaymentConfiguration(PaymentConfiguration memory configuration) internal view virtual {
@@ -58,7 +45,7 @@ abstract contract SimplePaymentRule is MetadataBased {
         require(configuration.amount == expectedConfiguration.amount, Errors.InvalidParameter());
         require(configuration.recipient == expectedConfiguration.recipient, Errors.InvalidParameter());
         // Requires payer to trust the msg.sender, which is acting as the primitive
-        require(_isTrusted[payer][msg.sender], Errors.Untrusted());
+        _requireTrust({fromAccount: payer, toTarget: msg.sender});
     }
 
     function _processPayment(
