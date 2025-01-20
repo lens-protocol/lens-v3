@@ -111,6 +111,8 @@ interface INamespace is IMetadataBased {
 
     function accountOf(string calldata name) external view returns (address);
 
+    function ownerOf(string memory username) external view returns (address);
+
     function getNamespace() external view returns (string memory);
 
     function getNamespaceRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
