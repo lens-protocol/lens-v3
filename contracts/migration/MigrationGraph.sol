@@ -8,11 +8,12 @@ import {RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Follow} from "contracts/core/interfaces/IGraph.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 
 /**
  * Special Graph implementation to allow data migrations from Lens V2 to Lens V3
  */
-contract MigrationGraph is Graph {
+contract MigrationGraph is Graph, EventEmitter {
     function follow(
         address followerAccount,
         address accountToFollow,
