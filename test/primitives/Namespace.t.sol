@@ -14,9 +14,10 @@ import "../helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {Rule} from "@core/types/Types.sol";
+import {Rule, RuleConfigurationChange} from "@core/types/Types.sol";
 import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
 import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
+import {UsernameSimpleCharsetNamespaceRule} from "@rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 
 contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     INamespace namespace;
@@ -760,6 +761,116 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
             optional2_passes
         );
     }
+
+    function test_UsernameSimpleCharsetNamespaceRule() public {
+        UsernameSimpleCharsetNamespaceRule simpleCharsetRule = new UsernameSimpleCharsetNamespaceRule("https://x.com/");
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(simpleCharsetRule),
+            configSalt: bytes32(uint256(0)),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: _emptyKeyValueArray()}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: INamespaceRule.processCreation.selector, isRequired: true, enabled: true});
+
+        vm.prank(namespaceOwner);
+        namespace.changeNamespaceRules(ruleChanges);
+
+        // Valid charset
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: "abcdefghijklmnopqrstuvwxyz-0123456789_",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function _isInCharset(bytes1 char, string memory charset) internal pure returns (bool) {
+        for (uint256 i = 0; i < bytes(charset).length; i++) {
+            if (char == bytes1(bytes(charset)[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function test_CannotCreateUsername_WithInvalidCharset(bytes1 invalidChar, uint8 charToReplacePosition) public {
+        string memory validCharset = "abcdefghijklmnopqrstuvwxyz-0123456789_";
+        vm.assume(charToReplacePosition < 38);
+        vm.assume(!_isInCharset(invalidChar, validCharset));
+        UsernameSimpleCharsetNamespaceRule simpleCharsetRule = new UsernameSimpleCharsetNamespaceRule("https://x.com/");
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(simpleCharsetRule),
+            configSalt: bytes32(uint256(0)),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: _emptyKeyValueArray()}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: INamespaceRule.processCreation.selector, isRequired: true, enabled: true});
+
+        vm.prank(namespaceOwner);
+        namespace.changeNamespaceRules(ruleChanges);
+
+        bytes memory invalidUsernameBytes = bytes(validCharset);
+        invalidUsernameBytes[charToReplacePosition] = invalidChar;
+        string memory invalidUsername = string(invalidUsernameBytes);
+
+        // Invalid charset
+        vm.prank(account);
+        vm.expectRevert(Errors.RequiredRuleReverted.selector);
+        namespace.createUsername({
+            account: account,
+            username: invalidUsername,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function test_CannotCreateUsername_StartingWithUnderscoreOrDash() public {
+        UsernameSimpleCharsetNamespaceRule simpleCharsetRule = new UsernameSimpleCharsetNamespaceRule("https://x.com/");
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(simpleCharsetRule),
+            configSalt: bytes32(uint256(0)),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: _emptyKeyValueArray()}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: INamespaceRule.processCreation.selector, isRequired: true, enabled: true});
+
+        vm.prank(namespaceOwner);
+        namespace.changeNamespaceRules(ruleChanges);
+
+        vm.prank(account);
+        vm.expectRevert(Errors.RequiredRuleReverted.selector);
+        namespace.createUsername({
+            account: account,
+            username: "_abcdefghijklmnopqrstuvwxyz-0123456789_",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        vm.prank(account);
+        vm.expectRevert(Errors.RequiredRuleReverted.selector);
+        namespace.createUsername({
+            account: account,
+            username: "-abcdefghijklmnopqrstuvwxyz-0123456789_",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function onERC721Received(
         address, /* operator */
