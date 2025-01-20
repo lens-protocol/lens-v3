@@ -763,21 +763,6 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     }
 
     function test_UsernameSimpleCharsetNamespaceRule() public {
-        UsernameSimpleCharsetNamespaceRule simpleCharsetRule = new UsernameSimpleCharsetNamespaceRule("https://x.com/");
-
-        RuleChange[] memory ruleChanges = new RuleChange[](1);
-        ruleChanges[0] = RuleChange({
-            ruleAddress: address(simpleCharsetRule),
-            configSalt: bytes32(uint256(0)),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: _emptyKeyValueArray()}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: INamespaceRule.processCreation.selector, isRequired: true, enabled: true});
-
-        vm.prank(namespaceOwner);
-        namespace.changeNamespaceRules(ruleChanges);
-
         // Valid charset
         vm.prank(account);
         namespace.createUsername({
@@ -802,20 +787,6 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
         string memory validCharset = "abcdefghijklmnopqrstuvwxyz-0123456789_";
         vm.assume(charToReplacePosition < 38);
         vm.assume(!_isInCharset(invalidChar, validCharset));
-        UsernameSimpleCharsetNamespaceRule simpleCharsetRule = new UsernameSimpleCharsetNamespaceRule("https://x.com/");
-
-        RuleChange[] memory ruleChanges = new RuleChange[](1);
-        ruleChanges[0] = RuleChange({
-            ruleAddress: address(simpleCharsetRule),
-            configSalt: bytes32(uint256(0)),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: _emptyKeyValueArray()}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: INamespaceRule.processCreation.selector, isRequired: true, enabled: true});
-
-        vm.prank(namespaceOwner);
-        namespace.changeNamespaceRules(ruleChanges);
 
         bytes memory invalidUsernameBytes = bytes(validCharset);
         invalidUsernameBytes[charToReplacePosition] = invalidChar;
@@ -834,21 +805,6 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     }
 
     function test_CannotCreateUsername_StartingWithUnderscoreOrDash() public {
-        UsernameSimpleCharsetNamespaceRule simpleCharsetRule = new UsernameSimpleCharsetNamespaceRule("https://x.com/");
-
-        RuleChange[] memory ruleChanges = new RuleChange[](1);
-        ruleChanges[0] = RuleChange({
-            ruleAddress: address(simpleCharsetRule),
-            configSalt: bytes32(uint256(0)),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: _emptyKeyValueArray()}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: INamespaceRule.processCreation.selector, isRequired: true, enabled: true});
-
-        vm.prank(namespaceOwner);
-        namespace.changeNamespaceRules(ruleChanges);
-
         vm.prank(account);
         vm.expectRevert(Errors.RequiredRuleReverted.selector);
         namespace.createUsername({
