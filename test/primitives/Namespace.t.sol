@@ -74,6 +74,8 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
             extraData: _emptyKeyValueArray()
         });
 
+        assertEq(namespace.ownerOf(localName), account, "Owner of the username should be the account");
+
         vm.prank(account);
         namespace.assignUsername({
             account: account,
@@ -151,6 +153,9 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         // Verify username exists
         assertTrue(namespace.exists(localName), "Username should exist");
+
+        // Verify owner of the username
+        assertEq(namespace.ownerOf(localName), account, "Owner of the username should be the account");
 
         // Verify username is not assigned
         assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned");
