@@ -133,7 +133,6 @@ contract Namespace is
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
     ) external override {
-        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
         _idToUsername[id] = username;
