@@ -32,7 +32,7 @@ import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 
 import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
-
+import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract BaseDeployments is Test {
@@ -66,6 +66,7 @@ contract BaseDeployments is Test {
 
     address accountBlockingRule;
     address groupGatedFeedRule;
+    address usernameSimpleCharsetRule;
 
     function setUp() public virtual {
         proxyAdminLock = address(new Lock(lockOwner, true));
@@ -75,6 +76,7 @@ contract BaseDeployments is Test {
 
         accountBlockingRule = address(new AccountBlockingRule({metadataURI: "uri://any"}));
         groupGatedFeedRule = address(new GroupGatedFeedRule({metadataURI: "uri://any"}));
+        usernameSimpleCharsetRule = address(new UsernameSimpleCharsetNamespaceRule({metadataURI: "uri://any"}));
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(),
@@ -85,7 +87,8 @@ contract BaseDeployments is Test {
             graphFactory: graphFactory,
             namespaceFactory: namespaceFactory,
             accountBlockingRule: accountBlockingRule,
-            groupGatedFeedRule: groupGatedFeedRule
+            groupGatedFeedRule: groupGatedFeedRule,
+            usernameSimpleCharsetRule: usernameSimpleCharsetRule
         });
     }
 

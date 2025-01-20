@@ -59,7 +59,7 @@ contract LensFactoryTest is Test, BaseDeployments {
             accountExtraData: _emptyKeyValueArray()
         });
         CreateUsernameParams memory usernameParams = CreateUsernameParams({
-            username: "myTestUsername",
+            username: "satoshi",
             createUsernameCustomParams: _emptyKeyValueArray(),
             createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             assignUsernameCustomParams: _emptyKeyValueArray(),
