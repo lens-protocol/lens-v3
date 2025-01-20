@@ -63,16 +63,28 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
         AppInitialProperties memory initialProps,
         KeyValue[] memory extraData
     ) internal {
-        _setMetadataURI(metadataURI);
+        if (bytes(metadataURI).length > 0) {
+            _setMetadataURI(metadataURI);
+        }
         _setSourceStampVerification(isSourceStampVerificationEnabled);
-        _setTreasury(initialProps.treasury);
-        _setGraph(initialProps.graph);
+        if (initialProps.treasury != address(0)) {
+            _setTreasury(initialProps.treasury);
+        }
+        if (initialProps.graph != address(0)) {
+            _setGraph(initialProps.graph);
+        }
         _addFeeds(initialProps.feeds);
-        _setNamespace(initialProps.namespace);
+        if (initialProps.namespace != address(0)) {
+            _setNamespace(initialProps.namespace);
+        }
         _addGroups(initialProps.groups);
-        _setDefaultFeed(initialProps.defaultFeed);
+        if (initialProps.defaultFeed != address(0)) {
+            _setDefaultFeed(initialProps.defaultFeed);
+        }
         _addSigners(initialProps.signers);
-        _setPaymaster(initialProps.paymaster);
+        if (initialProps.paymaster != address(0)) {
+            _setPaymaster(initialProps.paymaster);
+        }
         _setExtraData(extraData);
 
         _emitPIDs();
