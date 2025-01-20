@@ -289,10 +289,18 @@ contract Namespace is
         return username;
     }
 
+    // Assigned to
     function accountOf(string memory username) external view returns (address) {
         uint256 tokenId = _computeId(username);
         require(_exists(tokenId), Errors.DoesNotExist());
         return Core.$storage().usernameToAccount[username];
+    }
+
+    // Owner of the username
+    function ownerOf(string memory username) external view returns (address) {
+        uint256 tokenId = _computeId(username);
+        require(_exists(tokenId), Errors.DoesNotExist());
+        return _ownerOf(tokenId);
     }
 
     function getNamespace() external view returns (string memory) {
