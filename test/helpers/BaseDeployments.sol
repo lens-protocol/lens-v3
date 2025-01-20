@@ -19,6 +19,7 @@ import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
 import {MigrationFeed} from "contracts/migration/MigrationFeed.sol";
 import {MigrationGraph} from "contracts/migration/MigrationGraph.sol";
+import {MigrationNamespace} from "contracts/migration/MigrationNamespace.sol";
 
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
 import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
@@ -111,7 +112,7 @@ contract BaseDeployments is Test {
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());
-        namespaceImpl = address(new Namespace());
+        namespaceImpl = migrationMode ? address(new MigrationNamespace()) : address(new Namespace());
     }
 
     function _deployBeacons() internal {
