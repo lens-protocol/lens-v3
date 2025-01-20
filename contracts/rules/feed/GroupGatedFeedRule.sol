@@ -30,6 +30,7 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__GROUP) {
                 groupGate = abi.decode(ruleParams[i].value, (address));
+                break;
             }
         }
         _groupGate[msg.sender][configSalt] = groupGate;

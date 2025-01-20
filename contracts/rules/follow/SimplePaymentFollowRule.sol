@@ -85,6 +85,7 @@ contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == PARAM__PAYMENT_CONFIG) {
                 paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
+                break;
             }
         }
         return paymentConfiguration;
