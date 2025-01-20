@@ -73,6 +73,11 @@ export default async function deployFactories(factoriesProxyOwner: string): Prom
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },
+    {
+      contractName: 'UsernameSimpleCharsetNamespaceRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [metadataURI],
+    },
   ];
 
   const deployedContracts: Record<string, ContractInfo> = {};
@@ -97,6 +102,7 @@ export default async function deployFactories(factoriesProxyOwner: string): Prom
     deployedContracts['NamespaceFactory'].address,
     deployedContracts['AccountBlockingRule'].address,
     deployedContracts['GroupGatedFeedRule'].address,
+    deployedContracts['UsernameSimpleCharsetNamespaceRule'].address,
   ];
 
   await deployLensContract({

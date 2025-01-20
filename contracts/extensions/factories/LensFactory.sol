@@ -26,8 +26,11 @@ import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
+
 import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
@@ -82,6 +85,7 @@ contract LensFactory {
     IAccessControl internal immutable TEMPORARY_ACCESS_CONTROL;
     address internal immutable ACCOUNT_BLOCKING_RULE;
     address internal immutable GROUP_GATED_FEED_RULE;
+    address internal immutable USERNAME_SIMPLE_CHARSET_RULE;
 
     constructor(
         AccessControlFactory accessControlFactory,
@@ -92,7 +96,8 @@ contract LensFactory {
         GraphFactory graphFactory,
         NamespaceFactory namespaceFactory,
         address accountBlockingRule,
-        address groupGatedFeedRule
+        address groupGatedFeedRule,
+        address usernameSimpleCharsetRule
     ) {
         ACCESS_CONTROL_FACTORY = accessControlFactory;
         ACCOUNT_FACTORY = accountFactory;
@@ -104,6 +109,7 @@ contract LensFactory {
         TEMPORARY_ACCESS_CONTROL = new PermissionlessAccessControl();
         ACCOUNT_BLOCKING_RULE = accountBlockingRule;
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
+        USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
     }
 
     // TODO: This function belongs to an App probably.
@@ -314,18 +320,38 @@ contract LensFactory {
         string memory nftName,
         string memory nftSymbol
     ) external returns (address) {
-        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
+
+        {
+            RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+            selectorChanges[0] = RuleSelectorChange({
+                ruleSelector: INamespaceRule.processCreation.selector,
+                isRequired: true,
+                enabled: true
+            });
+            modifiedRules[0] = RuleChange({
+                ruleAddress: USERNAME_SIMPLE_CHARSET_RULE,
+                configSalt: bytes32(0),
+                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+                selectorChanges: selectorChanges
+            });
+            for (uint256 i = 0; i < rules.length; i++) {
+                require(rules[i].ruleAddress != USERNAME_SIMPLE_CHARSET_RULE, Errors.DuplicatedValue());
+                modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], address(accessControl));
+            }
+        }
+
         return NAMESPACE_FACTORY.deployNamespace(
             namespace,
             metadataURI,
             accessControl,
             owner,
-            _injectRuleAccessControl(rules, address(accessControl)),
+            modifiedRules,
             extraData,
             nftName,
             nftSymbol,
-            tokenURIProvider
+            new LensUsernameTokenURIProvider()
         );
     }
 

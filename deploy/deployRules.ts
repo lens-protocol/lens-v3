@@ -69,11 +69,11 @@ export async function deployRules(): Promise<void> {
       constructorArguments: [metadataURI],
     },
     // Namespace Rules
-    {
-      contractName: 'UsernameCharsetNamespaceRule',
-      contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
-    },
+    // {
+    //   contractName: 'UsernameCharsetNamespaceRule',
+    //   contractType: ContractType.Rule,
+    //   constructorArguments: [metadataURI],
+    // },
     {
       contractName: 'UsernameLengthNamespaceRule',
       contractType: ContractType.Rule,
@@ -93,7 +93,7 @@ export async function deployRules(): Promise<void> {
       contractName: 'TokenGatedNamespaceRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
-    },
+    }
   ];
 
   for (const contract of contracts) {
