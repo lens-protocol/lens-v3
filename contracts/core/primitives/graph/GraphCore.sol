@@ -33,7 +33,7 @@ library GraphCore {
     {
         require(followerAccount != address(0), Errors.InvalidParameter());
         require(accountToFollow != address(0), Errors.InvalidParameter());
-        require(followerAccount != accountToFollow, Errors.Self());
+        require(followerAccount != accountToFollow, Errors.ActionOnSelf());
         require($storage().follows[followerAccount][accountToFollow].id == 0, Errors.CannotFollowAgain());
         if (followId == 0) {
             followId = ++$storage().lastFollowIdAssigned[accountToFollow];

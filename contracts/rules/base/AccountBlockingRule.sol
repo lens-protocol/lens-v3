@@ -34,7 +34,7 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
 
     function blockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
-        require(source != target, Errors.Self());
+        require(source != target, Errors.ActionOnSelf());
         accountBlocks[source][target] = block.timestamp;
     }
 

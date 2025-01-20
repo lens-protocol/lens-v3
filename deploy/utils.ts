@@ -56,7 +56,7 @@ export const verifyContract = async (data: {
   bytecode: string;
 }) => {
   // Skip verification for local networks
-  if (hre.network.name === 'inMemoryNode') {
+  if (hre.network.name === 'inMemoryNode' || hre.network.name === "zkstackMigrationNode") {
     console.log('Skipping contract verification on local network');
     return 0;
   }

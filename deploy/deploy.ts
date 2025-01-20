@@ -7,9 +7,14 @@ import { generateEnvFile } from './lensUtils';
 import { deployBeacons, deployProxyAdminLock } from './deployProxyStuff';
 import { getWallet, LOCAL_RICH_WALLETS } from './utils';
 
-export default async function deploy() {
-  const DEPLOYING_FR = false;
+async function deploy() {
+  const DEPLOYING_MIGRATION = Boolean(process.env.DEPLOY_MIGRATION);
+  const DEPLOYING_FR = Boolean(process.env.DEPLOY_FR);
   const deployerAddress = getWallet().address;
+
+  if (DEPLOYING_MIGRATION) {
+    console.log('Deploying migration version...');
+  }
 
   const lockOwner = process.env.PROXY_ADMIN_LOCK_OWNER;
   if (!lockOwner && DEPLOYING_FR) {
@@ -38,7 +43,7 @@ export default async function deploy() {
   }
 
   await deployProxyAdminLock(lockOwner ?? deployerAddress);
-  await deployImplementations();
+  await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
   await deployFactories(factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address);
   await deployLensPrimitives();
@@ -48,3 +53,14 @@ export default async function deploy() {
   await deployActions(actionHub);
   generateEnvFile();
 }
+
+if (require.main === module) {
+  deploy()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
+
+export default deploy;

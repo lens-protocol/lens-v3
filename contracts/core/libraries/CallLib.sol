@@ -35,7 +35,7 @@ library CallLib {
         return handledsafecall(target, 0, data);
     }
 
-    function _handleCall(bool callSucceeded, bytes memory returnData) private returns (bytes memory) {
+    function _handleCall(bool callSucceeded, bytes memory returnData) private pure returns (bytes memory) {
         if (!callSucceeded) {
             assembly {
                 // Get the length of the return data, which contains the error message or selector, as the call failed
