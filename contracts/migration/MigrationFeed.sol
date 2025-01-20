@@ -7,6 +7,7 @@ import {CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/FeedCore.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 
 struct PostCreationParams {
     uint256 authorPostSequentialId;
@@ -14,7 +15,7 @@ struct PostCreationParams {
     address source;
 }
 
-contract MigrationFeed is Feed {
+contract MigrationFeed is Feed, EventEmitter {
     function createPost(
         CreatePostParams memory postParams,
         KeyValue[] memory customParams,
