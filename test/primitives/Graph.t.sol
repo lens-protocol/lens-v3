@@ -306,7 +306,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(account != address(0));
 
         vm.prank(account);
-        vm.expectRevert(Errors.Self.selector);
+        vm.expectRevert(Errors.ActionOnSelf.selector);
         graph.follow({
             followerAccount: account,
             targetAccount: account,
