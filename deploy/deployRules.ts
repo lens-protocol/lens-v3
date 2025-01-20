@@ -84,16 +84,21 @@ export async function deployRules(): Promise<void> {
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
     },
-    {
-      contractName: 'SimplePaymentNamespaceRule',
-      contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
-    },
+    // {
+    //   contractName: 'SimplePaymentNamespaceRule',
+    //   contractType: ContractType.Rule,
+    //   constructorArguments: [metadataURI],
+    // },
     {
       contractName: 'TokenGatedNamespaceRule',
       contractType: ContractType.Rule,
       constructorArguments: [metadataURI],
-    }
+    },
+    {
+      contractName: 'UsernamePricePerLengthNamespaceRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [metadataURI],
+    },
   ];
 
   for (const contract of contracts) {
