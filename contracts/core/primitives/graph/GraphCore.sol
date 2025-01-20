@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.26;
 
 import {Follow} from "contracts/core/interfaces/IGraph.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 library GraphCore {
     // Storage
@@ -30,13 +31,15 @@ library GraphCore {
         internal
         returns (uint256)
     {
-        require(followerAccount != accountToFollow); // Cannot follow yourself
-        require($storage().follows[followerAccount][accountToFollow].id == 0); // Cannot follow more than once
+        require(followerAccount != address(0), Errors.InvalidParameter());
+        require(accountToFollow != address(0), Errors.InvalidParameter());
+        require(followerAccount != accountToFollow, Errors.ActionOnSelf());
+        require($storage().follows[followerAccount][accountToFollow].id == 0, Errors.CannotFollowAgain());
         if (followId == 0) {
             followId = ++$storage().lastFollowIdAssigned[accountToFollow];
         } else {
-            require(followId < $storage().lastFollowIdAssigned[accountToFollow]); // Only previous Follow IDs allowed to be reused
-            require($storage().followers[accountToFollow][followId] == address(0)); // Follow ID is already taken
+            require(followId < $storage().lastFollowIdAssigned[accountToFollow], Errors.InvalidParameter()); // Only previous Follow IDs allowed to be reused
+            require($storage().followers[accountToFollow][followId] == address(0), Errors.AlreadyExists()); // Follow ID is already taken
         }
         $storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: timestamp});
         $storage().followers[accountToFollow][followId] = followerAccount;
@@ -46,8 +49,10 @@ library GraphCore {
     }
 
     function _unfollow(address followerAccount, address accountToUnfollow) internal returns (uint256) {
+        require(followerAccount != address(0), Errors.InvalidParameter());
+        require(accountToUnfollow != address(0), Errors.InvalidParameter());
         uint256 followId = $storage().follows[followerAccount][accountToUnfollow].id;
-        require(followId != 0); // Must be following
+        require(followId != 0, Errors.NotFollowing()); // Must be following
         $storage().followersCount[accountToUnfollow]--;
         $storage().followingCount[followerAccount]--;
         delete $storage().followers[accountToUnfollow][followId];

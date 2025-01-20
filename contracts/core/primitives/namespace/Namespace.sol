@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {NamespaceCore as Core} from "contracts/core/primitives/namespace/NamespaceCore.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
@@ -16,6 +16,7 @@ import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract Namespace is
     INamespace,
@@ -84,25 +85,33 @@ contract Namespace is
         _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
-    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view override {
+    function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal view virtual override {
         _requireAccess(msg.sender, PID__SET_TOKEN_URI_PROVIDER);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal view virtual override {
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
+
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges)
+        internal
+        pure
+        virtual
+        override
+    {}
+
     // Permissionless functions
 
     function createAndAssignUsername(
         address account,
-        string calldata username,
+        string memory username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningProcessingParams,
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams,
-        KeyValue[] calldata extraData
+        KeyValue[] memory extraData
     ) external {
-        require(msg.sender == account); // msg.sender must be the account
+        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
         _idToUsername[id] = username;
@@ -124,7 +133,7 @@ contract Namespace is
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
     ) external override {
-        require(msg.sender == account); // msg.sender must be the account
+        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
         _idToUsername[id] = username;
@@ -142,8 +151,8 @@ contract Namespace is
         RuleProcessingParams[] calldata removalRuleProcessingParams
     ) external override {
         uint256 id = _computeId(username);
-        address owner = _ownerOf(id);
-        require(msg.sender == owner); // msg.sender must be the owner of the username
+        address owner = ownerOf(id);
+        require(msg.sender == owner, Errors.InvalidMsgSender()); // msg.sender must be the owner of the username
         _processRemoval(msg.sender, username, customParams, removalRuleProcessingParams);
         address source = _processSourceStamp(id, customParams);
         _unassignIfAssigned(username, customParams, unassigningRuleProcessingParams, source);
@@ -160,9 +169,11 @@ contract Namespace is
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external override {
-        require(msg.sender == account); // msg.sender must be the account
         uint256 id = _computeId(username);
-        require(account == _ownerOf(id)); // account should own the tokenized username
+        // account should own the tokenized username and be the msg.sender
+        require(msg.sender == ownerOf(id) && msg.sender == account, Errors.InvalidMsgSender());
+        // Check if username is not already assigned to this account
+        require(account != Core.$storage().usernameToAccount[username], Errors.RedundantStateChange());
         address source = _processSourceStamp(id, customParams);
         _unassignIfAssigned(account, customParams, unassignAccountRuleProcessingParams, source);
         _unassignIfAssigned(username, customParams, unassignUsernameRuleProcessingParams, source);
@@ -178,7 +189,7 @@ contract Namespace is
     ) external override {
         address account = Core.$storage().usernameToAccount[username];
         uint256 id = _computeId(username);
-        require(msg.sender == account || msg.sender == _ownerOf(id));
+        require(msg.sender == ownerOf(id) || msg.sender == account, Errors.InvalidMsgSender());
         Core._unassignUsername(username);
         _processUnassigning(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
@@ -209,7 +220,7 @@ contract Namespace is
     function setUsernameExtraData(string calldata username, KeyValue[] calldata extraDataToSet) external {
         uint256 id = _computeId(username);
         address owner = _ownerOf(id);
-        require(msg.sender == owner);
+        require(msg.sender == owner, Errors.InvalidMsgSender());
         _decodeAndSetUsernameExtraData(id, extraDataToSet);
     }
 
@@ -275,13 +286,13 @@ contract Namespace is
 
     function usernameOf(address user) external view returns (string memory) {
         string memory username = Core.$storage().accountToUsername[user];
-        require(bytes(username).length != 0, "NO_USERNAME_ASSIGNED");
+        require(bytes(username).length != 0, Errors.DoesNotExist());
         return username;
     }
 
     function accountOf(string memory username) external view returns (address) {
         uint256 tokenId = _computeId(username);
-        require(_exists(tokenId), "NO_SUCH_USERNAME");
+        require(_exists(tokenId), Errors.DoesNotExist());
         return Core.$storage().usernameToAccount[username];
     }
 
@@ -297,5 +308,18 @@ contract Namespace is
         uint256 tokenId = _computeId(username);
         address owner = ownerOf(tokenId);
         return _getEntityExtraData(owner, tokenId, key);
+    }
+
+    function exists(string calldata username) external view override returns (bool) {
+        uint256 tokenId = _computeId(username);
+        return _exists(tokenId);
+    }
+
+    function exists(uint256 tokenId) external view override returns (bool) {
+        return _exists(tokenId);
+    }
+
+    function getUsernameTokenId(string calldata username) external pure returns (uint256) {
+        return _computeId(username);
     }
 }

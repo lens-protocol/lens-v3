@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {KeyValue, RuleChange, RuleProcessingParams, Rule} from "contracts/core/types/Types.sol";
 import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
@@ -118,4 +118,10 @@ interface INamespace is IMetadataBased {
     function getExtraData(bytes32 key) external view returns (bytes memory);
 
     function getUsernameExtraData(string calldata username, bytes32 key) external view returns (bytes memory);
+
+    function exists(string calldata username) external view returns (bool);
+
+    function exists(uint256 tokenId) external view returns (bool);
+
+    function getUsernameTokenId(string calldata username) external view returns (uint256);
 }

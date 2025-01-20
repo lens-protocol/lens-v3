@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity 0.8.17;
+pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {LensFactory} from "@extensions/factories/LensFactory.sol";
+import {LensFactory, CreateAccountParams, CreateUsernameParams} from "@extensions/factories/LensFactory.sol";
 import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
 import {AppFactory} from "@extensions/factories/AppFactory.sol";
 import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
@@ -50,21 +50,27 @@ contract LensFactoryTest is Test, BaseDeployments {
     }
 
     function testCreateAccountWithUsernameFree() public {
-        lensFactory.createAccountWithUsernameFree({
+        CreateAccountParams memory accountParams = CreateAccountParams({
             metadataURI: "someMetadataURI",
             owner: address(this),
             accountManagers: _emptyAddressArray(),
             accountManagersPermissions: new AccountManagerPermissions[](0),
-            namespacePrimitiveAddress: address(namespace),
-            username: "myTestUsername",
             accountCreationSourceStamp: _emptySourceStamp(),
+            accountExtraData: _emptyKeyValueArray()
+        });
+        CreateUsernameParams memory usernameParams = CreateUsernameParams({
+            username: "myTestUsername",
             createUsernameCustomParams: _emptyKeyValueArray(),
             createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             assignUsernameCustomParams: _emptyKeyValueArray(),
             unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             assignRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            accountExtraData: _emptyKeyValueArray(),
             usernameExtraData: _emptyKeyValueArray()
+        });
+        lensFactory.createAccountWithUsernameFree({
+            accountParams: accountParams,
+            namespacePrimitiveAddress: address(namespace),
+            usernameParams: usernameParams
         });
     }
 

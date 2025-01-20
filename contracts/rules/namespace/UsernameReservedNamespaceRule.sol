@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
@@ -8,6 +8,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
@@ -61,7 +62,10 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
             } else if (ruleParams[i].key == PARAM__USERNAMES_TO_RESERVE) {
                 string[] memory usernamesToReserve = abi.decode(ruleParams[i].value, (string[]));
                 for (uint256 j = 0; j < usernamesToReserve.length; j++) {
-                    require(!_isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]]);
+                    require(
+                        !_isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]],
+                        Errors.RedundantStateChange()
+                    );
                     _isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]] = true;
                     emit Lens_UsernameReservedNamespaceRule_UsernameReserved(
                         msg.sender, configSalt, usernamesToReserve[j], usernamesToReserve[j]
@@ -70,7 +74,9 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
             } else if (ruleParams[i].key == PARAM__USERNAMES_TO_RELEASE) {
                 string[] memory usernamesToRelease = abi.decode(ruleParams[i].value, (string[]));
                 for (uint256 j = 0; j < usernamesToRelease.length; j++) {
-                    require(_isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]]);
+                    require(
+                        _isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]], Errors.RedundantStateChange()
+                    );
                     _isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]] = false;
                     emit Lens_UsernameReservedNamespaceRule_UsernameReleased(
                         msg.sender, configSalt, usernamesToRelease[j], usernamesToRelease[j]
@@ -105,7 +111,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processAssigning(
@@ -116,7 +122,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processUnassigning(
@@ -127,6 +133,6 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

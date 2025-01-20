@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {GraphCore as Core} from "contracts/core/primitives/graph/GraphCore.sol";
 import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {Follow} from "contracts/core/interfaces/IGraph.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 /**
  * Special Graph implementation to allow data migrations from Lens V2 to Lens V3
@@ -20,7 +22,7 @@ contract MigrationGraph is Graph {
         KeyValue[] calldata extraData
     ) external override returns (uint256) {
         (uint256 followId, uint256 timestamp) = abi.decode(customParams[0].value, (uint256, uint256));
-        Core._follow(followerAccount, accountToFollow, followId, timestamp);
+        _followWithoutChecks(followerAccount, accountToFollow, followId, timestamp);
         emit Lens_Graph_Followed(
             followerAccount,
             accountToFollow,
@@ -32,5 +34,20 @@ contract MigrationGraph is Graph {
             extraData
         );
         return followId;
+    }
+
+    function _followWithoutChecks(address followerAccount, address accountToFollow, uint256 followId, uint256 timestamp)
+        internal
+    {
+        require(followerAccount != accountToFollow, Errors.ActionOnSelf());
+        require(followId != 0, Errors.InvalidParameter());
+        require(followerAccount != address(0), Errors.InvalidParameter());
+        require(accountToFollow != address(0), Errors.InvalidParameter());
+        require(Core.$storage().follows[followerAccount][accountToFollow].id == 0, Errors.CannotFollowAgain());
+        require(Core.$storage().followers[accountToFollow][followId] == address(0), Errors.AlreadyExists());
+        Core.$storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: timestamp});
+        Core.$storage().followers[accountToFollow][followId] = followerAccount;
+        Core.$storage().followersCount[accountToFollow]++;
+        Core.$storage().followingCount[followerAccount]++;
     }
 }

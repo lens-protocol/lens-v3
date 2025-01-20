@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {ILock} from "contracts/core/interfaces/ILock.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract ProxyAdmin is Ownable {
     using CallLib for address;
@@ -19,32 +20,23 @@ contract ProxyAdmin is Ownable {
     }
 
     function call(address to, uint256 value, bytes calldata data) external onlyOwner returns (bytes memory) {
-        bytes4 selector = bytes4(data[0]);
+        bytes4 selector = bytes4(data);
         if (LOCK.isLocked()) {
             // While the Proxy Admin is locked it:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
-            require(selector != BeaconProxy.changeProxyAdmin.selector);
+            require(selector != BeaconProxy.proxy__changeProxyAdmin.selector, Errors.Locked());
             // - Cannot change the Beacon in the Proxy
-            require(selector != BeaconProxy.setBeacon.selector);
+            require(selector != BeaconProxy.proxy__setBeacon.selector, Errors.Locked());
             // - Cannot change the implementation in the Proxy
-            require(selector != BeaconProxy.setImplementation.selector);
+            require(selector != BeaconProxy.proxy__setImplementation.selector, Errors.Locked());
             // - Cannot trigger an upgrade in the Proxy
-            require(selector != BeaconProxy.triggerUpgradeToVersion.selector);
-            require(selector != BeaconProxy.triggerUpgrade.selector);
+            require(selector != BeaconProxy.proxy__triggerUpgradeToVersion.selector, Errors.Locked());
+            require(selector != BeaconProxy.proxy__triggerUpgrade.selector, Errors.Locked());
             // - Cannot opt-out from auto-upgrade in the Proxy
-            require(selector != BeaconProxy.optOutFromAutoUpgrade.selector);
+            require(selector != BeaconProxy.proxy__optOutFromAutoUpgrade.selector, Errors.Locked());
             // - Cannot opt-in to auto-upgrade in the Proxy
-            require(selector != BeaconProxy.optInToAutoUpgrade.selector);
+            require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
-        // Do the call
-        (bool success, bytes memory ret) = to.safecall(value, data);
-        if (!success) {
-            assembly {
-                // Equivalent to reverting with the returned error selector if the length is not zero.
-                let length := mload(ret)
-                if iszero(iszero(length)) { revert(add(ret, 32), length) }
-            }
-        }
-        return ret;
+        return to.handledsafecall(value, data);
     }
 }

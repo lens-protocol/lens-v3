@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
@@ -9,6 +9,7 @@ import {RuleProcessingParams, RuleChange, Rule, KeyValue} from "contracts/core/t
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {RuleBasedPrimitive} from "contracts/core/base/RuleBasedPrimitive.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     using RulesLib for RulesStorage;
@@ -52,6 +53,14 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         );
     }
 
+    function _processEntityRulesChanges(
+        uint256 entityId,
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory ruleChangesProcessingParams
+    ) internal virtual override {
+        _graphProcessFollowRuleChanges(address(uint160(entityId)), ruleChanges, ruleChangesProcessingParams);
+    }
+
     function _supportedPrimitiveRuleSelectors() internal view virtual override returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](3);
         selectors[0] = IGraphRule.processFollow.selector;
@@ -66,7 +75,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         return selectors;
     }
 
-    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] calldata ruleParams)
+    function _encodePrimitiveConfigureCall(bytes32 configSalt, KeyValue[] memory ruleParams)
         internal
         pure
         override
@@ -75,11 +84,20 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         return abi.encodeCall(IGraphRule.configure, (configSalt, ruleParams));
     }
 
+    function _encodeEntityConfigureCall(uint256 accountAsUint256, bytes32 configSalt, KeyValue[] memory ruleParams)
+        internal
+        pure
+        override
+        returns (bytes memory)
+    {
+        return abi.encodeCall(IFollowRule.configure, (configSalt, address(uint160(accountAsUint256)), ruleParams));
+    }
+
     function _emitPrimitiveRuleConfiguredEvent(
         bool wasAlreadyConfigured,
         address ruleAddress,
         bytes32 configSalt,
-        KeyValue[] calldata ruleParams
+        KeyValue[] memory ruleParams
     ) internal override {
         if (wasAlreadyConfigured) {
             emit IGraph.Lens_Graph_RuleReconfigured(ruleAddress, configSalt, ruleParams);
@@ -99,6 +117,37 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
             emit Lens_Graph_RuleSelectorEnabled(ruleAddress, configSalt, isRequired, ruleSelector);
         } else {
             emit Lens_Graph_RuleSelectorDisabled(ruleAddress, configSalt, isRequired, ruleSelector);
+        }
+    }
+
+    function _emitEntityRuleConfiguredEvent(
+        bool wasAlreadyConfigured,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        KeyValue[] memory ruleParams
+    ) internal override {
+        address account = address(uint160(entityId));
+        if (wasAlreadyConfigured) {
+            emit IGraph.Lens_Graph_Follow_RuleReconfigured(account, ruleAddress, configSalt, ruleParams);
+        } else {
+            emit IGraph.Lens_Graph_Follow_RuleConfigured(account, ruleAddress, configSalt, ruleParams);
+        }
+    }
+
+    function _emitEntityRuleSelectorEvent(
+        bool enabled,
+        uint256 entityId,
+        address ruleAddress,
+        bytes32 configSalt,
+        bool isRequired,
+        bytes4 selector
+    ) internal override {
+        address account = address(uint160(entityId));
+        if (enabled) {
+            emit IGraph.Lens_Graph_Follow_RuleSelectorEnabled(account, ruleAddress, configSalt, isRequired, selector);
+        } else {
+            emit IGraph.Lens_Graph_Follow_RuleSelectorDisabled(account, ruleAddress, configSalt, isRequired, selector);
         }
     }
 
@@ -131,73 +180,59 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     function _graphProcessFollowRuleChanges(
         address account,
-        RuleChange[] calldata ruleChanges,
-        RuleProcessingParams[] calldata graphRulesProcessingParams
+        RuleChange[] memory ruleChanges,
+        RuleProcessingParams[] memory graphRulesProcessingParams
     ) internal {
         bytes4 ruleSelector = IGraphRule.processFollowRuleChanges.selector;
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $graphRulesStorage().requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = $graphRulesStorage().requiredRules[ruleSelector][i];
-            for (uint256 j = 0; j < graphRulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    graphRulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && graphRulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = rule.ruleAddress.safecall(
-                    abi.encodeCall(
-                        IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
-                    )
-                );
-                require(callNotReverted, "Some required rule failed");
-            }
+            rule = $graphRulesStorage().requiredRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, graphRulesProcessingParams);
+            (bool callSucceeded,) = rule.ruleAddress.safecall(
+                abi.encodeCall(IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleParams))
+            );
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $graphRulesStorage().anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = $graphRulesStorage().anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < graphRulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    graphRulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && graphRulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = graphRulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = rule.ruleAddress.safecall(
-                    abi.encodeCall(
-                        IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleCustomParams)
-                    )
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = $graphRulesStorage().anyOfRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, graphRulesProcessingParams);
+            (bool callSucceeded,) = rule.ruleAddress.safecall(
+                abi.encodeCall(IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleParams))
+            );
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
+    }
+
+    struct ProcessParams {
+        address originalMsgSender;
+        address sourceAccount;
+        address targetAccount;
+        KeyValue[] primitiveCustomParams;
+        RuleProcessingParams[] rulesProcessingParams;
     }
 
     function _encodeAndCallGraphProcessFollow(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address followerAccount,
-        address accountToFollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] memory ruleCustomParams
+        Rule memory rule,
+        ProcessParams memory processParams,
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IGraphRule.processFollow,
                 (
-                    configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToFollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.sourceAccount,
+                    processParams.targetAccount,
+                    processParams.primitiveCustomParams,
+                    ruleParams
                 )
             )
         );
@@ -208,39 +243,37 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         address followerAccount,
         address accountToFollow,
         KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
         _processFollow(
             $graphRulesStorage(),
             _encodeAndCallGraphProcessFollow,
             IGraphRule.processFollow.selector,
-            originalMsgSender,
-            followerAccount,
-            accountToFollow,
-            primitiveCustomParams,
-            ruleProcessingParams
+            ProcessParams({
+                originalMsgSender: originalMsgSender,
+                sourceAccount: followerAccount,
+                targetAccount: accountToFollow,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
     function _encodeAndCallGraphProcessUnfollow(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address followerAccount,
-        address accountToUnfollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] memory ruleCustomParams
+        Rule memory rule,
+        ProcessParams memory processParams,
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IGraphRule.processUnfollow,
                 (
-                    configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToUnfollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.sourceAccount,
+                    processParams.targetAccount,
+                    processParams.primitiveCustomParams,
+                    ruleParams
                 )
             )
         );
@@ -251,38 +284,36 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         address followerAccount,
         address accountToUnfollow,
         KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
         _processUnfollow(
             $graphRulesStorage(),
             _encodeAndCallGraphProcessUnfollow,
-            originalMsgSender,
-            followerAccount,
-            accountToUnfollow,
-            primitiveCustomParams,
-            ruleProcessingParams
+            ProcessParams({
+                originalMsgSender: originalMsgSender,
+                sourceAccount: followerAccount,
+                targetAccount: accountToUnfollow,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
     function _encodeAndCallAccountProcessFollow(
-        address rule,
-        bytes32 configSalt,
-        address originalMsgSender,
-        address followerAccount,
-        address accountToFollow,
-        KeyValue[] calldata primitiveCustomParams,
-        KeyValue[] memory ruleCustomParams
+        Rule memory rule,
+        ProcessParams memory processParams,
+        KeyValue[] memory ruleParams
     ) internal returns (bool, bytes memory) {
-        return rule.safecall(
+        return rule.ruleAddress.safecall(
             abi.encodeCall(
                 IFollowRule.processFollow,
                 (
-                    configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToFollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
+                    rule.configSalt,
+                    processParams.originalMsgSender,
+                    processParams.sourceAccount,
+                    processParams.targetAccount,
+                    processParams.primitiveCustomParams,
+                    ruleParams
                 )
             )
         );
@@ -293,143 +324,75 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         address followerAccount,
         address accountToFollow,
         KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        RuleProcessingParams[] calldata rulesProcessingParams
     ) internal {
         _processFollow(
             $followRulesStorage(accountToFollow),
             _encodeAndCallAccountProcessFollow,
             IFollowRule.processFollow.selector,
-            originalMsgSender,
-            followerAccount,
-            accountToFollow,
-            primitiveCustomParams,
-            ruleProcessingParams
+            ProcessParams({
+                originalMsgSender: originalMsgSender,
+                sourceAccount: followerAccount,
+                targetAccount: accountToFollow,
+                primitiveCustomParams: primitiveCustomParams,
+                rulesProcessingParams: rulesProcessingParams
+            })
         );
     }
 
     function _processUnfollow(
         RulesStorage storage rulesStorage,
-        function(address,bytes32,address,address,address,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
-            encodeAndCall,
-        address originalMsgSender,
-        address followerAccount,
-        address accountToUnfollow,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata rulesProcessingParams
+        function(Rule memory,ProcessParams memory,KeyValue[] memory) internal returns (bool,bytes memory) encodeAndCall,
+        ProcessParams memory processParams
     ) internal {
         bytes4 ruleSelector = IGraphRule.processUnfollow.selector;
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.requiredRules[ruleSelector][i];
-            // TODO: Think how to put this loop into a library (all the rules use it)
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToUnfollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                require(callNotReverted, "Some required rule failed");
-            }
+            rule = rulesStorage.requiredRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
+        // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToUnfollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = rulesStorage.anyOfRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require(rulesStorage.anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 
     function _processFollow(
         RulesStorage storage rulesStorage,
-        function(address,bytes32,address,address,address,KeyValue[] calldata,KeyValue[] memory) internal returns (bool,bytes memory)
-            encodeAndCall,
+        function(Rule memory,ProcessParams memory,KeyValue[] memory) internal returns (bool,bytes memory) encodeAndCall,
         bytes4 ruleSelector,
-        address originalMsgSender,
-        address followerAccount,
-        address accountToFollow,
-        KeyValue[] calldata primitiveCustomParams,
-        RuleProcessingParams[] calldata rulesProcessingParams
+        ProcessParams memory processParams
     ) internal {
+        Rule memory rule;
+        KeyValue[] memory ruleParams;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.requiredRules[ruleSelector][i];
-            // TODO: Think how to put this loop into a library (all the rules use it)
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToFollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                require(callNotReverted, "Some required rule failed");
-            }
+            rule = rulesStorage.requiredRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            require(callSucceeded, Errors.RequiredRuleReverted());
         }
+        // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
-            Rule memory rule = rulesStorage.anyOfRules[ruleSelector][i];
-            for (uint256 j = 0; j < rulesProcessingParams.length; j++) {
-                KeyValue[] memory ruleCustomParams = new KeyValue[](0);
-                if (
-                    rulesProcessingParams[j].ruleAddress == rule.ruleAddress
-                        && rulesProcessingParams[j].configSalt == rule.configSalt
-                ) {
-                    ruleCustomParams = rulesProcessingParams[j].ruleParams;
-                }
-                (bool callNotReverted,) = encodeAndCall(
-                    rule.ruleAddress,
-                    rule.configSalt,
-                    originalMsgSender,
-                    followerAccount,
-                    accountToFollow,
-                    primitiveCustomParams,
-                    ruleCustomParams
-                );
-                if (callNotReverted) {
-                    return; // If any of the OR-combined rules passed, it means they succeed and we can return
-                }
+            rule = rulesStorage.anyOfRules[ruleSelector][i];
+            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            if (callSucceeded) {
+                return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
         }
         // If there are any-of rules and it reached this point, it means all of them failed.
-        require($graphRulesStorage().anyOfRules[ruleSelector].length == 0, "All of the any-of rules failed");
+        require(rulesStorage.anyOfRules[ruleSelector].length == 0, Errors.AllAnyOfRulesReverted());
     }
 }

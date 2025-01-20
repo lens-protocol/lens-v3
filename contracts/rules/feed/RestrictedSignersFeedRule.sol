@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
@@ -49,7 +49,7 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
         });
     }
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32 configSalt,
         uint256 postId,
         KeyValue[] calldata primitiveParams,
@@ -57,7 +57,7 @@ contract RestrictedSignersFeedRule is RestrictedSignersRule, IFeedRule {
     ) external override {
         _validateRestrictedSignerMessage({
             configSalt: configSalt,
-            functionSelector: IFeedRule.processRemovePost.selector,
+            functionSelector: IFeedRule.processDeletePost.selector,
             abiEncodedFunctionParams: abi.encode(postId, EIP712EncodingLib.encodeForEIP712(primitiveParams)),
             signature: abi.decode(ruleParams[0].value, (EIP712Signature))
         });

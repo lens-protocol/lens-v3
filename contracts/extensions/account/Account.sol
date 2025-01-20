@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.26;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
@@ -12,8 +12,12 @@ import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
+import {CallLib} from "contracts/core/libraries/CallLib.sol";
 
 contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStorageBased, MetadataBased {
+    using CallLib for address;
+
     // TODO: Think how long the timelock should be and should it be configurable
     uint256 constant SPENDING_TIMELOCK = 1 hours;
 
@@ -74,9 +78,7 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
     // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setPrimitiveExtraDataByUser case
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
-            require(
-                $storage().accountManagerPermissions[msg.sender].canSetMetadataURI, "No permissions to set metadata URI"
-            );
+            require($storage().accountManagerPermissions[msg.sender].canSetMetadataURI, Errors.NotAllowed());
         }
         if (sourceStamp.source != address(0)) {
             ISource(sourceStamp.source).validateSource(sourceStamp);
@@ -92,10 +94,10 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
 
     function allowNonOwnerSpending(bool allow) external onlyOwner {
         if (allow) {
-            require($storage().allowNonOwnerSpendingTimestamp == 0, "Non-Owner Spending Already Allowed");
+            require($storage().allowNonOwnerSpendingTimestamp == 0, Errors.RedundantStateChange());
             $storage().allowNonOwnerSpendingTimestamp = block.timestamp;
         } else {
-            require($storage().allowNonOwnerSpendingTimestamp > 0, "Non-Owner Spending Already Not Allowed");
+            require($storage().allowNonOwnerSpendingTimestamp > 0, Errors.RedundantStateChange());
             delete $storage().allowNonOwnerSpendingTimestamp;
         }
         emit Lens_Account_AllowNonOwnerSpending(allow, allow ? block.timestamp : 0);
@@ -107,18 +109,17 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
         onlyOwner
     {
         require(
-            !$storage().accountManagerPermissions[accountManager].canExecuteTransactions,
-            "Account manager already exists"
+            !$storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.RedundantStateChange()
         );
-        require(accountManager != owner(), "Cannot add owner as account manager");
-        require(accountManager != address(0), "Cannot add zero address as account manager");
+        require(accountManager != owner(), Errors.InvalidParameter());
+        require(accountManager != address(0), Errors.InvalidParameter());
         $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
         emit Lens_Account_AccountManagerAdded(accountManager, accountManagerPermissions);
     }
 
     function removeAccountManager(address accountManager) external override onlyOwner {
         require(
-            $storage().accountManagerPermissions[accountManager].canExecuteTransactions, "Account manager already exists"
+            $storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.RedundantStateChange()
         );
         delete $storage().accountManagerPermissions[accountManager];
         emit Lens_Account_AccountManagerRemoved(accountManager);
@@ -128,10 +129,8 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
         address accountManager,
         AccountManagerPermissions calldata accountManagerPermissions
     ) external override onlyOwner {
-        require(
-            $storage().accountManagerPermissions[accountManager].canExecuteTransactions, "Account manager does not exist"
-        );
-        require(accountManagerPermissions.canExecuteTransactions, "Cannot remove execution permissions");
+        require($storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.InvalidParameter());
+        require(accountManagerPermissions.canExecuteTransactions, Errors.InvalidParameter());
         $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
@@ -147,38 +146,22 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
         returns (bytes memory)
     {
         if (msg.sender != owner()) {
-            require(
-                $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
-                "No permissions to execute transactions"
-            );
+            require($storage().accountManagerPermissions[msg.sender].canExecuteTransactions, Errors.NotAllowed());
             if (value > 0) {
-                require(
-                    $storage().accountManagerPermissions[msg.sender].canTransferNative,
-                    "No permissions to transfer native tokens"
-                );
+                require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
             }
             if (_isTransferRelatedSelector(bytes4(data[:4]))) {
                 require(
                     $storage().allowNonOwnerSpendingTimestamp > 0
                         && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
-                    "Spender Lock ON: Non-owner spending not allowed"
+                    Errors.NotAllowed()
                 );
-                require(
-                    $storage().accountManagerPermissions[msg.sender].canTransferTokens,
-                    "No permissions to transfer tokens"
-                );
+                require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
             }
         }
-        (bool success, bytes memory ret) = to.call{value: value}(data);
-        if (!success) {
-            assembly {
-                // Equivalent to reverting with the returned error selector if the length is not zero.
-                let length := mload(ret)
-                if iszero(iszero(length)) { revert(add(ret, 32), length) }
-            }
-        }
+        bytes memory returnData = to.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(to, value, data, msg.sender);
-        return ret;
+        return returnData;
     }
 
     receive() external payable override {}

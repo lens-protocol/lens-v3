@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.26;
 
 import {KeyValue, RuleChange, RuleConfigurationChange, RuleSelectorChange} from "contracts/core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";

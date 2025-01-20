@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
-import {Rule} from "contracts/core/types/Types.sol";
+import {Rule, RuleChange, RuleSelectorChange} from "contracts/core/types/Types.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 struct RulesStorage {
     mapping(bytes4 => Rule[]) requiredRules;
@@ -32,7 +33,7 @@ library RulesLib {
         if (providedConfigSalt == 0x00) {
             return bytes32(++rulesStorage.lastConfigSaltGenerated);
         } else {
-            require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt]);
+            require(rulesStorage.isConfigured[ruleAddress][providedConfigSalt], Errors.InvalidConfigSalt());
             return providedConfigSalt;
         }
     }
@@ -45,8 +46,8 @@ library RulesLib {
     ) internal returns (bool) {
         bool wasAlreadyConfigured = rulesStorage.isConfigured[ruleAddress][configSalt];
         rulesStorage.isConfigured[ruleAddress][configSalt] = true;
-        (bool success,) = ruleAddress.safecall(encodedConfigureCall);
-        require(success);
+        (bool callSucceeded,) = ruleAddress.safecall(encodedConfigureCall);
+        require(callSucceeded, Errors.ConfigureCallReverted());
         return wasAlreadyConfigured;
     }
 
@@ -57,19 +58,29 @@ library RulesLib {
         bytes32 configSalt,
         bytes4 ruleSelector
     ) internal {
-        require(rulesStorage.isConfigured[ruleAddress][configSalt]);
-        require(!_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt));
+        require(rulesStorage.isConfigured[ruleAddress][configSalt], Errors.RuleNotConfigured());
+        if (rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled) {
+            if (rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired == isRequired) {
+                revert Errors.RedundantStateChange();
+            } else {
+                revert Errors.SelectorEnabledForDifferentRuleType();
+            }
+        }
         _addRuleSelectorToStorage(rulesStorage, ruleSelector, ruleAddress, configSalt, isRequired);
     }
 
     function disableRuleSelector(
         RulesStorage storage rulesStorage,
-        bool, /* isRequired */
+        bool isRequired,
         address ruleAddress,
         bytes32 configSalt,
         bytes4 ruleSelector
     ) internal {
-        require(_isSelectorAlreadyEnabled(rulesStorage, ruleSelector, ruleAddress, configSalt));
+        require(rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled, Errors.RedundantStateChange());
+        require(
+            rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isRequired == isRequired,
+            Errors.SelectorEnabledForDifferentRuleType()
+        );
         _removeRuleSelectorFromStorage(rulesStorage, ruleSelector, ruleAddress, configSalt);
     }
 
@@ -83,18 +94,28 @@ library RulesLib {
 
     function _changeRulesSelectors(
         RulesStorage storage rulesStorage,
-        address ruleAddress,
-        bytes32 configSalt,
+        RuleChange memory ruleChange,
         uint256 entityId,
-        bytes4 ruleSelector,
-        bool isRequired,
-        bool enabled,
+        RuleSelectorChange memory ruleSelectorChange,
         function(bool,uint256,address,bytes32,bool,bytes4) internal fn_emitEvent
     ) internal {
         function(RulesStorage storage, bool, address, bytes32, bytes4) internal fn_changeRuleSelector =
-            enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
-        fn_changeRuleSelector(rulesStorage, isRequired, ruleAddress, configSalt, ruleSelector);
-        fn_emitEvent(enabled, entityId, ruleAddress, configSalt, isRequired, ruleSelector);
+            ruleSelectorChange.enabled ? RulesLib.enableRuleSelector : RulesLib.disableRuleSelector;
+        fn_changeRuleSelector(
+            rulesStorage,
+            ruleSelectorChange.isRequired,
+            ruleChange.ruleAddress,
+            ruleChange.configSalt,
+            ruleSelectorChange.ruleSelector
+        );
+        fn_emitEvent(
+            ruleSelectorChange.enabled,
+            entityId,
+            ruleChange.ruleAddress,
+            ruleChange.configSalt,
+            ruleSelectorChange.isRequired,
+            ruleSelectorChange.ruleSelector
+        );
     }
 
     // Private
@@ -131,14 +152,5 @@ library RulesLib {
         }
         rules.pop();
         delete rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt];
-    }
-
-    function _isSelectorAlreadyEnabled(
-        RulesStorage storage rulesStorage,
-        bytes4 ruleSelector,
-        address ruleAddress,
-        bytes32 configSalt
-    ) private view returns (bool) {
-        return rulesStorage.ruleStates[ruleSelector][ruleAddress][configSalt].isEnabled;
     }
 }

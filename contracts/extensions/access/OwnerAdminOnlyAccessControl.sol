@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {Events} from "contracts/core/types/Events.sol";
 import {RoleBasedAccessControl} from "contracts/core/access/RoleBasedAccessControl.sol";
 import {Access} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract OwnerAdminOnlyAccessControl is RoleBasedAccessControl {
     /// @custom:keccak lens.role.Admin
@@ -17,7 +18,7 @@ contract OwnerAdminOnlyAccessControl is RoleBasedAccessControl {
     }
 
     function _beforeGrantingRole(address account, uint256 roleId) internal virtual override {
-        require(roleId == ADMIN_ROLE_ID, "You cannot grant other roles than ADMIN");
+        require(roleId == ADMIN_ROLE_ID, Errors.InvalidParameter());
         super._beforeGrantingRole(account, roleId);
     }
 
@@ -27,7 +28,7 @@ contract OwnerAdminOnlyAccessControl is RoleBasedAccessControl {
         uint256, /*permissionId*/
         Access /*access*/
     ) internal virtual override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function getType() external pure virtual override returns (bytes32) {

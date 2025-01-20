@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
@@ -24,7 +24,7 @@ interface IFeedRule {
         KeyValue[] calldata ruleParams
     ) external;
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32 configSalt,
         uint256 postId,
         KeyValue[] calldata primitiveParams,

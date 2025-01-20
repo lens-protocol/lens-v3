@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract BeaconProxy {
     event Upgraded(address indexed implementation);
@@ -61,36 +62,36 @@ contract BeaconProxy {
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
-    function changeProxyAdmin(address proxyAdmin) external {
-        require(msg.sender == $proxyAdmin().value);
+    function proxy__changeProxyAdmin(address proxyAdmin) external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $proxyAdmin().value = proxyAdmin;
         emit AdminChanged(msg.sender, proxyAdmin);
     }
 
-    function optOutFromAutoUpgrade() external {
-        require(msg.sender == $proxyAdmin().value);
+    function proxy__optOutFromAutoUpgrade() external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $autoUpgrade().value = false;
         emit AutoUpgradeChanged(false);
     }
 
-    function optInToAutoUpgrade() external {
-        require(msg.sender == $proxyAdmin().value);
+    function proxy__optInToAutoUpgrade() external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $autoUpgrade().value = true;
         emit AutoUpgradeChanged(true);
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
-    function setImplementation(address implementation) external {
-        require(msg.sender == $proxyAdmin().value);
-        require($autoUpgrade().value == false);
+    function proxy__setImplementation(address implementation) external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
+        require($autoUpgrade().value == false, Errors.AutoUpgradeEnabled());
         if (implementation != $implementation().value) {
             $implementation().value = implementation;
             emit Upgraded(implementation);
         }
     }
 
-    function setBeacon(address beacon) external {
-        require(msg.sender == $proxyAdmin().value);
+    function proxy__setBeacon(address beacon) external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         if (beacon != $beacon().value) {
             $beacon().value = beacon;
             emit BeaconUpgraded(beacon);
@@ -100,8 +101,8 @@ contract BeaconProxy {
         }
     }
 
-    function triggerUpgradeToVersion(uint256 implementationVersion) external {
-        require(msg.sender == $proxyAdmin().value);
+    function proxy__triggerUpgradeToVersion(uint256 implementationVersion) external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         address implementationFromBeacon = IVersionedBeacon($beacon().value).implementation(implementationVersion);
         if (implementationFromBeacon != $implementation().value) {
             emit Upgraded(implementationFromBeacon);
@@ -109,8 +110,8 @@ contract BeaconProxy {
         }
     }
 
-    function triggerUpgrade() external {
-        require(msg.sender == $proxyAdmin().value);
+    function proxy__triggerUpgrade() external {
+        require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 

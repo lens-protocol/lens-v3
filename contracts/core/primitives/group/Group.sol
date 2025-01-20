@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {Membership, IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {GroupCore as Core} from "contracts/core/primitives/group/GroupCore.sol";
@@ -14,6 +14,7 @@ import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract Group is
     IGroup,
@@ -70,9 +71,16 @@ contract Group is
         _requireAccess(msg.sender, PID__SET_METADATA);
     }
 
-    function _beforeChangePrimitiveRules(RuleChange[] calldata /* ruleChanges */ ) internal virtual override {
+    function _beforeChangePrimitiveRules(RuleChange[] memory /* ruleChanges */ ) internal virtual override {
         _requireAccess(msg.sender, PID__CHANGE_RULES);
     }
+
+    function _beforeChangeEntityRules(uint256 entityId, RuleChange[] memory ruleChanges)
+        internal
+        pure
+        virtual
+        override
+    {}
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
@@ -127,7 +135,7 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        require(msg.sender == account);
+        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._grantMembership(account);
         _processMemberJoining(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(membershipId, customParams);
@@ -139,7 +147,7 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        require(msg.sender == account);
+        require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(membershipId, customParams);
@@ -158,19 +166,19 @@ contract Group is
 
     function getMembership(address account) external view override returns (Membership memory) {
         Membership memory membership = Core._getMembership(account);
-        require(membership.id != 0, "NOT_A_MEMBER");
+        require(membership.id != 0, Errors.DoesNotExist());
         return membership;
     }
 
     function getMembershipTimestamp(address account) external view override returns (uint256) {
         Membership memory membership = Core._getMembership(account);
-        require(membership.id != 0, "NOT_A_MEMBER");
+        require(membership.id != 0, Errors.DoesNotExist());
         return membership.timestamp;
     }
 
     function getMembershipId(address account) external view override returns (uint256) {
         uint256 membershipId = Core.$storage().memberships[account].id;
-        require(membershipId != 0, "NOT_A_MEMBER");
+        require(membershipId != 0, Errors.DoesNotExist());
         return membershipId;
     }
 

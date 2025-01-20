@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
@@ -8,6 +8,7 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
     using AccessControlLib for IAccessControl;
@@ -45,19 +46,19 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
     }
 
     function requestMembership(bytes32 configSalt, address group) external {
-        require(!_membershipRequests[group][msg.sender][configSalt].isRequested);
+        require(!_membershipRequests[group][msg.sender][configSalt].isRequested, Errors.AlreadyExists());
         _membershipRequests[group][msg.sender][configSalt].isRequested = true;
         emit Lens_ApprovalGroupRule_MembershipRequested(group, msg.sender);
     }
 
     function cancelMembershipRequest(bytes32 configSalt, address group) external {
-        require(_membershipRequests[group][msg.sender][configSalt].isRequested);
+        require(_membershipRequests[group][msg.sender][configSalt].isRequested, Errors.DoesNotExist());
         delete _membershipRequests[group][msg.sender][configSalt];
         emit Lens_ApprovalGroupRule_MembershipRequestCancelled(group, msg.sender);
     }
 
     function answerMembershipRequest(bytes32 configSalt, address group, address account, bool isApproved) external {
-        require(_membershipRequests[group][account][configSalt].isRequested);
+        require(_membershipRequests[group][account][configSalt].isRequested, Errors.DoesNotExist());
         if (isApproved) {
             _membershipRequests[group][account][configSalt].isApproved = isApproved;
             emit Lens_ApprovalGroupRule_MembershipApproved(group, account, msg.sender);
@@ -65,7 +66,7 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
             delete _membershipRequests[group][account][configSalt];
             emit Lens_ApprovalGroupRule_MembershipRejected(group, account, msg.sender);
         }
-        require(_accessControl[group][configSalt].hasAccess(msg.sender, PID__APPROVE_MEMBER));
+        _accessControl[group][configSalt].requireAccess(msg.sender, PID__APPROVE_MEMBER);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
@@ -88,7 +89,7 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata /* ruleParams */
     ) external override {
         if (!_membershipRequests[msg.sender][account][configSalt].isApproved) {
-            require(_accessControl[msg.sender][configSalt].hasAccess(originalMsgSender, PID__APPROVE_MEMBER));
+            _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__APPROVE_MEMBER);
             emit Lens_ApprovalGroupRule_MembershipApproved(msg.sender, account, originalMsgSender);
         }
         delete _membershipRequests[msg.sender][account][configSalt];
@@ -101,7 +102,7 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external override {
-        require(_membershipRequests[msg.sender][account][configSalt].isApproved);
+        require(_membershipRequests[msg.sender][account][configSalt].isApproved, Errors.NotAllowed());
         delete _membershipRequests[msg.sender][account][configSalt];
         emit Lens_ApprovalGroupRule_MembershipGranted(msg.sender, account);
     }
@@ -113,7 +114,7 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processLeaving(
@@ -122,6 +123,6 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

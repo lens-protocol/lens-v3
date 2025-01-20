@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 /// @custom:keccak lens.param.group
 bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;
@@ -42,7 +43,7 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(IGroup(_groupGate[msg.sender][configSalt]).isMember(postParams.author), "NotAMember()");
+        require(IGroup(_groupGate[msg.sender][configSalt]).isMember(postParams.author), Errors.NotAMember());
     }
 
     function processEditPost(
@@ -52,16 +53,16 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
-    function processRemovePost(
+    function processDeletePost(
         bytes32, /* configSalt */
         uint256, /* postId */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processPostRuleChanges(
@@ -70,6 +71,6 @@ contract GroupGatedFeedRule is IFeedRule, MetadataBased {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 }

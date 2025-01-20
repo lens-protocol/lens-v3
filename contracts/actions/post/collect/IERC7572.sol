@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 // As appears in https://eips.ethereum.org/EIPS/eip-7572
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 /**
  * This specification standardizes contractURI() to return contract-level metadata. This is useful for dapps and

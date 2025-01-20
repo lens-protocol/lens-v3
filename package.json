@@ -18,6 +18,8 @@
     "compile": "hardhat compile",
     "clean": "hardhat clean",
     "test": "hardhat test --network hardhat",
+    "coverage": "forge coverage",
+    "coverage:report": "bash coverage.sh",
     "prepare": "husky",
     "format": "forge fmt",
     "prod:abis": "npm run abis && cp -r out/abis ./ABIs",

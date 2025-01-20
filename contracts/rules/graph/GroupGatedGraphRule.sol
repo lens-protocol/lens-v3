@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
@@ -9,6 +9,7 @@ import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract GroupGatedGraphRule is IGraphRule, MetadataBased {
     using AccessControlLib for IAccessControl;
@@ -16,8 +17,8 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
 
     event Lens_Rule_MetadataURISet(string metadataURI);
 
-    /// @custom:keccak lens.permission.SkipTokenGate
-    uint256 constant PID__SKIP_TOKEN_GATE = uint256(0x42073514d6ebc3c4c46bdc33d53105f5c563a0d184e86952704eb3e7b74ec1ae);
+    /// @custom:keccak lens.permission.SkipGate
+    uint256 constant PID__SKIP_GATE = uint256(0xeb7f30e4c97d5211e2534aa42375c26931bd55b57a8101e5eb7918daead714eb);
 
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
@@ -33,7 +34,7 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
 
     constructor(string memory metadataURI) {
         _setMetadataURI(metadataURI);
-        emit Events.Lens_PermissionId_Available(PID__SKIP_TOKEN_GATE, "lens.permission.SkipTokenGate");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
@@ -79,7 +80,7 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function processFollowRuleChanges(
@@ -88,12 +89,12 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
-        revert();
+        revert Errors.NotImplemented();
     }
 
     function _validateGroupMembership(address accessControl, address group, address account) internal view {
-        if (!accessControl.hasAccess(account, PID__SKIP_TOKEN_GATE)) {
-            require(IGroup(group).isMember(account), "NotAMember()");
+        if (!accessControl.hasAccess(account, PID__SKIP_GATE)) {
+            require(IGroup(group).isMember(account), Errors.NotAMember());
         }
     }
 

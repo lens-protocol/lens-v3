@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
@@ -13,8 +13,8 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
-    /// @custom:keccak lens.permission.SkipTokenGate
-    uint256 constant PID__SKIP_TOKEN_GATE = uint256(0x42073514d6ebc3c4c46bdc33d53105f5c563a0d184e86952704eb3e7b74ec1ae);
+    /// @custom:keccak lens.permission.SkipGate
+    uint256 constant PID__SKIP_GATE = uint256(0xeb7f30e4c97d5211e2534aa42375c26931bd55b57a8101e5eb7918daead714eb);
 
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
@@ -27,7 +27,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
     constructor(string memory metadataURI) TokenGatedRule(metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_TOKEN_GATE, "lens.permission.SkipTokenGate");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
@@ -101,7 +101,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
         TokenGateConfiguration memory tokenGateConfiguration,
         address account
     ) internal view {
-        if (!accessControl.hasAccess(account, PID__SKIP_TOKEN_GATE)) {
+        if (!accessControl.hasAccess(account, PID__SKIP_GATE)) {
             _validateTokenBalance(tokenGateConfiguration, account);
         }
     }

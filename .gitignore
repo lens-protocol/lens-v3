@@ -133,3 +133,5 @@ dist
 deployment-zk/*
 !deployment-zk/lensSepoliaTestnet/
 cache_forge/solidity-files-cache.json
+
+lcov.info

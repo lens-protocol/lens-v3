@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.26;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 interface IToken {
     /**
@@ -38,7 +39,7 @@ abstract contract TokenGatedRule is MetadataBased {
     }
 
     function _validateTokenGateConfiguration(TokenGateConfiguration memory configuration) internal view {
-        require(configuration.amount > 0, "Errors.CannotSetZeroAmount()");
+        require(configuration.amount > 0, Errors.InvalidParameter());
         if (configuration.tokenStandard == ERC20 || configuration.tokenStandard == ERC721) {
             // Expects token to support ERC-20/ERC-721 balanceOf by not reverting
             IToken(configuration.token).balanceOf(address(this));
@@ -46,12 +47,12 @@ abstract contract TokenGatedRule is MetadataBased {
             // Expects token to support ERC-1155 balanceOf by not reverting
             IERC1155(configuration.token).balanceOf(address(this), configuration.typeId);
         } else {
-            revert("Errors.InvalidTokenStandard()");
+            revert Errors.InvalidParameter();
         }
     }
 
     function _validateTokenBalance(TokenGateConfiguration memory configuration, address owner) internal view {
-        require(_checkTokenBalance(configuration, owner), "Errors.InsufficientTokenBalance()");
+        require(_checkTokenBalance(configuration, owner), Errors.NotEnough());
     }
 
     function _checkTokenBalance(TokenGateConfiguration memory configuration, address owner)
