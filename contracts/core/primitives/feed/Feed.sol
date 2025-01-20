@@ -36,6 +36,9 @@ contract Feed is
     /// @custom:keccak lens.permission.RemovePost
     uint256 constant PID__REMOVE_POST = uint256(0x25b86c749bcf827bec85b3f107e1d65771462eb329e68ff158d50a2f4b301c89);
 
+    /// @custom:keccak lens.param.expectedPostId
+    bytes32 constant PARAM__EXPECTED_POST_ID = 0x5c421319b1e3c75e7c7239e8e44abd0f35e3e7f7fcc9a98fdbbcbd19deb4202e;
+
     constructor() {
         _disableInitializers();
     }
@@ -93,6 +96,7 @@ contract Feed is
     ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
         (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        _validateExpectedPostIdIfPresent(customParams, postId);
         address source = _processSourceStamp(postId, customParams);
         _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
@@ -277,5 +281,14 @@ contract Feed is
 
     function getNextPostId(address author) external view returns (uint256) {
         return Core._generatePostId(author, Core.$storage().authorPostCount[author] + 1);
+    }
+
+    function _validateExpectedPostIdIfPresent(KeyValue[] memory customParams, uint256 postId) internal pure {
+        for (uint256 i = 0; i < customParams.length; i++) {
+            if (customParams[i].key == PARAM__EXPECTED_POST_ID) {
+                require(postId == abi.decode(customParams[i].value, (uint256)), Errors.UnexpectedValue());
+                return;
+            }
+        }
     }
 }
