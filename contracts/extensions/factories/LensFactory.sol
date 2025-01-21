@@ -155,10 +155,13 @@ contract LensFactory {
     }
 
     struct CreateGroupWithFeedParams {
+        address owner;
         address group;
         IRoleBasedAccessControl groupAccessControl;
         IRoleBasedAccessControl feedAccessControl;
         RuleChange[] modifiedFeedRules;
+        string feedMetadataURI;
+        RuleChange[] feedRules;
         KeyValue[] feedExtraData;
     }
 
@@ -176,17 +179,19 @@ contract LensFactory {
     ) external returns (address, address) {
         CreateGroupWithFeedParams memory s;
         s.feedExtraData = feedExtraData;
+        s.feedRules = feedRules;
+        s.feedMetadataURI = feedMetadataURI;
         s.feedAccessControl = _deployAccessControl(owner, admins);
-
         {
             s.groupAccessControl = _deployAccessControl(owner, admins);
         }
+        s.owner = owner;
 
         {
             s.group = GROUP_FACTORY.deployGroup(
                 groupMetadataURI,
                 TEMPORARY_ACCESS_CONTROL,
-                owner,
+                s.owner,
                 _injectRuleAccessControl(groupRules, address(s.groupAccessControl)),
                 groupExtraData,
                 groupFoundingMember,
@@ -194,7 +199,7 @@ contract LensFactory {
             );
         }
 
-        s.modifiedFeedRules = new RuleChange[](feedRules.length + 2);
+        s.modifiedFeedRules = new RuleChange[](s.feedRules.length + 2);
 
         {
             RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
@@ -221,15 +226,16 @@ contract LensFactory {
         }
 
         {
-            for (uint256 i = 0; i < feedRules.length; i++) {
-                require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
-                require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
-                s.modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(s.feedAccessControl));
+            for (uint256 i = 0; i < s.feedRules.length; i++) {
+                require(s.feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
+                require(s.feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
+                s.modifiedFeedRules[i + 2] = _injectRuleAccessControl(s.feedRules[i], address(s.feedAccessControl));
             }
         }
 
-        address feed =
-            FEED_FACTORY.deployFeed(feedMetadataURI, s.feedAccessControl, owner, s.modifiedFeedRules, s.feedExtraData);
+        address feed = FEED_FACTORY.deployFeed(
+            s.feedMetadataURI, s.feedAccessControl, s.owner, s.modifiedFeedRules, s.feedExtraData
+        );
 
         KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
         groupExtraDataWithFeed[0] = KeyValue({key: DATA__GROUP_LINKED_FEED, value: abi.encode(feed)});
@@ -276,7 +282,7 @@ contract LensFactory {
         RuleChange[] calldata rules,
         KeyValue[] calldata extraData,
         address foundingMember,
-        KeyValue[] calldata addFoundingMemberCustomParams
+        KeyValue[] memory addFoundingMemberCustomParams
     ) external returns (address) {
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
         return GROUP_FACTORY.deployGroup(
