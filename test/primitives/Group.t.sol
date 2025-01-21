@@ -48,7 +48,9 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
             accessControl: mockAccessControl,
             proxyAdminOwner: address(this),
             ruleChanges: _emptyRuleChangeArray(),
-            extraData: _emptyKeyValueArray()
+            extraData: _emptyKeyValueArray(),
+            foundingMember: address(0),
+            addFoundingMemberCustomParams: _emptyKeyValueArray()
         });
 
         vm.prank(groupOwner);
