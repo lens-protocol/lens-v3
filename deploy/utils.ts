@@ -266,6 +266,7 @@ export const deployContract = async (
   };
 
   console.log(`\nStarting deployment process of "${contractArtifactName}"...`);
+  console.log(`\nConstructor arguments: ${constructorArguments}`);
 
   const wallet = options?.wallet ?? getWallet();
   const deployer = new Deployer(hre, wallet);

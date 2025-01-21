@@ -51,7 +51,7 @@ async function deploy() {
   await deployProxyAdminLock(lockOwner ?? deployerAddress);
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
-  await deployFactories(factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address);
+  await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address);
   await deployLensPrimitives();
   const actionHub = await deployLensActionHub();
   await deployLensAccessControl();
