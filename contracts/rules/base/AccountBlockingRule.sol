@@ -7,24 +7,16 @@ import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract AccountBlockingRule is IFeedRule, IGraphRule, MetadataBased {
+contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule {
     event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target, uint256 timestamp);
     event Lens_AccountBlocking_UserUnblocked(address indexed source, address indexed target);
 
-    event Lens_Rule_MetadataURISet(string metadataURI);
-
     mapping(address => mapping(address => uint256)) public accountBlocks;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
-    }
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
     function configure(bytes32, /* salt */ KeyValue[] calldata /* ruleConfigurationParams */ )
         external

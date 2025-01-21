@@ -149,7 +149,7 @@ async function deployLensGroup(lensFactory: ethers.Contract): Promise<string> {
   }
 
   console.log('Deploying ' + name);
-  const transaction = await lensFactory.deployGroup(metadataURI, getWallet().address, [], [], []);
+  const transaction = await lensFactory.deployGroup(metadataURI, getWallet().address, [], [], [], ZeroAddress, []);
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);

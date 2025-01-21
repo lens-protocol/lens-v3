@@ -35,7 +35,9 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
                 owner: groupOwner,
                 admins: _emptyAddressArray(),
                 rules: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
+                extraData: _emptyKeyValueArray(),
+                foundingMember: address(0),
+                addFoundingMemberCustomParams: _emptyKeyValueArray()
             })
         );
 

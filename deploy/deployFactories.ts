@@ -6,7 +6,7 @@ import {
   loadContractAddressFromAddressBook,
 } from './lensUtils';
 
-export default async function deployFactories(factoriesProxyOwner: string): Promise<void> {
+export default async function deployFactories(rulesOwner: string, factoriesProxyOwner: string): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
 
   const factories: ContractInfo[] = [
@@ -66,17 +66,17 @@ export default async function deployFactories(factoriesProxyOwner: string): Prom
     {
       contractName: 'AccountBlockingRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'GroupGatedFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'UsernameSimpleCharsetNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
   ];
 

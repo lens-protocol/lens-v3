@@ -78,9 +78,10 @@ contract MyScript is Script {
         _deployBeacons();
         _deployFactories();
 
-        accountBlockingRule = address(new AccountBlockingRule({metadataURI: "uri://any"}));
-        groupGatedFeedRule = address(new GroupGatedFeedRule({metadataURI: "uri://any"}));
-        usernameSimpleCharsetRule = address(new UsernameSimpleCharsetNamespaceRule({metadataURI: "uri://any"}));
+        accountBlockingRule = address(new AccountBlockingRule({owner: address(this), metadataURI: "uri://any"}));
+        groupGatedFeedRule = address(new GroupGatedFeedRule({owner: address(this), metadataURI: "uri://any"}));
+        usernameSimpleCharsetRule =
+            address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(),

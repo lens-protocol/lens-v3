@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 interface IToken {
@@ -13,9 +13,7 @@ interface IToken {
     function balanceOf(address account) external view returns (uint256);
 }
 
-abstract contract TokenGatedRule is MetadataBased {
-    event Lens_Rule_MetadataURISet(string metadataURI);
-
+abstract contract TokenGatedRule is OwnableMetadataBasedRule {
     uint256 internal constant ERC20 = 20;
     uint256 internal constant ERC721 = 721;
     uint256 internal constant ERC1155 = 1155;
@@ -30,13 +28,7 @@ abstract contract TokenGatedRule is MetadataBased {
         uint256 amount;
     }
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
-    }
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
     function _validateTokenGateConfiguration(TokenGateConfiguration memory configuration) internal view {
         require(configuration.amount > 0, Errors.InvalidParameter());

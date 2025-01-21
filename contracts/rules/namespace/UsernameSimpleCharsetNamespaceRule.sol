@@ -4,30 +4,22 @@ pragma solidity ^0.8.26;
 
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, MetadataBased {
-    event Lens_Rule_MetadataURISet(string metadataURI);
-
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
-    }
+contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRule {
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
     function configure(bytes32, /* configSalt */ KeyValue[] calldata /* ruleParams */ ) external override {}
 
     function processCreation(
-        bytes32 configSalt,
-        address originalMsgSender,
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
         address, /* account */
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external pure override {
         _processRestrictions(username);
     }
 

@@ -28,7 +28,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(string memory metadataURI) SimplePaymentRule(metadataURI) {
+    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
     }
 
@@ -114,6 +114,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == PARAM__PAYMENT_CONFIG) {
                 paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
+                break;
             }
         }
         return paymentConfiguration;

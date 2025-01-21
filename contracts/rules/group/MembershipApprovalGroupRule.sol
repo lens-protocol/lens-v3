@@ -7,14 +7,12 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
+contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
-
-    event Lens_Rule_MetadataURISet(string metadataURI);
 
     /// @custom:keccak lens.permission.ApproveMember
     uint256 constant PID__APPROVE_MEMBER = uint256(0x6dee95fe4c317d653a8497c1c8ce08e19bdee16c90d0ec8d1795b29ff85811b6);
@@ -36,13 +34,8 @@ contract MembershipApprovalGroupRule is IGroupRule, MetadataBased {
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(address => mapping(bytes32 => MembershipRequest))) internal _membershipRequests;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__APPROVE_MEMBER, "lens.permission.ApproveMember");
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function requestMembership(bytes32 configSalt, address group) external {
