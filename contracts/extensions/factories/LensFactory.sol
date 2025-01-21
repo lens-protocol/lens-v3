@@ -168,6 +168,8 @@ contract LensFactory {
         string memory groupMetadataURI,
         RuleChange[] memory groupRules,
         KeyValue[] memory groupExtraData,
+        address groupFoundingMember,
+        KeyValue[] memory groupAddFoundingMemberCustomParams,
         string memory feedMetadataURI,
         RuleChange[] memory feedRules,
         KeyValue[] memory feedExtraData
@@ -178,13 +180,17 @@ contract LensFactory {
 
         {
             s.groupAccessControl = _deployAccessControl(owner, admins);
+        }
 
+        {
             s.group = GROUP_FACTORY.deployGroup(
                 groupMetadataURI,
                 TEMPORARY_ACCESS_CONTROL,
                 owner,
                 _injectRuleAccessControl(groupRules, address(s.groupAccessControl)),
-                groupExtraData
+                groupExtraData,
+                groupFoundingMember,
+                groupAddFoundingMemberCustomParams
             );
         }
 
@@ -268,11 +274,19 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         RuleChange[] calldata rules,
-        KeyValue[] calldata extraData
+        KeyValue[] calldata extraData,
+        address foundingMember,
+        KeyValue[] calldata addFoundingMemberCustomParams
     ) external returns (address) {
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
         return GROUP_FACTORY.deployGroup(
-            metadataURI, accessControl, owner, _injectRuleAccessControl(rules, address(accessControl)), extraData
+            metadataURI,
+            accessControl,
+            owner,
+            _injectRuleAccessControl(rules, address(accessControl)),
+            extraData,
+            foundingMember,
+            addFoundingMemberCustomParams
         );
     }
 
