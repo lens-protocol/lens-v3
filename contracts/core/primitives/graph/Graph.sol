@@ -77,7 +77,7 @@ contract Graph is
         require(msg.sender == address(uint160(entityId)), Errors.InvalidMsgSender()); // Follow rules can only be changed in your own account
     }
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external payable override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
@@ -105,7 +105,7 @@ contract Graph is
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external virtual override returns (uint256) {
+    ) external payable virtual override returns (uint256) {
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
         uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);
@@ -130,7 +130,7 @@ contract Graph is
         address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external virtual override returns (uint256) {
+    ) external payable virtual override returns (uint256) {
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(followId, customParams);

@@ -6,7 +6,7 @@ import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.
 import {KeyValue} from "contracts/core/types/Types.sol";
 
 interface IPostRule {
-    function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external;
+    function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external payable;
 
     function processCreatePost(
         bytes32 configSalt,
@@ -15,7 +15,7 @@ interface IPostRule {
         CreatePostParams calldata postParams,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 
     function processEditPost(
         bytes32 configSalt,
@@ -24,5 +24,5 @@ interface IPostRule {
         EditPostParams calldata postParams,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 }

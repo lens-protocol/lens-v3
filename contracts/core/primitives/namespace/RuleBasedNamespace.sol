@@ -126,9 +126,11 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessCreation(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 INamespaceRule.processCreation,
                 (
@@ -166,9 +168,11 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessRemoval(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 INamespaceRule.processRemoval,
                 (
@@ -204,9 +208,11 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessAssigning(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 INamespaceRule.processAssigning,
                 (
@@ -244,9 +250,11 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     function _encodeAndCallProcessUnassigning(
         Rule memory rule,
         ProcessParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 INamespaceRule.processUnassigning,
                 (
@@ -291,23 +299,25 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
     }
 
     function _processNamespaceRule(
-        function(Rule memory,ProcessParams memory,KeyValue[] memory) internal returns (bool,bytes memory) encodeAndCall,
+        function(Rule memory,ProcessParams memory,KeyValue[] memory, uint256) internal returns (bool,bytes memory)
+            encodeAndCall,
         ProcessParams memory processParams
     ) private {
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $namespaceRulesStorage().requiredRules[processParams.ruleSelector].length; i++) {
             rule = $namespaceRulesStorage().requiredRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
-            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams, msgValue);
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $namespaceRulesStorage().anyOfRules[processParams.ruleSelector].length; i++) {
             rule = $namespaceRulesStorage().anyOfRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
-            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams, msgValue);
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }

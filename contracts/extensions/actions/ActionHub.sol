@@ -8,10 +8,12 @@ import {Errors} from "contracts/core/types/Errors.sol";
 interface IPostAction {
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function setDisabled(
@@ -20,20 +22,23 @@ interface IPostAction {
         uint256 postId,
         bool isDisabled,
         KeyValue[] calldata params
-    ) external returns (bytes memory);
+    ) external payable returns (bytes memory);
 }
 
 interface IAccountAction {
     function configure(address originalMsgSender, address account, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function execute(address originalMsgSender, address account, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function setDisabled(address originalMsgSender, address account, bool isDisabled, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 }
 
@@ -108,7 +113,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IPostAction(action).configure(msg.sender, feed, postId, params);
+        bytes memory returnData = IPostAction(action).configure{value: msg.value}(msg.sender, feed, postId, params);
         emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
@@ -118,7 +123,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, params);
+        bytes memory returnData = IPostAction(action).execute{value: msg.value}(msg.sender, feed, postId, params);
         emit Lens_ActionHub_PostAction_Executed(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
@@ -128,7 +133,8 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, true, params);
+        bytes memory returnData =
+            IPostAction(action).setDisabled{value: msg.value}(msg.sender, feed, postId, true, params);
         emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
@@ -138,7 +144,8 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, false, params);
+        bytes memory returnData =
+            IPostAction(action).setDisabled{value: msg.value}(msg.sender, feed, postId, false, params);
         emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
@@ -154,7 +161,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IAccountAction(action).configure(msg.sender, account, params);
+        bytes memory returnData = IAccountAction(action).configure{value: msg.value}(msg.sender, account, params);
         emit Lens_ActionHub_AccountAction_Configured(action, msg.sender, account, params, returnData);
         return returnData;
     }
@@ -164,7 +171,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IAccountAction(action).execute(msg.sender, account, params);
+        bytes memory returnData = IAccountAction(action).execute{value: msg.value}(msg.sender, account, params);
         emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, params, returnData);
         return returnData;
     }
@@ -174,7 +181,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, true, params);
+        bytes memory returnData = IAccountAction(action).setDisabled{value: msg.value}(msg.sender, account, true, params);
         emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, params, returnData);
         return returnData;
     }
@@ -184,7 +191,8 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, false, params);
+        bytes memory returnData =
+            IAccountAction(action).setDisabled{value: msg.value}(msg.sender, account, false, params);
         emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, params, returnData);
         return returnData;
     }

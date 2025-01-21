@@ -31,7 +31,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
@@ -44,7 +44,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external payable {
         revert Errors.NotImplemented();
     }
 
@@ -54,7 +54,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external payable {
         // Anyone can kick out member of the group if they no longer hold the required token balance:
         require(!_checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account), Errors.NotAllowed());
     }
@@ -64,7 +64,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external payable {
         _validateTokenBalance(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].tokenGate,
@@ -77,7 +77,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external payable {
         revert Errors.NotImplemented();
     }
 

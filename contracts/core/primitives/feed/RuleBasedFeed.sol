@@ -188,9 +188,11 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function _encodeAndCallProcessCreatePostOnFeed(
         Rule memory rule,
         ProcessPostCreationParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 IFeedRule.processCreatePost,
                 (
@@ -207,9 +209,11 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function _encodeAndCallProcessCreatePostOnRootPost(
         Rule memory rule,
         ProcessPostCreationParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 IPostRule.processCreatePost,
                 (
@@ -234,7 +238,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     }
 
     function _processPostCreation(
-        function(Rule memory,ProcessPostCreationParams memory,KeyValue[] memory) internal returns (bool, bytes memory)
+        function(Rule memory,ProcessPostCreationParams memory,KeyValue[] memory, uint256) internal returns (bool, bytes memory)
             encodeAndCall,
         ProcessPostCreationParams memory processParams
     ) internal {
@@ -242,18 +246,19 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             processParams.rootPostId == 0 ? $feedRulesStorage() : $postRulesStorage(processParams.rootPostId);
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < _rulesStorage.requiredRules[processParams.ruleSelector].length; i++) {
             rule = _rulesStorage.requiredRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
-            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams, msgValue);
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < _rulesStorage.anyOfRules[processParams.ruleSelector].length; i++) {
             rule = _rulesStorage.anyOfRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
-            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams, msgValue);
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
@@ -343,9 +348,11 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function _encodeAndCallProcessEditPostOnFeed(
         Rule memory rule,
         ProcessPostEditingParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 IFeedRule.processEditPost,
                 (
@@ -362,9 +369,11 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     function _encodeAndCallProcessEditPostOnRootPost(
         Rule memory rule,
         ProcessPostEditingParams memory processParams,
-        KeyValue[] memory ruleParams
+        KeyValue[] memory ruleParams,
+        uint256 msgValue
     ) internal returns (bool, bytes memory) {
         return rule.ruleAddress.safecall(
+            msgValue,
             abi.encodeCall(
                 IPostRule.processEditPost,
                 (
@@ -389,7 +398,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
     }
 
     function _processPostEditing(
-        function(Rule memory,ProcessPostEditingParams memory,KeyValue[] memory) internal returns (bool,bytes memory)
+        function(Rule memory,ProcessPostEditingParams memory,KeyValue[] memory, uint256) internal returns (bool,bytes memory)
             encodeAndCall,
         ProcessPostEditingParams memory processParams
     ) internal {
@@ -397,18 +406,19 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
             processParams.rootPostId == 0 ? $feedRulesStorage() : $postRulesStorage(processParams.rootPostId);
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < _rulesStorage.requiredRules[processParams.ruleSelector].length; i++) {
             rule = _rulesStorage.requiredRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
-            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams, msgValue);
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < _rulesStorage.anyOfRules[processParams.ruleSelector].length; i++) {
             rule = _rulesStorage.anyOfRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
-            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
+            (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams, msgValue);
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return
             }
@@ -425,11 +435,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         bytes4 ruleSelector = IFeedRule.processDeletePost.selector;
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $feedRulesStorage().requiredRules[ruleSelector].length; i++) {
             rule = $feedRulesStorage().requiredRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, rulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
+                msgValue,
                 abi.encodeCall(IFeedRule.processDeletePost, (rule.configSalt, postId, customParams, ruleParams))
             );
             require(callSucceeded, Errors.RequiredRuleReverted());
@@ -437,8 +449,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $feedRulesStorage().anyOfRules[ruleSelector].length; i++) {
             rule = $feedRulesStorage().anyOfRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, rulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
+                msgValue,
                 abi.encodeCall(IFeedRule.processDeletePost, (rule.configSalt, postId, customParams, ruleParams))
             );
             if (callSucceeded) {
@@ -457,11 +470,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         bytes4 ruleSelector = IFeedRule.processPostRuleChanges.selector;
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $feedRulesStorage().requiredRules[ruleSelector].length; i++) {
             rule = $feedRulesStorage().requiredRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, rulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
+                msgValue,
                 abi.encodeCall(IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleParams))
             );
             require(callSucceeded, Errors.RequiredRuleReverted());
@@ -469,8 +484,9 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $feedRulesStorage().anyOfRules[ruleSelector].length; i++) {
             rule = $feedRulesStorage().anyOfRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, rulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
+                msgValue,
                 abi.encodeCall(IFeedRule.processPostRuleChanges, (rule.configSalt, postId, ruleChanges, ruleParams))
             );
             if (callSucceeded) {

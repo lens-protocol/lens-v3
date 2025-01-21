@@ -7,15 +7,12 @@ import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
 import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {PaymentHandler} from "contracts/core/base/PaymentHandler.sol";
 
-contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBased {
-    using SafeERC20 for IERC20;
-
+contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, PaymentHandler, MetadataBased {
     event Lens_Action_MetadataURISet(string metadataURI);
 
     struct CollectActionStorage {
@@ -252,7 +249,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         address recipient = data.recipient;
 
         if (amount > 0) {
-            IERC20(token).safeTransferFrom(originalMsgSender, recipient, amount);
+            _handlePayment(token, originalMsgSender, recipient, amount);
         }
     }
 

@@ -3,14 +3,12 @@
 pragma solidity ^0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {TrustBasedRule} from "contracts/rules/base/TrustBasedRule.sol";
+import {PaymentHandler} from "contracts/core/base/PaymentHandler.sol";
 
-abstract contract SimplePaymentRule is TrustBasedRule, OwnableMetadataBasedRule {
-    using SafeERC20 for IERC20;
-
+abstract contract SimplePaymentRule is PaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
     /// @custom:keccak lens.param.paymentConfiguration
     bytes32 constant PARAM__PAYMENT_CONFIG = 0x1d614931e4da442dfded7a7b2023927603d40081577686bb6fd4debb2fd73fc0;
 
@@ -46,6 +44,6 @@ abstract contract SimplePaymentRule is TrustBasedRule, OwnableMetadataBasedRule 
         address payer
     ) internal virtual {
         _beforePayment(configuration, expectedConfiguration, payer);
-        IERC20(configuration.token).safeTransferFrom(payer, configuration.recipient, configuration.amount);
+        _handlePayment(configuration.token, payer, configuration.recipient, configuration.amount);
     }
 }

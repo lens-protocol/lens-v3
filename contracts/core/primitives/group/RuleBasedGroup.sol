@@ -273,17 +273,18 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     ) private {
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $groupRulesStorage().requiredRules[processParams.ruleSelector].length; i++) {
             rule = $groupRulesStorage().requiredRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
             (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $groupRulesStorage().anyOfRules[processParams.ruleSelector].length; i++) {
             rule = $groupRulesStorage().anyOfRules[processParams.ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
             (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return

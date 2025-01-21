@@ -62,7 +62,7 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         _accessControl[group][configSalt].requireAccess(msg.sender, PID__APPROVE_MEMBER);
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable override {
         address accessControl;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__ACCESS_CONTROL) {
@@ -80,7 +80,7 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external override {
+    ) external payable override {
         if (!_membershipRequests[msg.sender][account][configSalt].isApproved) {
             _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__APPROVE_MEMBER);
             emit Lens_ApprovalGroupRule_MembershipApproved(msg.sender, account, originalMsgSender);
@@ -94,7 +94,7 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external override {
+    ) external payable override {
         require(_membershipRequests[msg.sender][account][configSalt].isApproved, Errors.NotAllowed());
         delete _membershipRequests[msg.sender][account][configSalt];
         emit Lens_ApprovalGroupRule_MembershipGranted(msg.sender, account);
@@ -106,7 +106,7 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -115,7 +115,7 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 }

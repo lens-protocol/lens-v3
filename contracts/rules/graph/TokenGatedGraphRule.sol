@@ -31,7 +31,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
@@ -45,7 +45,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address accountToFollow,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external payable {
         /**
          * Both ends of the follow connection must comply with the token-gate restriction, then the graph is purely
          * conformed by token holders.
@@ -69,7 +69,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address, /* accountToUnfollow */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external payable {
         revert Errors.NotImplemented();
     }
 
@@ -78,7 +78,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address, /* account */
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 

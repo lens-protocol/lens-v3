@@ -3,16 +3,13 @@
 pragma solidity ^0.8.26;
 
 import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {PaymentHandler} from "contracts/core/base/PaymentHandler.sol";
 
-contract TippingPostAction is BasePostAction, MetadataBased {
-    using SafeERC20 for IERC20;
-
+contract TippingPostAction is BasePostAction, PaymentHandler, MetadataBased {
     event Lens_Action_MetadataURISet(string metadataURI);
 
     /// @custom:keccak lens.param.amount
@@ -44,7 +41,7 @@ contract TippingPostAction is BasePostAction, MetadataBased {
         }
         require(tipAmount > 0, Errors.InvalidParameter());
         address account = IFeed(feed).getPostAuthor(postId);
-        IERC20(erc20Token).safeTransferFrom(originalMsgSender, account, tipAmount);
+        _handlePayment(erc20Token, originalMsgSender, account, tipAmount);
         return abi.encode(account);
     }
 }

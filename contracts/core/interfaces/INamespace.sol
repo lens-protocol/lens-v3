@@ -71,9 +71,9 @@ interface INamespace is IMetadataBased {
         IAccessControl accessControl
     ) external;
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external;
+    function setExtraData(KeyValue[] calldata extraDataToSet) external payable;
 
-    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external;
+    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external payable;
 
     function createUsername(
         address account,
@@ -81,14 +81,14 @@ interface INamespace is IMetadataBased {
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
-    ) external;
+    ) external payable;
 
     function removeUsername(
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningRuleProcessingParams,
         RuleProcessingParams[] calldata removalRuleProcessingParams
-    ) external;
+    ) external payable;
 
     function assignUsername(
         address account,
@@ -97,15 +97,15 @@ interface INamespace is IMetadataBased {
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
-    ) external;
+    ) external payable;
 
     function unassignUsername(
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
-    function setUsernameExtraData(string memory username, KeyValue[] calldata extraDataToSet) external;
+    function setUsernameExtraData(string memory username, KeyValue[] calldata extraDataToSet) external payable;
 
     function usernameOf(address user) external view returns (string memory);
 

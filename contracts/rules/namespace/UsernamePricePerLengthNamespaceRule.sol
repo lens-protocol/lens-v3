@@ -45,7 +45,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external payable {
         _extractAndSaveConfigurationFromParams(configSalt, ruleConfigurationParams);
         _configuration[msg.sender][configSalt].accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(_configuration[msg.sender][configSalt].defaultConfig);
@@ -58,7 +58,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external payable {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 
@@ -68,7 +68,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external payable {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 
@@ -79,7 +79,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external payable {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 
@@ -90,7 +90,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external payable {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 

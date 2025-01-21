@@ -10,7 +10,7 @@ import {Errors} from "contracts/core/types/Errors.sol";
 contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRule {
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
-    function configure(bytes32, /* configSalt */ KeyValue[] calldata /* ruleParams */ ) external override {}
+    function configure(bytes32, /* configSalt */ KeyValue[] calldata /* ruleParams */ ) external payable override {}
 
     function processCreation(
         bytes32, /* configSalt */
@@ -19,7 +19,7 @@ contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBa
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         _processRestrictions(username);
     }
 
@@ -29,7 +29,7 @@ contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBa
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -40,7 +40,7 @@ contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBa
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -51,7 +51,7 @@ contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBa
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 

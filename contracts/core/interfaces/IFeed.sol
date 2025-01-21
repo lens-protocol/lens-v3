@@ -120,7 +120,7 @@ interface IFeed is IMetadataBased {
 
     function initialize(string memory metadataURI, IAccessControl accessControl) external;
 
-    function changeFeedRules(RuleChange[] calldata ruleChanges) external;
+    function changeFeedRules(RuleChange[] calldata ruleChanges) external payable;
 
     function createPost(
         CreatePostParams calldata postParams,
@@ -128,7 +128,7 @@ interface IFeed is IMetadataBased {
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     function editPost(
         uint256 postId,
@@ -137,21 +137,21 @@ interface IFeed is IMetadataBased {
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external;
+    ) external payable;
 
     function deletePost(
         uint256 postId,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
-    ) external;
+    ) external payable;
 
     function changePostRules(
         uint256 postId,
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata feedRulesParams
-    ) external;
+    ) external payable;
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external;
+    function setExtraData(KeyValue[] calldata extraDataToSet) external payable;
 
     // Getters
 

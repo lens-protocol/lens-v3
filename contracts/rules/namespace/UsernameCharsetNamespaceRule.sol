@@ -58,7 +58,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         );
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _configuration[msg.sender][configSalt] = configuration;
@@ -71,7 +71,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         Configuration memory configuration = _configuration[msg.sender][configSalt];
         if (!configuration.accessControl.hasAccess(originalMsgSender, PID__SKIP_CHARSET_RESTRICTIONS)) {
             _processRestrictions(username, configuration.charsetRestrictions);
@@ -84,7 +84,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -95,7 +95,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -106,7 +106,7 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 

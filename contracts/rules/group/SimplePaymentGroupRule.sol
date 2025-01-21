@@ -31,7 +31,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
@@ -44,7 +44,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external payable {
         revert Errors.NotImplemented();
     }
 
@@ -54,7 +54,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external payable {
         revert Errors.NotImplemented();
     }
 
@@ -63,7 +63,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external payable {
         _processPayment(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].paymentConfiguration,
@@ -77,7 +77,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external payable {
         revert Errors.NotImplemented();
     }
 

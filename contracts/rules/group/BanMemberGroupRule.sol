@@ -52,7 +52,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         emit Lens_BanMemberGroupRule_MemberUnbanned(group, configSalt, account, msg.sender);
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable override {
         address accessControl;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__ACCESS_CONTROL) {
@@ -70,7 +70,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external override {
+    ) external payable override {
         if (_isMemberBanned[msg.sender][configSalt][account]) {
             for (uint256 i = 0; i < ruleParams.length; i++) {
                 if (ruleParams[i].key == PARAM__BAN_MEMBER) {
@@ -92,7 +92,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external override {
+    ) external payable override {
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__BAN_MEMBER) {
                 if (abi.decode(ruleParams[i].value, (bool))) {
@@ -113,7 +113,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         require(!_isMemberBanned[msg.sender][configSalt][account], Errors.Banned());
     }
 
@@ -122,7 +122,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 }

@@ -47,7 +47,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRu
         emit Events.Lens_PermissionId_Available(PID__CREATE_RESERVED_USERNAME, "lens.permission.CreateReservedUsername");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable override {
         address accessControl;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__ACCESS_CONTROL) {
@@ -88,7 +88,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRu
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external override {
+    ) external payable override {
         if (_isUsernameReserved[msg.sender][configSalt][username]) {
             _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__CREATE_RESERVED_USERNAME);
             emit Lens_UsernameReservedNamespaceRule_ReservedUsernameCreated(
@@ -103,7 +103,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRu
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -114,7 +114,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRu
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -125,7 +125,7 @@ contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRu
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 }

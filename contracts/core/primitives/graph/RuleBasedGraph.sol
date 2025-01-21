@@ -39,7 +39,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeGraphRules(RuleChange[] calldata ruleChanges) external virtual override {
+    function changeGraphRules(RuleChange[] calldata ruleChanges) external payable virtual override {
         _changePrimitiveRules($graphRulesStorage(), ruleChanges);
     }
 
@@ -47,7 +47,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         address account,
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata ruleChangesProcessingParams
-    ) external virtual override {
+    ) external payable virtual override {
         _changeEntityRules(
             $followRulesStorage(account), uint256(uint160(account)), ruleChanges, ruleChangesProcessingParams
         );
@@ -186,10 +186,11 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         bytes4 ruleSelector = IGraphRule.processFollowRuleChanges.selector;
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < $graphRulesStorage().requiredRules[ruleSelector].length; i++) {
             rule = $graphRulesStorage().requiredRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, graphRulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, graphRulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
                 abi.encodeCall(IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleParams))
             );
@@ -198,7 +199,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < $graphRulesStorage().anyOfRules[ruleSelector].length; i++) {
             rule = $graphRulesStorage().anyOfRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, graphRulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, graphRulesProcessingParams);
             (bool callSucceeded,) = rule.ruleAddress.safecall(
                 abi.encodeCall(IGraphRule.processFollowRuleChanges, (rule.configSalt, account, ruleChanges, ruleParams))
             );
@@ -348,17 +349,18 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         bytes4 ruleSelector = IGraphRule.processUnfollow.selector;
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
             rule = rulesStorage.requiredRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
             (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
             rule = rulesStorage.anyOfRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
             (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return
@@ -376,17 +378,18 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
     ) internal {
         Rule memory rule;
         KeyValue[] memory ruleParams;
+        uint256 msgValue;
         // Check required rules (AND-combined rules)
         for (uint256 i = 0; i < rulesStorage.requiredRules[ruleSelector].length; i++) {
             rule = rulesStorage.requiredRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
             (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
             require(callSucceeded, Errors.RequiredRuleReverted());
         }
         // Check any-of rules (OR-combined rules)
         for (uint256 i = 0; i < rulesStorage.anyOfRules[ruleSelector].length; i++) {
             rule = rulesStorage.anyOfRules[ruleSelector][i];
-            ruleParams = _getRuleParamsOrEmptyArray(rule, processParams.rulesProcessingParams);
+            (ruleParams, msgValue) = _getRuleParamsAndMsgValue(rule, processParams.rulesProcessingParams);
             (bool callSucceeded,) = encodeAndCall(rule, processParams, ruleParams);
             if (callSucceeded) {
                 return; // If any of the OR-combined rules passed, it means they succeed and we can return

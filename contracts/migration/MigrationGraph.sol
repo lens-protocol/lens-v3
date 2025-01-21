@@ -5,7 +5,6 @@ pragma solidity ^0.8.26;
 import {GraphCore as Core} from "contracts/core/primitives/graph/GraphCore.sol";
 import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
-import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Follow} from "contracts/core/interfaces/IGraph.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {EventEmitter} from "contracts/migration/EventEmitter.sol";
@@ -21,7 +20,7 @@ contract MigrationGraph is Graph, EventEmitter {
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external override returns (uint256) {
+    ) external payable override returns (uint256) {
         (uint256 followId, uint256 timestamp) = abi.decode(customParams[0].value, (uint256, uint256));
         _followWithoutChecks(followerAccount, accountToFollow, followId, timestamp);
         emit Lens_Graph_Followed(

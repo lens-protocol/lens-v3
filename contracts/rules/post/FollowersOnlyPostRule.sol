@@ -31,7 +31,7 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
 
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
-    function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external payable override {
         Configuration memory configuration;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__GRAPH) {
@@ -59,7 +59,7 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
         CreatePostParams calldata postParams,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         Configuration memory configuration = _configuration[msg.sender][configSalt][rootPostId];
         if (_shouldRestrictionBeApplied(configuration, rootPostId, postParams)) {
             IFeed feed = IFeed(msg.sender);
@@ -79,7 +79,7 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
         EditPostParams calldata, /* postParams */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 

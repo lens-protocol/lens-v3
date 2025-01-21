@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import {KeyValue} from "contracts/core/types/Types.sol";
 
 interface INamespaceRule {
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable;
 
     function processCreation(
         bytes32 configSalt,
@@ -14,7 +14,7 @@ interface INamespaceRule {
         string calldata username,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 
     function processRemoval(
         bytes32 configSalt,
@@ -22,7 +22,7 @@ interface INamespaceRule {
         string calldata username,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 
     function processAssigning(
         bytes32 configSalt,
@@ -31,7 +31,7 @@ interface INamespaceRule {
         string calldata username,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 
     function processUnassigning(
         bytes32 configSalt,
@@ -40,5 +40,5 @@ interface INamespaceRule {
         string calldata username,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 }

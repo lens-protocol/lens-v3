@@ -210,7 +210,7 @@ contract LensFactory {
             s.modifiedFeedRules[0] = RuleChange({
                 ruleAddress: ACCOUNT_BLOCKING_RULE,
                 configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0), msgValue: 0}),
                 selectorChanges: selectorChanges
             });
 
@@ -220,7 +220,11 @@ contract LensFactory {
             s.modifiedFeedRules[1] = RuleChange({
                 ruleAddress: GROUP_GATED_FEED_RULE,
                 configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
+                configurationChanges: RuleConfigurationChange({
+                    configure: true,
+                    ruleParams: groupGatedRuleParams,
+                    msgValue: 0
+                }),
                 selectorChanges: selectorChanges
             });
         }
@@ -353,7 +357,7 @@ contract LensFactory {
             modifiedRules[0] = RuleChange({
                 ruleAddress: USERNAME_SIMPLE_CHARSET_RULE,
                 configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0), msgValue: 0}),
                 selectorChanges: selectorChanges
             });
             for (uint256 i = 0; i < rules.length; i++) {
@@ -421,7 +425,7 @@ contract LensFactory {
         modifiedRules[0] = RuleChange({
             ruleAddress: ACCOUNT_BLOCKING_RULE,
             configSalt: bytes32(0),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0), msgValue: 0}),
             selectorChanges: selectorChanges
         });
         for (uint256 i = 0; i < rules.length; i++) {

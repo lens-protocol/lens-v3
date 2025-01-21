@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 
 interface IGraphRule {
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable;
 
     function processFollow(
         bytes32 configSalt,
@@ -14,7 +14,7 @@ interface IGraphRule {
         address accountToFollow,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 
     function processUnfollow(
         bytes32 configSalt,
@@ -23,12 +23,12 @@ interface IGraphRule {
         address accountToUnfollow,
         KeyValue[] calldata primitiveParams,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 
     function processFollowRuleChanges(
         bytes32 configSalt,
         address account,
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata ruleParams
-    ) external;
+    ) external payable;
 }

@@ -30,7 +30,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
@@ -44,7 +44,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         _validateTokenBalance(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].tokenGate,
@@ -58,7 +58,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         _validateTokenBalance(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].tokenGate,
@@ -73,7 +73,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         _validateTokenBalance(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].tokenGate,
@@ -88,7 +88,7 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         _validateTokenBalance(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].tokenGate,

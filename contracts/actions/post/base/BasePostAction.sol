@@ -12,6 +12,7 @@ abstract contract BasePostAction is BaseAction, IPostAction {
 
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
+        payable
         override
         onlyActionHub
         returns (bytes memory)
@@ -21,6 +22,7 @@ abstract contract BasePostAction is BaseAction, IPostAction {
 
     function execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
+        payable
         override
         onlyActionHub
         returns (bytes memory)
@@ -34,7 +36,7 @@ abstract contract BasePostAction is BaseAction, IPostAction {
         uint256 postId,
         bool isDisabled,
         KeyValue[] calldata params
-    ) external override onlyActionHub returns (bytes memory) {
+    ) external payable override onlyActionHub returns (bytes memory) {
         return _setDisabled(originalMsgSender, feed, postId, isDisabled, params);
     }
 

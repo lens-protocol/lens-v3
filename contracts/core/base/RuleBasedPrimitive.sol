@@ -247,19 +247,19 @@ abstract contract RuleBasedPrimitive {
         return configSalt;
     }
 
-    function _getRuleParamsOrEmptyArray(Rule memory rule, RuleProcessingParams[] memory rulesProcessingParams)
+    function _getRuleParamsAndMsgValue(Rule memory rule, RuleProcessingParams[] memory rulesProcessingParams)
         internal
         pure
-        returns (KeyValue[] memory)
+        returns (KeyValue[] memory, uint256)
     {
         for (uint256 i = 0; i < rulesProcessingParams.length; i++) {
             if (
                 rulesProcessingParams[i].ruleAddress == rule.ruleAddress
                     && rulesProcessingParams[i].configSalt == rule.configSalt
             ) {
-                return rulesProcessingParams[i].ruleParams;
+                return (rulesProcessingParams[i].ruleParams, rulesProcessingParams[i].msgValue);
             }
         }
-        return new KeyValue[](0);
+        return (new KeyValue[](0), 0);
     }
 }

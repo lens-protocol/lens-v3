@@ -22,6 +22,7 @@ struct RuleChange {
 struct RuleConfigurationChange {
     bool configure;
     KeyValue[] ruleParams;
+    uint256 msgValue;
 }
 
 struct RuleSelectorChange {
@@ -34,6 +35,7 @@ struct RuleProcessingParams {
     address ruleAddress;
     bytes32 configSalt;
     KeyValue[] ruleParams;
+    uint256 msgValue;
 }
 
 struct SourceStamp {

@@ -49,7 +49,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, OwnableMetadataBasedRule
         );
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external payable override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         require(
@@ -67,7 +67,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, OwnableMetadataBasedRule
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external payable override {
         Configuration memory configuration = _configuration[msg.sender][configSalt];
         uint256 usernameLength = bytes(username).length;
         if (
@@ -90,7 +90,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, OwnableMetadataBasedRule
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -101,7 +101,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, OwnableMetadataBasedRule
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
@@ -112,7 +112,7 @@ contract UsernameLengthNamespaceRule is INamespaceRule, OwnableMetadataBasedRule
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
+    ) external payable override {
         revert Errors.NotImplemented();
     }
 
