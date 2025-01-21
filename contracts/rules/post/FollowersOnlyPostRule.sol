@@ -7,12 +7,10 @@ import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract FollowersOnlyPostRule is IPostRule, MetadataBased {
-    event Lens_Rule_MetadataURISet(string metadataURI);
-
+contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
     struct Configuration {
         address graph;
         bool repliesRestricted;
@@ -31,13 +29,7 @@ contract FollowersOnlyPostRule is IPostRule, MetadataBased {
 
     mapping(address => mapping(bytes32 => mapping(uint256 => Configuration))) internal _configuration;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
-    }
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
     function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration;

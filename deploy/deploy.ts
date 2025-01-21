@@ -31,10 +31,16 @@ async function deploy() {
     throw new Error('FACTORIES_PROXY_OWNER not found in environment variables');
   }
 
+  const rulesOwner = process.env.RULES_OWNER;
+  if (!rulesOwner && DEPLOYING_FR) {
+    throw new Error('RULES_OWNER not found in environment variables');
+  }
+
   if (DEPLOYING_FR) {
     console.log('ProxyAdminLockOwner', lockOwner);
     console.log('BeaconOwner', beaconOwner);
     console.log('FactoriesProxyOwner', factoriesProxyOwner);
+    console.log('RulesOwner', rulesOwner);
   } else {
     console.log('Not Deploying fr, so using deployer address as owner everywhere:');
     console.log('\tProxyAdminLockOwner:', deployerAddress);
@@ -49,7 +55,7 @@ async function deploy() {
   await deployLensPrimitives();
   const actionHub = await deployLensActionHub();
   await deployLensAccessControl();
-  await deployRules();
+  await deployRules(rulesOwner ?? deployerAddress);
   await deployActions(actionHub);
   generateEnvFile();
 }

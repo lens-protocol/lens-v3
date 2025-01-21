@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import {EIP712EncodingLib} from "contracts/core/libraries/EIP712EncodingLib.sol";
 import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 // Move to types
@@ -25,12 +25,10 @@ struct RestrictedSignerMessage {
     uint256 deadline;
 }
 
-abstract contract RestrictedSignersRule is MetadataBased {
+abstract contract RestrictedSignersRule is OwnableMetadataBasedRule {
     event Lens_RestrictedSignersRule_SignerAdded(address indexed signer, string label);
     event Lens_RestrictedSignersRule_SignerRemoved(address indexed signer);
     event Lens_RestrictedSignersRule_SignerNonceUsed(address indexed signer, uint256 indexed nonce);
-
-    event Lens_Rule_MetadataURISet(string metadataURI);
 
     struct RulesStorage {
         mapping(address => mapping(bytes32 => InnerStorage)) rulesStorage;
@@ -73,13 +71,7 @@ abstract contract RestrictedSignersRule is MetadataBased {
     bytes32 constant RESTRICTED_SIGNER_MESSAGE_TYPEHASH =
         0x7ad50a890590bc3256729acae2904e819ef1a0db262583f09fef8974530accdf;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
-    }
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
     function _configure(bytes32 configSalt, KeyValue[] calldata ruleParams) internal virtual {
         require(ruleParams.length > 0, Errors.InvalidParameter());

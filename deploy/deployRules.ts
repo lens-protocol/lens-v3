@@ -1,72 +1,72 @@
 import { deployLensContract, ContractType, ContractInfo } from './lensUtils';
 
-export async function deployRules(): Promise<void> {
+export async function deployRules(rulesOwner: string): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
   const contracts: ContractInfo[] = [
     // Feed Rules
     {
       contractName: 'RestrictedSignersFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'SimplePaymentFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'TokenGatedFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     // Post Rules
     {
       contractName: 'FollowersOnlyPostRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     // Graph Rules
     {
       contractName: 'GroupGatedGraphRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'RestrictedSignersGraphRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'TokenGatedGraphRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     // Follow Rules
     {
       contractName: 'SimplePaymentFollowRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'TokenGatedFollowRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     // Group Rules
     {
       contractName: 'MembershipApprovalGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'SimplePaymentGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'TokenGatedGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     // Namespace Rules
     // {
@@ -77,12 +77,12 @@ export async function deployRules(): Promise<void> {
     {
       contractName: 'UsernameLengthNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'UsernameReservedNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     // {
     //   contractName: 'SimplePaymentNamespaceRule',
@@ -92,12 +92,12 @@ export async function deployRules(): Promise<void> {
     {
       contractName: 'TokenGatedNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
     {
       contractName: 'UsernamePricePerLengthNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [metadataURI],
+      constructorArguments: [rulesOwner, metadataURI],
     },
   ];
 

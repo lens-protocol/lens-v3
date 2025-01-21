@@ -27,7 +27,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(string memory metadataURI) SimplePaymentRule(metadataURI) {
+    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
     }
 

@@ -7,14 +7,12 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract BanMemberGroupRule is IGroupRule, MetadataBased {
+contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
-
-    event Lens_Rule_MetadataURISet(string metadataURI);
 
     /// @custom:keccak lens.permission.BanMember
     uint256 constant PID__BAN_MEMBER = uint256(0x9d308cac09fdd9a84cb1807d1735d96bcdf3e6b148cee46755a39c858ee0157f);
@@ -37,14 +35,9 @@ contract BanMemberGroupRule is IGroupRule, MetadataBased {
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(bytes32 => mapping(address => bool))) internal _isMemberBanned;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__BAN_MEMBER, "lens.permission.BanMember");
         emit Events.Lens_PermissionId_Available(PID__UNBAN_MEMBER, "lens.permission.UnbanMember");
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function ban(bytes32 configSalt, address group, address account) external {

@@ -28,7 +28,7 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(string memory metadataURI) TokenGatedRule(metadataURI) {
+    constructor(address owner, string memory metadataURI) TokenGatedRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
     }
 

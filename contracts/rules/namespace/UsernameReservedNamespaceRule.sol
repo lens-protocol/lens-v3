@@ -7,12 +7,10 @@ import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
-    event Lens_Rule_MetadataURISet(string metadataURI);
-
+contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -45,13 +43,8 @@ contract UsernameReservedNamespaceRule is INamespaceRule, MetadataBased {
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(bytes32 => mapping(string => bool))) internal _isUsernameReserved;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__CREATE_RESERVED_USERNAME, "lens.permission.CreateReservedUsername");
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
