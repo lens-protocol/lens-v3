@@ -7,6 +7,7 @@ import {IFeed, Post, CreatePostParams} from "contracts/core/interfaces/IFeed.sol
 import {PostCreationParams} from "contracts/migration/MigrationFeed.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract MigrationFeedTest is BaseDeployments {
     IFeed migrationFeed;
@@ -96,6 +97,54 @@ contract MigrationFeedTest is BaseDeployments {
             migrationFeed.getNextPostId(author),
             _generatePostId(address(migrationFeed), author, 2),
             "getNextPostId() mismatch"
+        );
+    }
+
+    function test_CannotCreatePost_ifAlreadyExists(
+        address author,
+        uint256 authorPostSequentialId,
+        uint80 creationTimestamp,
+        address source
+    ) public {
+        vm.assume(author != address(0));
+        vm.assume(authorPostSequentialId != 0);
+        vm.assume(creationTimestamp != 0);
+        vm.assume(source != address(0));
+
+        PostCreationParams memory postCreationParams = PostCreationParams({
+            authorPostSequentialId: authorPostSequentialId,
+            creationTimestamp: creationTimestamp,
+            source: source
+        });
+
+        KeyValue[] memory customParams = new KeyValue[](1);
+        customParams[0] = KeyValue(bytes32(0), abi.encode(postCreationParams));
+
+        CreatePostParams memory postParams = CreatePostParams({
+            author: author,
+            contentURI: "some content uri",
+            repostedPostId: 0,
+            quotedPostId: 0,
+            repliedPostId: 0,
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        migrationFeed.createPost(
+            postParams,
+            customParams,
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray()
+        );
+
+        vm.expectRevert(Errors.AlreadyExists.selector);
+        migrationFeed.createPost(
+            postParams,
+            customParams,
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray()
         );
     }
 
