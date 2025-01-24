@@ -28,7 +28,10 @@ struct Log4EventData {
 }
 
 abstract contract EventEmitter {
+    function _allowedToEmitEvents() internal view virtual returns (bool) {}
+
     function emitEventsLog1(Log1EventData[] calldata events) external {
+        require(_allowedToEmitEvents());
         assembly {
             let eventsLength := events.length
             let dataOffset := add(events.offset, mul(0x20, eventsLength))
@@ -58,6 +61,7 @@ abstract contract EventEmitter {
     }
 
     function emitEventsLog2(Log2EventData[] calldata events) external {
+        require(_allowedToEmitEvents());
         assembly {
             let eventsLength := events.length
             let dataOffset := add(events.offset, mul(0x20, eventsLength))
@@ -88,6 +92,7 @@ abstract contract EventEmitter {
     }
 
     function emitEventsLog3(Log3EventData[] calldata events) external {
+        require(_allowedToEmitEvents());
         assembly {
             let eventsLength := events.length
             let dataOffset := add(events.offset, mul(0x20, eventsLength))
@@ -119,6 +124,7 @@ abstract contract EventEmitter {
     }
 
     function emitEventsLog4(Log4EventData[] calldata events) external {
+        require(_allowedToEmitEvents());
         assembly {
             let eventsLength := events.length
             let dataOffset := add(events.offset, mul(0x20, eventsLength))

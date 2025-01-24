@@ -23,6 +23,7 @@ contract MigrationFeed is Feed, EventEmitter {
         RuleProcessingParams[] memory rootPostRulesParams,
         RuleProcessingParams[] memory quotedPostRulesParams
     ) external override returns (uint256) {
+        require(customParams.length > 0, Errors.InvalidParameter());
         PostCreationParams memory postCreationParams = abi.decode(customParams[0].value, (PostCreationParams));
         (uint256 postId, uint256 rootPostId) =
             _createPost(postParams, postCreationParams.authorPostSequentialId, postCreationParams.creationTimestamp);
