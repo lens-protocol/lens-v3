@@ -199,39 +199,7 @@ contract LensFactory {
             );
         }
 
-        s.modifiedFeedRules = new RuleChange[](s.feedRules.length + 2);
-
-        {
-            RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
-            // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
-            selectorChanges[0] =
-                RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
-
-            s.modifiedFeedRules[0] = RuleChange({
-                ruleAddress: ACCOUNT_BLOCKING_RULE,
-                configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-                selectorChanges: selectorChanges
-            });
-
-            KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
-            groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(s.group)});
-
-            s.modifiedFeedRules[1] = RuleChange({
-                ruleAddress: GROUP_GATED_FEED_RULE,
-                configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
-                selectorChanges: selectorChanges
-            });
-        }
-
-        {
-            for (uint256 i = 0; i < s.feedRules.length; i++) {
-                require(s.feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
-                require(s.feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
-                s.modifiedFeedRules[i + 2] = _injectRuleAccessControl(s.feedRules[i], address(s.feedAccessControl));
-            }
-        }
+        s.modifiedFeedRules = _injectRulesForFeedAndGroup(s.feedRules, s.feedAccessControl, s.group);
 
         address feed = FEED_FACTORY.deployFeed(
             s.feedMetadataURI, s.feedAccessControl, s.owner, s.modifiedFeedRules, s.feedExtraData
@@ -341,6 +309,128 @@ contract LensFactory {
         string memory nftSymbol
     ) external returns (address) {
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
+        RuleChange[] memory modifiedRules = _injectRulesForNamespace(rules, address(accessControl));
+
+        return NAMESPACE_FACTORY.deployNamespace(
+            namespace,
+            metadataURI,
+            accessControl,
+            owner,
+            modifiedRules,
+            extraData,
+            nftName,
+            nftSymbol,
+            new LensUsernameTokenURIProvider()
+        );
+    }
+
+    function _deployAccessControl(address owner, address[] memory admins)
+        internal
+        virtual
+        returns (IRoleBasedAccessControl)
+    {
+        return ACCESS_CONTROL_FACTORY.deployOwnerAdminOnlyAccessControl(owner, admins);
+    }
+
+    function _injectRuleAccessControl(RuleChange memory rule, address accessControl)
+        internal
+        pure
+        virtual
+        returns (RuleChange memory)
+    {
+        bool found;
+        if (rule.configurationChanges.configure) {
+            for (uint256 i = 0; i < rule.configurationChanges.ruleParams.length; i++) {
+                if (rule.configurationChanges.ruleParams[i].key == PARAM__ACCESS_CONTROL) {
+                    require(!found, Errors.DuplicatedValue());
+                    found = true;
+                    require(rule.configurationChanges.ruleParams[i].value.length == 0, Errors.InvalidParameter());
+                    rule.configurationChanges.ruleParams[i].value = abi.encode(accessControl);
+                }
+            }
+        }
+        return rule;
+    }
+
+    function _injectRuleAccessControl(RuleChange[] memory rules, address accessControl)
+        internal
+        pure
+        virtual
+        returns (RuleChange[] memory)
+    {
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length);
+        for (uint256 i = 0; i < rules.length; i++) {
+            modifiedRules[i] = _injectRuleAccessControl(rules[i], accessControl);
+        }
+        return modifiedRules;
+    }
+
+    function _prepareRules(RuleChange[] memory rules, bytes4 ruleSelector, address accessControl)
+        internal
+        view
+        virtual
+        returns (RuleChange[] memory)
+    {
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        selectorChanges[0] = RuleSelectorChange({ruleSelector: ruleSelector, isRequired: true, enabled: true});
+        modifiedRules[0] = RuleChange({
+            ruleAddress: ACCOUNT_BLOCKING_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: selectorChanges
+        });
+        for (uint256 i = 0; i < rules.length; i++) {
+            require(rules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
+            modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
+        }
+        return modifiedRules;
+    }
+
+    function _injectRulesForFeedAndGroup(
+        RuleChange[] memory feedRules,
+        IRoleBasedAccessControl feedAccessControl,
+        address group
+    ) internal view virtual returns (RuleChange[] memory) {
+        RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
+
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
+        selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
+
+        modifiedFeedRules[0] = RuleChange({
+            ruleAddress: ACCOUNT_BLOCKING_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: selectorChanges
+        });
+
+        KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
+        groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(group)});
+
+        modifiedFeedRules[1] = RuleChange({
+            ruleAddress: GROUP_GATED_FEED_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
+            selectorChanges: selectorChanges
+        });
+
+        for (uint256 i = 0; i < feedRules.length; i++) {
+            require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
+            require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
+            modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(feedAccessControl));
+        }
+
+        return modifiedFeedRules;
+    }
+
+    function _injectRulesForNamespace(RuleChange[] memory rules, address accessControl)
+        internal
+        view
+        virtual
+        returns (RuleChange[] memory)
+    {
         RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
 
         {
@@ -362,72 +452,6 @@ contract LensFactory {
             }
         }
 
-        return NAMESPACE_FACTORY.deployNamespace(
-            namespace,
-            metadataURI,
-            accessControl,
-            owner,
-            modifiedRules,
-            extraData,
-            nftName,
-            nftSymbol,
-            new LensUsernameTokenURIProvider()
-        );
-    }
-
-    function _deployAccessControl(address owner, address[] memory admins) internal returns (IRoleBasedAccessControl) {
-        return ACCESS_CONTROL_FACTORY.deployOwnerAdminOnlyAccessControl(owner, admins);
-    }
-
-    function _injectRuleAccessControl(RuleChange memory rule, address accessControl)
-        internal
-        pure
-        returns (RuleChange memory)
-    {
-        bool found;
-        if (rule.configurationChanges.configure) {
-            for (uint256 i = 0; i < rule.configurationChanges.ruleParams.length; i++) {
-                if (rule.configurationChanges.ruleParams[i].key == PARAM__ACCESS_CONTROL) {
-                    require(!found, Errors.DuplicatedValue());
-                    found = true;
-                    require(rule.configurationChanges.ruleParams[i].value.length == 0, Errors.InvalidParameter());
-                    rule.configurationChanges.ruleParams[i].value = abi.encode(accessControl);
-                }
-            }
-        }
-        return rule;
-    }
-
-    function _injectRuleAccessControl(RuleChange[] memory rules, address accessControl)
-        internal
-        pure
-        returns (RuleChange[] memory)
-    {
-        RuleChange[] memory modifiedRules = new RuleChange[](rules.length);
-        for (uint256 i = 0; i < rules.length; i++) {
-            modifiedRules[i] = _injectRuleAccessControl(rules[i], accessControl);
-        }
-        return modifiedRules;
-    }
-
-    function _prepareRules(RuleChange[] memory rules, bytes4 ruleSelector, address accessControl)
-        internal
-        view
-        returns (RuleChange[] memory)
-    {
-        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
-        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
-        selectorChanges[0] = RuleSelectorChange({ruleSelector: ruleSelector, isRequired: true, enabled: true});
-        modifiedRules[0] = RuleChange({
-            ruleAddress: ACCOUNT_BLOCKING_RULE,
-            configSalt: bytes32(0),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-            selectorChanges: selectorChanges
-        });
-        for (uint256 i = 0; i < rules.length; i++) {
-            require(rules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
-            modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
-        }
         return modifiedRules;
     }
 }

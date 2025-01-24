@@ -17,9 +17,19 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
-import {MigrationFeed} from "contracts/migration/MigrationFeed.sol";
-import {MigrationGraph} from "contracts/migration/MigrationGraph.sol";
-import {MigrationNamespace} from "contracts/migration/MigrationNamespace.sol";
+import {MigrationApp} from "contracts/migration/primitives/MigrationApp.sol";
+import {MigrationFeed} from "contracts/migration/primitives/MigrationFeed.sol";
+import {MigrationGraph} from "contracts/migration/primitives/MigrationGraph.sol";
+import {MigrationGroup} from "contracts/migration/primitives/MigrationGroup.sol";
+import {MigrationNamespace} from "contracts/migration/primitives/MigrationNamespace.sol";
+
+import {MigrationAppFactory} from "contracts/migration/factories/MigrationAppFactory.sol";
+import {MigrationAccountFactory} from "contracts/migration/factories/MigrationAccountFactory.sol";
+import {MigrationFeedFactory} from "contracts/migration/factories/MigrationFeedFactory.sol";
+import {MigrationGraphFactory} from "contracts/migration/factories/MigrationGraphFactory.sol";
+import {MigrationGroupFactory} from "contracts/migration/factories/MigrationGroupFactory.sol";
+import {MigrationNamespaceFactory} from "contracts/migration/factories/MigrationNamespaceFactory.sol";
+import {MigrationLensFactory} from "contracts/migration/factories/MigrationLensFactory.sol";
 
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
 import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
@@ -76,7 +86,7 @@ contract BaseDeployments is Test {
     address groupGatedFeedRule;
     address usernameSimpleCharsetRule;
 
-    bool migrationMode = false;
+    bool migrationMode = vm.envOr("MIGRATION_MODE", false);
 
     function switchMigrationMode(bool newMigrationMode) public {
         migrationMode = newMigrationMode;
@@ -93,29 +103,50 @@ contract BaseDeployments is Test {
         usernameSimpleCharsetRule =
             address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
 
-        lensFactory = new LensFactory({
-            accessControlFactory: new AccessControlFactory(),
-            accountFactory: accountFactory,
-            appFactory: appFactory,
-            groupFactory: groupFactory,
-            feedFactory: feedFactory,
-            graphFactory: graphFactory,
-            namespaceFactory: namespaceFactory,
-            accountBlockingRule: accountBlockingRule,
-            groupGatedFeedRule: groupGatedFeedRule,
-            usernameSimpleCharsetRule: usernameSimpleCharsetRule
-        });
+        address lensFactoryImpl = migrationMode
+            ? address(
+                new MigrationLensFactory({
+                    accessControlFactory: new AccessControlFactory(),
+                    accountFactory: accountFactory,
+                    appFactory: appFactory,
+                    groupFactory: groupFactory,
+                    feedFactory: feedFactory,
+                    graphFactory: graphFactory,
+                    namespaceFactory: namespaceFactory,
+                    accountBlockingRule: address(0),
+                    groupGatedFeedRule: address(0),
+                    usernameSimpleCharsetRule: address(0)
+                })
+            )
+            : address(
+                new LensFactory({
+                    accessControlFactory: new AccessControlFactory(),
+                    accountFactory: accountFactory,
+                    appFactory: appFactory,
+                    groupFactory: groupFactory,
+                    feedFactory: feedFactory,
+                    graphFactory: graphFactory,
+                    namespaceFactory: namespaceFactory,
+                    accountBlockingRule: accountBlockingRule,
+                    groupGatedFeedRule: groupGatedFeedRule,
+                    usernameSimpleCharsetRule: usernameSimpleCharsetRule
+                })
+            );
+        TransparentUpgradeableProxy lensFactoryProxy =
+            new TransparentUpgradeableProxy(address(lensFactoryImpl), proxyAdminLock, "");
+
+        lensFactory = LensFactory(address(lensFactoryProxy));
     }
 
     function _deployImplementations() internal {
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
-        appImpl = address(new App());
+        appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
         accountImpl = address(new AccountContract());
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
-        groupImpl = address(new Group());
+        groupImpl = migrationMode ? address(new MigrationGroup()) : address(new Group());
         namespaceImpl = migrationMode ? address(new MigrationNamespace()) : address(new Namespace());
     }
 
@@ -129,16 +160,28 @@ contract BaseDeployments is Test {
     }
 
     function _deployFactories() internal {
-        appFactory = new AppFactory(appBeacon, proxyAdminLock);
-        accountFactory = new AccountFactory(accountBeacon, proxyAdminLock);
+        appFactory = migrationMode
+            ? new MigrationAppFactory(appBeacon, proxyAdminLock)
+            : new AppFactory(appBeacon, proxyAdminLock);
+        accountFactory = migrationMode
+            ? new MigrationAccountFactory(accountBeacon, proxyAdminLock)
+            : new AccountFactory(accountBeacon, proxyAdminLock);
 
-        address feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock));
+        address feedFactoryImpl = migrationMode
+            ? address(new MigrationFeedFactory(feedBeacon, proxyAdminLock))
+            : address(new FeedFactory(feedBeacon, proxyAdminLock));
         TransparentUpgradeableProxy feedFactoryProxy =
             new TransparentUpgradeableProxy(address(feedFactoryImpl), proxyAdminLock, "");
         feedFactory = FeedFactory(address(feedFactoryProxy));
 
-        graphFactory = new GraphFactory(graphBeacon, proxyAdminLock);
-        groupFactory = new GroupFactory(groupBeacon, proxyAdminLock);
-        namespaceFactory = new NamespaceFactory(namespaceBeacon, proxyAdminLock);
+        graphFactory = migrationMode
+            ? new MigrationGraphFactory(graphBeacon, proxyAdminLock)
+            : new GraphFactory(graphBeacon, proxyAdminLock);
+        groupFactory = migrationMode
+            ? new MigrationGroupFactory(groupBeacon, proxyAdminLock)
+            : new GroupFactory(groupBeacon, proxyAdminLock);
+        namespaceFactory = migrationMode
+            ? new MigrationNamespaceFactory(namespaceBeacon, proxyAdminLock)
+            : new NamespaceFactory(namespaceBeacon, proxyAdminLock);
     }
 }

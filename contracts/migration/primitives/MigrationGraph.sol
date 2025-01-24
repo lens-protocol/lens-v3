@@ -22,6 +22,7 @@ contract MigrationGraph is Graph, EventEmitter {
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
     ) external override returns (uint256) {
+        require(customParams.length > 0, Errors.InvalidParameter());
         (uint256 followId, uint256 timestamp) = abi.decode(customParams[0].value, (uint256, uint256));
         _followWithoutChecks(followerAccount, accountToFollow, followId, timestamp);
         emit Lens_Graph_Followed(
