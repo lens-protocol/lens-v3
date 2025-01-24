@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import {IFeed, Post, CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
-import {PostCreationParams} from "contracts/migration/MigrationFeed.sol";
+import {PostCreationParams} from "contracts/migration/primitives/MigrationFeed.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
