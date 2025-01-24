@@ -36,6 +36,9 @@ export interface AppInitialProperties {
 
 export async function deployLensPrimitives() {
   const lensFactoryAddress = loadAddressBook()['LensFactory'].address;
+  if (!lensFactoryAddress) {
+    throw new Error('LensFactory not found in address book');
+  }
   console.log(`Running script to interact with LensFactory at ${lensFactoryAddress}`);
 
   // Load compiled contract info

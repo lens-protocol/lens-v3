@@ -5,14 +5,18 @@ import {
   ContractInfo,
   loadContractAddressFromAddressBook,
 } from './lensUtils';
+import { ZeroAddress } from 'ethers';
 
-export default async function deployFactories(rulesOwner: string, factoriesProxyOwner: string): Promise<void> {
+
+
+export default async function deployFactories(rulesOwner: string, factoriesProxyOwner: string, DEPLOYING_MIGRATION: boolean): Promise<void> {
   const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
 
   const factories: ContractInfo[] = [
     // Factories
-    { contractName: 'AccessControlFactory', contractType: ContractType.Factory },
+    { name: 'AccessControlFactory', contractName: DEPLOYING_MIGRATION ? 'MigrationAccessControlFactory' : 'AccessControlFactory', contractType: ContractType.Factory },
     {
+      name: 'AccountFactory',
       contractName: 'AccountFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
@@ -21,7 +25,8 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       ],
     },
     {
-      contractName: 'AppFactory',
+      name: 'AppFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationAppFactory' : 'AppFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('AppBeacon'),
@@ -29,7 +34,8 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       ],
     },
     {
-      contractName: 'FeedFactory',
+      name: 'FeedFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationFeedFactory' : 'FeedFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('FeedBeacon'),
@@ -37,7 +43,8 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       ],
     },
     {
-      contractName: 'GraphFactory',
+      name: 'GraphFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationGraphFactory' : 'GraphFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GraphBeacon'),
@@ -45,7 +52,8 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       ],
     },
     {
-      contractName: 'GroupFactory',
+      name: 'GroupFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationGroupFactory' : 'GroupFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GroupBeacon'),
@@ -53,7 +61,8 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       ],
     },
     {
-      contractName: 'NamespaceFactory',
+      name: 'NamespaceFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationNamespaceFactory' : 'NamespaceFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('NamespaceBeacon'),
@@ -83,15 +92,17 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
   const deployedContracts: Record<string, ContractInfo> = {};
 
   for (const factory of factories) {
-    deployedContracts[factory.contractName] = await deployLensContractAsProxy(factory, factoriesProxyOwner);
+    deployedContracts[factory.name ?? factory.contractName] = await deployLensContractAsProxy(factory, factoriesProxyOwner);
   }
 
-  for (const rule of rules) {
-    deployedContracts[rule.contractName] = await deployLensContract(rule);
+  if (!DEPLOYING_MIGRATION) {
+    for (const rule of rules) {
+      deployedContracts[rule.contractName] = await deployLensContract(rule);
+    }
   }
 
   // lens factory
-  const lensFactory_artifactName = 'LensFactory';
+  const lensFactory_artifactName = DEPLOYING_MIGRATION ? 'MigrationLensFactory' : 'LensFactory';
   const lensFactory_args = [
     deployedContracts['AccessControlFactory'].address,
     deployedContracts['AccountFactory'].address,
@@ -100,14 +111,18 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
     deployedContracts['FeedFactory'].address,
     deployedContracts['GraphFactory'].address,
     deployedContracts['NamespaceFactory'].address,
-    deployedContracts['AccountBlockingRule'].address,
-    deployedContracts['GroupGatedFeedRule'].address,
-    deployedContracts['UsernameSimpleCharsetNamespaceRule'].address,
+    DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['AccountBlockingRule'].address,
+    DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['GroupGatedFeedRule'].address,
+    DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['UsernameSimpleCharsetNamespaceRule'].address,
   ];
 
-  await deployLensContract({
-    contractName: lensFactory_artifactName,
-    contractType: ContractType.Factory,
-    constructorArguments: lensFactory_args,
-  });
+  await deployLensContractAsProxy(
+    {
+      name: 'LensFactory',
+      contractName: lensFactory_artifactName,
+      contractType: ContractType.Factory,
+      constructorArguments: lensFactory_args,
+    },
+    factoriesProxyOwner
+  );
 }

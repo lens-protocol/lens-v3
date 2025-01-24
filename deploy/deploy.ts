@@ -51,12 +51,14 @@ async function deploy() {
   await deployProxyAdminLock(lockOwner ?? deployerAddress);
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
-  await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address);
+  await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);
   await deployLensPrimitives();
-  const actionHub = await deployLensActionHub();
-  await deployLensAccessControl();
-  await deployRules(rulesOwner ?? deployerAddress);
-  await deployActions(actionHub);
+  if (!DEPLOYING_MIGRATION) {
+    const actionHub = await deployLensActionHub();
+    await deployLensAccessControl();
+    await deployRules(rulesOwner ?? deployerAddress);
+    await deployActions(actionHub);
+  }
   generateEnvFile();
 }
 
