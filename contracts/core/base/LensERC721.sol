@@ -33,7 +33,7 @@ abstract contract LensERC721 is IERC721 {
     }
 
     /// @custom:keccak lens.storage.ERC721
-    bytes32 constant STORAGE__ERC721 = 0x5d84583cb768017b44ca3aec8199901a24d17ed118ff103b086430f4dac47b71;
+    bytes32 constant STORAGE__ERC721 = 0x9773440c5f3d31ef6a1be068fec8ef97f4aa1ba801bb599e82d4fd5382955955;
 
     function $erc721Storage() internal pure returns (ERC721Storage storage _storage) {
         assembly {
