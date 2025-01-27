@@ -2,10 +2,16 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {RuleChange, RuleProcessingParams, SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
+import {
+    RuleSelectorChange, RuleChange, RuleProcessingParams, SourceStamp, KeyValue
+} from "contracts/core/types/Types.sol";
 
 function _emptyKeyValueArray() pure returns (KeyValue[] memory) {
     return new KeyValue[](0);
+}
+
+function _emptyRuleSelectorChangeArray() pure returns (RuleSelectorChange[] memory) {
+    return new RuleSelectorChange[](0);
 }
 
 function _emptyRuleProcessingParamsArray() pure returns (RuleProcessingParams[] memory) {
@@ -22,6 +28,19 @@ function _emptySourceStamp() pure returns (SourceStamp memory) {
 
 function _emptyUint256Array() pure returns (uint256[] memory) {
     uint256[] memory ret = new uint256[](0);
+    return ret;
+}
+
+function _toKeyValueArray(KeyValue memory kv) pure returns (KeyValue[] memory) {
+    KeyValue[] memory ret = new KeyValue[](1);
+    ret[0] = kv;
+    return ret;
+}
+
+function _toKeyValueArray(KeyValue memory kv0, KeyValue memory kv1) pure returns (KeyValue[] memory) {
+    KeyValue[] memory ret = new KeyValue[](2);
+    ret[0] = kv0;
+    ret[1] = kv1;
     return ret;
 }
 

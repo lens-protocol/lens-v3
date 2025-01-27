@@ -50,6 +50,10 @@ import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/User
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract BaseDeployments is Test {
+    function testBaseDeployments() public {
+        // Prevents being counted in Foundry Coverage
+    }
+
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
     address proxyAdminLock;

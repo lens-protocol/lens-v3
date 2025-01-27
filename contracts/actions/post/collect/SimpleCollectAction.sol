@@ -214,7 +214,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
             revert Errors.Expired();
         }
 
-        if (data.collectLimit != 0 && data.currentCollects + 1 > data.collectLimit) {
+        if (data.collectLimit != 0 && data.currentCollects > data.collectLimit) {
             revert Errors.LimitReached();
         }
 

@@ -34,6 +34,7 @@ library GroupCore {
     }
 
     function _grantMembership(address account) internal returns (uint256) {
+        require(account != address(0), Errors.InvalidParameter());
         uint256 membershipId = ++$storage().lastMemberIdAssigned;
         $storage().numberOfMembers++;
         require($storage().memberships[account].id == 0, Errors.RedundantStateChange()); // Must not be a member yet
@@ -42,6 +43,7 @@ library GroupCore {
     }
 
     function _revokeMembership(address account) internal returns (uint256) {
+        require(account != address(0), Errors.InvalidParameter());
         uint256 membershipId = $storage().memberships[account].id;
         require(membershipId != 0, Errors.RedundantStateChange()); // Must be a member
         $storage().numberOfMembers--;

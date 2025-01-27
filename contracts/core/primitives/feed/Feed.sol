@@ -83,6 +83,7 @@ contract Feed is
         override
     {
         require(msg.sender == Core.$storage().posts[entityId].author, Errors.InvalidMsgSender());
+        require(entityId == Core.$storage().posts[entityId].rootPostId, Errors.CannotHaveRules());
     }
 
     // Public user functions
@@ -157,7 +158,7 @@ contract Feed is
             wereExtraDataValuesSet[i] = _setEntityExtraData(postId, postParams.extraData[i]);
         }
 
-        _processPostEditingOnFeed(postId, postParams, customParams, rootPostRulesParams);
+        _processPostEditingOnFeed(postId, postParams, customParams, feedRulesParams);
         uint256 quotedPostId = Core.$storage().posts[postId].quotedPostId;
         if (quotedPostId != 0) {
             uint256 rootOfQuotedPost = Core.$storage().posts[quotedPostId].rootPostId;

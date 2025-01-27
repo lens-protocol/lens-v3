@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "./helpers/TypeHelpers.sol";
 import {IAccount, AccountManagerPermissions} from "@extensions/account/IAccount.sol";
 import {Account} from "@extensions/account/Account.sol";
-import {Feed} from "@core/primitives/Feed/Feed.sol";
+import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "@core/types/Errors.sol";
@@ -245,6 +245,10 @@ contract AccountTest is Test, BaseDeployments {
 }
 
 contract ErrorsTest {
+    function testErrorsTest() public {
+        // Prevents being counted in Foundry Coverage
+    }
+
     function stringError() public pure {
         revert("This is an error message");
     }

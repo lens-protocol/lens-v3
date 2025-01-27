@@ -68,7 +68,7 @@ contract MigrationFeed is Feed, EventEmitter {
         require(authorPostSequentialId != 0, Errors.InvalidParameter());
         require(creationTimestamp != 0, Errors.InvalidParameter());
 
-        uint256 postSequentialId = Core.$storage().postCount++;
+        uint256 postSequentialId = ++Core.$storage().postCount;
         Core.$storage().authorPostCount[postParams.author]++;
         uint256 postId = Core._generatePostId(postParams.author, authorPostSequentialId);
         require(Core._postExists(postId) == false, Errors.AlreadyExists());

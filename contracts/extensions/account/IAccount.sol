@@ -3,6 +3,8 @@
 pragma solidity ^0.8.26;
 
 import {SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {IMetadataBased} from "contracts/core/interfaces/IMetadataBased.sol";
 
 struct AccountManagerPermissions {
@@ -12,7 +14,7 @@ struct AccountManagerPermissions {
     bool canSetMetadataURI;
 }
 
-interface IAccount is IMetadataBased {
+interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_MetadataURISet(string metadataURI);
     event Lens_Account_MetadataURISet(string metadataURI, address indexed source);
     event Lens_Account_OwnerTransferred(address indexed newOwner);

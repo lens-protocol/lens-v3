@@ -3,7 +3,6 @@
 pragma solidity ^0.8.26;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import {Events} from "contracts/core/types/Events.sol";
 import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
@@ -14,8 +13,12 @@ import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
+import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
-contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStorageBased, MetadataBased {
+contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, MetadataBased, ERC1155Holder, ERC721Holder {
     using CallLib for address;
 
     // TODO: Think how long the timelock should be and should it be configurable
@@ -210,7 +213,9 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
             || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))
             || selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))
             || selector == bytes4(keccak256("approve(address,uint256)"))
-            || selector == bytes4(keccak256("setApprovalForAll(address,bool)"));
+            || selector == bytes4(keccak256("setApprovalForAll(address,bool)"))
+            || selector == bytes4(keccak256("increaseAllowance(address,uint256)"))
+            || selector == bytes4(keccak256("decreaseAllowance(address,uint256)"));
     }
 
     function _transferOwnership(address newOwner) internal override {
@@ -218,12 +223,13 @@ contract Account is IAccount, Initializable, Ownable, IERC721Receiver, ExtraStor
         emit Lens_Account_OwnerTransferred(newOwner);
     }
 
-    function onERC721Received(
-        address, /* operator */
-        address, /* from */
-        uint256, /* tokenId */
-        bytes calldata /* data */
-    ) external pure override returns (bytes4) {
-        return this.onERC721Received.selector;
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155Receiver, IERC165)
+        returns (bool)
+    {
+        return ERC1155Receiver.supportsInterface(interfaceId);
     }
 }

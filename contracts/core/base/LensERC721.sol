@@ -3,14 +3,16 @@
 // Modified from OpenZeppelin's v4.9.0 contracts
 pragma solidity ^0.8.26;
 
-import "contracts/core/interfaces/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "contracts/core/interfaces/ITokenURIProvider.sol";
 import "contracts/core/interfaces/IERC4906Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
-abstract contract LensERC721 is IERC721 {
+abstract contract LensERC721 is IERC721Metadata, ERC165 {
     using AddressUpgradeable for address;
 
     event Lens_ERC721_TokenURIProviderSet(address indexed tokenURIProvider);
@@ -444,5 +446,13 @@ abstract contract LensERC721 is IERC721 {
     // solhint-disable-next-line func-name-mixedcase
     function __unsafe_increaseBalance(address account, uint256 amount) internal {
         $erc721Storage().balances[account] += amount;
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IERC721).interfaceId || interfaceId == type(IERC721Metadata).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 }

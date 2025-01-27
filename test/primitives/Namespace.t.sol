@@ -8,17 +8,28 @@ import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAcce
 import {INamespace} from "@core/interfaces/INamespace.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+import {LensERC721} from "@core/base/LensERC721.sol";
+import {Errors} from "@core/types/Errors.sol";
 import "../helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
+import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
+import {Rule, RuleConfigurationChange} from "@core/types/Types.sol";
+import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
+import {UsernameSimpleCharsetNamespaceRule} from "@rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 
-contract NamespaceTest is Test, BaseDeployments {
+contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     INamespace namespace;
 
     address account = makeAddr("ACCOUNT");
     address namespaceOwner = makeAddr("NAMESPACE_OWNER");
 
-    function setUp() public override {
-        super.setUp();
+    MockAccessControl mockAccessControl;
+    address namespaceForRules;
+
+    function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
+        BaseDeployments.setUp();
 
         namespace = INamespace(
             lensFactory.deployNamespace({
@@ -32,6 +43,24 @@ contract NamespaceTest is Test, BaseDeployments {
                 nftSymbol: "BTC"
             })
         );
+
+        mockAccessControl = new MockAccessControl();
+
+        namespaceForRules = namespaceFactory.deployNamespace({
+            namespace: "ethereum",
+            metadataURI: "vitalik://buterin",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray(),
+            nftName: "Ethereum",
+            nftSymbol: "ETH",
+            tokenURIProvider: new LensUsernameTokenURIProvider()
+        });
+
+        RulesTest.setUp();
+
+        RuleExecutionTest.setUp();
     }
 
     function testCreateAssignUnassignDelete() public {
@@ -45,6 +74,8 @@ contract NamespaceTest is Test, BaseDeployments {
             ruleProcessingParams: _emptyRuleProcessingParamsArray(),
             extraData: _emptyKeyValueArray()
         });
+
+        assertEq(namespace.ownerOf(localName), account, "Owner of the username should be the account");
 
         vm.prank(account);
         namespace.assignUsername({
@@ -70,5 +101,739 @@ contract NamespaceTest is Test, BaseDeployments {
             unassigningRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             removalRuleProcessingParams: _emptyRuleProcessingParamsArray()
         });
+    }
+
+    function test_CannotCreateEmptyUsername() public {
+        vm.prank(account);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        namespace.createUsername({
+            account: account,
+            username: "",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function test_CannotCreateDuplicateUsername() public {
+        string memory localName = "satoshi";
+
+        // First creation should succeed
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Second creation should fail
+        vm.prank(account);
+        vm.expectRevert(Errors.AlreadyExists.selector);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function test_CreateUsername() public {
+        string memory localName = "satoshi";
+
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists
+        assertTrue(namespace.exists(localName), "Username should exist");
+
+        // Verify owner of the username
+        assertEq(namespace.ownerOf(localName), account, "Owner of the username should be the account");
+
+        // Verify username is not assigned
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned");
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        namespace.usernameOf(account);
+    }
+
+    function test_RemoveUsername() public {
+        string memory localName = "satoshi";
+
+        // Create username first
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+
+        // Remove username
+        vm.prank(account);
+        namespace.removeUsername({
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassigningRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            removalRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertFalse(namespace.exists(localName), "Username should not exist after removal");
+    }
+
+    function test_CannotRemoveUnownedUsername() public {
+        string memory localName = "satoshi";
+        address otherAccount = makeAddr("OTHER_ACCOUNT");
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Try to remove the username from a different account
+        vm.prank(otherAccount);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        namespace.removeUsername({
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassigningRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            removalRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_RemoveAssignedUsername() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+
+        // Assign username
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Remove assigned username (should automatically unassign first)
+        vm.prank(account);
+        namespace.removeUsername({
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassigningRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            removalRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertFalse(namespace.exists(localName), "Username should not exist after removal");
+    }
+
+    function test_AssignUsername() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        // Assign username
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify username is assigned
+        assertEq(namespace.accountOf(localName), account, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(account), localName, "Account should have the username");
+    }
+
+    function test_CannotAssignNonexistentUsername() public {
+        string memory nonexistentName = "nonexistent";
+        assertFalse(namespace.exists(nonexistentName), "Username should not exist initially");
+
+        // Try to assign non-existent username
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        namespace.assignUsername({
+            account: account,
+            username: nonexistentName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotAssignAlreadyAssignedUsername() public {
+        string memory localName = "satoshi";
+
+        // Create username owned by account
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Assign username to account
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        vm.prank(account);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        namespace.assignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_AutoUnassignPreviousUsername() public {
+        string memory firstUsername = "satoshi";
+        string memory secondUsername = "vitalik";
+
+        // Create first username owned by account
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: firstUsername,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Create second username owned by account
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: secondUsername,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Assign first username to account
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: firstUsername,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify first username is assigned
+        assertEq(namespace.accountOf(firstUsername), account, "First username should be assigned to account");
+        assertEq(namespace.usernameOf(account), firstUsername, "Account should have the first username");
+
+        // Assign second username to account (should automatically unassign first username)
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: secondUsername,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify only second is assigned
+        assertEq(namespace.accountOf(firstUsername), address(0), "First username should be unassigned");
+        assertEq(namespace.accountOf(secondUsername), account, "Second username should be assigned to account");
+        assertEq(namespace.usernameOf(account), secondUsername, "Account should have the second username");
+    }
+
+    function test_UnassignUsername() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Assign username
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify username is assigned
+        assertEq(namespace.accountOf(localName), account, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(account), localName, "Account should have the username");
+
+        // Unassign username
+        vm.prank(account);
+        namespace.unassignUsername({
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify username is unassigned
+        assertEq(namespace.accountOf(localName), address(0), "Username should be unassigned");
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        namespace.usernameOf(account);
+    }
+
+    function test_CannotUnassign_UnassignedUsername() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Try to unassign username that is not assigned
+        vm.prank(account);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        namespace.unassignUsername({
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_UsernameTokenId() public {
+        string memory localName = "satoshi";
+        uint256 expectedId = uint256(keccak256(bytes(localName)));
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        assertEq(namespace.getUsernameTokenId(localName), expectedId, "Token ID should match computed ID");
+    }
+
+    function test_TransferUsername() public {
+        string memory localName = "satoshi";
+        uint256 tokenId = uint256(keccak256(bytes(localName)));
+        address otherAccount = makeAddr("OTHER_ACCOUNT");
+
+        // Create and assign username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(LensERC721(address(namespace)).ownerOf(tokenId), account, "Token ownership should be correct");
+
+        vm.prank(account);
+        namespace.assignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Transfer username NFT
+        vm.prank(account);
+        LensERC721(address(namespace)).transferFrom(account, otherAccount, tokenId);
+
+        // Verify ownership changed but assignment remains
+        assertTrue(namespace.exists(localName), "Username should still exist after transfer");
+        assertEq(LensERC721(address(namespace)).ownerOf(tokenId), otherAccount, "Token ownership should be transferred");
+        assertEq(namespace.accountOf(localName), account, "Username assignment should remain unchanged");
+        assertEq(namespace.usernameOf(account), localName, "Account should still have the username");
+    }
+
+    function test_CreateAndAssignUsername() public {
+        string memory localName = "satoshi";
+        uint256 tokenId = uint256(keccak256(bytes(localName)));
+
+        // Create and assign username in one operation
+        vm.prank(account);
+        Namespace(address(namespace)).createAndAssignUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassigningProcessingParams: _emptyRuleProcessingParamsArray(),
+            creationProcessingParams: _emptyRuleProcessingParamsArray(),
+            assigningProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify token ownership and username assignment
+        assertTrue(namespace.exists(localName), "Username should exist");
+        assertEq(LensERC721(address(namespace)).ownerOf(tokenId), account, "Token should be owned by account");
+        assertEq(namespace.accountOf(localName), account, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(account), localName, "Account should have the username");
+    }
+
+    function test_CannotAssignToZeroAddress() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Try to assign username to zero address
+        vm.prank(account);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        namespace.assignUsername({
+            account: address(0),
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotGetAccountOfEmptyUsername() public {
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        namespace.accountOf("");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        INamespace(namespaceForRules).changeNamespaceRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override returns (address) {
+        return namespaceForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
+        return INamespaceRule.processCreation.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = INamespaceRule.processCreation.selector;
+        selectors[1] = INamespaceRule.processRemoval.selector;
+        selectors[2] = INamespaceRule.processAssigning.selector;
+        selectors[3] = INamespaceRule.processUnassigning.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return INamespace(namespaceForRules).getNamespaceRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return INamespaceRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function testRuleExecution_processCreation(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processCreation.selector;
+        string memory username = "satoshi";
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.createUsername,
+            (address(this), username, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), _emptyKeyValueArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processCreation,
+            (bytes32(uint256(1)), address(this), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_processRemoval(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processRemoval.selector;
+        string memory username = "satoshi";
+
+        INamespace(namespaceForRules).createUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.removeUsername,
+            (username, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), _emptyRuleProcessingParamsArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processRemoval,
+            (bytes32(uint256(1)), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_processAssigning(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processAssigning.selector;
+        string memory username = "satoshi";
+
+        INamespace(namespaceForRules).createUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.assignUsername,
+            (
+                address(this),
+                username,
+                _emptyKeyValueArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray(),
+                _emptyRuleProcessingParamsArray()
+            )
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processAssigning,
+            (bytes32(uint256(1)), address(this), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function testRuleExecution_processUnassigning(
+        bool mandatory1_passes,
+        bool mandatory2_passes,
+        bool optional1_passes,
+        bool optional2_passes
+    ) public {
+        bytes4 executionSelector = INamespaceRule.processUnassigning.selector;
+        string memory username = "satoshi";
+
+        INamespace(namespaceForRules).createUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        vm.prank(address(this));
+        INamespace(namespaceForRules).assignUsername({
+            account: address(this),
+            username: username,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        bytes memory executionFunctionCallData = abi.encodeCall(
+            INamespace.unassignUsername, (username, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray())
+        );
+        bytes memory expectedRuleExecutionCallData = abi.encodeCall(
+            INamespaceRule.processUnassigning,
+            (bytes32(uint256(1)), address(this), address(this), username, _emptyKeyValueArray(), _emptyKeyValueArray())
+        );
+        _verifyRulesExecution(
+            executionSelector,
+            expectedRuleExecutionCallData,
+            address(namespaceForRules),
+            executionFunctionCallData,
+            address(this),
+            mandatory1_passes,
+            mandatory2_passes,
+            optional1_passes,
+            optional2_passes
+        );
+    }
+
+    function test_UsernameSimpleCharsetNamespaceRule() public {
+        // Valid charset
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: "abcdefghijklmnopqrstuvwxyz-0123456789_",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function _isInCharset(bytes1 char, string memory charset) internal pure returns (bool) {
+        for (uint256 i = 0; i < bytes(charset).length; i++) {
+            if (char == bytes1(bytes(charset)[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function test_CannotCreateUsername_WithInvalidCharset(bytes1 invalidChar, uint8 charToReplacePosition) public {
+        string memory validCharset = "abcdefghijklmnopqrstuvwxyz-0123456789_";
+        vm.assume(charToReplacePosition < 38);
+        vm.assume(!_isInCharset(invalidChar, validCharset));
+
+        bytes memory invalidUsernameBytes = bytes(validCharset);
+        invalidUsernameBytes[charToReplacePosition] = invalidChar;
+        string memory invalidUsername = string(invalidUsernameBytes);
+
+        // Invalid charset
+        vm.prank(account);
+        vm.expectRevert(Errors.RequiredRuleReverted.selector);
+        namespace.createUsername({
+            account: account,
+            username: invalidUsername,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    function test_CannotCreateUsername_StartingWithUnderscoreOrDash() public {
+        vm.prank(account);
+        vm.expectRevert(Errors.RequiredRuleReverted.selector);
+        namespace.createUsername({
+            account: account,
+            username: "_abcdefghijklmnopqrstuvwxyz-0123456789_",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        vm.prank(account);
+        vm.expectRevert(Errors.RequiredRuleReverted.selector);
+        namespace.createUsername({
+            account: account,
+            username: "-abcdefghijklmnopqrstuvwxyz-0123456789_",
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function onERC721Received(
+        address, /* operator */
+        address, /* from */
+        uint256, /* tokenId */
+        bytes calldata /* data */
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }
