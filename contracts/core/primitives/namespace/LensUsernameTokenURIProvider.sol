@@ -197,9 +197,24 @@ contract LensUsernameTokenURIProvider is ITokenURIProvider {
     function _slice(string memory str, uint256 start, uint256 end) internal pure virtual returns (string memory) {
         bytes memory strBytes = bytes(str);
         bytes memory result = new bytes(end - start);
+
         assembly {
-            mcopy(add(result, 0x20), add(strBytes, add(start, 0x20)), sub(end, start))
+            let length := sub(end, start)
+            let resultPtr := add(result, 0x20)
+            let strPtr := add(add(strBytes, 0x20), start)
+
+            // Copy memory using mload and mstore in 32-byte chunks
+            for { let i := 0 } lt(i, length) { i := add(i, 0x20) } { mstore(add(resultPtr, i), mload(add(strPtr, i))) }
+
+            // Handle any remaining bytes (if length is not a multiple of 32)
+            let remainder := mod(length, 0x20)
+            if gt(remainder, 0) {
+                let mask := sub(shl(mul(8, sub(0x20, remainder)), 1), 1)
+                let data := and(mload(add(strPtr, length)), not(mask))
+                mstore(add(resultPtr, length), data)
+            }
         }
+
         return string(result);
     }
 
