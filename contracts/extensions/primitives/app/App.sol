@@ -265,7 +265,7 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     ///////////////// Paymaster
 
     function setPaymaster(address paymaster) external override {
-        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
+        _requireAccess(msg.sender, PID__SET_PAYMASTER);
         _setPaymaster(paymaster);
     }
 
