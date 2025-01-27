@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import {INamespace} from "@core/interfaces/INamespace.sol";
+import {IERC721Namespace} from "@core/interfaces/IERC721Namespace.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import {LensERC721} from "@core/base/LensERC721.sol";
@@ -474,7 +475,11 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
             extraData: _emptyKeyValueArray()
         });
 
-        assertEq(namespace.getUsernameTokenId(localName), expectedId, "Token ID should match computed ID");
+        assertEq(
+            IERC721Namespace(address(namespace)).getTokenIdByUsername(localName),
+            expectedId,
+            "Token ID should match computed ID"
+        );
     }
 
     function test_TransferUsername() public {

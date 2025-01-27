@@ -111,7 +111,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertTrue(group.isMember(newMember));
     }
 
-    function test_CannotAddMember_viaPID_noAccess(address newMember) public {
+    function test_CannotAddMember_viaPID_noAccess_noRuleSet(address newMember) public {
         vm.assume(newMember != address(0));
 
         address accountWithoutPID = _getAccountWithoutPID(PID__ADD_MEMBER);
