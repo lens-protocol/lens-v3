@@ -213,7 +213,9 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
             || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))
             || selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))
             || selector == bytes4(keccak256("approve(address,uint256)"))
-            || selector == bytes4(keccak256("setApprovalForAll(address,bool)"));
+            || selector == bytes4(keccak256("setApprovalForAll(address,bool)"))
+            || selector == bytes4(keccak256("increaseAllowance(address,uint256)"))
+            || selector == bytes4(keccak256("decreaseAllowance(address,uint256)"));
     }
 
     function _transferOwnership(address newOwner) internal override {
