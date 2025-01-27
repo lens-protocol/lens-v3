@@ -52,6 +52,15 @@ contract ActionHub {
         bytes returnData
     );
 
+    event Lens_ActionHub_PostAction_Reconfigured(
+        address indexed action,
+        address indexed msgSender,
+        address feed,
+        uint256 indexed postId,
+        KeyValue[] params,
+        bytes returnData
+    );
+
     event Lens_ActionHub_PostAction_Executed(
         address indexed action,
         address indexed msgSender,
@@ -85,6 +94,10 @@ contract ActionHub {
         address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
     );
 
+    event Lens_ActionHub_AccountAction_Reconfigured(
+        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+    );
+
     event Lens_ActionHub_AccountAction_Executed(
         address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
     );
@@ -96,6 +109,36 @@ contract ActionHub {
     event Lens_ActionHub_AccountAction_Enabled(
         address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
     );
+
+    /// @custom:keccak lens.storage.ActionHub.PostActionStatus
+    bytes32 constant STORAGE__POST_ACTION_STATUS = 0x5cf5bb5f1a3f0a5fa6642893567684ad97472320c8ebdff0c847f0f5ffa686a8;
+    /// @custom:keccak lens.storage.ActionHub.AccountActionStatus
+    bytes32 constant STORAGE__ACCOUNT_ACTION_STATUS = 0x882d8e43ef939b6546056e5cc9db6a69e8d4b37be87d42d6b7b0419769e84213;
+
+    struct ActionStatus {
+        bool wasConfigured;
+        bool isDisabled;
+    }
+
+    function $postActionStatus()
+        internal
+        pure
+        returns (mapping(address => mapping(address => mapping(uint256 => ActionStatus))) storage _storage)
+    {
+        assembly {
+            _storage.slot := STORAGE__POST_ACTION_STATUS
+        }
+    }
+
+    function $accountActionStatus()
+        internal
+        pure
+        returns (mapping(address => mapping(address => ActionStatus)) storage _storage)
+    {
+        assembly {
+            _storage.slot := STORAGE__ACCOUNT_ACTION_STATUS
+        }
+    }
 
     function signalUniversalPostAction(address action) external {
         bytes memory returnData = IPostAction(action).configure(address(0), address(0), 0, new KeyValue[](0));
@@ -109,7 +152,12 @@ contract ActionHub {
         returns (bytes memory)
     {
         bytes memory returnData = IPostAction(action).configure(msg.sender, feed, postId, params);
-        emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, params, returnData);
+        if ($postActionStatus()[action][feed][postId].wasConfigured == false) {
+            $postActionStatus()[action][feed][postId].wasConfigured = true;
+            emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, params, returnData);
+        } else {
+            emit Lens_ActionHub_PostAction_Reconfigured(action, msg.sender, feed, postId, params, returnData);
+        }
         return returnData;
     }
 
@@ -118,6 +166,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.Disabled());
         bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, params);
         emit Lens_ActionHub_PostAction_Executed(action, msg.sender, feed, postId, params, returnData);
         return returnData;
@@ -128,7 +177,9 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.RedundantStateChange());
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, true, params);
+        $postActionStatus()[action][feed][postId].isDisabled = true;
         emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
@@ -138,7 +189,9 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($postActionStatus()[action][feed][postId].isDisabled, Errors.RedundantStateChange());
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, false, params);
+        $postActionStatus()[action][feed][postId].isDisabled = false;
         emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, params, returnData);
         return returnData;
     }
@@ -154,8 +207,14 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
         bytes memory returnData = IAccountAction(action).configure(msg.sender, account, params);
-        emit Lens_ActionHub_AccountAction_Configured(action, msg.sender, account, params, returnData);
+        if ($accountActionStatus()[action][account].wasConfigured == false) {
+            $accountActionStatus()[action][account].wasConfigured = true;
+            emit Lens_ActionHub_AccountAction_Configured(action, msg.sender, account, params, returnData);
+        } else {
+            emit Lens_ActionHub_AccountAction_Reconfigured(action, msg.sender, account, params, returnData);
+        }
         return returnData;
     }
 
@@ -164,6 +223,7 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
         bytes memory returnData = IAccountAction(action).execute(msg.sender, account, params);
         emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, params, returnData);
         return returnData;
@@ -174,7 +234,9 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($accountActionStatus()[action][account].isDisabled == false, Errors.RedundantStateChange());
         bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, true, params);
+        $accountActionStatus()[action][account].isDisabled = true;
         emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, params, returnData);
         return returnData;
     }
@@ -184,7 +246,9 @@ contract ActionHub {
         payable
         returns (bytes memory)
     {
+        require($accountActionStatus()[action][account].isDisabled, Errors.RedundantStateChange());
         bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, false, params);
+        $accountActionStatus()[action][account].isDisabled = false;
         emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, params, returnData);
         return returnData;
     }
