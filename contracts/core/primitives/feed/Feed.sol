@@ -83,6 +83,7 @@ contract Feed is
         override
     {
         require(msg.sender == Core.$storage().posts[entityId].author, Errors.InvalidMsgSender());
+        require(entityId == Core.$storage().posts[entityId].rootPostId, Errors.CannotHaveRules());
     }
 
     // Public user functions
