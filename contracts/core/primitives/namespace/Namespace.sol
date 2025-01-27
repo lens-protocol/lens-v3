@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {NamespaceCore as Core} from "contracts/core/primitives/namespace/NamespaceCore.sol";
-import {INamespace} from "contracts/core/interfaces/INamespace.sol";
+import {IERC721Namespace} from "contracts/core/interfaces/IERC721Namespace.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedNamespace} from "contracts/core/primitives/namespace/RuleBasedNamespace.sol";
@@ -19,7 +19,7 @@ import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 contract Namespace is
-    INamespace,
+    IERC721Namespace,
     Initializable,
     LensERC721,
     RuleBasedNamespace,
@@ -326,7 +326,12 @@ contract Namespace is
         return _exists(tokenId);
     }
 
-    function getUsernameTokenId(string calldata username) external pure returns (uint256) {
+    function getTokenIdByUsername(string calldata username) external pure override returns (uint256) {
         return _computeId(username);
+    }
+
+    function getUsernameByTokenId(uint256 tokenId) external view override returns (string memory) {
+        require(_exists(tokenId), Errors.DoesNotExist());
+        return _idToUsername[tokenId];
     }
 }
