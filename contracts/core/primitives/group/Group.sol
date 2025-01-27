@@ -123,9 +123,12 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        _requireAccess(msg.sender, PID__REMOVE_MEMBER);
+        if (_amountOfRules(IGroupRule.processAddition.selector) != 0) {
+            _requireAccess(msg.sender, PID__REMOVE_MEMBER);
+        } else {
+            _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
+        }
         uint256 membershipId = Core._revokeMembership(account);
-        _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(membershipId, customParams);
         emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
     }
