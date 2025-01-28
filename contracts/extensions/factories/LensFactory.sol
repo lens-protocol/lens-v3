@@ -112,7 +112,6 @@ contract LensFactory {
         USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
     }
 
-    // TODO: This function belongs to an App probably.
     function createAccountWithUsernameFree(
         address namespacePrimitiveAddress,
         CreateAccountParams calldata accountParams,
@@ -151,6 +150,7 @@ contract LensFactory {
         );
         IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(accountParams.owner);
+        IOwnable(BeaconProxy(account).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
         return account;
     }
 
