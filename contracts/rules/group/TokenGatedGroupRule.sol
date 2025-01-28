@@ -55,8 +55,15 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view {
-        // Anyone can kick out member of the group if they no longer hold the required token balance:
-        require(!_checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account), Errors.NotAllowed());
+        // Anyone can kick out member of the group if they no longer hold the required token balance...
+        require(
+            _checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account) == false, Errors.NotAllowed()
+        );
+        // ...unless it joined using the special skip gate permission.
+        require(
+            _configuration[msg.sender][configSalt].accessControl.hasAccess(account, PID__SKIP_GATE) == false,
+            Errors.NotAllowed()
+        );
     }
 
     function processJoining(
