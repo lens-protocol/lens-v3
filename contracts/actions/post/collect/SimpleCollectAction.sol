@@ -16,7 +16,7 @@ import {Errors} from "contracts/core/types/Errors.sol";
 contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;
 
-    event Lens_Action_MetadataURISet(string metadataURI);
+    event Lens_PostAction_MetadataURISet(string metadataURI);
 
     struct CollectActionStorage {
         mapping(address => mapping(uint256 => CollectActionData)) collectData;
@@ -82,7 +82,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Action_MetadataURISet(metadataURI);
+        emit Lens_PostAction_MetadataURISet(metadataURI);
     }
 
     function _configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)

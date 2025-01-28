@@ -13,7 +13,7 @@ import {Errors} from "contracts/core/types/Errors.sol";
 contract TippingPostAction is BasePostAction, MetadataBased {
     using SafeERC20 for IERC20;
 
-    event Lens_Action_MetadataURISet(string metadataURI);
+    event Lens_PostAction_MetadataURISet(string metadataURI);
 
     /// @custom:keccak lens.param.amount
     bytes32 constant PARAM__TIP_AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
@@ -25,7 +25,7 @@ contract TippingPostAction is BasePostAction, MetadataBased {
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Action_MetadataURISet(metadataURI);
+        emit Lens_PostAction_MetadataURISet(metadataURI);
     }
 
     function _execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
