@@ -23,7 +23,7 @@ function _emptyRuleChangeArray() pure returns (RuleChange[] memory) {
 }
 
 function _emptySourceStamp() pure returns (SourceStamp memory) {
-    return SourceStamp(address(0), 0, 0, "");
+    return SourceStamp(address(0), address(0), address(0), 0, 0, "");
 }
 
 function _emptyUint256Array() pure returns (uint256[] memory) {

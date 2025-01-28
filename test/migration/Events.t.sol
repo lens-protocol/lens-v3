@@ -111,6 +111,8 @@ contract EventsTest is Test, BaseDeployments {
                 accountManagersPermissions: new AccountManagerPermissions[](0),
                 accountCreationSourceStamp: SourceStamp({
                     source: app,
+                    originalMsgSender: address(this), // TODO: Set proper value when testing source validation
+                    validator: address(this), // TODO: Set proper value when testing source validation
                     nonce: 0,
                     deadline: block.timestamp + 1000,
                     signature: new bytes(0)

@@ -24,8 +24,8 @@ import {AccessControlFactory} from "contracts/extensions/factories/AccessControl
 import {AccountFactory} from "contracts/extensions/factories/AccountFactory.sol";
 import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
-import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
@@ -150,7 +150,7 @@ contract LensFactory {
         );
         IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(accountParams.owner);
-        IOwnable(BeaconProxy(account).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
+        IOwnable(BeaconProxy(payable(account)).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
         return account;
     }
 
