@@ -7,12 +7,16 @@ import {SourceStamp} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract BaseSource is ISource {
+    event Lens_Source_NonceUsed(uint256 nonce);
+
     bytes2 internal immutable EIP191_VERSION_BYTE_0X01_HEADER = 0x1901;
     string constant EIP712_DOMAIN_VERSION = "1";
     bytes32 constant EIP712_DOMAIN_VERSION_HASH = keccak256(bytes(EIP712_DOMAIN_VERSION));
     bytes32 constant EIP712_DOMAIN_TYPEHASH =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-    bytes32 constant SOURCE_STAMP_TYPEHASH = keccak256("SourceStamp(address source,uint256 nonce,uint256 deadline)");
+    bytes32 constant SOURCE_STAMP_TYPEHASH = keccak256(
+        "SourceStamp(address source,address originalMsgSender,address validator,uint256 nonce,uint256 deadline)"
+    );
 
     mapping(uint256 => bool) internal _wasSourceStampNonceUsed;
 
@@ -20,11 +24,19 @@ abstract contract BaseSource is ISource {
         _validateSource(sourceStamp);
     }
 
+    function cancelNonce(uint256 nonce) external virtual {
+        require(_wasSourceStampNonceUsed[nonce] == false, Errors.RedundantStateChange());
+        require(_isValidSourceStampSigner(msg.sender), Errors.InvalidMsgSender());
+        _wasSourceStampNonceUsed[nonce] = true;
+        emit Lens_Source_NonceUsed(nonce);
+    }
+
     // Signature Standard: EIP-191 - Version Byte: 0x00
     function _validateSource(SourceStamp calldata sourceStamp) internal virtual {
         require(!_wasSourceStampNonceUsed[sourceStamp.nonce], Errors.NonceUsed());
         require(sourceStamp.deadline >= block.timestamp, Errors.Expired());
         require(sourceStamp.source == address(this), Errors.InvalidParameter());
+        require(sourceStamp.validator == msg.sender, Errors.InvalidMsgSender());
         _wasSourceStampNonceUsed[sourceStamp.nonce] = true;
         bytes32 digest = _calculateDigest(_calculateHashStruct(sourceStamp));
         bytes32 r;
@@ -38,12 +50,22 @@ abstract contract BaseSource is ISource {
         }
         address signer = ecrecover(digest, v, r, s);
         require(_isValidSourceStampSigner(signer), Errors.WrongSigner());
+        emit Lens_Source_NonceUsed(sourceStamp.nonce);
     }
 
     function _isValidSourceStampSigner(address signer) internal virtual returns (bool);
 
     function _calculateHashStruct(SourceStamp memory sourceStamp) private pure returns (bytes32) {
-        return keccak256(abi.encode(SOURCE_STAMP_TYPEHASH, sourceStamp.source, sourceStamp.nonce, sourceStamp.deadline));
+        return keccak256(
+            abi.encode(
+                SOURCE_STAMP_TYPEHASH,
+                sourceStamp.source,
+                sourceStamp.originalMsgSender,
+                sourceStamp.validator,
+                sourceStamp.nonce,
+                sourceStamp.deadline
+            )
+        );
     }
 
     function _calculateDigest(bytes32 hashStruct) private view returns (bytes32) {

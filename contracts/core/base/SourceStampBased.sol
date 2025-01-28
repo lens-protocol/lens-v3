@@ -25,6 +25,7 @@ abstract contract SourceStampBased is ExtraStorageBased {
             if (customParams[i].key == PARAM__SOURCE_STAMP) {
                 if (customParams[i].value.length > 0) {
                     SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
+                    require(sourceStamp.originalMsgSender == msg.sender);
                     ISource(sourceStamp.source).validateSource(sourceStamp);
                     if (storeSource) {
                         _setPrimitiveInternalExtraDataForEntity(entityId, KeyValue(key, abi.encode(sourceStamp.source)));
