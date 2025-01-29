@@ -26,6 +26,7 @@ import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
@@ -35,19 +36,6 @@ import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-
-// TODO: Move this some place else or remove
-interface IOwnable {
-    function transferOwnership(address newOwner) external;
-    function owner() external view returns (address);
-}
-
-// struct AccessConfiguration {
-//     uint256 permissionId;
-//     address contractAddress;
-//     uint256 roleId;
-//     IRoleBasedAccessControl.Access access;
-// }
 
 /// @custom:keccak lens.data.groupFeed
 bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92d4ee5701c6d20b721221326b94ae1;

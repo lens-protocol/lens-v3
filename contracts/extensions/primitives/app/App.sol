@@ -111,7 +111,8 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     }
 
     function _isValidSourceStampSigner(address signer) internal virtual override returns (bool) {
-        return Core.$storage().signerStorageHelper[signer].isSet; // TODO: What about the app's owner?
+        // Owner is not by default a signer, should be explicitly enabled as it.
+        return Core.$storage().signerStorageHelper[signer].isSet;
     }
 
     function _setSourceStampVerification(bool isEnabled) internal virtual {

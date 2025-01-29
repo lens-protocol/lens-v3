@@ -28,9 +28,6 @@ contract Namespace is
     SourceStampBased,
     MetadataBased
 {
-    // TODO: Why is this event not in the INamespace interface?
-    event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
-
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
     /// @custom:keccak lens.permission.ChangeRules

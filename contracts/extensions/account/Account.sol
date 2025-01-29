@@ -20,7 +20,7 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, MetadataBased, ERC1155Holder, ERC721Holder {
     using CallLib for address;
 
-    // TODO: Think how long the timelock should be and should it be configurable
+    // In a future Account version/upgrade this could be configurable by the owner.
     uint256 constant SPENDING_TIMELOCK = 1 hours;
 
     struct Storage {

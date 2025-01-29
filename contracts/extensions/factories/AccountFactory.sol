@@ -34,7 +34,7 @@ contract AccountFactory {
         SourceStamp calldata sourceStamp,
         KeyValue[] calldata extraData
     ) external returns (address) {
-        address proxyAdmin = address(new ProxyAdmin(owner, _lock)); // TODO: Owner of Proxy Admin same as owner of Account
+        address proxyAdmin = address(new ProxyAdmin(owner, _lock)); // Owner of Proxy Admin same as owner of Account
         Account account = Account(payable(new BeaconProxy(proxyAdmin, _beacon)));
         account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
         emit Lens_Account_Created(

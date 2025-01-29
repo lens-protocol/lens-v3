@@ -83,7 +83,6 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
         revert Errors.NotImplemented();
     }
 
-    // TODO: This function smells weird, we should reconsider going back to the processQuote/Reply/Repost selectors...
     function _shouldRestrictionBeApplied(
         Configuration memory configuration,
         uint256 rootPostId,

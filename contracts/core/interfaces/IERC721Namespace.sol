@@ -6,6 +6,8 @@ import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
 
 interface IERC721Namespace is INamespace, IERC721 {
+    event Lens_Username_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
     function exists(uint256 tokenId) external view returns (bool);
 
     function getTokenIdByUsername(string calldata username) external view returns (uint256);

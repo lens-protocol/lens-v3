@@ -89,7 +89,7 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external override {
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 

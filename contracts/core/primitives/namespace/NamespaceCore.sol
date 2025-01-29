@@ -9,7 +9,7 @@ library NamespaceCore {
 
     struct Storage {
         string namespace;
-        mapping(string => bool) usernameExists; // TODO: Should this store the owner instead???
+        mapping(string => bool) usernameExists;
         mapping(string => address) usernameToAccount;
         mapping(address => string) accountToUsername;
     }

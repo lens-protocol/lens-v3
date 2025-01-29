@@ -24,9 +24,6 @@ contract Feed is
     SourceStampBased,
     MetadataBased
 {
-    // TODO: Move these to respective contracts
-    // Resource IDs involved in the contract
-
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
     /// @custom:keccak lens.permission.ChangeRules
@@ -103,7 +100,7 @@ contract Feed is
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
-            // TODO: Maybe quotes shouldn't be limited by rules... Just a brave thought. Like quotations in real life.
+            // Just a thought: Maybe quotes shouldn't be limited by rules... Like quotations in real life.
             uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
             if (rootOfQuotedPost != rootPostId) {
                 _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
@@ -147,7 +144,7 @@ contract Feed is
     ) external virtual override {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;
-        // TODO: We can have this for moderators:
+        // You can have this if you want to allow moderator editing:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, Errors.InvalidMsgSender());
 
