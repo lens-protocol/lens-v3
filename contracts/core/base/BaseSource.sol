@@ -18,26 +18,37 @@ abstract contract BaseSource is ISource {
         "SourceStamp(address source,address originalMsgSender,address validator,uint256 nonce,uint256 deadline)"
     );
 
-    mapping(uint256 => bool) internal _wasSourceStampNonceUsed;
+    struct BaseSourceStorage {
+        mapping(uint256 => bool) wasSourceStampNonceUsed;
+    }
+
+    /// @custom:keccak lens.storage.BaseSource
+    bytes32 constant STORAGE__BASE_SOURCE = 0xfd9714e424fa7160703dd063d878378eed95e0eeb9e0b16afb8b33322bd268de;
+
+    function $baseSourceStorage() private pure returns (BaseSourceStorage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__BASE_SOURCE
+        }
+    }
 
     function validateSource(SourceStamp calldata sourceStamp) external virtual override {
         _validateSource(sourceStamp);
     }
 
     function cancelNonce(uint256 nonce) external virtual {
-        require(_wasSourceStampNonceUsed[nonce] == false, Errors.RedundantStateChange());
+        require($baseSourceStorage().wasSourceStampNonceUsed[nonce] == false, Errors.RedundantStateChange());
         require(_isValidSourceStampSigner(msg.sender), Errors.InvalidMsgSender());
-        _wasSourceStampNonceUsed[nonce] = true;
+        $baseSourceStorage().wasSourceStampNonceUsed[nonce] = true;
         emit Lens_Source_NonceUsed(nonce);
     }
 
     // Signature Standard: EIP-191 - Version Byte: 0x00
     function _validateSource(SourceStamp calldata sourceStamp) internal virtual {
-        require(!_wasSourceStampNonceUsed[sourceStamp.nonce], Errors.NonceUsed());
+        require(!$baseSourceStorage().wasSourceStampNonceUsed[sourceStamp.nonce], Errors.NonceUsed());
         require(sourceStamp.deadline >= block.timestamp, Errors.Expired());
         require(sourceStamp.source == address(this), Errors.InvalidParameter());
         require(sourceStamp.validator == msg.sender, Errors.InvalidMsgSender());
-        _wasSourceStampNonceUsed[sourceStamp.nonce] = true;
+        $baseSourceStorage().wasSourceStampNonceUsed[sourceStamp.nonce] = true;
         bytes32 digest = _calculateDigest(_calculateHashStruct(sourceStamp));
         bytes32 r;
         bytes32 s;

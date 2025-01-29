@@ -41,7 +41,18 @@ contract Namespace is
     uint256 constant PID__SET_TOKEN_URI_PROVIDER =
         uint256(0x32b3651aa4f96bc363c3045558bf6accc2b6027323bee86f6b4a570142cbd469);
 
-    mapping(uint256 => string) private _idToUsername; // TODO: Move to computed storage
+    /// @custom:keccak lens.storage.Namespace
+    uint256 constant STORAGE__NAMESPACE = 0x643a2517af0a90463c06865bbd358f4e5d1271f6ad1b8352aca5bb2e89b867f6;
+
+    struct NamespaceStorage {
+        mapping(uint256 => string) idToUsername;
+    }
+
+    function $storage() internal pure returns (NamespaceStorage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__NAMESPACE
+        }
+    }
 
     constructor() {
         _disableInitializers();
@@ -114,7 +125,7 @@ contract Namespace is
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
-        _idToUsername[id] = username;
+        $storage().idToUsername[id] = username;
         Core._createUsername(username);
         address source = _processSourceStamp(id, customParams);
         _decodeAndSetUsernameExtraData(id, extraData);
@@ -135,7 +146,7 @@ contract Namespace is
     ) external override {
         uint256 id = _computeId(username);
         _safeMint(account, id);
-        _idToUsername[id] = username;
+        $storage().idToUsername[id] = username;
         Core._createUsername(username);
         _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
@@ -332,6 +343,6 @@ contract Namespace is
 
     function getUsernameByTokenId(uint256 tokenId) external view override returns (string memory) {
         require(_exists(tokenId), Errors.DoesNotExist());
-        return _idToUsername[tokenId];
+        return $storage().idToUsername[tokenId];
     }
 }
