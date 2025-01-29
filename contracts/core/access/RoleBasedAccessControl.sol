@@ -3,6 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {Access, IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
+import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
@@ -18,9 +19,7 @@ import {Errors} from "contracts/core/types/Errors.sol";
  * - Within an specific role the denied-overrides strategy is applied (in case of same amount of wildcards).
  * - When some account has many roles, the final permission is the most permissive one (i.e. granted-overrides strategy).
  */
-contract RoleBasedAccessControl is IRoleBasedAccessControl {
-    event Lens_OwnershipTransferred(address indexed previousOwner, address indexed newOwner); // TODO: Do we need it?
-
+contract RoleBasedAccessControl is Ownable, IRoleBasedAccessControl {
     address internal constant ANY_CONTRACT_ADDRESS = address(0);
     uint256 internal constant ANY_PERMISSION_ID = uint256(0);
     /// @custom:keccak lens.role.Owner
@@ -28,24 +27,20 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
     /// @custom:keccak lens.contract.AccessControl.RoleBasedAccessControl
     bytes32 constant CONTRACT_TYPE = 0xd7f02d8d0f478fc8e4dfbe64bafebbee03e9d359c4395bdbf35858b495f3daaa;
 
-    address internal _owner;
     mapping(address => uint256[]) internal _roles;
     mapping(uint256 => mapping(address => mapping(uint256 => Access))) internal _access;
 
     constructor(address owner) {
         _emitLensContractDeployedEvent();
-        _owner = owner;
         _grantRole(owner, OWNER_ROLE_ID);
         _setAccess(OWNER_ROLE_ID, ANY_CONTRACT_ADDRESS, ANY_PERMISSION_ID, Access.GRANTED);
+        _transferOwnership(owner);
     }
 
-    function transferOwnership(address newOwner) external virtual {
-        address oldOwner = _owner;
-        require(msg.sender == oldOwner, Errors.InvalidMsgSender());
-        _owner = newOwner;
-        _revokeRole(oldOwner, OWNER_ROLE_ID);
+    function transferOwnership(address newOwner) public virtual override {
+        _revokeRole(owner(), OWNER_ROLE_ID);
         _grantRole(newOwner, OWNER_ROLE_ID);
-        emit Lens_OwnershipTransferred(oldOwner, newOwner);
+        super.transferOwnership(newOwner);
     }
 
     function getType() external pure virtual override returns (bytes32) {
@@ -59,7 +54,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         override
         returns (bool)
     {
-        return account == _owner;
+        return account == owner();
     }
 
     function hasAccess(address account, address contractAddress, uint256 permissionId)
@@ -77,8 +72,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         _grantRole(account, roleId);
     }
 
-    function _beforeGrantingRole(address, /* account */ uint256 roleId) internal virtual {
-        require(msg.sender == _owner, Errors.InvalidMsgSender());
+    function _beforeGrantingRole(address, /* account */ uint256 roleId) internal virtual onlyOwner {
         require(roleId != OWNER_ROLE_ID, Errors.InvalidParameter());
     }
 
@@ -93,8 +87,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         _revokeRole(account, roleId);
     }
 
-    function _beforeRevokingRole(address, /* account */ uint256 roleId) internal virtual {
-        require(msg.sender == _owner, Errors.InvalidMsgSender());
+    function _beforeRevokingRole(address, /* account */ uint256 roleId) internal virtual onlyOwner {
         require(roleId != OWNER_ROLE_ID, Errors.InvalidParameter());
     }
 
@@ -133,8 +126,7 @@ contract RoleBasedAccessControl is IRoleBasedAccessControl {
         address, /* contractAddress */
         uint256, /* permissionId */
         Access /* access */
-    ) internal virtual {
-        require(msg.sender == _owner, Errors.InvalidMsgSender());
+    ) internal virtual onlyOwner {
         require(roleId != OWNER_ROLE_ID, Errors.InvalidParameter());
     }
 
