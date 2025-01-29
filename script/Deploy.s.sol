@@ -31,7 +31,7 @@ import {LensFactory} from "@extensions/factories/LensFactory.sol";
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 
-import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
+import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 

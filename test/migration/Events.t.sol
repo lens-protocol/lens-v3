@@ -14,7 +14,7 @@ import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {RuleChange, KeyValue} from "@core/types/Types.sol";
 import {AccountManagerPermissions} from "@extensions/account/Account.sol";
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
-import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
+import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {IGraph} from "@core/interfaces/IGraph.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import "test/helpers/TypeHelpers.sol";

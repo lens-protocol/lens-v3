@@ -4,19 +4,11 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import {LensFactory, CreateAccountParams, CreateUsernameParams} from "@extensions/factories/LensFactory.sol";
-import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
-import {AppFactory} from "@extensions/factories/AppFactory.sol";
-import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
-import {FeedFactory} from "@extensions/factories/FeedFactory.sol";
-import {GraphFactory} from "@extensions/factories/GraphFactory.sol";
-import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {RuleChange, KeyValue} from "@core/types/Types.sol";
 import {AccountManagerPermissions} from "@extensions/account/Account.sol";
-import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
-import {AccountBlockingRule} from "contracts/rules/base/AccountBlockingRule.sol";
+import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {IGraph} from "@core/interfaces/IGraph.sol";
-import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 

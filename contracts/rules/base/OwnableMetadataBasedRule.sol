@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
-contract OwnableMetadataBasedRule is Ownable, MetadataBased {
+abstract contract OwnableMetadataBasedRule is Ownable, MetadataBased {
     event Lens_Rule_MetadataURISet(string metadataURI);
 
     constructor(address owner, string memory metadataURI) {
