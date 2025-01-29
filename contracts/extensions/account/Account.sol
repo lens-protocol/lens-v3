@@ -70,7 +70,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         _decodeAndSetExtraData(extraData);
         _setMetadataURI(metadataURI);
         // _emitPIDs();
-        emit Events.Lens_Contract_Deployed("account", "lens.account", "account", "lens.account");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Account", flavour: "lens.contract.Account"});
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

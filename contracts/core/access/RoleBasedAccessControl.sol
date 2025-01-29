@@ -203,11 +203,9 @@ contract RoleBasedAccessControl is Ownable, IRoleBasedAccessControl {
     }
 
     function _emitLensContractDeployedEvent() internal virtual {
-        emit Events.Lens_Contract_Deployed( // TODO: Fix!
-            "access-control",
-            "lens.access-control.role-based-access-control",
-            "access-control",
-            "lens.access-control.role-based-access-control"
-        );
+        emit Events.Lens_Contract_Deployed({
+            contractType: "lens.contract.AccessControl",
+            flavour: "lens.contract.AccessControl.RoleBasedAccessControl"
+        });
     }
 }

@@ -45,12 +45,10 @@ contract LensUsernameTokenURIProvider is ITokenURIProvider {
     }
 
     function _emitLensContractDeployedEvent() internal virtual {
-        emit Events.Lens_Contract_Deployed(
-            "username-token-uri-provider",
-            "lens.username.token-uri-provider",
-            "username-token-uri-provider",
-            "lens.username.token-uri-provider"
-        );
+        emit Events.Lens_Contract_Deployed({
+            contractType: "lens.contract.TokenURIProvider",
+            flavour: "lens.contract.TokenURIProvider.LensUsernameTokenURIProvider"
+        });
     }
 
     function _svgImage(string memory namespace, string memory lowercasedUsername)

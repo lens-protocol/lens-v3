@@ -36,11 +36,9 @@ contract OwnerAdminOnlyAccessControl is RoleBasedAccessControl {
     }
 
     function _emitLensContractDeployedEvent() internal virtual override {
-        emit Events.Lens_Contract_Deployed( // TODO: Fix!
-            "access-control",
-            "lens.access-control.owner-admin-only-access-control",
-            "access-control",
-            "lens.access-control.owner-admin-only-access-control"
-        );
+        emit Events.Lens_Contract_Deployed({
+            contractType: "lens.contract.AccessControl",
+            flavour: "lens.contract.AccessControl.OwnerAdminOnlyAccessControl"
+        });
     }
 }

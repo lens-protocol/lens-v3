@@ -49,7 +49,7 @@ contract Group is
     function _initialize(string memory metadataURI) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
-        emit Events.Lens_Contract_Deployed("group", "lens.group", "group", "lens.group");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Group", flavour: "lens.contract.Group"});
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

@@ -89,7 +89,7 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
 
         _emitPIDs();
 
-        emit Events.Lens_Contract_Deployed("app", "lens.app", "app", "lens.app");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.App", flavour: "lens.contract.App"});
     }
 
     function _emitPIDs() internal override {

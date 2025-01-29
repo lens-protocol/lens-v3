@@ -75,7 +75,10 @@ contract Namespace is
         Core.$storage().namespace = namespace;
         _setMetadataURI(metadataURI);
         _emitPIDs();
-        emit Events.Lens_Contract_Deployed("namespace", "lens.namespace", "namespace", "lens.namespace");
+        emit Events.Lens_Contract_Deployed({
+            contractType: "lens.contract.Namespace",
+            flavour: "lens.contract.Namespace.ERC721Namespace"
+        });
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {

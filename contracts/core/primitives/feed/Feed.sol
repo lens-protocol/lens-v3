@@ -51,7 +51,7 @@ contract Feed is
     function _initialize(string memory metadataURI) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
-        emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Feed", flavour: "lens.contract.Feed"});
     }
 
     function _emitMetadataURISet(string memory metadataURI) internal override {
