@@ -8,17 +8,20 @@ import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAcce
 import {Access} from "@core/interfaces/IRoleBasedAccessControl.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {Lock} from "@core/upgradeability/Lock.sol";
 
 contract OwnerAdminOnlyAccessControlTest is Test {
     address owner;
     address admin;
+    Lock lock;
     OwnerAdminOnlyAccessControl accessControl;
     uint256 OWNER_ROLE_ID;
     uint256 ADMIN_ROLE_ID;
 
     function setUp() public virtual {
         owner = address(this);
-        accessControl = new OwnerAdminOnlyAccessControl(owner);
+        lock = new Lock(address(this), true);
+        accessControl = new OwnerAdminOnlyAccessControl(owner, address(lock));
         OWNER_ROLE_ID = uint256(keccak256("lens.role.Owner"));
         ADMIN_ROLE_ID = uint256(keccak256("lens.role.Admin"));
         accessControl.grantRole({account: admin, roleId: ADMIN_ROLE_ID});
@@ -59,8 +62,18 @@ contract OwnerAdminOnlyAccessControlTest is Test {
         );
     }
 
-    function test_CanChangeAccessControl_IfOwner(address newAccessControl) public view {
+    function test_CanChangeAccessControl_IfOwner_And_LockUnlocked(address newAccessControl) public {
+        lock.setLockStatus(false);
+        assertFalse(lock.isLocked());
+
         assertTrue(accessControl.canChangeAccessControl(owner, newAccessControl));
+    }
+
+    function test_Cannot_ChangeAccessControl_IfOwner_But_LockLocked(address newAccessControl) public {
+        lock.setLockStatus(true);
+        assertTrue(lock.isLocked());
+
+        assertFalse(accessControl.canChangeAccessControl(owner, newAccessControl));
     }
 
     function test_Cannot_ChangeAccessControl_IfAdminButNotOwner(address newAccessControl) public view {

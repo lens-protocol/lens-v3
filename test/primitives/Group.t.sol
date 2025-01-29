@@ -4,7 +4,6 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import {IGroup, Membership} from "@core/interfaces/IGroup.sol";
 import {Group, PID__ADD_MEMBER, PID__REMOVE_MEMBER} from "@core/primitives/group/Group.sol";
 import "test/helpers/TypeHelpers.sol";
@@ -13,10 +12,10 @@ import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {AccessControlled} from "@core/access/AccessControlled.sol";
 import {Errors} from "@core/types/Errors.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {Rule, RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue} from "@core/types/Types.sol";
+import {Rule, KeyValue} from "@core/types/Types.sol";
 import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
-import {MockRule} from "test/mocks/MockRule.sol";
 import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
+import {Lock} from "@core/upgradeability/Lock.sol";
 
 contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IGroup group;
@@ -52,6 +51,10 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
             foundingMember: address(0),
             addFoundingMemberCustomParams: _emptyKeyValueArray()
         });
+
+        address groupAccessControl = address(AccessControlled(address(group)).getAccessControl());
+        vm.prank(lockOwner);
+        Lock(accessControlLock).setLockStatusForAddress(groupAccessControl, false);
 
         vm.prank(groupOwner);
         AccessControlled(address(group)).setAccessControl(IAccessControl(address(mockAccessControl)));

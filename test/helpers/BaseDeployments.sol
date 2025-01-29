@@ -57,6 +57,7 @@ contract BaseDeployments is Test {
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
     address proxyAdminLock;
+    address accessControlLock;
     address lockOwner = makeAddr("LOCK_OWNER");
 
     address appImpl;
@@ -94,6 +95,7 @@ contract BaseDeployments is Test {
 
     function setUp() public virtual {
         proxyAdminLock = address(new Lock(lockOwner, true));
+        accessControlLock = address(new Lock(lockOwner, true));
         _deployImplementations();
         _deployBeacons();
         _deployFactories();
@@ -106,7 +108,7 @@ contract BaseDeployments is Test {
         address lensFactoryImpl = migrationMode
             ? address(
                 new MigrationLensFactory({
-                    accessControlFactory: new AccessControlFactory(),
+                    accessControlFactory: new AccessControlFactory(accessControlLock),
                     accountFactory: accountFactory,
                     appFactory: appFactory,
                     groupFactory: groupFactory,
@@ -120,7 +122,7 @@ contract BaseDeployments is Test {
             )
             : address(
                 new LensFactory({
-                    accessControlFactory: new AccessControlFactory(),
+                    accessControlFactory: new AccessControlFactory(accessControlLock),
                     accountFactory: accountFactory,
                     appFactory: appFactory,
                     groupFactory: groupFactory,

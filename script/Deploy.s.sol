@@ -43,6 +43,7 @@ contract MyScript is Script {
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
     address proxyAdminLock;
+    address accessControlLock;
     address lockOwner = makeAddr("LOCK_OWNER");
 
     address appImpl;
@@ -74,6 +75,7 @@ contract MyScript is Script {
 
     function run() external {
         proxyAdminLock = address(new Lock(lockOwner, true));
+        accessControlLock = address(new Lock(lockOwner, true));
         _deployImplementations();
         _deployBeacons();
         _deployFactories();
@@ -84,7 +86,7 @@ contract MyScript is Script {
             address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
 
         lensFactory = new LensFactory({
-            accessControlFactory: new AccessControlFactory(),
+            accessControlFactory: new AccessControlFactory(accessControlLock),
             accountFactory: accountFactory,
             appFactory: appFactory,
             groupFactory: groupFactory,
