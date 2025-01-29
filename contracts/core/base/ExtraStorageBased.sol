@@ -7,30 +7,33 @@ import {ExtraDataLib} from "contracts/core/libraries/ExtraDataLib.sol";
 abstract contract ExtraStorageBased {
     using ExtraDataLib for mapping(bytes32 => bytes);
 
-    // TODO: Consider supporting multi-entity primitives by adding "bytes32 entityType" in addition to existing keys
     event Lens_ExtraDataSet(address indexed addr, uint256 indexed entityId, bytes32 indexed key, bytes value);
 
-    /*
-     * ExtraStorage is organized like this:
-     * address Address => uint256 EntityId => bytes32 Key => bytes ABIEncodedValue
+    /**
+     * ExtraStorage has the following keys:
+     *  `address` an address, `uint256` an entity ID, and a `bytes32` custom storage key
+     * Which map to a `bytes` value which contains any ABI-encoded data.
+     *    address addr => uint256 entityId => bytes32 key => bytes value
      *
-     * Where Address is either of:
-     *  - address(0) for the PrimitiveSet extra storage (the primitive controls and generates it)
-     *  - address(this) for the owner-controlled extra storage (for setting primitive metadata, primitive params, etc)
-     *  - address(entity-owner) for the entity-owned extra storage (for setting entity metadata, params, etc)
-     *  - address(rule) for the rule-controlled & rule-generated extra storage
-     *  - address(any) for user-controlled extra storage (setting any metadata by the user (tags, bookmarks, etc))
+     * The key used in the address can be:
+     * address(0) => Basic primitive storage extension, set by primitive code / business logic
+     * address(this) => About the primitive but set by its owner
+     * any other address => Set on the primitive linked to that address.
      *
      * The ExtraStorage access and ownership is meant to be controlled by the above cases on case-by-case basis.
      * Each implementation can choose how they allow & restrict write-access to it.
      *
      * EntityId is the ID of the entity (postId, followId, username hash, rule configSalt, etc)
-     * EntityId == 0 is passed if the extraData is not entity-specific but rather general for primitive/account/rule/etc
+     * EntityId == 0 is passed if the extraData is not entity-specific but rather general.
      *
-     * Key is the keccak256 hash of the key (string) that is used to store the Value
+     * Key is the keccak256 hash of the key (string) that is used to store the value, for example:
+     *      keccak256("lens.data.myAppName.someCustomKey")
      */
     struct ExtraDataStorage {
-        mapping(address => mapping(uint256 => mapping(bytes32 => bytes))) extraStorage;
+        mapping(
+            address addressScope
+                => mapping(uint256 entityType => mapping(uint256 entityId => mapping(bytes32 key => bytes value)))
+        ) extraStorage;
     }
 
     /// @custom:keccak lens.storage.ExtraDataStorage
@@ -42,67 +45,68 @@ abstract contract ExtraStorageBased {
         }
     }
 
-    function _setExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
-        bool wasPreviousValueSet = $extraDataStorage().extraStorage[addr][entityId].set(extraDataToSet);
+    // Internal functions to set and get extra data
+
+    function _private_setExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet)
+        private
+        returns (bool)
+    {
+        // In this release we always set the entityID to zero
+        bool wasPreviousValueSet = $extraDataStorage().extraStorage[addr][0][entityId].set(extraDataToSet);
         emit Lens_ExtraDataSet(addr, entityId, extraDataToSet.key, extraDataToSet.value);
         return wasPreviousValueSet;
     }
 
-    function _getExtraData(address addr, uint256 entityId, bytes32 key) internal view returns (bytes memory) {
-        return $extraDataStorage().extraStorage[addr][entityId][key];
+    function _private_getExtraData(address addr, uint256 entityId, bytes32 key) private view returns (bytes memory) {
+        // In this release we always set the entityID to zero
+        return $extraDataStorage().extraStorage[addr][0][entityId][key];
     }
 
-    // Helper functions to set different types of extra data
+    // Setter function for each different type of extra data
 
-    function _setPrimitiveInternalExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
-        return _setExtraData(address(0), 0, extraDataToSet);
+    function _setExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
+        return _private_setExtraData(address(0), 0, extraDataToSet);
     }
 
-    function _setPrimitiveInternalExtraDataForEntity(uint256 entityId, KeyValue memory extraDataToSet)
-        internal
-        returns (bool)
-    {
-        return _setExtraData(address(0), entityId, extraDataToSet);
-    }
-
-    // TODO: rename to PrimitiveOwner?
-    function _setPrimitiveExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
-        return _setExtraData(address(this), 0, extraDataToSet);
-    }
-
-    // TODO: rename to PrimitiveOwner?
-    function _setPrimitiveExtraDataForEntity(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
-        return _setExtraData(address(this), entityId, extraDataToSet);
-    }
-
-    // TODO: Currently we don't have a entityBased extraData that doesn't change if the owner is changed. Should we?
-
-    // TODO: rename to accent it's user/author-set?
     function _setEntityExtraData(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
-        return _setExtraData(msg.sender, entityId, extraDataToSet);
+        return _private_setExtraData(address(0), entityId, extraDataToSet);
     }
 
-    function _getPrimitiveInternalExtraData(bytes32 key) internal view returns (bytes memory) {
-        return _getExtraData(address(0), 0, key);
+    function _setExtraData_Primitive(KeyValue memory extraDataToSet) internal returns (bool) {
+        return _private_setExtraData(address(this), 0, extraDataToSet);
     }
 
-    function _getPrimitiveInternalExtraDataForEntity(uint256 entityId, bytes32 key)
+    function _setEntityExtraData_Primitive(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
+        return _private_setExtraData(address(this), entityId, extraDataToSet);
+    }
+
+    function _setEntityExtraData_Account(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
+        return _private_setExtraData(msg.sender, entityId, extraDataToSet);
+    }
+
+    // Getter function for each different type of extra data
+
+    function _getExtraData(bytes32 key) internal view returns (bytes memory) {
+        return _private_getExtraData(address(0), 0, key);
+    }
+
+    function _getEntityExtraData(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
+        return _private_getExtraData(address(0), entityId, key);
+    }
+
+    function _getExtraData_Primitive(bytes32 key) internal view returns (bytes memory) {
+        return _private_getExtraData(address(this), 0, key);
+    }
+
+    function _getEntityExtraData_Primitive(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
+        return _private_getExtraData(address(this), entityId, key);
+    }
+
+    function _getEntityExtraData_Account(address addr, uint256 entityId, bytes32 key)
         internal
         view
         returns (bytes memory)
     {
-        return _getExtraData(address(0), entityId, key);
-    }
-
-    function _getPrimitiveExtraData(bytes32 key) internal view returns (bytes memory) {
-        return _getExtraData(address(this), 0, key);
-    }
-
-    function _getPrimitiveExtraDataForEntity(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
-        return _getExtraData(address(this), entityId, key);
-    }
-
-    function _getEntityExtraData(address addr, uint256 entityId, bytes32 key) internal view returns (bytes memory) {
-        return _getExtraData(addr, entityId, key);
+        return _private_getExtraData(addr, entityId, key);
     }
 }

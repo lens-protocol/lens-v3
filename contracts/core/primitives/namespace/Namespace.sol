@@ -209,7 +209,7 @@ contract Namespace is
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraData_Primitive(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -238,7 +238,7 @@ contract Namespace is
 
     function _decodeAndSetUsernameExtraData(uint256 tokenId, KeyValue[] memory extraDataToSet) internal {
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setEntityExtraData(tokenId, extraDataToSet[i]);
+            bool hadAValueSetBefore = _setEntityExtraData_Account(tokenId, extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -319,13 +319,13 @@ contract Namespace is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getPrimitiveExtraData(key);
+        return _getExtraData_Primitive(key);
     }
 
     function getUsernameExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
         uint256 tokenId = _computeId(username);
         address owner = ownerOf(tokenId);
-        return _getEntityExtraData(owner, tokenId, key);
+        return _getEntityExtraData_Account(owner, tokenId, key);
     }
 
     function exists(string calldata username) external view override returns (bool) {

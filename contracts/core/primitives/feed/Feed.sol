@@ -36,6 +36,9 @@ contract Feed is
     /// @custom:keccak lens.param.expectedPostId
     bytes32 constant PARAM__EXPECTED_POST_ID = 0x5c421319b1e3c75e7c7239e8e44abd0f35e3e7f7fcc9a98fdbbcbd19deb4202e;
 
+    /// @custom:keccak lens.data.lastUpdatedSource
+    bytes32 constant DATA__LAST_UPDATED_SOURCE = 0x3cd0f450c58e5572a9f19a4af172d526fb9645ba11a751c1e6fe7f53c4d956eb;
+
     constructor() {
         _disableInitializers();
     }
@@ -96,7 +99,7 @@ contract Feed is
         (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         _validateExpectedPostIdIfPresent(customParams, postId);
         address source = _processSourceStamp(postId, customParams);
-        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
+        _setEntityExtraData(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
@@ -126,7 +129,7 @@ contract Feed is
             source
         );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraData(postId, postParams.extraData[i]);
+            _setEntityExtraData_Account(postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
             );
@@ -152,7 +155,7 @@ contract Feed is
 
         bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            wereExtraDataValuesSet[i] = _setEntityExtraData(postId, postParams.extraData[i]);
+            wereExtraDataValuesSet[i] = _setEntityExtraData_Account(postId, postParams.extraData[i]);
         }
 
         _processPostEditingOnFeed(postId, postParams, customParams, feedRulesParams);
@@ -166,10 +169,10 @@ contract Feed is
             _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         }
         address source = _processSourceStamp({
+            key: DATA__LAST_UPDATED_SOURCE,
             entityId: postId,
             customParams: customParams,
-            storeSource: true,
-            lastUpdatedSourceType: true
+            storeSource: true
         });
         emit Lens_Feed_PostEdited(
             postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
@@ -204,7 +207,7 @@ contract Feed is
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraData_Primitive(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -236,7 +239,7 @@ contract Feed is
             creationTimestamp: Core.$storage().posts[postId].creationTimestamp,
             creationSource: _getSource(postId),
             lastUpdatedTimestamp: Core.$storage().posts[postId].lastUpdatedTimestamp,
-            lastUpdateSource: _getLastUpdateSource(postId)
+            lastUpdateSource: _getSource(DATA__LAST_UPDATED_SOURCE, postId)
         });
     }
 
@@ -260,11 +263,11 @@ contract Feed is
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address postAuthor = Core.$storage().posts[postId].author;
-        return _getEntityExtraData(postAuthor, postId, key);
+        return _getEntityExtraData_Account(postAuthor, postId, key);
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getPrimitiveExtraData(key);
+        return _getExtraData_Primitive(key);
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {

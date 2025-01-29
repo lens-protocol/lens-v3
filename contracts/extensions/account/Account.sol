@@ -77,7 +77,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         emit Lens_Account_MetadataURISet(metadataURI);
     }
 
-    // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setPrimitiveExtraDataByUser case
+    // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setExtraData_PrimitiveByUser case
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
             require($storage().accountManagerPermissions[msg.sender].canSetMetadataURI, Errors.NotAllowed());
@@ -182,12 +182,12 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getPrimitiveExtraData(key);
+        return _getExtraData_Primitive(key);
     }
 
     function _decodeAndSetExtraData(KeyValue[] memory extraDataToSet) internal {
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraData_Primitive(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
