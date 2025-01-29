@@ -2,8 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
+import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
 import {SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
