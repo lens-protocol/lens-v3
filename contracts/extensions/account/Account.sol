@@ -69,7 +69,6 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         }
         _decodeAndSetExtraData(extraData);
         _setMetadataURI(metadataURI);
-        // _emitPIDs();
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Account", flavour: "lens.contract.Account"});
     }
 
@@ -77,7 +76,6 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         emit Lens_Account_MetadataURISet(metadataURI);
     }
 
-    // TODO: Should we replace setMetadataURI with extraData? Cause here it looks like _setExtraData_PrimitiveByUser case
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
             require($storage().accountManagerPermissions[msg.sender].canSetMetadataURI, Errors.NotAllowed());

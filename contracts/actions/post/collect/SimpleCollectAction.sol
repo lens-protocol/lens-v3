@@ -105,7 +105,6 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         } else {
             // Editing existing collect action config
             if (storedData.isImmutable) {
-                // TODO: Should we have two different bools? isImmutableConfig & isImmutableContentURI?
                 revert Errors.Immutable();
             } else {
                 storedData.amount = configData.amount;
@@ -114,9 +113,8 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
                 storedData.recipient = configData.recipient;
                 storedData.followerOnlyGraph = configData.followerOnlyGraph;
                 storedData.endTimestamp = configData.endTimestamp;
-                // storedData.isImmutable = configData.isImmutable;
-                // TODO: Cannot make it immutable if it wasn't before, because ContentURI is not immutable, unless we
-                // would figure out a way to trigger a switch in LensCollectedPost contract.
+                // Immutability cannot be changed after the first collect was made.
+                require(configData.isImmutable == false, Errors.InvalidParameter());
             }
         }
         return abi.encode(storedData);
@@ -230,7 +228,7 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         }
 
         if (data.isImmutable) {
-            // TODO: There might be some edge-cases here (e.g. maybe also worth checking LensCollectedPost.isImmutable)
+            // If post is edited to a different content, we fail so people do not collect an unexpected thing.
             string memory contentURI = IFeed(feed).getPost(postId).contentURI;
             require(
                 keccak256(bytes(contentURI))
