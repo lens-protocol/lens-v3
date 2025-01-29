@@ -7,9 +7,11 @@ import {Ownable} from "contracts/core/access/Ownable.sol";
 import {EventEmitterEarly} from "contracts/migration/EventEmitterEarly.sol";
 
 contract Lock is Ownable, ILock, EventEmitterEarly {
-    event LockStatusSet(bool indexed locked);
+    event Lens_Lock_LockStatusSet(bool indexed locked);
+    event Lens_Lock_LockStatusSet(address indexed target, bool indexed locked);
 
-    bool internal _locked;
+    bool internal _areAllAddressesUnlocked;
+    mapping(address => bool) internal _isAddressUnlocked;
 
     constructor(address owner, bool locked) Ownable() {
         _transferOwnership(owner);
@@ -17,15 +19,25 @@ contract Lock is Ownable, ILock, EventEmitterEarly {
     }
 
     function isLocked() external view override returns (bool) {
-        return _locked;
+        if (_areAllAddressesUnlocked) {
+            return false;
+        } else {
+            return !_isAddressUnlocked[msg.sender];
+        }
     }
 
     function setLockStatus(bool locked) external onlyOwner {
         _setLockStatus(locked);
     }
 
+    // Only to unlock specific addresses before the global lock is released.
+    function setLockStatusForAddress(address target, bool locked) external onlyOwner {
+        _isAddressUnlocked[target] = !locked;
+        emit Lens_Lock_LockStatusSet(target, locked);
+    }
+
     function _setLockStatus(bool locked) internal {
-        _locked = locked;
-        emit LockStatusSet(locked);
+        _areAllAddressesUnlocked = !locked;
+        emit Lens_Lock_LockStatusSet(locked);
     }
 }
