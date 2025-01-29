@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract Ownable {
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event Lens_Ownable_OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     struct OwnableStorage {
         address owner;
@@ -36,6 +36,6 @@ abstract contract Ownable {
     function _transferOwnership(address newOwner) internal virtual {
         address oldOwner = $ownableStorage().owner;
         $ownableStorage().owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
+        emit Lens_Ownable_OwnershipTransferred(oldOwner, newOwner);
     }
 }
