@@ -57,7 +57,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
             return _contentURISnapshot;
         } else {
             string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
-            // TODO: If content was deleted - should we fail or return empty string?
+            // If content was deleted we fail. You can override this to return the empty URI if preferred.
             require(bytes(contentURI).length > 0, Errors.DoesNotExist());
             return contentURI;
         }
@@ -66,7 +66,6 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     // Internal
 
     // Disabling integrated LensERC721 tokenURIProvider
-    // TODO: Is this approach more favorable than deploying the LensCollectedPostTokenURIProvider over and over?
     function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal pure override {
         revert Errors.NotImplemented();
     }
