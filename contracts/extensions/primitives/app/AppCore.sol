@@ -54,6 +54,7 @@ library AppCore {
         require(element != address(0), Errors.InvalidParameter());
         require(!arrayHelper[element].isSet, Errors.RedundantStateChange());
         array.push(element);
+        require(array.length <= type(uint8).max, Errors.LimitReached());
         arrayHelper[element] = ArrayStorageHelper({index: uint8(array.length - 1), isSet: true});
     }
 
