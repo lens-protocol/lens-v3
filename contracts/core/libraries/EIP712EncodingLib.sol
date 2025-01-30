@@ -74,7 +74,7 @@ library EIP712EncodingLib {
         return keccak256(
             abi.encodePacked(
                 keccak256(
-                    "RuleChange(address ruleAddress,bytes32 configSalt,RuleConfigurationChange configurationChanges,RuleSelectorChange[] selectorChanges)"
+                    "RuleChange(address ruleAddress,bytes32 configSalt,RuleConfigurationChange configurationChanges,RuleSelectorChange[] selectorChanges)KeyValue(bytes32 key,bytes value)RuleConfigurationChange(bool configure,KeyValue[] ruleParams)RuleSelectorChange(bytes4 ruleSelector,bool isRequired,bool enabled)"
                 ), // Type Hash
                 ruleChange.ruleAddress,
                 ruleChange.configSalt,
@@ -87,7 +87,9 @@ library EIP712EncodingLib {
     function encodeForEIP712(RuleConfigurationChange memory ruleConfigurationChange) internal pure returns (bytes32) {
         return keccak256(
             abi.encodePacked(
-                keccak256("RuleConfigurationChange(bool configure,KeyValue[] ruleParams)"), // Type Hash
+                keccak256(
+                    "RuleConfigurationChange(bool configure,KeyValue[] ruleParams)KeyValue(bytes32 key,bytes value)"
+                ), // Type Hash
                 ruleConfigurationChange.configure,
                 encodeForEIP712(ruleConfigurationChange.ruleParams)
             )
@@ -109,7 +111,7 @@ library EIP712EncodingLib {
         return keccak256(
             abi.encodePacked(
                 keccak256(
-                    "CreatePostParams(address author,string contentURI,uint256 repostedPostId,uint256 quotedPostId,uint256 repliedPostId,RuleChange[] ruleChanges,KeyValue[] extraData)"
+                    "CreatePostParams(address author,string contentURI,uint256 repostedPostId,uint256 quotedPostId,uint256 repliedPostId,RuleChange[] ruleChanges,KeyValue[] extraData)KeyValue(bytes32 key,bytes value)RuleChange(address ruleAddress,bytes32 configSalt,RuleConfigurationChange configurationChanges,RuleSelectorChange[] selectorChanges)RuleConfigurationChange(bool configure,KeyValue[] ruleParams)RuleSelectorChange(bytes4 ruleSelector,bool isRequired,bool enabled)"
                 ), // Type Hash
                 createPostParams.author,
                 encodeForEIP712(createPostParams.contentURI),
@@ -125,7 +127,7 @@ library EIP712EncodingLib {
     function encodeForEIP712(EditPostParams memory editPostParams) internal pure returns (bytes32) {
         return keccak256(
             abi.encodePacked(
-                keccak256("EditPostParams(string contentURI,KeyValue[] extraData)"), // Type Hash
+                keccak256("EditPostParams(string contentURI,KeyValue[] extraData)KeyValue(bytes32 key,bytes value)"), // Type Hash
                 encodeForEIP712(editPostParams.contentURI),
                 encodeForEIP712(editPostParams.extraData)
             )
