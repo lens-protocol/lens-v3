@@ -19,7 +19,7 @@ contract ProxyAdmin is Ownable {
         LOCK.isLocked(); // Aims to verify the given address follows ILock interface
     }
 
-    function call(address to, uint256 value, bytes calldata data) external onlyOwner returns (bytes memory) {
+    function call(address to, uint256 value, bytes calldata data) external payable onlyOwner returns (bytes memory) {
         bytes4 selector = bytes4(data);
         if (LOCK.isLocked()) {
             // While the Proxy Admin is locked it:
