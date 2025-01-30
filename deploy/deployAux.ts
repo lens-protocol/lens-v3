@@ -3,6 +3,7 @@ import {
   loadAddressBook,
   saveContractToAddressBook,
   loadContractFromAddressBook,
+  loadContractAddressFromAddressBook,
 } from './lensUtils';
 import * as hre from 'hardhat';
 import {
@@ -308,6 +309,7 @@ export async function deployLensApp(
 
 export async function deployLensAccessControl() {
   const contractName = 'OwnerAdminOnlyAccessControl';
+  const contractType = 'AccessControl';
   const existingContract = loadContractFromAddressBook(contractName);
   if (existingContract && existingContract.address) {
     console.log(`${contractName} already deployed at ${existingContract.address}. Skipping...`);
@@ -336,9 +338,14 @@ export async function deployLensAccessControl() {
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const accessControlAddress = getAddressFromEvents(events, 'access-control');
+  const accessControlAddress = getAddressFromEvents(events, contractType);
 
-  await verifyPrimitive('OwnerAdminOnlyAccessControl', accessControlAddress, [getWallet().address]);
+  const accessControlLock = loadContractAddressFromAddressBook('AccessControlLock');
+  if (!accessControlLock) {
+    throw new Error('AccessControlLock not found in address book');
+  }
+
+  await verifyPrimitive('OwnerAdminOnlyAccessControl', accessControlAddress, [getWallet().address, accessControlLock]);
 
   saveContractToAddressBook({
     contractName: 'OwnerAdminOnlyAccessControl',

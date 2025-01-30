@@ -41,6 +41,11 @@ async function deploy() {
     throw new Error('RULES_OWNER not found in environment variables');
   }
 
+  const actionsOwner = process.env.ACTIONS_OWNER;
+  if (!rulesOwner && DEPLOYING_FR) {
+    throw new Error('ACTIONS_OWNER not found in environment variables');
+  }
+
   if (DEPLOYING_FR) {
     console.log('ProxyAdminLockOwner', proxyAdminLockOwner);
     console.log('AccessControlAdminLockOwner', accessControlLockOwner);
@@ -64,7 +69,7 @@ async function deploy() {
     const actionHub = await deployLensActionHub();
     await deployLensAccessControl();
     await deployRules(rulesOwner ?? deployerAddress);
-    await deployActions(actionHub);
+    await deployActions(actionHub, actionsOwner ?? deployerAddress);
   }
   generateEnvFile();
 }
