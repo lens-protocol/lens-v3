@@ -152,6 +152,10 @@ library AppCore {
         $storage().defaultGroup = group;
     }
 
+    function _isGroupPresent(address group) internal view returns (bool) {
+        return $storage().groupStorageHelper[group].isSet;
+    }
+
     ////////////// Paymaster
 
     function _addPaymaster(address paymaster) internal {

@@ -213,6 +213,15 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
 
     ///////////////// Group
 
+    function setDefaultGroup(address group) external override {
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
+        if (group != address(0) && !Core._isGroupPresent(group)) {
+            Core._addGroup(group);
+            emit Lens_App_GroupAdded(group);
+        }
+        _setDefaultGroup(group);
+    }
+
     function addGroups(address[] memory groups) external override {
         _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _addGroups(groups);
@@ -235,6 +244,11 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
             Core._removeGroup(groups[i]);
             emit Lens_App_GroupRemoved(groups[i]);
         }
+    }
+
+    function _setDefaultGroup(address group) internal {
+        Core._setDefaultGroup(group);
+        emit Lens_App_DefaultGroupSet(group);
     }
 
     ///////////////// Signers

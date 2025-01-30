@@ -24,6 +24,7 @@ interface IApp is IMetadataBased {
     // Group
     event Lens_App_GroupAdded(address indexed group);
     event Lens_App_GroupRemoved(address indexed group);
+    event Lens_App_DefaultGroupSet(address indexed group);
 
     // Paymaster
     event Lens_App_PaymasterAdded(address indexed paymaster);
@@ -59,6 +60,7 @@ interface IApp is IMetadataBased {
 
     function addGroups(address[] memory groups) external;
     function removeGroups(address[] memory groups) external;
+    function setDefaultGroup(address group) external;
 
     function addFeeds(address[] memory feeds) external;
     function removeFeeds(address[] memory feeds) external;
