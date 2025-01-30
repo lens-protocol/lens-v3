@@ -132,9 +132,9 @@ contract RoleBasedAccessControl is Ownable, IRoleBasedAccessControl {
 
     function _setAccess(uint256 roleId, address contractAddress, uint256 permissionId, Access access) internal virtual {
         Access perviousAccess = _access[roleId][contractAddress][permissionId];
+        require(access != perviousAccess, Errors.RedundantStateChange());
         _access[roleId][contractAddress][permissionId] = access;
         if (perviousAccess == Access.UNDEFINED) {
-            require(access != Access.UNDEFINED, Errors.RedundantStateChange());
             emit Lens_AccessControl_AccessAdded(roleId, contractAddress, permissionId, access == Access.GRANTED);
         } else if (access == Access.UNDEFINED) {
             emit Lens_AccessControl_AccessRemoved(roleId, contractAddress, permissionId);

@@ -212,7 +212,7 @@ contract RoleBasedAccessControlTest is Test {
         });
     }
 
-    function test_Cannot_SetAccess_ToUndefined_IfAlreadyUndefined(
+    function test_CannotSetAccess_ToSameValueAlreadyHas_Undefined(
         uint256 roleId,
         address contractAddress,
         uint256 permissionId
@@ -233,7 +233,7 @@ contract RoleBasedAccessControlTest is Test {
         });
     }
 
-    function test_SetAccess_ToSameValueIfNotUndefined(
+    function test_CannotSetAccess_ToSameValueAlreadyHas_NonUndefined(
         uint256 roleId,
         address contractAddress,
         uint256 permissionId,
@@ -242,6 +242,10 @@ contract RoleBasedAccessControlTest is Test {
         vm.assume(roleId != OWNER_ROLE_ID);
         vm.assume(_validAccess(access));
         vm.assume(access != uint8(Access.UNDEFINED));
+        vm.assume(
+            Access(access)
+                != accessControl.getAccess({roleId: roleId, contractAddress: contractAddress, permissionId: permissionId})
+        );
 
         accessControl.setAccess({
             roleId: roleId,
@@ -250,11 +254,7 @@ contract RoleBasedAccessControlTest is Test {
             access: Access(access)
         });
 
-        assertTrue(
-            accessControl.getAccess({roleId: roleId, contractAddress: contractAddress, permissionId: permissionId})
-                == Access(access)
-        );
-
+        vm.expectRevert(Errors.RedundantStateChange.selector);
         accessControl.setAccess({
             roleId: roleId,
             contractAddress: contractAddress,
