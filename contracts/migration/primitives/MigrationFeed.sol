@@ -57,6 +57,7 @@ contract MigrationFeed is Feed, EventEmitter {
         );
 
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            _setEntityExtraData(postId, postParams.extraData[i]);
             _migration_forceExtraData(postParams.author, postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
