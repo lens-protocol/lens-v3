@@ -13,7 +13,11 @@ async function deploy() {
   const deployerAddress = getWallet().address;
 
   if (DEPLOYING_MIGRATION) {
-    console.log('Deploying migration version...');
+    console.log('\x1b[33m=============================================')
+    console.log('|                                           |');
+    console.log('|       Deploying migration version         |');
+    console.log('|                                           |');
+    console.log('=============================================\x1b[0m')
   }
 
   const proxyAdminLockOwner = process.env.PROXY_ADMIN_LOCK_OWNER;
@@ -53,18 +57,19 @@ async function deploy() {
     console.log('FactoriesProxyOwner', factoriesProxyOwner);
     console.log('RulesOwner', rulesOwner);
   } else {
-    console.log('Not Deploying fr, so using deployer address as owner everywhere:');
+    console.log('\nNot Deploying fr, so using deployer address as owner everywhere:');
     console.log('\tProxyAdminLockOwner:', deployerAddress);
     console.log('\tBeaconOwner:', deployerAddress);
     console.log('\tFactoriesProxyOwner:', LOCAL_RICH_WALLETS[1].address); // Cannot be deployer cause later it will fail to execute the lensFactory primitives deployments
   }
+  console.log('\n-------------------------------------------------------------------\n\n');
 
   await deployProxyAdminLock(proxyAdminLockOwner ?? deployerAddress);
   await deployAccessControlLock(accessControlLockOwner ?? deployerAddress);
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
   await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);
-  await deployLensPrimitives();
+  await deployLensPrimitives(DEPLOYING_MIGRATION);
   if (!DEPLOYING_MIGRATION) {
     const actionHub = await deployLensActionHub();
     await deployLensAccessControl();

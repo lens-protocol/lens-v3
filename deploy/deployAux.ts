@@ -37,7 +37,7 @@ export interface AppInitialProperties {
   treasury: string;
 }
 
-export async function deployLensPrimitives() {
+export async function deployLensPrimitives(DEPLOYING_MIGRATION: boolean) {
   const lensFactoryAddress = loadAddressBook()['LensFactory'].address;
   if (!lensFactoryAddress) {
     throw new Error('LensFactory not found in address book');
@@ -54,24 +54,31 @@ export async function deployLensPrimitives() {
     getWallet() // Interact with the contract on behalf of this wallet
   );
 
-  const account = await deployLensAccount(lensFactory);
+  let account;
+  let group = ZeroAddress;
+  if (!DEPLOYING_MIGRATION) {
+    account = await deployLensAccount(lensFactory);
+    group = await deployLensGroup(lensFactory);
+  }
+
   const feed = await deployLensFeed(lensFactory);
-  const group = await deployLensGroup(lensFactory);
   const graph = await deployLensGraph(lensFactory);
   const namespace = await deployLensNamespace(lensFactory);
 
-  const initialProperties: AppInitialProperties = {
-    graph,
-    feeds: [feed],
-    namespace,
-    groups: [group],
-    defaultFeed: feed,
-    signers: [],
-    paymaster: getWallet().address,
-    treasury: getWallet().address,
-  };
+  if (!DEPLOYING_MIGRATION) {
+    const initialProperties: AppInitialProperties = {
+      graph,
+      feeds: [feed],
+      namespace,
+      groups: [group],
+      defaultFeed: feed,
+      signers: [],
+      paymaster: getWallet().address,
+      treasury: getWallet().address,
+    };
 
-  const app = await deployLensApp(lensFactory, initialProperties);
+    const app = await deployLensApp(lensFactory, initialProperties);
+  }
 }
 
 async function deployLensAccount(lensFactory: ethers.Contract): Promise<string> {
@@ -155,7 +162,15 @@ async function deployLensGroup(lensFactory: ethers.Contract): Promise<string> {
   }
 
   console.log('Deploying ' + name);
-  const transaction = await lensFactory.deployGroup(metadataURI, getWallet().address, [], [], [], ZeroAddress, []);
+  const transaction = await lensFactory.deployGroup(
+    metadataURI,
+    getWallet().address,
+    [],
+    [],
+    [],
+    ZeroAddress,
+    []
+  );
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
@@ -345,7 +360,10 @@ export async function deployLensAccessControl() {
     throw new Error('AccessControlLock not found in address book');
   }
 
-  await verifyPrimitive('OwnerAdminOnlyAccessControl', accessControlAddress, [getWallet().address, accessControlLock]);
+  await verifyPrimitive('OwnerAdminOnlyAccessControl', accessControlAddress, [
+    getWallet().address,
+    accessControlLock,
+  ]);
 
   saveContractToAddressBook({
     contractName: 'OwnerAdminOnlyAccessControl',

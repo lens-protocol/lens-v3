@@ -234,7 +234,7 @@ export function generateEnvFile() {
 
   if (primitives.length > 0) {
     output += '# BEACONS\n';
-    output += implementations.join('\n');
+    output += beacons.join('\n');
     output += '\n\n';
   }
 

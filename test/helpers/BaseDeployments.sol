@@ -20,14 +20,12 @@ import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 import {MigrationApp} from "contracts/migration/primitives/MigrationApp.sol";
 import {MigrationFeed} from "contracts/migration/primitives/MigrationFeed.sol";
 import {MigrationGraph} from "contracts/migration/primitives/MigrationGraph.sol";
-import {MigrationGroup} from "contracts/migration/primitives/MigrationGroup.sol";
 import {MigrationNamespace} from "contracts/migration/primitives/MigrationNamespace.sol";
 
 import {MigrationAppFactory} from "contracts/migration/factories/MigrationAppFactory.sol";
 import {MigrationAccountFactory} from "contracts/migration/factories/MigrationAccountFactory.sol";
 import {MigrationFeedFactory} from "contracts/migration/factories/MigrationFeedFactory.sol";
 import {MigrationGraphFactory} from "contracts/migration/factories/MigrationGraphFactory.sol";
-import {MigrationGroupFactory} from "contracts/migration/factories/MigrationGroupFactory.sol";
 import {MigrationNamespaceFactory} from "contracts/migration/factories/MigrationNamespaceFactory.sol";
 import {MigrationLensFactory} from "contracts/migration/factories/MigrationLensFactory.sol";
 
@@ -148,7 +146,7 @@ contract BaseDeployments is Test {
         accountImpl = address(new AccountContract());
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
-        groupImpl = migrationMode ? address(new MigrationGroup()) : address(new Group());
+        groupImpl = address(new Group());
         namespaceImpl = migrationMode ? address(new MigrationNamespace()) : address(new Namespace());
     }
 
@@ -179,9 +177,7 @@ contract BaseDeployments is Test {
         graphFactory = migrationMode
             ? new MigrationGraphFactory(graphBeacon, proxyAdminLock)
             : new GraphFactory(graphBeacon, proxyAdminLock);
-        groupFactory = migrationMode
-            ? new MigrationGroupFactory(groupBeacon, proxyAdminLock)
-            : new GroupFactory(groupBeacon, proxyAdminLock);
+        groupFactory = new GroupFactory(groupBeacon, proxyAdminLock);
         namespaceFactory = migrationMode
             ? new MigrationNamespaceFactory(namespaceBeacon, proxyAdminLock)
             : new NamespaceFactory(namespaceBeacon, proxyAdminLock);

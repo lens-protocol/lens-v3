@@ -6,7 +6,7 @@ export default async function deployImplementations(DEPLOYING_MIGRATION: boolean
     { name: 'AccountImpl', contractName: 'Account', contractType: ContractType.Implementation },
     { name: 'FeedImpl', contractName: DEPLOYING_MIGRATION ? 'MigrationFeed' : 'Feed', contractType: ContractType.Implementation },
     { name: 'GraphImpl', contractName: DEPLOYING_MIGRATION ? 'MigrationGraph' : 'Graph', contractType: ContractType.Implementation },
-    { name: 'GroupImpl', contractName: DEPLOYING_MIGRATION ? 'MigrationGroup' : 'Group', contractType: ContractType.Implementation },
+    { name: 'GroupImpl', contractName: 'Group', contractType: ContractType.Implementation },
     { name: 'NamespaceImpl', contractName: DEPLOYING_MIGRATION ? 'MigrationNamespace' : 'Namespace', contractType: ContractType.Implementation },
   ];
 

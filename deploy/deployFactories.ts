@@ -22,7 +22,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       ] },
     {
       name: 'AccountFactory',
-      contractName: 'AccountFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationAccountFactory' : 'AccountFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('AccountBeacon'),
@@ -58,7 +58,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
     },
     {
       name: 'GroupFactory',
-      contractName: DEPLOYING_MIGRATION ? 'MigrationGroupFactory' : 'GroupFactory',
+      contractName: 'GroupFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GroupBeacon'),
