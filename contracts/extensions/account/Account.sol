@@ -216,8 +216,9 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     }
 
     function _transferOwnership(address newOwner) internal override {
+        address oldOwner = owner();
         super._transferOwnership(newOwner);
-        emit Lens_Account_OwnerTransferred(newOwner);
+        emit Lens_Account_OwnershipTransferred(oldOwner, newOwner);
     }
 
     function supportsInterface(bytes4 interfaceId)

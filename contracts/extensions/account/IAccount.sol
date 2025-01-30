@@ -17,7 +17,7 @@ struct AccountManagerPermissions {
 interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_MetadataURISet(string metadataURI);
     event Lens_Account_MetadataURISet(string metadataURI, address indexed source);
-    event Lens_Account_OwnerTransferred(address indexed newOwner);
+    event Lens_Account_OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
     event Lens_Account_TransactionExecuted(address indexed to, uint256 value, bytes data, address indexed executor);
     event Lens_Account_AccountManagerAdded(address accountManager, AccountManagerPermissions permissions);
     event Lens_Account_AccountManagerRemoved(address accountManager);
