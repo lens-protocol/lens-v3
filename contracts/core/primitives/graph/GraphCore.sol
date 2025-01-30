@@ -38,7 +38,7 @@ library GraphCore {
         if (followId == 0) {
             followId = ++$storage().lastFollowIdAssigned[accountToFollow];
         } else {
-            require(followId < $storage().lastFollowIdAssigned[accountToFollow], Errors.InvalidParameter()); // Only previous Follow IDs allowed to be reused
+            require(followId <= $storage().lastFollowIdAssigned[accountToFollow], Errors.InvalidParameter()); // Only previous Follow IDs allowed to be reused
             require($storage().followers[accountToFollow][followId] == address(0), Errors.AlreadyExists()); // Follow ID is already taken
         }
         $storage().follows[followerAccount][accountToFollow] = Follow({id: followId, timestamp: timestamp});
