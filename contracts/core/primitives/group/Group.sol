@@ -52,7 +52,7 @@ contract Group is
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Group", flavour: "lens.contract.Group"});
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_Group_MetadataURISet(metadataURI);
     }
 

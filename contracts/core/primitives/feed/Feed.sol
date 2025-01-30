@@ -54,7 +54,7 @@ contract Feed is
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Feed", flavour: "lens.contract.Feed"});
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_Feed_MetadataURISet(metadataURI);
     }
 

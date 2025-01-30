@@ -60,20 +60,22 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         SourceStamp memory sourceStamp,
         KeyValue[] memory extraData
     ) internal {
-        if (sourceStamp.source != address(0)) {
-            ISource(sourceStamp.source).validateSource(sourceStamp);
-        }
         for (uint256 i = 0; i < accountManagers.length; i++) {
             $storage().accountManagerPermissions[accountManagers[i]] = accountManagerPermissions[i];
             emit Lens_Account_AccountManagerAdded(accountManagers[i], accountManagerPermissions[i]);
         }
         _decodeAndSetExtraData(extraData);
-        _setMetadataURI(metadataURI);
+        if (sourceStamp.source != address(0)) {
+            ISource(sourceStamp.source).validateSource(sourceStamp);
+            _setMetadataURI(metadataURI, sourceStamp.source);
+        } else {
+            _setMetadataURI(metadataURI);
+        }
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Account", flavour: "lens.contract.Account"});
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Account_MetadataURISet(metadataURI);
+    function _emitMetadataURISet(string memory metadataURI, address source) internal override {
+        emit Lens_Account_MetadataURISet(metadataURI, source);
     }
 
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
@@ -83,10 +85,8 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         if (sourceStamp.source != address(0)) {
             ISource(sourceStamp.source).validateSource(sourceStamp);
             _setMetadataURI(metadataURI, sourceStamp.source);
-            emit Lens_Account_MetadataURISet(metadataURI, sourceStamp.source);
         } else {
             _setMetadataURI(metadataURI);
-            emit Lens_Account_MetadataURISet(metadataURI, address(this));
         }
     }
 

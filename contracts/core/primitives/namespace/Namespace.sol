@@ -78,7 +78,7 @@ contract Namespace is
         });
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_Namespace_MetadataURISet(metadataURI);
     }
 

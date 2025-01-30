@@ -48,7 +48,7 @@ contract Graph is
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Graph", flavour: "lens.contract.Graph"});
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_Graph_MetadataURISet(metadataURI);
     }
 

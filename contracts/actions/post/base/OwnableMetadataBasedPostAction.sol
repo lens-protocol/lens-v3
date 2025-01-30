@@ -14,7 +14,7 @@ abstract contract OwnableMetadataBasedPostAction is BasePostAction, Ownable, Met
         _setMetadataURI(metadataURI);
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal virtual override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal virtual override {
         emit Lens_PostAction_MetadataURISet(metadataURI);
     }
 

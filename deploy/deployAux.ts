@@ -15,7 +15,7 @@ import {
 } from './utils';
 import { ethers, ZeroAddress } from 'ethers';
 
-const metadataURI = 'https://ipfs.io/ipfs/QmZ';
+const metadataURI = '';
 
 export const emptySourceStamp = {
   source: ZeroAddress,

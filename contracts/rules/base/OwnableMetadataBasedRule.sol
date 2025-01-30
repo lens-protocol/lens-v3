@@ -13,7 +13,7 @@ abstract contract OwnableMetadataBasedRule is Ownable, MetadataBased {
         _setMetadataURI(metadataURI);
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal virtual override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal virtual override {
         emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
