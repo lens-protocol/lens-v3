@@ -18,6 +18,8 @@ const metadataURI = 'https://ipfs.io/ipfs/QmZ';
 
 export const emptySourceStamp = {
   source: ZeroAddress,
+  originalMsgSender: ZeroAddress,
+  validator: ZeroAddress,
   nonce: 0,
   deadline: 0,
   signature: '0x',
@@ -92,7 +94,7 @@ async function deployLensAccount(lensFactory: ethers.Contract): Promise<string> 
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const accountAddress = getAddressFromEvents(events, contractName.toLowerCase());
+  const accountAddress = getAddressFromEvents(events, contractName);
 
   // await verifyPrimitive('Account', accountAddress, [
   //   getWallet().address,
@@ -127,7 +129,7 @@ async function deployLensFeed(lensFactory: ethers.Contract): Promise<string> {
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const primitiveAddress = getAddressFromEvents(events, contractName.toLowerCase());
+  const primitiveAddress = getAddressFromEvents(events, contractName);
   // const accessControlAddress = getAddressFromEvents(events, 'access-control');
 
   // await verifyPrimitive(contractName, primitiveAddress, [metadataURI, accessControlAddress]);
@@ -156,7 +158,7 @@ async function deployLensGroup(lensFactory: ethers.Contract): Promise<string> {
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const primitiveAddress = getAddressFromEvents(events, contractName.toLowerCase());
+  const primitiveAddress = getAddressFromEvents(events, contractName);
   // const accessControlAddress = getAddressFromEvents(events, 'access-control');
 
   // await verifyPrimitive(contractName, primitiveAddress, [metadataURI, accessControlAddress]);
@@ -185,7 +187,7 @@ async function deployLensGraph(lensFactory: ethers.Contract): Promise<string> {
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const primitiveAddress = getAddressFromEvents(events, contractName.toLowerCase());
+  const primitiveAddress = getAddressFromEvents(events, contractName);
   // const accessControlAddress = getAddressFromEvents(events, 'access-control');
 
   // await verifyPrimitive(contractName, primitiveAddress, [metadataURI, accessControlAddress]);
@@ -230,7 +232,7 @@ export async function deployLensNamespace(
 
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const primitiveAddress = getAddressFromEvents(events, contractName.toLowerCase());
+  const primitiveAddress = getAddressFromEvents(events, contractName);
   // const accessControlAddress = getAddressFromEvents(events, 'access-control');
   // const lensUsernameTokenURIProviderAddress = getAddressFromEvents(
   //   events,
@@ -283,7 +285,7 @@ export async function deployLensApp(
   const txReceipt = (await transaction.wait()) as ethers.TransactionReceipt;
 
   const events = parseLensContractDeployedEventsFromReceipt(txReceipt);
-  const primitiveAddress = getAddressFromEvents(events, contractName.toLowerCase());
+  const primitiveAddress = getAddressFromEvents(events, contractName);
   // const accessControlAddress = getAddressFromEvents(events, 'access-control');
 
   // await verifyPrimitive('App', appAddress, [

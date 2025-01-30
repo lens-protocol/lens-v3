@@ -103,7 +103,7 @@ export const verifyLensFactoryDeployedPrimitive = async (data: {
   const txReceipt = (await data.tx.wait()) as ethers.TransactionReceipt;
 
   const eventInterface = new ethers.Interface([
-    'event Lens_Contract_Deployed(string indexed indexedContractType, string indexed indexedFlavour, string contractType, string flavour)',
+    'event Lens_Contract_Deployed(string contractType, string flavour)',
   ]);
 
   // Parse event logs
@@ -114,16 +114,17 @@ export const verifyLensFactoryDeployedPrimitive = async (data: {
         log.data,
         log.topics
       );
-      return { primitive: decodedLog[2], primitiveType: decodedLog[3], address: log.address };
+      console.log(decodedLog);
+      return { contractType: decodedLog[0], flavor: decodedLog[1], address: log.address };
     } catch (e) {
       return null;
     }
   });
 
   const deployedAddress = events.filter(
-    (e) => e?.primitive === data.lensContractArtifactName.toLowerCase()
+    (e) => e?.contractType === `lens.contract.${data.lensContractArtifactName}`
   )[0]!.address;
-  const accessControlAddress = events.filter((e) => e?.primitive === 'access-control')[0]?.address;
+  const accessControlAddress = events.filter((e) => e?.contractType === 'lens.contract.AccessControl')[0]?.address;
 
   if (accessControlAddress) {
     const deployedArtifact = await hre.artifacts.readArtifact(data.lensContractArtifactName);
@@ -138,49 +139,9 @@ export const verifyLensFactoryDeployedPrimitive = async (data: {
   return deployedAddress;
 };
 
-export const verifyLensFactoryDeployedUsername = async (data: {
-  tx: any;
-  constructorParams: any[];
-}) => {
-  const txReceipt = (await data.tx.wait()) as ethers.TransactionReceipt;
-
-  const eventInterface = new ethers.Interface([
-    'event Lens_Contract_Deployed(string indexed indexedContractType, string indexed indexedFlavour, string contractType, string flavour)',
-  ]);
-
-  // Parse event logs
-  const events = txReceipt.logs.map((log) => {
-    try {
-      const decodedLog = eventInterface.decodeEventLog(
-        'Lens_Contract_Deployed',
-        log.data,
-        log.topics
-      );
-      return { primitive: decodedLog[2], primitiveType: decodedLog[3], address: log.address };
-    } catch (e) {
-      return null;
-    }
-  });
-
-  const deployedAddress = events.filter((e) => e?.primitive === 'username')[0]!.address;
-  const tokenUriProviderAddress = events.filter(
-    (e) => e?.primitive === 'username-token-uri-provider'
-  )[0]?.address;
-
-  const deployedArtifact = await hre.artifacts.readArtifact('Username');
-
-  await verifyDeployedContract({
-    address: deployedAddress,
-    artifact: deployedArtifact,
-    constructorArguments: [...data.constructorParams, tokenUriProviderAddress],
-  });
-
-  return deployedAddress;
-};
-
 interface ParsedEvent {
-  primitive: string;
-  primitiveType: string;
+  contractType: string;
+  flavor: string;
   address: string;
 }
 
@@ -188,7 +149,7 @@ export function parseLensContractDeployedEventsFromReceipt(
   txReceipt: ethers.TransactionReceipt
 ): ParsedEvent[] {
   const eventInterface = new ethers.Interface([
-    'event Lens_Contract_Deployed(string indexed indexedContractType, string indexed indexedFlavour, string contractType, string flavour)',
+    'event Lens_Contract_Deployed(string contractType, string flavour)',
   ]);
 
   // Parse event logs
@@ -200,8 +161,8 @@ export function parseLensContractDeployedEventsFromReceipt(
         log.topics
       );
       acc.push({
-        primitive: decodedLog[2],
-        primitiveType: decodedLog[3],
+        contractType: decodedLog[0],
+        flavor: decodedLog[1],
         address: log.address,
       });
     } catch (e) {
@@ -214,7 +175,7 @@ export function parseLensContractDeployedEventsFromReceipt(
 }
 
 export const getAddressFromEvents = (events: ParsedEvent[], primitiveName: string) => {
-  return events.filter((e) => e?.primitive === primitiveName)[0]!.address;
+  return events.filter((e) => e?.contractType === `lens.contract.${primitiveName}`)[0]!.address;
 };
 
 export async function verifyPrimitive(

@@ -4,7 +4,7 @@ import { deployLensPrimitives, deployLensAccessControl, deployLensActionHub } fr
 import { deployRules } from './deployRules';
 import { deployActions } from './deployActions';
 import { generateEnvFile } from './lensUtils';
-import { deployBeacons, deployProxyAdminLock } from './deployProxyStuff';
+import { deployBeacons, deployProxyAdminLock, deployAccessControlLock } from './deployProxyStuff';
 import { getWallet, LOCAL_RICH_WALLETS } from './utils';
 
 async function deploy() {
@@ -16,9 +16,14 @@ async function deploy() {
     console.log('Deploying migration version...');
   }
 
-  const lockOwner = process.env.PROXY_ADMIN_LOCK_OWNER;
-  if (!lockOwner && DEPLOYING_FR) {
+  const proxyAdminLockOwner = process.env.PROXY_ADMIN_LOCK_OWNER;
+  if (!proxyAdminLockOwner && DEPLOYING_FR) {
     throw new Error('PROXY_ADMIN_LOCK_OWNER not found in environment variables');
+  }
+
+  const accessControlLockOwner = process.env.ACCESS_CONTROL_LOCK_OWNER;
+  if (!accessControlLockOwner && DEPLOYING_FR) {
+    throw new Error('ACCESS_CONTROL_LOCK_OWNER not found in environment variables');
   }
 
   const beaconOwner = process.env.BEACON_OWNER;
@@ -37,7 +42,8 @@ async function deploy() {
   }
 
   if (DEPLOYING_FR) {
-    console.log('ProxyAdminLockOwner', lockOwner);
+    console.log('ProxyAdminLockOwner', proxyAdminLockOwner);
+    console.log('AccessControlAdminLockOwner', accessControlLockOwner);
     console.log('BeaconOwner', beaconOwner);
     console.log('FactoriesProxyOwner', factoriesProxyOwner);
     console.log('RulesOwner', rulesOwner);
@@ -48,7 +54,8 @@ async function deploy() {
     console.log('\tFactoriesProxyOwner:', LOCAL_RICH_WALLETS[1].address); // Cannot be deployer cause later it will fail to execute the lensFactory primitives deployments
   }
 
-  await deployProxyAdminLock(lockOwner ?? deployerAddress);
+  await deployProxyAdminLock(proxyAdminLockOwner ?? deployerAddress);
+  await deployAccessControlLock(accessControlLockOwner ?? deployerAddress);
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
   await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);

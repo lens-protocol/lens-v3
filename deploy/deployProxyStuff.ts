@@ -7,6 +7,16 @@ import {
 
 export async function deployProxyAdminLock(lockOwner: string): Promise<void> {
   const proxyAdminLock = await deployLensContract({
+    name: 'ProxyAdminLock',
+    contractName: 'Lock',
+    contractType: ContractType.Aux,
+    constructorArguments: [lockOwner, true],
+  });
+}
+
+export async function deployAccessControlLock(lockOwner: string): Promise<void> {
+  const accessControlLock = await deployLensContract({
+    name: 'AccessControlLock',
     contractName: 'Lock',
     contractType: ContractType.Aux,
     constructorArguments: [lockOwner, true],

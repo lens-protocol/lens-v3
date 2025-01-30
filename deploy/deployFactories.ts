@@ -14,14 +14,19 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
 
   const factories: ContractInfo[] = [
     // Factories
-    { name: 'AccessControlFactory', contractName: DEPLOYING_MIGRATION ? 'MigrationAccessControlFactory' : 'AccessControlFactory', contractType: ContractType.Factory },
+    { name: 'AccessControlFactory',
+      contractName: DEPLOYING_MIGRATION ? 'MigrationAccessControlFactory' : 'AccessControlFactory',
+      contractType: ContractType.Factory,
+      constructorArguments: [
+        loadContractAddressFromAddressBook('AccessControlLock'),
+      ] },
     {
       name: 'AccountFactory',
       contractName: 'AccountFactory',
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('AccountBeacon'),
-        loadContractAddressFromAddressBook('Lock'),
+        loadContractAddressFromAddressBook('ProxyAdminLock'),
       ],
     },
     {
@@ -30,7 +35,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('AppBeacon'),
-        loadContractAddressFromAddressBook('Lock'),
+        loadContractAddressFromAddressBook('ProxyAdminLock'),
       ],
     },
     {
@@ -39,7 +44,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('FeedBeacon'),
-        loadContractAddressFromAddressBook('Lock'),
+        loadContractAddressFromAddressBook('ProxyAdminLock'),
       ],
     },
     {
@@ -48,7 +53,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GraphBeacon'),
-        loadContractAddressFromAddressBook('Lock'),
+        loadContractAddressFromAddressBook('ProxyAdminLock'),
       ],
     },
     {
@@ -57,7 +62,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('GroupBeacon'),
-        loadContractAddressFromAddressBook('Lock'),
+        loadContractAddressFromAddressBook('ProxyAdminLock'),
       ],
     },
     {
@@ -66,7 +71,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       contractType: ContractType.Factory,
       constructorArguments: [
         loadContractAddressFromAddressBook('NamespaceBeacon'),
-        loadContractAddressFromAddressBook('Lock'),
+        loadContractAddressFromAddressBook('ProxyAdminLock'),
       ],
     }]
 
