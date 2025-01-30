@@ -96,7 +96,7 @@ contract Feed is
         RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
-        (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         _validateExpectedPostIdIfPresent(customParams, postId);
         address source = _processSourceStamp(postId, customParams);
         _setEntityExtraData(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
@@ -119,7 +119,7 @@ contract Feed is
         emit Lens_Feed_PostCreated(
             postId,
             postParams.author,
-            authorPostSequentialId,
+            localSequentialId,
             rootPostId,
             postParams,
             customParams,
