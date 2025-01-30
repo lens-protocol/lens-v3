@@ -6,17 +6,14 @@ import {ISimpleCollectAction, CollectActionData} from "contracts/actions/post/co
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
-import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
+import {OwnableMetadataBasedPostAction} from "contracts/actions/post/base/OwnableMetadataBasedPostAction.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBased {
+contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAction {
     using SafeERC20 for IERC20;
-
-    event Lens_PostAction_MetadataURISet(string metadataURI);
 
     struct CollectActionStorage {
         mapping(address => mapping(uint256 => CollectActionData)) collectData;
@@ -77,13 +74,9 @@ contract SimpleCollectAction is ISimpleCollectAction, BasePostAction, MetadataBa
         address token; // (Optional, but required if amount > 0) Default: address(0)
     }
 
-    constructor(address actionHub, string memory metadataURI) BasePostAction(actionHub) {
-        _setMetadataURI(metadataURI);
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_PostAction_MetadataURISet(metadataURI);
-    }
+    constructor(address actionHub, address owner, string memory metadataURI)
+        OwnableMetadataBasedPostAction(actionHub, owner, metadataURI)
+    {}
 
     function _configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         internal
