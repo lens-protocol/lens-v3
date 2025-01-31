@@ -4,7 +4,7 @@ import { deployLensPrimitives, deployLensAccessControl, deployLensActionHub } fr
 import { deployRules } from './deployRules';
 import { deployActions } from './deployActions';
 import { generateEnvFile } from './lensUtils';
-import { deployBeacons, deployProxyAdminLock, deployAccessControlLock } from './deployProxyStuff';
+import { deployBeacons, deployLock } from './deployProxyStuff';
 import { getWallet, LOCAL_RICH_WALLETS } from './utils';
 
 async function deploy() {
@@ -76,8 +76,14 @@ async function deploy() {
   }
   console.log('\n-------------------------------------------------------------------\n\n');
 
-  await deployProxyAdminLock(proxyAdminLockOwner ?? deployerAddress);
-  await deployAccessControlLock(accessControlLockOwner ?? deployerAddress);
+  await deployLock("AppLock", proxyAdminLockOwner ?? deployerAddress);
+  await deployLock("AccountLock", proxyAdminLockOwner ?? deployerAddress);
+  await deployLock("FeedLock", proxyAdminLockOwner ?? deployerAddress);
+  await deployLock("GraphLock", proxyAdminLockOwner ?? deployerAddress);
+  await deployLock("GroupLock", proxyAdminLockOwner ?? deployerAddress);
+  await deployLock("NamespaceLock", proxyAdminLockOwner ?? deployerAddress);
+  await deployLock("AccessControlLock", accessControlLockOwner ?? deployerAddress);
+
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
   await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);

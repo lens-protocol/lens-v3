@@ -1,7 +1,7 @@
 import { deployLensContract, ContractType, ContractInfo } from './lensUtils';
 
 export async function deployRules(rulesOwner: string): Promise<void> {
-  const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
+  const metadataURI = '';
   const contracts: ContractInfo[] = [
     // Feed Rules
     {
