@@ -5,6 +5,6 @@ import "./EventEmitter.sol";
 
 contract EventEmitterEarly is EventEmitter {
     function _allowedToEmitEvents() internal view override returns (bool) {
-        return block.number < 1000;
+        return block.number < 30_000;
     }
 }
