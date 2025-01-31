@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import "contracts/core/libraries/ExtraDataLib.sol";
+import "contracts/core/libraries/KeyValueStorageLib.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 struct ArrayStorageHelper {
@@ -11,12 +11,11 @@ struct ArrayStorageHelper {
 }
 
 library AppCore {
-    using ExtraDataLib for mapping(bytes32 => bytes);
+    using KeyValueStorageLib for mapping(bytes32 => bytes);
 
     // Storage
 
     struct Storage {
-        string metadataURI; // Name, description, logo, other attributes like category/topic, etc.
         bool sourceStampVerificationEnabled;
         address treasury; // Can also be defined as a permission in the AC... and allow multiple revenue recipients!
         mapping(address => ArrayStorageHelper) signerStorageHelper;
@@ -191,21 +190,5 @@ library AppCore {
 
     function _setTreasury(address treasury) internal {
         $storage().treasury = treasury;
-    }
-
-    ////////////// Metadata URI
-
-    function _setMetadataURI(string memory metadataURI) internal {
-        $storage().metadataURI = metadataURI;
-    }
-
-    ////////////// Extra Data
-
-    function setExtraData(KeyValue memory extraDataToSet) external returns (bool) {
-        return _setExtraData(extraDataToSet);
-    }
-
-    function _setExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
-        return $storage().extraData.set(extraDataToSet);
     }
 }

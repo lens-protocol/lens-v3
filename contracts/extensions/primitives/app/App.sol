@@ -11,6 +11,8 @@ import {Events} from "contracts/core/types/Events.sol";
 import {BaseSource} from "contracts/core/base/BaseSource.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 struct AppInitialProperties {
     address graph;
@@ -23,7 +25,7 @@ struct AppInitialProperties {
     address treasury;
 }
 
-contract App is IApp, Initializable, BaseSource, AccessControlled {
+contract App is IApp, ExtraStorageBased, MetadataBased, Initializable, BaseSource, AccessControlled {
     // Resource IDs involved in the contract
 
     /// @custom:keccak lens.permission.SetPrimitives
@@ -320,13 +322,11 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
 
     ///////////////// Metadata URI
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
         _requireAccess(msg.sender, PID__SET_METADATA);
-        _setMetadataURI(metadataURI);
     }
 
-    function _setMetadataURI(string memory metadataURI) internal {
-        Core._setMetadataURI(metadataURI);
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_App_MetadataURISet(metadataURI);
     }
 
@@ -339,7 +339,7 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
 
     function _setExtraData(KeyValue[] memory extraDataToSet) internal {
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -400,10 +400,6 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().extraData[key];
-    }
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
+        return _getExtraStorage_Self(key);
     }
 }
