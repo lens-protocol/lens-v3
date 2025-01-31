@@ -28,7 +28,9 @@ struct Log4EventData {
 }
 
 abstract contract EventEmitter {
-    function _allowedToEmitEvents() internal view virtual returns (bool) {}
+    function _allowedToEmitEvents() internal view virtual returns (bool) {
+        return true;
+    }
 
     function emitEventsLog1(Log1EventData[] calldata events) external {
         require(_allowedToEmitEvents());
