@@ -99,7 +99,7 @@ contract Feed is
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         _validateExpectedPostIdIfPresent(customParams, postId);
         address source = _processSourceStamp(postId, customParams);
-        _setEntityExtraData(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
+        _setEntityExtraStorage(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
@@ -129,7 +129,7 @@ contract Feed is
             source
         );
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraData_Account(postId, postParams.extraData[i]);
+            _setEntityExtraStorage_Account(postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
             );
@@ -155,7 +155,7 @@ contract Feed is
 
         bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            wereExtraDataValuesSet[i] = _setEntityExtraData_Account(postId, postParams.extraData[i]);
+            wereExtraDataValuesSet[i] = _setEntityExtraStorage_Account(postId, postParams.extraData[i]);
         }
 
         _processPostEditingOnFeed(postId, postParams, customParams, feedRulesParams);
@@ -207,7 +207,7 @@ contract Feed is
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraData_Primitive(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -263,11 +263,11 @@ contract Feed is
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address postAuthor = Core.$storage().posts[postId].author;
-        return _getEntityExtraData_Account(postAuthor, postId, key);
+        return _getEntityExtraStorage_Account(postAuthor, postId, key);
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraData_Primitive(key);
+        return _getExtraStorage_Self(key);
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {

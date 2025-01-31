@@ -23,12 +23,12 @@ abstract contract SourceStampBased is ExtraStorageBased {
                     require(sourceStamp.originalMsgSender == msg.sender);
                     ISource(sourceStamp.source).validateSource(sourceStamp);
                     if (storeSource) {
-                        _setEntityExtraData(entityId, KeyValue(key, abi.encode(sourceStamp.source)));
+                        _setEntityExtraStorage(entityId, KeyValue(key, abi.encode(sourceStamp.source)));
                     }
                     return sourceStamp.source;
                 } else {
                     if (storeSource) {
-                        _setEntityExtraData(entityId, KeyValue(key, ""));
+                        _setEntityExtraStorage(entityId, KeyValue(key, ""));
                     }
                 }
             }
@@ -37,7 +37,7 @@ abstract contract SourceStampBased is ExtraStorageBased {
     }
 
     function _getSource(bytes32 key, uint256 entityId) internal view returns (address) {
-        bytes memory encodedSource = _getEntityExtraData(entityId, key);
+        bytes memory encodedSource = _getEntityExtraStorage(entityId, key);
         if (encodedSource.length == 0) {
             return address(0);
         } else {

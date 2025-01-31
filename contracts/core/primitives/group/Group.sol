@@ -85,7 +85,7 @@ contract Group is
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraData_Primitive(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {
@@ -186,6 +186,6 @@ contract Group is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraData_Primitive(key);
+        return _getExtraStorage_Self(key);
     }
 }

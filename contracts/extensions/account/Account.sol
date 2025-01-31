@@ -206,12 +206,12 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraData_Primitive(key);
+        return _getExtraStorage_Self(key);
     }
 
     function _decodeAndSetExtraData(KeyValue[] memory extraDataToSet) internal {
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraData_Primitive(extraDataToSet[i]);
+            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
             if (hadAValueSetBefore) {
                 if (isNewValueEmpty) {

@@ -8,7 +8,7 @@ import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/Feed
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {EventEmitter} from "contracts/migration/EventEmitter.sol";
-import {ExtraDataLib} from "contracts/core/libraries/ExtraDataLib.sol";
+import {KeyValueStorageLib} from "contracts/core/libraries/KeyValueStorageLib.sol";
 
 struct PostCreationParams {
     uint256 authorPostSequentialId;
@@ -17,9 +17,9 @@ struct PostCreationParams {
 }
 
 contract MigrationFeed is Feed, EventEmitter {
-    using ExtraDataLib for mapping(bytes32 => bytes);
+    using KeyValueStorageLib for mapping(bytes32 => bytes);
 
-    function $migrationExtraDataStorage() private pure returns (ExtraDataStorage storage _storage) {
+    function $migrationExtraStorage() private pure returns (ExtraStorage storage _storage) {
         assembly {
             _storage.slot := STORAGE__EXTRA_STORAGE
         }
@@ -39,8 +39,8 @@ contract MigrationFeed is Feed, EventEmitter {
 
         if (postCreationParams.source != address(0)) {
             // Trust the migrator, no source verification
-            _setEntityExtraData(postId, KeyValue(DATA__SOURCE, abi.encode(postCreationParams.source)));
-            _setEntityExtraData(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(postCreationParams.source)));
+            _setEntityExtraStorage(postId, KeyValue(DATA__SOURCE, abi.encode(postCreationParams.source)));
+            _setEntityExtraStorage(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(postCreationParams.source)));
         }
 
         emit Lens_Feed_PostCreated(
@@ -57,7 +57,7 @@ contract MigrationFeed is Feed, EventEmitter {
         );
 
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraData(postId, postParams.extraData[i]);
+            _setEntityExtraStorage(postId, postParams.extraData[i]);
             _migration_forceExtraData(postParams.author, postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
@@ -66,14 +66,10 @@ contract MigrationFeed is Feed, EventEmitter {
         return postId;
     }
 
-    function _migration_forceExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet)
-        private
-        returns (bool)
-    {
+    function _migration_forceExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet) private {
         // In this release we always set the entityID to zero
-        bool wasPreviousValueSet = $migrationExtraDataStorage().extraStorage[addr][0][entityId].set(extraDataToSet);
-        emit Lens_ExtraDataSet(addr, entityId, extraDataToSet.key, extraDataToSet.value);
-        return wasPreviousValueSet;
+        $migrationExtraStorage().slot[addr][0][entityId].set(extraDataToSet);
+        emit Lens_ExtraStorageSet(addr, entityId, extraDataToSet.key, extraDataToSet.value);
     }
 
     // Overriding the FeedCore

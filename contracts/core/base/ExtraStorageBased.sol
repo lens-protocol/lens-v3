@@ -2,12 +2,12 @@
 pragma solidity ^0.8.26;
 
 import {KeyValue} from "contracts/core/types/Types.sol";
-import {ExtraDataLib} from "contracts/core/libraries/ExtraDataLib.sol";
+import {KeyValueStorageLib} from "contracts/core/libraries/KeyValueStorageLib.sol";
 
 abstract contract ExtraStorageBased {
-    using ExtraDataLib for mapping(bytes32 => bytes);
+    using KeyValueStorageLib for mapping(bytes32 => bytes);
 
-    event Lens_ExtraDataSet(address indexed addr, uint256 indexed entityId, bytes32 indexed key, bytes value);
+    event Lens_ExtraStorageSet(address indexed addressScope, uint256 indexed entityId, bytes32 indexed key, bytes value);
 
     /**
      * ExtraStorage has the following keys:
@@ -16,30 +16,40 @@ abstract contract ExtraStorageBased {
      *    address addr => uint256 entityId => bytes32 key => bytes value
      *
      * The key used in the address can be:
-     * address(0) => Basic primitive storage extension, set by primitive code / business logic
-     * address(this) => About the primitive but set by its owner
-     * any other address => Set on the primitive linked to that address.
+     *
+     * address(0)           => Basic contract storage extension, set by its contract code itself / business logic
+     *                         Functions: _setExtraStorage & _getExtraStorage
+     *                                    _setEntityExtraStorage & _getEntityExtraStorage
+     *
+     * address(this)        => About the contract but set by its owner, admin, manager, or similar.
+     *                         Functions: _setExtraStorage_Self & _getExtraStorage_Self
+     *                                    _setEntityExtraStorage_Self & _getEntityExtraStorage_Self
+     *
+     *
+     * any other address    => Set on the contract linked to that address.
+     *                          Functions: _setEntityExtraStorage_Account & _getEntityExtraStorage_Account
+     *
      *
      * The ExtraStorage access and ownership is meant to be controlled by the above cases on case-by-case basis.
      * Each implementation can choose how they allow & restrict write-access to it.
      *
      * EntityId is the ID of the entity (postId, followId, username hash, rule configSalt, etc)
-     * EntityId == 0 is passed if the extraData is not entity-specific but rather general.
+     * EntityId == 0 is passed if the extraStorage is not entity-specific but rather general.
      *
      * Key is the keccak256 hash of the key (string) that is used to store the value, for example:
      *      keccak256("lens.data.myAppName.someCustomKey")
      */
-    struct ExtraDataStorage {
+    struct ExtraStorage {
         mapping(
             address addressScope
                 => mapping(uint256 entityType => mapping(uint256 entityId => mapping(bytes32 key => bytes value)))
-        ) extraStorage;
+        ) slot;
     }
 
-    /// @custom:keccak lens.storage.ExtraDataStorage
-    bytes32 constant STORAGE__EXTRA_STORAGE = 0xfcea8b4575b2819c79ea87472ec531dc6bcf2b1f70176b2f7050dc0569bb7a44;
+    /// @custom:keccak lens.storage.ExtraStorage
+    bytes32 constant STORAGE__EXTRA_STORAGE = 0xfae2ddb96afe37e426489b23daa1bb7071e3786e8320e123d30b7ec1bc85340f;
 
-    function $extraDataStorage() private pure returns (ExtraDataStorage storage _storage) {
+    function $extraStorage() private pure returns (ExtraStorage storage _storage) {
         assembly {
             _storage.slot := STORAGE__EXTRA_STORAGE
         }
@@ -47,66 +57,73 @@ abstract contract ExtraStorageBased {
 
     // Internal functions to set and get extra data
 
-    function _private_setExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet)
+    function _storeExtraStorage(address addressScope, uint256 entityId, KeyValue memory extraStorageToSet)
         private
         returns (bool)
     {
         // In this release we always set the entityID to zero
-        bool wasPreviousValueSet = $extraDataStorage().extraStorage[addr][0][entityId].set(extraDataToSet);
-        emit Lens_ExtraDataSet(addr, entityId, extraDataToSet.key, extraDataToSet.value);
+        bool wasPreviousValueSet = $extraStorage().slot[addressScope][0][entityId].set(extraStorageToSet);
+        emit Lens_ExtraStorageSet(addressScope, entityId, extraStorageToSet.key, extraStorageToSet.value);
         return wasPreviousValueSet;
     }
 
-    function _private_getExtraData(address addr, uint256 entityId, bytes32 key) private view returns (bytes memory) {
+    function _loadExtraStorage(address addressScope, uint256 entityId, bytes32 key)
+        private
+        view
+        returns (bytes memory)
+    {
         // In this release we always set the entityID to zero
-        return $extraDataStorage().extraStorage[addr][0][entityId][key];
+        return $extraStorage().slot[addressScope][0][entityId][key];
     }
 
     // Setter function for each different type of extra data
 
-    function _setExtraData(KeyValue memory extraDataToSet) internal returns (bool) {
-        return _private_setExtraData(address(0), 0, extraDataToSet);
+    function _setExtraStorage(KeyValue memory extraStorageToSet) internal returns (bool) {
+        return _storeExtraStorage(address(0), 0, extraStorageToSet);
     }
 
-    function _setEntityExtraData(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
-        return _private_setExtraData(address(0), entityId, extraDataToSet);
+    function _setEntityExtraStorage(uint256 entityId, KeyValue memory extraStorageToSet) internal returns (bool) {
+        return _storeExtraStorage(address(0), entityId, extraStorageToSet);
     }
 
-    function _setExtraData_Primitive(KeyValue memory extraDataToSet) internal returns (bool) {
-        return _private_setExtraData(address(this), 0, extraDataToSet);
+    function _setExtraStorage_Self(KeyValue memory extraStorageToSet) internal returns (bool) {
+        return _storeExtraStorage(address(this), 0, extraStorageToSet);
     }
 
-    function _setEntityExtraData_Primitive(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
-        return _private_setExtraData(address(this), entityId, extraDataToSet);
+    function _setEntityExtraStorage_Self(uint256 entityId, KeyValue memory extraStorageToSet) internal returns (bool) {
+        return _storeExtraStorage(address(this), entityId, extraStorageToSet);
     }
 
-    function _setEntityExtraData_Account(uint256 entityId, KeyValue memory extraDataToSet) internal returns (bool) {
-        return _private_setExtraData(msg.sender, entityId, extraDataToSet);
+    function _setEntityExtraStorage_Account(uint256 entityId, KeyValue memory extraStorageToSet)
+        internal
+        returns (bool)
+    {
+        return _storeExtraStorage(msg.sender, entityId, extraStorageToSet);
     }
 
     // Getter function for each different type of extra data
 
-    function _getExtraData(bytes32 key) internal view returns (bytes memory) {
-        return _private_getExtraData(address(0), 0, key);
+    function _getExtraStorage(bytes32 key) internal view returns (bytes memory) {
+        return _loadExtraStorage(address(0), 0, key);
     }
 
-    function _getEntityExtraData(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
-        return _private_getExtraData(address(0), entityId, key);
+    function _getEntityExtraStorage(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
+        return _loadExtraStorage(address(0), entityId, key);
     }
 
-    function _getExtraData_Primitive(bytes32 key) internal view returns (bytes memory) {
-        return _private_getExtraData(address(this), 0, key);
+    function _getExtraStorage_Self(bytes32 key) internal view returns (bytes memory) {
+        return _loadExtraStorage(address(this), 0, key);
     }
 
-    function _getEntityExtraData_Primitive(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
-        return _private_getExtraData(address(this), entityId, key);
+    function _getEntityExtraStorage_Self(uint256 entityId, bytes32 key) internal view returns (bytes memory) {
+        return _loadExtraStorage(address(this), entityId, key);
     }
 
-    function _getEntityExtraData_Account(address addr, uint256 entityId, bytes32 key)
+    function _getEntityExtraStorage_Account(address addressScope, uint256 entityId, bytes32 key)
         internal
         view
         returns (bytes memory)
     {
-        return _private_getExtraData(addr, entityId, key);
+        return _loadExtraStorage(addressScope, entityId, key);
     }
 }
