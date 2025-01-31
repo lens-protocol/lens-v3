@@ -442,4 +442,24 @@ contract LensFactory {
 
         return modifiedRules;
     }
+
+    function getFactories() external view returns (address, address, address, address, address, address, address) {
+        return (
+            address(ACCESS_CONTROL_FACTORY),
+            address(ACCOUNT_FACTORY),
+            address(APP_FACTORY),
+            address(FEED_FACTORY),
+            address(GRAPH_FACTORY),
+            address(GROUP_FACTORY),
+            address(NAMESPACE_FACTORY)
+        );
+    }
+
+    function getTemporaryAccessControl() external view returns (address) {
+        return address(TEMPORARY_ACCESS_CONTROL);
+    }
+
+    function getRules() external view returns (address, address, address) {
+        return (address(ACCOUNT_BLOCKING_RULE), address(GROUP_GATED_FEED_RULE), address(USERNAME_SIMPLE_CHARSET_RULE));
+    }
 }
