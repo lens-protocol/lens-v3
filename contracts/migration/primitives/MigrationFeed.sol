@@ -57,8 +57,10 @@ contract MigrationFeed is Feed, EventEmitter {
         );
 
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
+            // Storing extra data in the native extra storage for data integrity
             _setEntityExtraStorage(postId, postParams.extraData[i]);
-            _migration_forceExtraData(postParams.author, postId, postParams.extraData[i]);
+            // Forcing ExtraStorageBased::_setEntityExtraStorage_Account with injected addressScope
+            _migration_force__setEntityExtraStorage_Account(postParams.author, postId, postParams.extraData[i]);
             emit Lens_Feed_Post_ExtraDataAdded(
                 postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
             );
@@ -66,10 +68,14 @@ contract MigrationFeed is Feed, EventEmitter {
         return postId;
     }
 
-    function _migration_forceExtraData(address addr, uint256 entityId, KeyValue memory extraDataToSet) private {
+    function _migration_force__setEntityExtraStorage_Account(
+        address addressScope,
+        uint256 entityId,
+        KeyValue memory extraDataToSet
+    ) private {
         // In this release we always set the entityID to zero
-        $migrationExtraStorage().slot[addr][0][entityId].set(extraDataToSet);
-        emit Lens_ExtraStorageSet(addr, entityId, extraDataToSet.key, extraDataToSet.value);
+        $migrationExtraStorage().slot[addressScope][0][entityId].set(extraDataToSet);
+        emit Lens_ExtraStorageSet(addressScope, entityId, extraDataToSet.key, extraDataToSet.value);
     }
 
     // Overriding the FeedCore
