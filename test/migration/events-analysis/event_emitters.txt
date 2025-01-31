@@ -1,0 +1,20 @@
+EventEmitterEarly
+-----------------
+[ ] Beacon
+[ ] Lock
+
+EventEmitter
+------------
+[ ] MigrationAccessControlFactory
+[ ] MigrationAccountFactory
+[ ] MigrationAppFactory
+[ ] MigrationFeedFactory
+[ ] MigrationGraphFactory
+[ ] MigrationNamespaceFactory
+[ ] MigrationLensFactory
+
+[ ] MigrationAccount
+[ ] MigrationApp
+[ ] MigrationFeed
+[ ] MigrationGraph
+[ ] MigrationNamespace
