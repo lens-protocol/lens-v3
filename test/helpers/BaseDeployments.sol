@@ -23,6 +23,7 @@ import {MigrationFeed} from "contracts/migration/primitives/MigrationFeed.sol";
 import {MigrationGraph} from "contracts/migration/primitives/MigrationGraph.sol";
 import {MigrationNamespace} from "contracts/migration/primitives/MigrationNamespace.sol";
 
+import {MigrationAccessControlFactory} from "contracts/migration/factories/MigrationAccessControlFactory.sol";
 import {MigrationAppFactory} from "contracts/migration/factories/MigrationAppFactory.sol";
 import {MigrationAccountFactory} from "contracts/migration/factories/MigrationAccountFactory.sol";
 import {MigrationFeedFactory} from "contracts/migration/factories/MigrationFeedFactory.sol";
@@ -81,6 +82,7 @@ contract BaseDeployments is Test {
     address namespaceBeacon;
 
     AppFactory appFactory;
+    AccessControlFactory accessControlFactory;
     AccountFactory accountFactory;
     FeedFactory feedFactory;
     GraphFactory graphFactory;
@@ -114,7 +116,7 @@ contract BaseDeployments is Test {
         address lensFactoryImpl = migrationMode
             ? address(
                 new MigrationLensFactory({
-                    accessControlFactory: new AccessControlFactory(accessControlLock),
+                    accessControlFactory: accessControlFactory,
                     accountFactory: accountFactory,
                     appFactory: appFactory,
                     groupFactory: groupFactory,
@@ -128,7 +130,7 @@ contract BaseDeployments is Test {
             )
             : address(
                 new LensFactory({
-                    accessControlFactory: new AccessControlFactory(accessControlLock),
+                    accessControlFactory: accessControlFactory,
                     accountFactory: accountFactory,
                     appFactory: appFactory,
                     groupFactory: groupFactory,
@@ -141,7 +143,7 @@ contract BaseDeployments is Test {
                 })
             );
         TransparentUpgradeableProxy lensFactoryProxy =
-            new TransparentUpgradeableProxy(address(lensFactoryImpl), proxyAdminLock, "");
+            new TransparentUpgradeableProxy(address(lensFactoryImpl), factoriesProxyOwner, "");
 
         lensFactory = LensFactory(address(lensFactoryProxy));
     }
@@ -168,26 +170,51 @@ contract BaseDeployments is Test {
     }
 
     function _deployFactories() internal {
-        appFactory = migrationMode
-            ? new MigrationAppFactory(appBeacon, proxyAdminLock)
-            : new AppFactory(appBeacon, proxyAdminLock);
-        accountFactory = migrationMode
-            ? new MigrationAccountFactory(accountBeacon, proxyAdminLock)
-            : new AccountFactory(accountBeacon, proxyAdminLock);
+        address accessControlFactoryImpl = migrationMode
+            ? address(new MigrationAccessControlFactory(accessControlLock))
+            : address(new AccessControlFactory(accessControlLock));
+        TransparentUpgradeableProxy accessControlFactoryProxy =
+            new TransparentUpgradeableProxy(accessControlFactoryImpl, factoriesProxyOwner, "");
+        accessControlFactory = AccessControlFactory(address(accessControlFactoryProxy));
+
+        address accountFactoryImpl = migrationMode
+            ? address(new MigrationAccountFactory(accountBeacon, proxyAdminLock))
+            : address(new AccountFactory(accountBeacon, proxyAdminLock));
+        TransparentUpgradeableProxy accountFactoryProxy =
+            new TransparentUpgradeableProxy(accountFactoryImpl, factoriesProxyOwner, "");
+        accountFactory = AccountFactory(address(accountFactoryProxy));
+
+        address appFactoryImpl = migrationMode
+            ? address(new MigrationAppFactory(appBeacon, proxyAdminLock))
+            : address(new AppFactory(appBeacon, proxyAdminLock));
+        TransparentUpgradeableProxy appFactoryProxy =
+            new TransparentUpgradeableProxy(appFactoryImpl, factoriesProxyOwner, "");
+        appFactory = AppFactory(address(appFactoryProxy));
 
         address feedFactoryImpl = migrationMode
             ? address(new MigrationFeedFactory(feedBeacon, proxyAdminLock))
             : address(new FeedFactory(feedBeacon, proxyAdminLock));
         TransparentUpgradeableProxy feedFactoryProxy =
-            new TransparentUpgradeableProxy(address(feedFactoryImpl), proxyAdminLock, "");
+            new TransparentUpgradeableProxy(address(feedFactoryImpl), factoriesProxyOwner, "");
         feedFactory = FeedFactory(address(feedFactoryProxy));
 
-        graphFactory = migrationMode
-            ? new MigrationGraphFactory(graphBeacon, proxyAdminLock)
-            : new GraphFactory(graphBeacon, proxyAdminLock);
-        groupFactory = new GroupFactory(groupBeacon, proxyAdminLock);
-        namespaceFactory = migrationMode
-            ? new MigrationNamespaceFactory(namespaceBeacon, proxyAdminLock)
-            : new NamespaceFactory(namespaceBeacon, proxyAdminLock);
+        address graphFactoryImpl = migrationMode
+            ? address(new MigrationGraphFactory(graphBeacon, proxyAdminLock))
+            : address(new GraphFactory(graphBeacon, proxyAdminLock));
+        TransparentUpgradeableProxy graphFactoryProxy =
+            new TransparentUpgradeableProxy(graphFactoryImpl, factoriesProxyOwner, "");
+        graphFactory = GraphFactory(address(graphFactoryProxy));
+
+        address groupFactoryImpl = address(new GroupFactory(groupBeacon, proxyAdminLock));
+        TransparentUpgradeableProxy groupFactoryProxy =
+            new TransparentUpgradeableProxy(groupFactoryImpl, factoriesProxyOwner, "");
+        groupFactory = GroupFactory(address(groupFactoryProxy));
+
+        address namespaceFactoryImpl = migrationMode
+            ? address(new MigrationNamespaceFactory(namespaceBeacon, proxyAdminLock))
+            : address(new NamespaceFactory(namespaceBeacon, proxyAdminLock));
+        TransparentUpgradeableProxy namespaceFactoryProxy =
+            new TransparentUpgradeableProxy(namespaceFactoryImpl, factoriesProxyOwner, "");
+        namespaceFactory = NamespaceFactory(address(namespaceFactoryProxy));
     }
 }

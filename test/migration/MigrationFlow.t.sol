@@ -11,6 +11,26 @@ import {Errors} from "contracts/core/types/Errors.sol";
 import {CreateAccountParams, CreateUsernameParams} from "@extensions/factories/LensFactory.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ProxyAdmin} from "contracts/core/upgradeability/ProxyAdmin.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
+import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
+import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
+import {App} from "contracts/extensions/primitives/app/App.sol";
+import {Account as AccountContract} from "contracts/extensions/account/Account.sol";
+import {Feed} from "contracts/core/primitives/feed/Feed.sol";
+import {Graph} from "contracts/core/primitives/graph/Graph.sol";
+import {Group} from "contracts/core/primitives/group/Group.sol";
+import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
+import {AccessControlFactory} from "contracts/extensions/factories/AccessControlFactory.sol";
+import {AccountFactory} from "contracts/extensions/factories/AccountFactory.sol";
+import {AppFactory} from "contracts/extensions/factories/AppFactory.sol";
+import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
+import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
+import {GroupFactory} from "contracts/extensions/factories/GroupFactory.sol";
+import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
+import {LensFactory} from "contracts/extensions/factories/LensFactory.sol";
 
 struct PostData {
     address author;
@@ -158,6 +178,9 @@ contract MigrationFlowTest is BaseDeployments {
         _migrateUsernames();
 
         _transferOwnership();
+        _setAccessControls();
+        _upgradeBeacons();
+        _upgradeFactories();
     }
 
     function _migrateAccounts() internal {
@@ -345,5 +368,125 @@ contract MigrationFlowTest is BaseDeployments {
         vm.stopPrank();
     }
 
-    function _transferOwnership() internal {}
+    function _transferOwnership() internal {
+        vm.startPrank(factoriesProxyOwner);
+        ITransparentUpgradeableProxy(address(accessControlFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(accountFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(appFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(feedFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(graphFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(groupFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(namespaceFactory)).changeAdmin(newOwner);
+        ITransparentUpgradeableProxy(address(lensFactory)).changeAdmin(newOwner);
+        vm.stopPrank();
+
+        vm.startPrank(beaconOwner);
+        Beacon(appBeacon).transferOwnership(newOwner);
+        Beacon(accountBeacon).transferOwnership(newOwner);
+        Beacon(feedBeacon).transferOwnership(newOwner);
+        Beacon(graphBeacon).transferOwnership(newOwner);
+        Beacon(groupBeacon).transferOwnership(newOwner);
+        Beacon(namespaceBeacon).transferOwnership(newOwner);
+        vm.stopPrank();
+
+        vm.startPrank(primitivesOwner);
+        ProxyAdmin feedProxyAdmin = ProxyAdmin(BeaconProxy(payable(address(lensDefaultFeed))).proxy__getProxyAdmin());
+        feedProxyAdmin.transferOwnership(newOwner);
+
+        ProxyAdmin graphProxyAdmin = ProxyAdmin(BeaconProxy(payable(address(lensDefaultGraph))).proxy__getProxyAdmin());
+        graphProxyAdmin.transferOwnership(newOwner);
+
+        ProxyAdmin namespaceProxyAdmin =
+            ProxyAdmin(BeaconProxy(payable(address(lensDefaultNamespace))).proxy__getProxyAdmin());
+        namespaceProxyAdmin.transferOwnership(newOwner);
+
+        // TODO: Also do on Apps if not done initially? Depends who Josh sets as owner of the App
+        vm.stopPrank();
+    }
+
+    function _setAccessControls() internal {
+        IAccessControl feedAccessControl = IAccessControl(
+            address(accessControlFactory.deployOwnerAdminOnlyAccessControl(newOwner, _emptyAddressArray()))
+        );
+        AccessControlled(address(lensDefaultFeed)).setAccessControl(feedAccessControl);
+
+        IAccessControl graphAccessControl = IAccessControl(
+            address(accessControlFactory.deployOwnerAdminOnlyAccessControl(newOwner, _emptyAddressArray()))
+        );
+        AccessControlled(address(lensDefaultGraph)).setAccessControl(graphAccessControl);
+
+        IAccessControl namespaceAccessControl = IAccessControl(
+            address(accessControlFactory.deployOwnerAdminOnlyAccessControl(newOwner, _emptyAddressArray()))
+        );
+        AccessControlled(address(lensDefaultNamespace)).setAccessControl(namespaceAccessControl);
+
+        // TODO: Also do on Apps.
+    }
+
+    function _upgradeBeacons() internal {
+        appImpl = address(new App());
+        accountImpl = address(new AccountContract());
+        feedImpl = address(new Feed());
+        graphImpl = address(new Graph());
+        groupImpl = address(new Group());
+        namespaceImpl = address(new Namespace());
+
+        vm.startPrank(newOwner);
+        Beacon(appBeacon).setImplementationForVersion(1, address(appImpl));
+        Beacon(accountBeacon).setImplementationForVersion(1, address(accountImpl));
+        Beacon(feedBeacon).setImplementationForVersion(1, address(feedImpl));
+        Beacon(graphBeacon).setImplementationForVersion(1, address(graphImpl));
+        Beacon(groupBeacon).setImplementationForVersion(1, address(groupImpl));
+        Beacon(namespaceBeacon).setImplementationForVersion(1, address(namespaceImpl));
+        vm.stopPrank();
+    }
+
+    function _upgradeFactories() internal {
+        address accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
+        address accountFactoryImpl = address(new AccountFactory(accountBeacon, proxyAdminLock));
+        address appFactoryImpl = address(new AppFactory(appBeacon, proxyAdminLock));
+        address feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock));
+        address graphFactoryImpl = address(new GraphFactory(graphBeacon, proxyAdminLock));
+        address namespaceFactoryImpl = address(new NamespaceFactory(namespaceBeacon, proxyAdminLock));
+
+        vm.startPrank(newOwner);
+        ITransparentUpgradeableProxy(address(accessControlFactory)).upgradeTo(accessControlFactoryImpl);
+        ITransparentUpgradeableProxy(address(accountFactory)).upgradeTo(accountFactoryImpl);
+        ITransparentUpgradeableProxy(address(appFactory)).upgradeTo(appFactoryImpl);
+        ITransparentUpgradeableProxy(address(feedFactory)).upgradeTo(feedFactoryImpl);
+        ITransparentUpgradeableProxy(address(graphFactory)).upgradeTo(graphFactoryImpl);
+        ITransparentUpgradeableProxy(address(namespaceFactory)).upgradeTo(namespaceFactoryImpl);
+        vm.stopPrank();
+
+        (
+            address lensAccessControlFactory,
+            address lensAccountFactory,
+            address lensAppFactory,
+            address lensFeedFactory,
+            address lensGraphFactory,
+            address lensGroupFactory,
+            address lensNamespaceFactory
+        ) = lensFactory.getFactories();
+
+        (address lensAccountBlockingRule, address lensGroupGatedFeedRule, address lensUsernameSimpleCharsetRule) =
+            lensFactory.getRules();
+
+        address lensFactoryImpl = address(
+            new LensFactory(
+                AccessControlFactory(lensAccessControlFactory),
+                AccountFactory(lensAccountFactory),
+                AppFactory(lensAppFactory),
+                GroupFactory(lensGroupFactory),
+                FeedFactory(lensFeedFactory),
+                GraphFactory(lensGraphFactory),
+                NamespaceFactory(lensNamespaceFactory),
+                lensAccountBlockingRule,
+                lensGroupGatedFeedRule,
+                lensUsernameSimpleCharsetRule
+            )
+        );
+
+        vm.prank(newOwner);
+        ITransparentUpgradeableProxy(address(lensFactory)).upgradeTo(lensFactoryImpl);
+    }
 }
