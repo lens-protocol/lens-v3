@@ -102,7 +102,10 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
   };
 }
 
-export async function deployLensContractAsProxy(contractToDeploy: ContractInfo, proxyOwner: string): Promise<ContractInfo> {
+export async function deployLensContractAsProxy(
+  contractToDeploy: ContractInfo,
+  proxyOwner: string
+): Promise<ContractInfo> {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
   const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
@@ -122,51 +125,55 @@ export async function deployLensContractAsProxy(contractToDeploy: ContractInfo, 
     console.log(`Deploying ${name} (as upgradeable proxy)...`);
   }
 
-    const deployedImplementation = await deployContract(
-      contractToDeploy.contractName,
-      contractToDeploy.constructorArguments
-    );
+  const deployedImplementation = await deployContract(
+    contractToDeploy.contractName,
+    contractToDeploy.constructorArguments
+  );
 
-    const contractInfo: ContractInfo = {
-      name: contractToDeploy.name ?? contractToDeploy.contractName + 'Impl',
-      contractName: contractToDeploy.contractName,
-      contractType: ContractType.Implementation,
-      address: await deployedImplementation.getAddress(),
-      // bytecodeHash,
-      constructorArguments: contractToDeploy.constructorArguments,
-    };
+  const contractInfo: ContractInfo = {
+    name: contractToDeploy.name ?? contractToDeploy.contractName + 'Impl',
+    contractName: contractToDeploy.contractName,
+    contractType: ContractType.Implementation,
+    address: await deployedImplementation.getAddress(),
+    // bytecodeHash,
+    constructorArguments: contractToDeploy.constructorArguments,
+  };
 
-    addressBook[contractToDeploy.name ?? contractToDeploy.contractName + 'Impl'] = contractInfo;
-    saveAddressBook(addressBook);
+  addressBook[contractToDeploy.name ?? contractToDeploy.contractName + 'Impl'] = contractInfo;
+  saveAddressBook(addressBook);
 
-    const constructorArguments = [
-      await deployedImplementation.getAddress(),
-      proxyOwner,
-      '0x'
-    ];
-    const deployedProxy = await deployContract('TransparentUpgradeableProxy', constructorArguments);
+  const constructorArguments = [await deployedImplementation.getAddress(), proxyOwner, '0x'];
+  const deployedProxy = await deployContract('TransparentUpgradeableProxy', constructorArguments);
 
-    const proxyInfo: ContractInfo = {
-      name: contractToDeploy.name,
-      contractName: 'TransparentUpgradeableProxy',
-      contractType: contractToDeploy.contractType,
-      constructorArguments,
-      address: await deployedProxy.getAddress(),
-    };
+  const proxyInfo: ContractInfo = {
+    name: contractToDeploy.name,
+    contractName: 'TransparentUpgradeableProxy',
+    contractType: contractToDeploy.contractType,
+    constructorArguments,
+    address: await deployedProxy.getAddress(),
+  };
 
-    addressBook[name] = proxyInfo;
-    saveAddressBook(addressBook);
+  addressBook[name] = proxyInfo;
+  saveAddressBook(addressBook);
 
-    return {
-      name: contractToDeploy.name,
-      ...proxyInfo,
-    };
+  return {
+    name: contractToDeploy.name,
+    ...proxyInfo,
+  };
 }
 
-export function camelToAllCaps(camelCase: string): string {
-  return camelCase
-    .replace(/([a-z])([A-Z])/g, '$1_$2') // Insert underscore between lowercase and uppercase letters
-    .toUpperCase(); // Convert to uppercase
+export function mapContractNameToEnvVarName(contractName: string): string {
+  if (contractName === 'LensGlobalFeed') {
+    return 'GLOBAL_FEED';
+  } else if (contractName === 'LensGlobalGraph') {
+    return 'GLOBAL_GRAPH';
+  } else if (contractName === 'LensGlobalNamespace') {
+    return 'LENS_NAMESPACE';
+  } else {
+    return contractName
+      .replace(/([a-z])([A-Z])/g, '$1_$2') // Insert underscore between lowercase and uppercase letters
+      .toUpperCase(); // Convert to uppercase
+  }
 }
 
 export function generateEnvFile() {
@@ -187,7 +194,7 @@ export function generateEnvFile() {
   for (const [contractName, info] of Object.entries(addressBook as AddressBook)) {
     if (!info.address) continue;
 
-    const envVarName = camelToAllCaps(contractName);
+    const envVarName = mapContractNameToEnvVarName(contractName);
     const line = `${envVarName}="${info.address}"`;
 
     switch (info.contractType) {
