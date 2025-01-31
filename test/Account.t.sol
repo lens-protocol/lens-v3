@@ -72,7 +72,7 @@ contract AccountTest is Test, BaseDeployments {
         );
 
         vm.prank(owner);
-        bytes memory returnData = account.executeTransaction({to: address(feed), value: 0, data: txData});
+        bytes memory returnData = account.executeTransaction({target: address(feed), value: 0, data: txData});
         console.log("Return Data length:", returnData.length);
         uint256 postId = abi.decode(returnData, (uint256));
 
@@ -102,7 +102,7 @@ contract AccountTest is Test, BaseDeployments {
         );
 
         vm.prank(manager);
-        bytes memory returnData = account.executeTransaction({to: address(feed), value: 0, data: txData});
+        bytes memory returnData = account.executeTransaction({target: address(feed), value: 0, data: txData});
         uint256 postId = abi.decode(returnData, (uint256));
 
         Post memory post = feed.getPost(postId);
@@ -228,16 +228,16 @@ contract AccountTest is Test, BaseDeployments {
 
         vm.expectRevert("This is an error message");
         vm.prank(owner);
-        account.executeTransaction({to: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.stringError, ())});
+        account.executeTransaction({target: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.stringError, ())});
 
         vm.expectRevert(ErrorsTest.CustomError.selector);
         vm.prank(owner);
-        account.executeTransaction({to: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.customError, ())});
+        account.executeTransaction({target: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.customError, ())});
 
         vm.expectRevert(abi.encodeWithSelector(ErrorsTest.CustomErrorWithValue.selector, uint256(123)));
         vm.prank(owner);
         account.executeTransaction({
-            to: errorsTest,
+            target: errorsTest,
             value: 0,
             data: abi.encodeWithSelector(ErrorsTest.customErrorWithValue.selector, uint256(123))
         });

@@ -14,11 +14,17 @@ struct AccountManagerPermissions {
     bool canSetMetadataURI;
 }
 
+struct Transaction {
+    address target;
+    uint256 value;
+    bytes data;
+}
+
 interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_MetadataURISet(string metadataURI);
     event Lens_Account_MetadataURISet(string metadataURI, address indexed source);
     event Lens_Account_OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event Lens_Account_TransactionExecuted(address indexed to, uint256 value, bytes data, address indexed executor);
+    event Lens_Account_TransactionExecuted(address indexed target, uint256 value, bytes data, address indexed executor);
     event Lens_Account_AccountManagerAdded(address accountManager, AccountManagerPermissions permissions);
     event Lens_Account_AccountManagerRemoved(address accountManager);
     event Lens_Account_AccountManagerUpdated(address accountManager, AccountManagerPermissions permissions);
@@ -41,10 +47,12 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
-    function executeTransaction(address to, uint256 value, bytes calldata data)
+    function executeTransaction(address target, uint256 value, bytes calldata data)
         external
         payable
         returns (bytes memory);
+
+    function executeTransactions(Transaction[] calldata transactions) external payable returns (bytes[] memory);
 
     function getAccountManagerPermissions(address accountManager)
         external

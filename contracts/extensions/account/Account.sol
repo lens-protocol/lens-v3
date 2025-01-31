@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Events} from "contracts/core/types/Events.sol";
-import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
+import {IAccount, AccountManagerPermissions, Transaction} from "contracts/extensions/account/IAccount.sol";
 import {SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
@@ -139,28 +139,54 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         _decodeAndSetExtraData(extraDataToSet);
     }
 
-    function executeTransaction(address to, uint256 value, bytes calldata data)
+    function executeTransaction(address target, uint256 value, bytes calldata data)
         external
         payable
         override
         returns (bytes memory)
     {
-        if (msg.sender != owner()) {
-            require($storage().accountManagerPermissions[msg.sender].canExecuteTransactions, Errors.NotAllowed());
-            if (value > 0) {
-                require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
-            }
-            if (_isTransferRelatedSelector(bytes4(data[:4]))) {
-                require(
-                    $storage().allowNonOwnerSpendingTimestamp > 0
-                        && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
-                    Errors.NotAllowed()
-                );
-                require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
-            }
+        require(
+            msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
+            Errors.NotAllowed()
+        );
+        return _executeTransaction(target, value, data);
+    }
+
+    function executeTransactions(Transaction[] calldata transactions)
+        external
+        payable
+        override
+        returns (bytes[] memory)
+    {
+        require(
+            msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
+            Errors.NotAllowed()
+        );
+        bytes[] memory returnData = new bytes[](transactions.length);
+        for (uint256 i = 0; i < transactions.length; i++) {
+            returnData[i] = _executeTransaction(transactions[i].target, transactions[i].value, transactions[i].data);
         }
-        bytes memory returnData = to.handledcall(value, data);
-        emit Lens_Account_TransactionExecuted(to, value, data, msg.sender);
+        return returnData;
+    }
+
+    function _executeTransaction(address target, uint256 value, bytes calldata data)
+        internal
+        virtual
+        returns (bytes memory)
+    {
+        if (value > 0) {
+            require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
+        }
+        if (_isTransferRelatedSelector(bytes4(data[:4]))) {
+            require(
+                $storage().allowNonOwnerSpendingTimestamp > 0
+                    && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
+                Errors.NotAllowed()
+            );
+            require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+        }
+        bytes memory returnData = target.handledcall(value, data);
+        emit Lens_Account_TransactionExecuted(target, value, data, msg.sender);
         return returnData;
     }
 
