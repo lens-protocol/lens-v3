@@ -53,7 +53,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         });
 
         address groupAccessControl = address(AccessControlled(address(group)).getAccessControl());
-        vm.prank(lockOwner);
+        vm.prank(accessControlLockOwner);
         Lock(accessControlLock).setLockStatusForAddress(groupAccessControl, false);
 
         vm.prank(groupOwner);

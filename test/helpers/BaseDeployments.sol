@@ -18,6 +18,7 @@ import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
 import {MigrationApp} from "contracts/migration/primitives/MigrationApp.sol";
+import {MigrationAccount} from "contracts/migration/primitives/MigrationAccount.sol";
 import {MigrationFeed} from "contracts/migration/primitives/MigrationFeed.sol";
 import {MigrationGraph} from "contracts/migration/primitives/MigrationGraph.sol";
 import {MigrationNamespace} from "contracts/migration/primitives/MigrationNamespace.sol";
@@ -56,7 +57,14 @@ contract BaseDeployments is Test {
     ITokenURIProvider simpleTokenURIProvider;
     address proxyAdminLock;
     address accessControlLock;
-    address lockOwner = makeAddr("LOCK_OWNER");
+
+    address proxyAdminLockOwner = vm.envOr("PROXY_ADMIN_LOCK_OWNER", makeAddr("PROXY_ADMIN_LOCK_OWNER"));
+    address accessControlLockOwner = vm.envOr("ACCESS_CONTROL_LOCK_OWNER", makeAddr("ACCESS_CONTROL_LOCK_OWNER"));
+    address rulesOwner = vm.envOr("RULES_OWNER", makeAddr("RULES_OWNER"));
+    address actionsOwner = vm.envOr("ACTIONS_OWNER", makeAddr("ACTIONS_OWNER"));
+    address beaconOwner = vm.envOr("BEACON_OWNER", makeAddr("BEACON_OWNER"));
+    address factoriesProxyOwner = vm.envOr("FACTORIES_PROXY_OWNER", makeAddr("FACTORIES_PROXY_OWNER"));
+    address primitivesOwner = vm.envOr("PRIMITIVES_OWNER", makeAddr("PRIMITIVES_OWNER"));
 
     address appImpl;
     address accountImpl;
@@ -85,23 +93,23 @@ contract BaseDeployments is Test {
     address groupGatedFeedRule;
     address usernameSimpleCharsetRule;
 
-    bool migrationMode = vm.envOr("MIGRATION_MODE", false);
+    bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
 
     function switchMigrationMode(bool newMigrationMode) public {
         migrationMode = newMigrationMode;
     }
 
     function setUp() public virtual {
-        proxyAdminLock = address(new Lock(lockOwner, true));
-        accessControlLock = address(new Lock(lockOwner, true));
+        proxyAdminLock = address(new Lock(proxyAdminLockOwner, true));
+        accessControlLock = address(new Lock(accessControlLockOwner, true));
         _deployImplementations();
         _deployBeacons();
         _deployFactories();
 
-        accountBlockingRule = address(new AccountBlockingRule({owner: address(this), metadataURI: "uri://any"}));
-        groupGatedFeedRule = address(new GroupGatedFeedRule({owner: address(this), metadataURI: "uri://any"}));
+        accountBlockingRule = address(new AccountBlockingRule({owner: rulesOwner, metadataURI: "uri://any"}));
+        groupGatedFeedRule = address(new GroupGatedFeedRule({owner: rulesOwner, metadataURI: "uri://any"}));
         usernameSimpleCharsetRule =
-            address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
+            address(new UsernameSimpleCharsetNamespaceRule({owner: rulesOwner, metadataURI: "uri://any"}));
 
         address lensFactoryImpl = migrationMode
             ? address(
@@ -143,7 +151,7 @@ contract BaseDeployments is Test {
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
         appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
-        accountImpl = address(new AccountContract());
+        accountImpl = migrationMode ? address(new MigrationAccount()) : address(new AccountContract());
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());
@@ -151,12 +159,12 @@ contract BaseDeployments is Test {
     }
 
     function _deployBeacons() internal {
-        appBeacon = address(new Beacon(lockOwner, 1, appImpl));
-        accountBeacon = address(new Beacon(lockOwner, 1, accountImpl));
-        feedBeacon = address(new Beacon(lockOwner, 1, feedImpl));
-        graphBeacon = address(new Beacon(lockOwner, 1, graphImpl));
-        groupBeacon = address(new Beacon(lockOwner, 1, groupImpl));
-        namespaceBeacon = address(new Beacon(lockOwner, 1, namespaceImpl));
+        appBeacon = address(new Beacon(beaconOwner, 1, appImpl));
+        accountBeacon = address(new Beacon(beaconOwner, 1, accountImpl));
+        feedBeacon = address(new Beacon(beaconOwner, 1, feedImpl));
+        graphBeacon = address(new Beacon(beaconOwner, 1, graphImpl));
+        groupBeacon = address(new Beacon(beaconOwner, 1, groupImpl));
+        namespaceBeacon = address(new Beacon(beaconOwner, 1, namespaceImpl));
     }
 
     function _deployFactories() internal {

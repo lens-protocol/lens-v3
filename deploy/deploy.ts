@@ -50,17 +50,29 @@ async function deploy() {
     throw new Error('ACTIONS_OWNER not found in environment variables');
   }
 
+  const primitivesOwner = process.env.PRIMITIVES_OWNER;
+  if (!primitivesOwner && DEPLOYING_FR) {
+    throw new Error('PRIMITIVES_OWNER not found in environment variables');
+  }
+
   if (DEPLOYING_FR) {
     console.log('ProxyAdminLockOwner', proxyAdminLockOwner);
     console.log('AccessControlAdminLockOwner', accessControlLockOwner);
     console.log('BeaconOwner', beaconOwner);
     console.log('FactoriesProxyOwner', factoriesProxyOwner);
     console.log('RulesOwner', rulesOwner);
+    console.log('ActionsOwner', actionsOwner);
+    console.log('PrimitivesOwner', primitivesOwner);
   } else {
     console.log('\nNot Deploying fr, so using deployer address as owner everywhere:');
+
     console.log('\tProxyAdminLockOwner:', deployerAddress);
+    console.log('\tAccessControlLockOwner:', deployerAddress);
     console.log('\tBeaconOwner:', deployerAddress);
     console.log('\tFactoriesProxyOwner:', LOCAL_RICH_WALLETS[1].address); // Cannot be deployer cause later it will fail to execute the lensFactory primitives deployments
+    console.log('\tRulesOwner:', deployerAddress);
+    console.log('\tActionsOwner:', deployerAddress);
+    console.log('\tPrimitivesOwner:', deployerAddress);
   }
   console.log('\n-------------------------------------------------------------------\n\n');
 
@@ -69,10 +81,10 @@ async function deploy() {
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
   await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);
-  await deployLensPrimitives(DEPLOYING_MIGRATION);
+  await deployLensPrimitives(primitivesOwner ?? deployerAddress, DEPLOYING_MIGRATION);
   if (!DEPLOYING_MIGRATION) {
-    const actionHub = await deployLensActionHub();
-    await deployLensAccessControl();
+    const actionHub = await deployLensActionHub(factoriesProxyOwner ?? deployerAddress);
+    await deployLensAccessControl(primitivesOwner ?? deployerAddress);
     await deployRules(rulesOwner ?? deployerAddress);
     await deployActions(actionHub, actionsOwner ?? deployerAddress);
   }
