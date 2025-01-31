@@ -5,6 +5,11 @@ pragma solidity ^0.8.26;
 import {
     RuleSelectorChange, RuleChange, RuleProcessingParams, SourceStamp, KeyValue
 } from "contracts/core/types/Types.sol";
+import {AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
+
+function _emptyAccountManagerPermissionsArray() pure returns (AccountManagerPermissions[] memory) {
+    return new AccountManagerPermissions[](0);
+}
 
 function _emptyKeyValueArray() pure returns (KeyValue[] memory) {
     return new KeyValue[](0);

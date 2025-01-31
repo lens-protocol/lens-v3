@@ -78,7 +78,7 @@ interface IGraph is IMetadataBased {
 
     function follow(
         address followerAccount,
-        address targetAccount,
+        address accountToFollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
@@ -87,7 +87,7 @@ interface IGraph is IMetadataBased {
 
     function unfollow(
         address followerAccount,
-        address targetAccount,
+        address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external returns (uint256);

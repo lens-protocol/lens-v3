@@ -46,7 +46,7 @@ contract LensFactoryTest is Test, BaseDeployments {
             metadataURI: "someMetadataURI",
             owner: address(this),
             accountManagers: _emptyAddressArray(),
-            accountManagersPermissions: new AccountManagerPermissions[](0),
+            accountManagersPermissions: _emptyAccountManagerPermissionsArray(),
             accountCreationSourceStamp: _emptySourceStamp(),
             accountExtraData: _emptyKeyValueArray()
         });
@@ -78,7 +78,7 @@ contract LensFactoryTest is Test, BaseDeployments {
         );
         graph.follow({
             followerAccount: address(this),
-            targetAccount: address(0xc0ffee),
+            accountToFollow: address(0xc0ffee),
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),

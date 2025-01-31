@@ -136,7 +136,7 @@ contract EventsTest is Test, BaseDeployments {
         vm.prank(follower);
         IGraph(graph).follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -146,7 +146,7 @@ contract EventsTest is Test, BaseDeployments {
         vm.prank(follower);
         IGraph(graph).unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });

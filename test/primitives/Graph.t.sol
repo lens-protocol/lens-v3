@@ -70,7 +70,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -100,7 +100,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -116,7 +116,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 unfollowedId = graph.unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -169,7 +169,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: customParams,
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -201,7 +201,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -233,7 +233,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 unfollowedId = graph.unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: customParams,
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -266,7 +266,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.InvalidMsgSender.selector);
         graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -281,7 +281,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.InvalidParameter.selector);
         graph.follow({
             followerAccount: follower,
-            targetAccount: address(0),
+            accountToFollow: address(0),
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -296,7 +296,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.InvalidParameter.selector);
         graph.unfollow({
             followerAccount: follower,
-            targetAccount: address(0),
+            accountToUnfollow: address(0),
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -309,7 +309,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.ActionOnSelf.selector);
         graph.follow({
             followerAccount: account,
-            targetAccount: account,
+            accountToFollow: account,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -326,7 +326,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -338,7 +338,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.CannotFollowAgain.selector);
         graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -356,7 +356,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.NotFollowing.selector);
         graph.unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -374,7 +374,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -386,7 +386,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.expectRevert(Errors.InvalidMsgSender.selector);
         graph.unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -406,7 +406,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(followers[i]);
             followIds[i] = graph.follow({
                 followerAccount: followers[i],
-                targetAccount: target,
+                accountToFollow: target,
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
                 followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -436,7 +436,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -470,7 +470,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -512,7 +512,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -529,7 +529,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         graph.unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -552,7 +552,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -592,7 +592,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(follower);
             followIds[i] = graph.follow({
                 followerAccount: follower,
-                targetAccount: targets[i],
+                accountToFollow: targets[i],
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
                 followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -621,7 +621,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(follower);
             uint256 unfollowedId = graph.unfollow({
                 followerAccount: follower,
-                targetAccount: targets[i],
+                accountToUnfollow: targets[i],
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
             });
@@ -686,7 +686,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(followers[i]);
             followIds[i] = graph.follow({
                 followerAccount: followers[i],
-                targetAccount: target,
+                accountToFollow: target,
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
                 followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -743,7 +743,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 firstFollowId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -759,7 +759,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 unfollowId = graph.unfollow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -774,7 +774,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 secondFollowId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -815,7 +815,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(followers[i]);
             followIds[i] = graph.follow({
                 followerAccount: followers[i],
-                targetAccount: target,
+                accountToFollow: target,
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
                 followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -846,7 +846,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(followers[i]);
             uint256 unfollowedId = graph.unfollow({
                 followerAccount: followers[i],
-                targetAccount: target,
+                accountToUnfollow: target,
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
             });
@@ -916,7 +916,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -952,7 +952,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(follower);
         uint256 followId = graph.follow({
             followerAccount: follower,
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -984,7 +984,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(followers[i]);
             followIds[i] = graph.follow({
                 followerAccount: followers[i],
-                targetAccount: target,
+                accountToFollow: target,
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
                 followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -1001,7 +1001,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(followers[0]);
         graph.unfollow({
             followerAccount: followers[0],
-            targetAccount: target,
+            accountToUnfollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
         });
@@ -1013,7 +1013,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.prank(followers[0]);
         uint256 newFollowId = graph.follow({
             followerAccount: followers[0],
-            targetAccount: target,
+            accountToFollow: target,
             customParams: _emptyKeyValueArray(),
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
@@ -1031,7 +1031,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
             vm.prank(followers[i]);
             graph.unfollow({
                 followerAccount: followers[i],
-                targetAccount: target,
+                accountToUnfollow: target,
                 customParams: _emptyKeyValueArray(),
                 graphRulesProcessingParams: _emptyRuleProcessingParamsArray()
             });

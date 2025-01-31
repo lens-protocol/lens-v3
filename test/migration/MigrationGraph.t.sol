@@ -35,7 +35,7 @@ contract MigrationGraphTest is BaseDeployments {
 
         uint256 returnedFollowId = migrationGraph.follow({
             followerAccount: makeAddr("FOLLOWER_1"),
-            targetAccount: makeAddr("TARGET_1"),
+            accountToFollow: makeAddr("TARGET_1"),
             customParams: customParams,
             graphRulesProcessingParams: _emptyRuleProcessingParamsArray(),
             followRulesProcessingParams: _emptyRuleProcessingParamsArray(),
