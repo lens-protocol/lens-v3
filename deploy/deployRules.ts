@@ -68,6 +68,11 @@ export async function deployRules(rulesOwner: string): Promise<void> {
       contractType: ContractType.Rule,
       constructorArguments: [rulesOwner, metadataURI],
     },
+    {
+      contractName: 'BanMemberGroupRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [rulesOwner, metadataURI],
+    },
     // Namespace Rules
     // {
     //   contractName: 'UsernameCharsetNamespaceRule',
