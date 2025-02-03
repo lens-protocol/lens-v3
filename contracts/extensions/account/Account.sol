@@ -145,11 +145,12 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         override
         returns (bytes memory)
     {
+        bool isMsgSenderOwner = msg.sender == owner();
         require(
-            msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
+            isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
             Errors.NotAllowed()
         );
-        return _executeTransaction(target, value, data);
+        return _executeTransaction(isMsgSenderOwner, target, value, data);
     }
 
     function executeTransactions(Transaction[] calldata transactions)
@@ -158,32 +159,37 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         override
         returns (bytes[] memory)
     {
+        bool isMsgSenderOwner = msg.sender == owner();
         require(
-            msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
+            isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
             Errors.NotAllowed()
         );
         bytes[] memory returnData = new bytes[](transactions.length);
         for (uint256 i = 0; i < transactions.length; i++) {
-            returnData[i] = _executeTransaction(transactions[i].target, transactions[i].value, transactions[i].data);
+            returnData[i] = _executeTransaction(
+                isMsgSenderOwner, transactions[i].target, transactions[i].value, transactions[i].data
+            );
         }
         return returnData;
     }
 
-    function _executeTransaction(address target, uint256 value, bytes calldata data)
+    function _executeTransaction(bool isMsgSenderOwner, address target, uint256 value, bytes calldata data)
         internal
         virtual
         returns (bytes memory)
     {
-        if (value > 0) {
-            require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
-        }
-        if (_isTransferRelatedSelector(bytes4(data[:4]))) {
-            require(
-                $storage().allowNonOwnerSpendingTimestamp > 0
-                    && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
-                Errors.NotAllowed()
-            );
-            require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+        if (!isMsgSenderOwner) {
+            if (value > 0) {
+                require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
+            }
+            if (_isTransferRelatedSelector(bytes4(data[:4]))) {
+                require(
+                    $storage().allowNonOwnerSpendingTimestamp > 0
+                        && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
+                    Errors.NotAllowed()
+                );
+                require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+            }
         }
         bytes memory returnData = target.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(target, value, data, msg.sender);
