@@ -30,12 +30,15 @@ import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
 
 import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+
+import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 
 /// @custom:keccak lens.data.groupFeed
 bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92d4ee5701c6d20b721221326b94ae1;
@@ -74,6 +77,7 @@ contract LensFactory {
     address internal immutable ACCOUNT_BLOCKING_RULE;
     address internal immutable GROUP_GATED_FEED_RULE;
     address internal immutable USERNAME_SIMPLE_CHARSET_RULE;
+    address internal immutable BAN_MEMBER_GROUP_RULE;
 
     constructor(
         AccessControlFactory accessControlFactory,
@@ -85,7 +89,8 @@ contract LensFactory {
         NamespaceFactory namespaceFactory,
         address accountBlockingRule,
         address groupGatedFeedRule,
-        address usernameSimpleCharsetRule
+        address usernameSimpleCharsetRule,
+        address banMemberGroupRule
     ) {
         ACCESS_CONTROL_FACTORY = accessControlFactory;
         ACCOUNT_FACTORY = accountFactory;
@@ -98,6 +103,7 @@ contract LensFactory {
         ACCOUNT_BLOCKING_RULE = accountBlockingRule;
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
         USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
+        BAN_MEMBER_GROUP_RULE = banMemberGroupRule;
     }
 
     function createAccountWithUsernameFree(
@@ -245,7 +251,7 @@ contract LensFactory {
             metadataURI,
             accessControl,
             owner,
-            _injectRuleAccessControl(rules, address(accessControl)),
+            _prepareGroupRules(rules, address(accessControl)),
             extraData,
             foundingMember,
             addFoundingMemberCustomParams
@@ -349,6 +355,34 @@ contract LensFactory {
         RuleChange[] memory modifiedRules = new RuleChange[](rules.length);
         for (uint256 i = 0; i < rules.length; i++) {
             modifiedRules[i] = _injectRuleAccessControl(rules[i], accessControl);
+        }
+        return modifiedRules;
+    }
+
+    function _prepareGroupRules(RuleChange[] memory rules, address accessControl)
+        internal
+        view
+        virtual
+        returns (RuleChange[] memory)
+    {
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        KeyValue[] memory banMemberGroupRuleParams = new KeyValue[](1);
+        banMemberGroupRuleParams[0] = KeyValue({
+            key: BanMemberGroupRule(BAN_MEMBER_GROUP_RULE).PARAM__ACCESS_CONTROL(),
+            value: abi.encode(accessControl)
+        });
+        selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IGroupRule.processJoining.selector, isRequired: true, enabled: true});
+        modifiedRules[0] = RuleChange({
+            ruleAddress: BAN_MEMBER_GROUP_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: banMemberGroupRuleParams}),
+            selectorChanges: selectorChanges
+        });
+        for (uint256 i = 0; i < rules.length; i++) {
+            require(rules[i].ruleAddress != BAN_MEMBER_GROUP_RULE, Errors.DuplicatedValue());
+            modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
         }
         return modifiedRules;
     }
@@ -459,7 +493,12 @@ contract LensFactory {
         return address(TEMPORARY_ACCESS_CONTROL);
     }
 
-    function getRules() external view returns (address, address, address) {
-        return (address(ACCOUNT_BLOCKING_RULE), address(GROUP_GATED_FEED_RULE), address(USERNAME_SIMPLE_CHARSET_RULE));
+    function getRules() external view returns (address, address, address, address) {
+        return (
+            address(ACCOUNT_BLOCKING_RULE),
+            address(GROUP_GATED_FEED_RULE),
+            address(USERNAME_SIMPLE_CHARSET_RULE),
+            address(BAN_MEMBER_GROUP_RULE)
+        );
     }
 }

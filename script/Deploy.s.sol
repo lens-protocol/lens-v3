@@ -34,6 +34,7 @@ import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
+import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 
 contract MyScript is Script {
     function testMyScript() public {
@@ -72,6 +73,7 @@ contract MyScript is Script {
     address accountBlockingRule;
     address groupGatedFeedRule;
     address usernameSimpleCharsetRule;
+    address banMemberGroupRule;
 
     function run() external {
         proxyAdminLock = address(new Lock(lockOwner, true));
@@ -84,6 +86,7 @@ contract MyScript is Script {
         groupGatedFeedRule = address(new GroupGatedFeedRule({owner: address(this), metadataURI: "uri://any"}));
         usernameSimpleCharsetRule =
             address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
+        banMemberGroupRule = address(new BanMemberGroupRule({owner: address(this), metadataURI: "uri://any"}));
 
         lensFactory = new LensFactory({
             accessControlFactory: new AccessControlFactory(accessControlLock),
@@ -95,7 +98,8 @@ contract MyScript is Script {
             namespaceFactory: namespaceFactory,
             accountBlockingRule: accountBlockingRule,
             groupGatedFeedRule: groupGatedFeedRule,
-            usernameSimpleCharsetRule: usernameSimpleCharsetRule
+            usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+            banMemberGroupRule: banMemberGroupRule
         });
     }
 

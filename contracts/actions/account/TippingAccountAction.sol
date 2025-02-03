@@ -14,7 +14,7 @@ contract TippingAccountAction is OwnableMetadataBasedAccountAction {
     /// @custom:keccak lens.param.amount
     bytes32 constant PARAM__TIP_AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
     /// @custom:keccak lens.param.token
-    bytes32 constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
+    bytes32 public constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 
     constructor(address actionHub, address owner, string memory metadataURI)
         OwnableMetadataBasedAccountAction(actionHub, owner, metadataURI)

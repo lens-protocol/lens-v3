@@ -15,15 +15,16 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     using AccessControlLib for address;
 
     /// @custom:keccak lens.permission.BanMember
-    uint256 constant PID__BAN_MEMBER = uint256(0x9d308cac09fdd9a84cb1807d1735d96bcdf3e6b148cee46755a39c858ee0157f);
+    uint256 public constant PID__BAN_MEMBER = uint256(0x9d308cac09fdd9a84cb1807d1735d96bcdf3e6b148cee46755a39c858ee0157f);
     /// @custom:keccak lens.permission.UnbanMember
-    uint256 constant PID__UNBAN_MEMBER = uint256(0x22ca63d52e89aec5edc4f87f1dec7197ab8f39c6eb711100459646e6634f5b3b);
+    uint256 public constant PID__UNBAN_MEMBER =
+        uint256(0x22ca63d52e89aec5edc4f87f1dec7197ab8f39c6eb711100459646e6634f5b3b);
 
     /// @custom:keccak lens.param.accessControl
-    bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
+    bytes32 public constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
     /// @custom:keccak lens.param.banMember
-    bytes32 constant PARAM__BAN_MEMBER = 0xc18b1794d154829be8985d985e210a3ff29be11c97069d5a0558da13bdbf2277;
+    bytes32 public constant PARAM__BAN_MEMBER = 0xc18b1794d154829be8985d985e210a3ff29be11c97069d5a0558da13bdbf2277;
 
     event Lens_BanMemberGroupRule_MemberBanned(
         address indexed group, bytes32 indexed configSalt, address indexed bannedAccount, address bannedBy

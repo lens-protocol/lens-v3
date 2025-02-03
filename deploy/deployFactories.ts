@@ -92,6 +92,11 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
       contractType: ContractType.Rule,
       constructorArguments: [rulesOwner, metadataURI],
     },
+    {
+      contractName: 'BanMemberGroupRule',
+      contractType: ContractType.Rule,
+      constructorArguments: [rulesOwner, metadataURI],
+    },
   ];
 
   const deployedContracts: Record<string, ContractInfo> = {};
@@ -119,6 +124,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
     DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['AccountBlockingRule'].address,
     DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['GroupGatedFeedRule'].address,
     DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['UsernameSimpleCharsetNamespaceRule'].address,
+    DEPLOYING_MIGRATION ? ZeroAddress : deployedContracts['BanMemberGroupRule'].address,
   ];
 
   await deployLensContractAsProxy(

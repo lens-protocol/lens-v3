@@ -478,8 +478,12 @@ contract MigrationFlowTest is BaseDeployments {
             address lensNamespaceFactory
         ) = lensFactory.getFactories();
 
-        (address lensAccountBlockingRule, address lensGroupGatedFeedRule, address lensUsernameSimpleCharsetRule) =
-            lensFactory.getRules();
+        (
+            address lensAccountBlockingRule,
+            address lensGroupGatedFeedRule,
+            address lensUsernameSimpleCharsetRule,
+            address lensBanMemberGroupRule
+        ) = lensFactory.getRules();
 
         address lensFactoryImpl = address(
             new LensFactory(
@@ -492,7 +496,8 @@ contract MigrationFlowTest is BaseDeployments {
                 NamespaceFactory(lensNamespaceFactory),
                 lensAccountBlockingRule,
                 lensGroupGatedFeedRule,
-                lensUsernameSimpleCharsetRule
+                lensUsernameSimpleCharsetRule,
+                lensBanMemberGroupRule
             )
         );
 

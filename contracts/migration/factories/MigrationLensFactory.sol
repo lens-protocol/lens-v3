@@ -26,7 +26,8 @@ contract MigrationLensFactory is LensFactory, EventEmitter {
         NamespaceFactory namespaceFactory,
         address accountBlockingRule,
         address groupGatedFeedRule,
-        address usernameSimpleCharsetRule
+        address usernameSimpleCharsetRule,
+        address banMemberGroupRule
     )
         LensFactory(
             accessControlFactory,
@@ -38,7 +39,8 @@ contract MigrationLensFactory is LensFactory, EventEmitter {
             namespaceFactory,
             accountBlockingRule,
             groupGatedFeedRule,
-            usernameSimpleCharsetRule
+            usernameSimpleCharsetRule,
+            banMemberGroupRule
         )
     {}
 

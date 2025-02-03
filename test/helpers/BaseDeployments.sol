@@ -47,6 +47,8 @@ import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
+import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
+
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract BaseDeployments is Test {
@@ -94,6 +96,7 @@ contract BaseDeployments is Test {
     address accountBlockingRule;
     address groupGatedFeedRule;
     address usernameSimpleCharsetRule;
+    address banMemberGroupRule;
 
     bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
 
@@ -112,6 +115,7 @@ contract BaseDeployments is Test {
         groupGatedFeedRule = address(new GroupGatedFeedRule({owner: rulesOwner, metadataURI: "uri://any"}));
         usernameSimpleCharsetRule =
             address(new UsernameSimpleCharsetNamespaceRule({owner: rulesOwner, metadataURI: "uri://any"}));
+        banMemberGroupRule = address(new BanMemberGroupRule({owner: rulesOwner, metadataURI: "uri://any"}));
 
         address lensFactoryImpl = migrationMode
             ? address(
@@ -125,7 +129,8 @@ contract BaseDeployments is Test {
                     namespaceFactory: namespaceFactory,
                     accountBlockingRule: address(0),
                     groupGatedFeedRule: address(0),
-                    usernameSimpleCharsetRule: address(0)
+                    usernameSimpleCharsetRule: address(0),
+                    banMemberGroupRule: address(0)
                 })
             )
             : address(
@@ -139,7 +144,8 @@ contract BaseDeployments is Test {
                     namespaceFactory: namespaceFactory,
                     accountBlockingRule: accountBlockingRule,
                     groupGatedFeedRule: groupGatedFeedRule,
-                    usernameSimpleCharsetRule: usernameSimpleCharsetRule
+                    usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+                    banMemberGroupRule: banMemberGroupRule
                 })
             );
         TransparentUpgradeableProxy lensFactoryProxy =
