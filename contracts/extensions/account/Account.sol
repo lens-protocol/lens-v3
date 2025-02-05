@@ -179,7 +179,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         returns (bytes memory)
     {
         if (!isMsgSenderOwner) {
-            if (value > 0) {
+            if (value > msg.value) {
                 require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
             }
             if (_isTransferRelatedSelector(bytes4(data[:4]))) {
