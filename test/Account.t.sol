@@ -162,6 +162,9 @@ contract AccountTest is Test, BaseDeployments {
         vm.assume(accountManager != address(0));
         vm.assume(accountManager != owner);
         vm.assume(accountManager != manager);
+        vm.assume(canTransferTokensBefore != canTransferTokensAfter);
+        vm.assume(canTransferNativeBefore != canTransferNativeAfter);
+        vm.assume(canSetMetadataURIBefore != canSetMetadataURIAfter);
 
         vm.prank(owner);
         account.addAccountManager(

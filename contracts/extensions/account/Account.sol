@@ -17,8 +17,26 @@ import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Hol
 import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 
+library PermissionsHelper {
+    function equals(AccountManagerPermissions memory permissions, AccountManagerPermissions memory otherPermissions)
+        internal
+        pure
+        returns (bool)
+    {
+        return permissions.canExecuteTransactions == otherPermissions.canExecuteTransactions
+            && permissions.canTransferTokens == otherPermissions.canTransferTokens
+            && permissions.canTransferNative == otherPermissions.canTransferNative
+            && permissions.canSetMetadataURI == otherPermissions.canSetMetadataURI;
+    }
+
+    function isAccountManager(AccountManagerPermissions memory managerPermissions) internal pure returns (bool) {
+        return managerPermissions.canExecuteTransactions || managerPermissions.canSetMetadataURI;
+    }
+}
+
 contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, MetadataBased, ERC1155Holder, ERC721Holder {
     using CallLib for address;
+    using PermissionsHelper for AccountManagerPermissions;
 
     // In a future Account version/upgrade this could be configurable by the owner.
     uint256 constant SPENDING_TIMELOCK = 1 hours;
@@ -103,14 +121,25 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         emit Lens_Account_AllowNonOwnerSpending(allow, allow ? block.timestamp : 0);
     }
 
+    function _isAccountManager(address accountManager) internal view returns (bool) {
+        return $storage().accountManagerPermissions[accountManager].isAccountManager();
+    }
+
+    function _validateAccountManagerPermissions(AccountManagerPermissions calldata permissions) internal pure {
+        if (permissions.canTransferNative || permissions.canTransferTokens) {
+            require(permissions.canExecuteTransactions, Errors.InvalidParameter());
+        } else {
+            require(permissions.isAccountManager(), Errors.InvalidParameter());
+        }
+    }
+
     function addAccountManager(address accountManager, AccountManagerPermissions calldata accountManagerPermissions)
         external
         override
         onlyOwner
     {
-        require(
-            !$storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.RedundantStateChange()
-        );
+        require(!_isAccountManager(accountManager), Errors.RedundantStateChange());
+        _validateAccountManagerPermissions(accountManagerPermissions);
         require(accountManager != owner(), Errors.InvalidParameter());
         require(accountManager != address(0), Errors.InvalidParameter());
         $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
@@ -118,9 +147,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     }
 
     function removeAccountManager(address accountManager) external override onlyOwner {
-        require(
-            $storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.RedundantStateChange()
-        );
+        require(_isAccountManager(accountManager), Errors.RedundantStateChange());
         delete $storage().accountManagerPermissions[accountManager];
         emit Lens_Account_AccountManagerRemoved(accountManager);
     }
@@ -129,8 +156,12 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         address accountManager,
         AccountManagerPermissions calldata accountManagerPermissions
     ) external override onlyOwner {
-        require($storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.InvalidParameter());
-        require(accountManagerPermissions.canExecuteTransactions, Errors.InvalidParameter());
+        require(_isAccountManager(accountManager), Errors.InvalidParameter());
+        _validateAccountManagerPermissions(accountManagerPermissions);
+        require(
+            !$storage().accountManagerPermissions[accountManager].equals(accountManagerPermissions),
+            Errors.RedundantStateChange()
+        );
         $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
@@ -200,6 +231,14 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
 
     function canExecuteTransactions(address executor) external view override returns (bool) {
         return $storage().accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
+    }
+
+    function isAccountManager(address accountManager) external view override returns (bool) {
+        return _isAccountManager(accountManager);
+    }
+
+    function canSetMetadataURI(address accountManager) external view override returns (bool) {
+        return $storage().accountManagerPermissions[accountManager].canSetMetadataURI;
     }
 
     function getAccountManagerPermissions(address accountManager)

@@ -54,14 +54,18 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
 
     function executeTransactions(Transaction[] calldata transactions) external payable returns (bytes[] memory);
 
+    function isAccountManager(address accountManager) external view returns (bool);
+
+    function canExecuteTransactions(address executor) external view returns (bool);
+
+    function canSetMetadataURI(address accountManager) external view returns (bool);
+
     function getAccountManagerPermissions(address accountManager)
         external
         view
         returns (AccountManagerPermissions memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
-
-    function canExecuteTransactions(address executor) external view returns (bool);
 
     receive() external payable;
 }
