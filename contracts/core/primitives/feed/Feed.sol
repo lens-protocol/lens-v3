@@ -82,6 +82,7 @@ contract Feed is
         virtual
         override
     {
+        require(Core._postExists(entityId), Errors.DoesNotExist());
         require(msg.sender == Core.$storage().posts[entityId].author, Errors.InvalidMsgSender());
         require(entityId == Core.$storage().posts[entityId].rootPostId, Errors.CannotHaveRules());
     }
@@ -103,16 +104,20 @@ contract Feed is
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
+            // Existence of the quotedPost post was checked in the Core
             // Just a thought: Maybe quotes shouldn't be limited by rules... Like quotations in real life.
             uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
-            if (rootOfQuotedPost != rootPostId) {
+            if (rootOfQuotedPost != rootPostId && Core._postExists(rootOfQuotedPost)) {
                 _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
             }
         }
         if (postId != rootPostId) {
+            // Existence of the Replied/Reposted Post is checked in the Core
             require(postParams.ruleChanges.length == 0, Errors.CannotHaveRules());
-            // This covers the Reply or Repost cases
-            _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
+            if (Core._postExists(rootPostId)) {
+                // This covers the Reply or Repost cases
+                _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
+            }
         } else {
             _addPostRulesAtCreation(postId, postParams, feedRulesParams);
         }
@@ -150,22 +155,23 @@ contract Feed is
         // You can have this if you want to allow moderator editing:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, Errors.InvalidMsgSender());
-
         Core._editPost(postId, postParams);
-
         bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
         for (uint256 i = 0; i < postParams.extraData.length; i++) {
             wereExtraDataValuesSet[i] = _setEntityExtraStorage_Account(postId, postParams.extraData[i]);
         }
-
         _processPostEditingOnFeed(postId, postParams, customParams, feedRulesParams);
         uint256 quotedPostId = Core.$storage().posts[postId].quotedPostId;
         if (quotedPostId != 0) {
             uint256 rootOfQuotedPost = Core.$storage().posts[quotedPostId].rootPostId;
-            _processPostEditingOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            // Skip the Root rules processing if the Root post was deleted
+            if (Core._postExists(rootOfQuotedPost)) {
+                _processPostEditingOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            }
         }
         uint256 rootPostId = Core.$storage().posts[postId].rootPostId;
-        if (postId != rootPostId) {
+        // Skip the Root rules processing if the Root post was deleted
+        if (postId != rootPostId && Core._postExists(rootPostId)) {
             _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         }
         address source = _processSourceStamp({
@@ -227,6 +233,14 @@ contract Feed is
 
     function getPost(uint256 postId) external view override returns (Post memory) {
         require(Core._postExists(postId), Errors.DoesNotExist());
+        return _getPostUnchecked(postId);
+    }
+
+    function getPostUnchecked(uint256 postId) external view override returns (Post memory) {
+        return _getPostUnchecked(postId);
+    }
+
+    function _getPostUnchecked(uint256 postId) internal view returns (Post memory) {
         return Post({
             author: Core.$storage().posts[postId].author,
             authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
@@ -239,7 +253,8 @@ contract Feed is
             creationTimestamp: Core.$storage().posts[postId].creationTimestamp,
             creationSource: _getSource(postId),
             lastUpdatedTimestamp: Core.$storage().posts[postId].lastUpdatedTimestamp,
-            lastUpdateSource: _getSource(DATA__LAST_UPDATED_SOURCE, postId)
+            lastUpdateSource: _getSource(DATA__LAST_UPDATED_SOURCE, postId),
+            isDeleted: Core.$storage().posts[postId].isDeleted
         });
     }
 
