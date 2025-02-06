@@ -89,6 +89,10 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
         CreatePostParams calldata postParams
     ) internal view returns (bool) {
         IFeed feed = IFeed(msg.sender);
+        if (feed.getPostAuthor(rootPostId) == postParams.author) {
+            // Author can always reply, repost or quote their own posts.
+            return false;
+        }
         if (configuration.repliesRestricted && postParams.repliedPostId != 0) {
             uint256 repliedPostRootId = feed.getPost(postParams.repliedPostId).rootPostId;
             if (repliedPostRootId == rootPostId) {
