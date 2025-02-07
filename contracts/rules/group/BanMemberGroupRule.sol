@@ -72,19 +72,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
     ) external override {
-        if (_isMemberBanned[msg.sender][configSalt][account]) {
-            for (uint256 i = 0; i < ruleParams.length; i++) {
-                if (ruleParams[i].key == PARAM__BAN_MEMBER) {
-                    require(!abi.decode(ruleParams[i].value, (bool)), Errors.InvalidParameter()); // Cannot ban while adding to the group.
-                    _isMemberBanned[msg.sender][configSalt][account] = false;
-                    _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__UNBAN_MEMBER);
-                    emit Lens_BanMemberGroupRule_MemberUnbanned(msg.sender, configSalt, account, originalMsgSender);
-                    return;
-                }
-            }
-            // If member is banned and the param to unban was not passed, revert.
-            revert Errors.Banned();
-        }
+        revert Errors.NotImplemented();
     }
 
     function processRemoval(
@@ -94,19 +82,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
     ) external override {
-        for (uint256 i = 0; i < ruleParams.length; i++) {
-            if (ruleParams[i].key == PARAM__BAN_MEMBER) {
-                if (abi.decode(ruleParams[i].value, (bool))) {
-                    _isMemberBanned[msg.sender][configSalt][account] = true;
-                    _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__BAN_MEMBER);
-                    emit Lens_BanMemberGroupRule_MemberBanned(msg.sender, configSalt, account, originalMsgSender);
-                } else {
-                    // Cannot unban while kicking from the group.
-                    require(!_isMemberBanned[msg.sender][configSalt][account], Errors.InvalidParameter());
-                }
-                return;
-            }
-        }
+        revert Errors.NotImplemented();
     }
 
     function processJoining(
