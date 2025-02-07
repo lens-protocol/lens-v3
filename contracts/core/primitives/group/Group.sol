@@ -15,6 +15,7 @@ import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {IAccountGroupAdditionSettings} from "contracts/core/interfaces/IAccountGroupAdditionSettings.sol";
 
 // Resource IDs involved in the contract
 /// @custom:keccak lens.permission.SetMetadata
@@ -103,19 +104,40 @@ contract Group is
 
     // Public functions
 
+    /// @custom:keccak lens.param.accountAdditionSettingsParams
+    bytes32 constant PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS =
+        0xc5602d6fdc6b403d800fd4d9c15c7ff231b8994478f8df567d4554ab356cdd55;
+
     function addMember(
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         uint256 membershipId = Core._grantMembership(account);
-        if (_amountOfRules(IGroupRule.processAddition.selector) != 0) {
+        if (_hasAccess(msg.sender, PID__ADD_MEMBER) == false) {
+            require(_amountOfRules(IGroupRule.processAddition.selector) != 0, Errors.AccessDenied());
             _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
-        } else {
-            _requireAccess(msg.sender, PID__ADD_MEMBER);
         }
+        IAccountGroupAdditionSettings(account).canBeAddedToGroup({
+            group: address(this),
+            addedBy: msg.sender,
+            params: _extractAccountAdditionSettingsParamsFromParams(customParams)
+        });
         address source = _processSourceStamp(membershipId, customParams);
         emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
+    }
+
+    function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] calldata customParams)
+        internal
+        pure
+        returns (KeyValue[] memory)
+    {
+        for (uint256 i = 0; i < customParams.length; i++) {
+            if (customParams[i].key == PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS) {
+                return abi.decode(customParams[i].value, (KeyValue[]));
+            }
+        }
+        return new KeyValue[](0);
     }
 
     function removeMember(
@@ -123,10 +145,9 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        if (_amountOfRules(IGroupRule.processRemoval.selector) != 0) {
+        if (_hasAccess(msg.sender, PID__REMOVE_MEMBER) == false) {
+            require(_amountOfRules(IGroupRule.processRemoval.selector) != 0, Errors.AccessDenied());
             _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
-        } else {
-            _requireAccess(msg.sender, PID__REMOVE_MEMBER);
         }
         uint256 membershipId = Core._revokeMembership(account);
         address source = _processSourceStamp(membershipId, customParams);
