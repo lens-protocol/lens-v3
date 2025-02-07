@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
+import {IRequestBasedGroupRule} from "contracts/core/interfaces/IRequestBasedGroupRule.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
@@ -10,7 +10,7 @@ import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
+contract MembershipApprovalGroupRule is IRequestBasedGroupRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -40,13 +40,19 @@ contract MembershipApprovalGroupRule is IGroupRule, OwnableMetadataBasedRule {
         emit Events.Lens_PermissionId_Available(PID__APPROVE_MEMBER, "lens.permission.ApproveMember");
     }
 
-    function requestMembership(bytes32 configSalt, address group) external {
+    function sendMembershipRequest(bytes32 configSalt, address group, KeyValue[] calldata /* params */ )
+        external
+        override
+    {
         require(_isMembershipRequested[group][msg.sender][configSalt] == false, Errors.AlreadyExists());
         _isMembershipRequested[group][msg.sender][configSalt] = true;
         emit Lens_ApprovalGroupRule_MembershipRequested(group, configSalt, msg.sender);
     }
 
-    function cancelMembershipRequest(bytes32 configSalt, address group) external {
+    function cancelMembershipRequest(bytes32 configSalt, address group, KeyValue[] calldata /* params */ )
+        external
+        override
+    {
         require(_isMembershipRequested[group][msg.sender][configSalt], Errors.DoesNotExist());
         delete _isMembershipRequested[group][msg.sender][configSalt];
         emit Lens_ApprovalGroupRule_MembershipRequestCancelled(group, configSalt, msg.sender);
