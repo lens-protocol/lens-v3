@@ -28,6 +28,15 @@ uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb12107369
 uint256 constant PID__ADD_MEMBER = uint256(0x19ef038b2d9618004143e998c9c636d9796ef58a03b5e2351e9f8d8446b0c2ab);
 /// @custom:keccak lens.permission.RemoveMember
 uint256 constant PID__REMOVE_MEMBER = uint256(0x8c204b72f1086f607fac077224053e94d5f8a69311195889c42430ffa8646e23);
+/// @custom:keccak lens.permission.SkipAddMemberRules
+uint256 constant PID__SKIP_ADD_MEMBER_RULES = uint256(0xd2a5a9d31c1be4f87f450917f4a33dadddde87ef034ecd45fa79c2067bb0b434);
+/// @custom:keccak lens.permission.SkipRemoveMemberRules
+uint256 constant PID__SKIP_REMOVE_MEMBER_RULES =
+    uint256(0x2c3e2cd5ab51b79b73a15b273d9b9ccfee8d62a91defe98fd96370db5e5564e0);
+
+/// @custom:keccak lens.param.accountAdditionSettingsParams
+bytes32 constant PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS =
+    0xc5602d6fdc6b403d800fd4d9c15c7ff231b8994478f8df567d4554ab356cdd55;
 
 contract Group is
     IGroup,
@@ -64,6 +73,8 @@ contract Group is
         emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
         emit Events.Lens_PermissionId_Available(PID__ADD_MEMBER, "lens.permission.AddMember");
         emit Events.Lens_PermissionId_Available(PID__REMOVE_MEMBER, "lens.permission.RemoveMember");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_ADD_MEMBER_RULES, "lens.permission.SkipAddMemberRules");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_REMOVE_MEMBER_RULES, "lens.permission.SkipRemoveMemberRules");
     }
 
     // Access Controlled functions
@@ -104,19 +115,20 @@ contract Group is
 
     // Public functions
 
-    /// @custom:keccak lens.param.accountAdditionSettingsParams
-    bytes32 constant PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS =
-        0xc5602d6fdc6b403d800fd4d9c15c7ff231b8994478f8df567d4554ab356cdd55;
-
     function addMember(
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         uint256 membershipId = Core._grantMembership(account);
-        if (_hasAccess(msg.sender, PID__ADD_MEMBER) == false) {
-            require(_amountOfRules(IGroupRule.processAddition.selector) != 0, Errors.AccessDenied());
-            _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
+        if (_amountOfRules(IGroupRule.processAddition.selector) == 0) {
+            _requireAccess(msg.sender, PID__ADD_MEMBER);
+        } else {
+            if (_hasAccess(msg.sender, PID__SKIP_ADD_MEMBER_RULES)) {
+                _requireAccess(msg.sender, PID__ADD_MEMBER);
+            } else {
+                _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
+            }
         }
         IAccountGroupAdditionSettings(account).canBeAddedToGroup({
             group: address(this),
@@ -127,27 +139,19 @@ contract Group is
         emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
-    function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] calldata customParams)
-        internal
-        pure
-        returns (KeyValue[] memory)
-    {
-        for (uint256 i = 0; i < customParams.length; i++) {
-            if (customParams[i].key == PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS) {
-                return abi.decode(customParams[i].value, (KeyValue[]));
-            }
-        }
-        return new KeyValue[](0);
-    }
-
     function removeMember(
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        if (_hasAccess(msg.sender, PID__REMOVE_MEMBER) == false) {
-            require(_amountOfRules(IGroupRule.processRemoval.selector) != 0, Errors.AccessDenied());
-            _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
+        if (_amountOfRules(IGroupRule.processRemoval.selector) == 0) {
+            _requireAccess(msg.sender, PID__REMOVE_MEMBER);
+        } else {
+            if (_hasAccess(msg.sender, PID__SKIP_REMOVE_MEMBER_RULES)) {
+                _requireAccess(msg.sender, PID__REMOVE_MEMBER);
+            } else {
+                _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
+            }
         }
         uint256 membershipId = Core._revokeMembership(account);
         address source = _processSourceStamp(membershipId, customParams);
@@ -176,6 +180,19 @@ contract Group is
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(membershipId, customParams);
         emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, source);
+    }
+
+    function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] calldata customParams)
+        internal
+        pure
+        returns (KeyValue[] memory)
+    {
+        for (uint256 i = 0; i < customParams.length; i++) {
+            if (customParams[i].key == PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS) {
+                return abi.decode(customParams[i].value, (KeyValue[]));
+            }
+        }
+        return new KeyValue[](0);
     }
 
     // Getters
