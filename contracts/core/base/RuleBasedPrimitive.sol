@@ -215,7 +215,9 @@ abstract contract RuleBasedPrimitive {
             bytes4 ruleSelector = selectorsToValidate[i];
             uint256 requiredRulesLength = rulesStorage._getRulesArray(ruleSelector, true).length;
             uint256 anyOfRulesLength = rulesStorage._getRulesArray(ruleSelector, false).length;
-            require(anyOfRulesLength != 1, Errors.SingleAnyOfRule());
+            // Having a single any-of rule makes it behave like a required rule. We permit it, but you can uncomment
+            // the following check if it is important for you to disallow it.
+            // require(anyOfRulesLength != 1, Errors.SingleAnyOfRule());
             require(requiredRulesLength + anyOfRulesLength <= RulesLib.MAX_AMOUNT_OF_RULES, Errors.LimitReached());
         }
     }
