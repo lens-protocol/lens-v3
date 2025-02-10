@@ -127,7 +127,6 @@ contract Account is
         }
     }
 
-    // TODO: Discuss and choose a default, then sort this so default is first (has value == 0)
     enum WhoCanAddMeToGroups {
         NOBODY,
         ANYONE_I_FOLLOW_ON_SPECIFIC_GRAPHS,
@@ -147,9 +146,9 @@ contract Account is
         if ($storage().didSendRequestToGroup[group]) {
             return true;
         }
-        // if (addedBy == owner() || $storage().accountManagerPermissions[addedBy].canExecuteTransactions) {
-        //     return true;
-        // }
+        if (addedBy == owner() || $storage().accountManagerPermissions[addedBy].canExecuteTransactions) {
+            return true;
+        }
         if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.NOBODY) {
             return false;
         }
