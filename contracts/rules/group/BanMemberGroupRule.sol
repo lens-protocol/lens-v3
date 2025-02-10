@@ -66,22 +66,22 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     }
 
     function processAddition(
-        bytes32 configSalt,
-        address originalMsgSender,
-        address account,
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* account */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata ruleParams
-    ) external override {
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 
     function processRemoval(
-        bytes32 configSalt,
-        address originalMsgSender,
-        address account,
+        bytes32, /* configSalt */
+        address, /* originalMsgSender */
+        address, /* account */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata ruleParams
-    ) external override {
+        KeyValue[] calldata /* ruleParams */
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 
