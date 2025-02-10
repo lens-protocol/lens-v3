@@ -37,6 +37,15 @@ library PermissionsHelper {
     }
 }
 
+enum WhoCanAddMeToGroups {
+    NOBODY, // Default value.
+    ANYONE_I_FOLLOW_ON_SPECIFIC_GRAPHS, // Not allowed in current implementation.
+    ANYONE_I_FOLLOW, // Not allowed in current implementation.
+    ANYONE
+}
+
+event Lens_Account_WhoCanAddMeToGroupsSet(WhoCanAddMeToGroups indexed whoCanAddMeToGroups);
+
 contract Account is
     IAccount,
     IAccountGroupAdditionSettings,
@@ -59,7 +68,7 @@ contract Account is
         WhoCanAddMeToGroups whoCanAddMeToGroups;
         mapping(address group => bool wasRequestSent) didSendRequestToGroup;
         mapping(address graph => bool usedGraph) didFollowOnGraph;
-        mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition;
+        mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition; // Not written in current impl.
     }
 
     /// @custom:keccak lens.storage.Account
@@ -125,13 +134,6 @@ contract Account is
         } else {
             _setMetadataURI(metadataURI);
         }
-    }
-
-    enum WhoCanAddMeToGroups {
-        NOBODY,
-        ANYONE_I_FOLLOW_ON_SPECIFIC_GRAPHS,
-        ANYONE_I_FOLLOW,
-        ANYONE
     }
 
     function canBeAddedToGroup(address group, address addedBy, KeyValue[] calldata params)
@@ -338,17 +340,13 @@ contract Account is
             msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
             Errors.NotAllowed()
         );
-        $storage().whoCanAddMeToGroups = whoCanAddMeToGroups;
-        // TODO: Event needed?
-    }
-
-    function setAllowedGraphForGroupAddition(address graph, bool allowed) external {
+        // We only allow setting it to NOBODY or ANYONE in current account implementation.
         require(
-            msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
-            Errors.NotAllowed()
+            whoCanAddMeToGroups == WhoCanAddMeToGroups.ANYONE || whoCanAddMeToGroups == WhoCanAddMeToGroups.NOBODY,
+            Errors.InvalidParameter()
         );
-        $storage().isGraphAllowedForGroupAddition[graph] = allowed;
-        // TODO: Event needed?
+        $storage().whoCanAddMeToGroups = whoCanAddMeToGroups;
+        emit Lens_Account_WhoCanAddMeToGroupsSet(whoCanAddMeToGroups);
     }
 
     // Receiver
