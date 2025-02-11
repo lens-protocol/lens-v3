@@ -40,9 +40,9 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         bool allowNumeric; /////////////// Default: true
         bool allowLatinLowercase; //////// Default: true
         bool allowLatinUppercase; //////// Default: true
-        string customAllowedCharset; ///// Default: empty string (unrestricted)
-        string customDisallowedCharset; // Default: empty string (unrestricted)
-        string cannotStartWith; ////////// Default: empty string (unrestricted)
+        string customAllowedCharset; ///// Default: empty string (unrestricted) [Takes precedence over above]
+        string customDisallowedCharset; // Default: empty string (unrestricted) [Takes precedence over customAllowedCharset]
+        string cannotStartWith; ////////// Default: empty string (unrestricted) [Takes precedence over everything]
     }
 
     struct Configuration {
@@ -119,17 +119,18 @@ contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRul
         // Check if the username contains only allowed characters
         for (uint256 i = 0; i < bytes(username).length; i++) {
             bytes1 char = bytes(username)[i];
-            // Check disallowed chars first
+            // Check disallowed charset first
             require(!_isInCharset(char, charsetRestrictions.customDisallowedCharset), Errors.NotAllowed());
-            // Check allowed charsets next
+            // Check allowed custom charset next
+            if (_isInCharset(char, charsetRestrictions.customAllowedCharset)) {
+                continue;
+            }
             if (_isNumeric(char)) {
                 require(charsetRestrictions.allowNumeric, Errors.NotAllowed());
             } else if (_isLatinLowercase(char)) {
                 require(charsetRestrictions.allowLatinLowercase, Errors.NotAllowed());
             } else if (_isLatinUppercase(char)) {
                 require(charsetRestrictions.allowLatinUppercase, Errors.NotAllowed());
-            } else if (bytes(charsetRestrictions.customAllowedCharset).length > 0) {
-                require(_isInCharset(char, charsetRestrictions.customAllowedCharset), Errors.NotAllowed());
             } else {
                 // If not in any of the above charsets, reject
                 revert Errors.NotAllowed();
