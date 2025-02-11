@@ -94,7 +94,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         return accountWithoutPID;
     }
 
-    function test_AddMember_viaPID(address newMember) public {
+    function test_AddMember_viaPID_NoRules(address newMember) public {
         vm.assume(newMember != address(0));
 
         address accountWithPID = _getAccountWithPID(PID__ADD_MEMBER);
@@ -102,6 +102,15 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(group.isMember(newMember) == false);
 
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
+
+        ////// Start of the account group addition settings mocking //////
+        // Assumes it's an EOA to avoid vm.etch'ing crucial addresses of the group::addMember flow.
+        vm.assume(newMember.code.length == 0);
+        // We need to vm.etch to mock the account group addition settings
+        bytes memory newMemberCode = newMember.code;
+        vm.etch(newMember, mockAccountGroupAdditionSettings.code);
+        MockAccountGroupAdditionSettings(newMember).mockCanBeAddedToGroup(address(group), true);
+        ////// End of the account group addition settings mocking //////
 
         vm.expectEmit(true, true, true, true);
         emit Lens_Group_MemberAdded(
@@ -114,6 +123,8 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
             customParams: _emptyKeyValueArray(),
             ruleProcessingParams: _emptyRuleProcessingParamsArray()
         });
+
+        vm.etch(newMember, newMemberCode); // Put the original code back, which should be empty anyways.
 
         assertTrue(group.isMember(newMember));
     }
