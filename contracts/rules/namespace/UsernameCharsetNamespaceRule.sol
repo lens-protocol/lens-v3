@@ -10,6 +10,9 @@ import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
+/// @title UsernameCharsetNamespaceRule
+/// @notice A rule that restricts the charset of usernames.
+/// @dev This rule is designed to be used ONLY for ASCII charsets (as it works byte-wise).
 contract UsernameCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
