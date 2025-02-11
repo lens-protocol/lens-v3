@@ -106,6 +106,8 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         ////// Start of the account group addition settings mocking //////
         // Assumes it's an EOA to avoid vm.etch'ing crucial addresses of the group::addMember flow.
         vm.assume(newMember.code.length == 0);
+        // Skips first addresses as they are used by precompiled and system contracts.
+        vm.assume(uint160(newMember) > type(uint32).max);
         // We need to vm.etch to mock the account group addition settings
         bytes memory newMemberCode = newMember.code;
         vm.etch(newMember, mockAccountGroupAdditionSettings.code);
@@ -147,6 +149,8 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     function _forceMemberIntoGroup_assumingIsEOA(address member) internal {
         // Requires member to be an EOA to avoid vm.etch'ing crucial pieces of the group::addMember flow.
         vm.assume(member.code.length == 0);
+        // Skips first addresses as they are used by precompiled and system contracts.
+        vm.assume(uint160(member) > type(uint32).max);
         if (group.isMember(member) == false) {
             bytes memory memberCode = member.code;
             vm.etch(member, mockAccountGroupAdditionSettings.code);
