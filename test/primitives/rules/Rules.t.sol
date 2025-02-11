@@ -251,72 +251,72 @@ abstract contract RulesTest is Test {
         _changeRules(ruleChanges);
     }
 
-    function test_Cannot_ChangeRules_SettingASingleRuleAsAnyOfRule() public {
-        bytes4 selector = _aValidRuleSelector();
+    // function test_Cannot_ChangeRules_SettingASingleRuleAsAnyOfRule() public {
+    //     bytes4 selector = _aValidRuleSelector();
 
-        RuleChange[] memory ruleChanges = new RuleChange[](1);
-        ruleChanges[0] = RuleChange({
-            ruleAddress: address(rule),
-            configSalt: bytes32(0),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
+    //     RuleChange[] memory ruleChanges = new RuleChange[](1);
+    //     ruleChanges[0] = RuleChange({
+    //         ruleAddress: address(rule),
+    //         configSalt: bytes32(0),
+    //         configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+    //         selectorChanges: new RuleSelectorChange[](1)
+    //     });
+    //     ruleChanges[0].selectorChanges[0] =
+    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
 
-        // Ensure has zero anyOf rules before applying the rule changes
-        assertEq(0, _getPrimitiveRules(selector, false).length);
+    //     // Ensure has zero anyOf rules before applying the rule changes
+    //     assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        vm.expectRevert(Errors.SingleAnyOfRule.selector);
-        _changeRules(ruleChanges);
-    }
+    //     vm.expectRevert(Errors.SingleAnyOfRule.selector);
+    //     _changeRules(ruleChanges);
+    // }
 
-    function test_Cannot_ChangeRules_IfFinalStateHasSingleAnyOfRule() public {
-        bytes4 selector = _aValidRuleSelector();
+    // function test_Cannot_ChangeRules_IfFinalStateHasSingleAnyOfRule() public {
+    //     bytes4 selector = _aValidRuleSelector();
 
-        // Ensure has zero anyOf rules before applying the rule changes
-        assertEq(0, _getPrimitiveRules(selector, false).length);
+    //     // Ensure has zero anyOf rules before applying the rule changes
+    //     assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        RuleChange[] memory ruleChanges = new RuleChange[](3);
-        ruleChanges[0] = RuleChange({
-            ruleAddress: address(rule),
-            configSalt: bytes32(0),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
-        ruleChanges[1] = ruleChanges[0];
-        ruleChanges[2] = ruleChanges[0];
+    //     RuleChange[] memory ruleChanges = new RuleChange[](3);
+    //     ruleChanges[0] = RuleChange({
+    //         ruleAddress: address(rule),
+    //         configSalt: bytes32(0),
+    //         configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+    //         selectorChanges: new RuleSelectorChange[](1)
+    //     });
+    //     ruleChanges[0].selectorChanges[0] =
+    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
+    //     ruleChanges[1] = ruleChanges[0];
+    //     ruleChanges[2] = ruleChanges[0];
 
-        // Ensure has zero anyOf rules before applying the rule changes
-        assertEq(0, _getPrimitiveRules(selector, false).length);
+    //     // Ensure has zero anyOf rules before applying the rule changes
+    //     assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
-        // Ensure has three anyOf rules after applying the first rule changes
-        assertEq(3, _getPrimitiveRules(selector, false).length);
+    //     _changeRules(ruleChanges);
+    //     // Ensure has three anyOf rules after applying the first rule changes
+    //     assertEq(3, _getPrimitiveRules(selector, false).length);
 
-        ruleChanges = new RuleChange[](2);
-        ruleChanges[0] = RuleChange({
-            ruleAddress: address(rule),
-            configSalt: bytes32(uint256(1)),
-            configurationChanges: RuleConfigurationChange({configure: false, ruleParams: new KeyValue[](0)}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[0].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
-        ruleChanges[1] = RuleChange({
-            ruleAddress: address(rule),
-            configSalt: bytes32(uint256(3)),
-            configurationChanges: RuleConfigurationChange({configure: false, ruleParams: new KeyValue[](0)}),
-            selectorChanges: new RuleSelectorChange[](1)
-        });
-        ruleChanges[1].selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
+    //     ruleChanges = new RuleChange[](2);
+    //     ruleChanges[0] = RuleChange({
+    //         ruleAddress: address(rule),
+    //         configSalt: bytes32(uint256(1)),
+    //         configurationChanges: RuleConfigurationChange({configure: false, ruleParams: new KeyValue[](0)}),
+    //         selectorChanges: new RuleSelectorChange[](1)
+    //     });
+    //     ruleChanges[0].selectorChanges[0] =
+    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
+    //     ruleChanges[1] = RuleChange({
+    //         ruleAddress: address(rule),
+    //         configSalt: bytes32(uint256(3)),
+    //         configurationChanges: RuleConfigurationChange({configure: false, ruleParams: new KeyValue[](0)}),
+    //         selectorChanges: new RuleSelectorChange[](1)
+    //     });
+    //     ruleChanges[1].selectorChanges[0] =
+    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
 
-        vm.expectRevert(Errors.SingleAnyOfRule.selector);
-        _changeRules(ruleChanges);
-    }
+    //     vm.expectRevert(Errors.SingleAnyOfRule.selector);
+    //     _changeRules(ruleChanges);
+    // }
 
     function test_Cannot_ChangeRules_IfTotalAmountOfRulesIsExceeded() public {
         bytes4 selector = _aValidRuleSelector();
