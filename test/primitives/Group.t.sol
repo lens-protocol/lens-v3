@@ -133,11 +133,9 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     }
 
     // TODO: Add this to GroupHelpers or something
-    function _addGroupMember_forceBypassingChecks(address member) internal {
-        // Assumptions needed to avoid vm.etch'ing addresses that are crucial parts of the group::addMember flow.
-        vm.assume(member != address(group));
-        vm.assume(member != groupBeacon);
-        vm.assume(member != address(mockAccessControl));
+    function _forceMemberIntoGroup_assumingIsEOA(address member) internal {
+        // Requires member to be an EOA to avoid vm.etch'ing crucial pieces of the group::addMember flow.
+        vm.assume(member.code.length == 0);
         if (group.isMember(member) == false) {
             bytes memory memberCode = member.code;
             vm.etch(member, mockAccountGroupAdditionSettings.code);
@@ -179,7 +177,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         address accountWithPID = _getAccountWithPID(PID__REMOVE_MEMBER);
 
-        _addGroupMember_forceBypassingChecks(memberToRemove);
+        _forceMemberIntoGroup_assumingIsEOA(memberToRemove);
         uint256 expectedMembershipId = group.getMembershipId(memberToRemove);
 
         vm.expectEmit(true, true, true, true);
@@ -202,7 +200,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         address accountWithoutPID = _getAccountWithoutPID(PID__REMOVE_MEMBER);
 
-        _addGroupMember_forceBypassingChecks(memberToRemove);
+        _forceMemberIntoGroup_assumingIsEOA(memberToRemove);
         assertTrue(group.isMember(memberToRemove));
 
         vm.expectRevert(Errors.AccessDenied.selector);
@@ -254,7 +252,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     function test_leaveGroup(address memberToLeave) public {
         vm.assume(memberToLeave != address(0));
 
-        _addGroupMember_forceBypassingChecks(memberToLeave);
+        _forceMemberIntoGroup_assumingIsEOA(memberToLeave);
 
         uint256 expectedMembershipId = group.getMembershipId(memberToLeave);
 
@@ -277,7 +275,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(member != address(0));
 
         // First add the member
-        _addGroupMember_forceBypassingChecks(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         // Try to add the same member again
         vm.prank(groupOwner);
@@ -293,7 +291,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(member != address(0));
 
         // First add the member
-        _addGroupMember_forceBypassingChecks(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         // Try to join the group again
         vm.prank(member);
@@ -386,7 +384,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(sender != differentAccount);
 
         // Add the member first
-        _addGroupMember_forceBypassingChecks(differentAccount);
+        _forceMemberIntoGroup_assumingIsEOA(differentAccount);
 
         vm.prank(sender);
         vm.expectRevert(Errors.InvalidMsgSender.selector);
@@ -401,7 +399,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(member != address(0));
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
 
-        _addGroupMember_forceBypassingChecks(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         uint256 membershipId = group.getMembershipId(member);
         assertTrue(membershipId != 0);
@@ -420,7 +418,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         uint256 expectedTimestamp = block.timestamp;
 
-        _addGroupMember_forceBypassingChecks(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         uint256 membershipTimestamp = group.getMembershipTimestamp(member);
 
@@ -441,14 +439,14 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         uint256 startingNumberOfMembers = group.getNumberOfMembers();
 
         for (uint256 i = 0; i < numberOfMembers; i++) {
-            _addGroupMember_forceBypassingChecks(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
             assertEq(group.getNumberOfMembers(), startingNumberOfMembers + i + 1);
         }
     }
 
     function test_NumberOfMembers_DecreasesOnRemove() public {
         for (uint256 i = 0; i < 10; i++) {
-            _addGroupMember_forceBypassingChecks(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
 
         uint256 startingNumberOfMembers = group.getNumberOfMembers();
@@ -469,7 +467,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
         uint256 expectedTimestamp = block.timestamp;
 
-        _addGroupMember_forceBypassingChecks(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         Membership memory membership = group.getMembership(member);
 
@@ -487,7 +485,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_NumberOfMembers_IncreasesOnJoin() public {
         for (uint256 i = 0; i < 10; i++) {
-            _addGroupMember_forceBypassingChecks(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
 
         uint256 memberCountBefore = group.getNumberOfMembers();
@@ -507,7 +505,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_NumberOfMembers_DecreasesOnLeave() public {
         for (uint256 i = 0; i < 10; i++) {
-            _addGroupMember_forceBypassingChecks(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
 
         uint256 memberCountBefore = group.getNumberOfMembers();
