@@ -39,12 +39,11 @@ library PermissionsHelper {
 
 enum WhoCanAddMeToGroups {
     NOBODY, // Default value.
+    ANYONE, // Not allowed in current implementation.
     ANYONE_I_FOLLOW_ON_SPECIFIC_GRAPHS, // Not allowed in current implementation.
-    ANYONE_I_FOLLOW, // Not allowed in current implementation.
-    ANYONE
-}
+    ANYONE_I_FOLLOW // Not allowed in current implementation.
 
-event Lens_Account_WhoCanAddMeToGroupsSet(WhoCanAddMeToGroups indexed whoCanAddMeToGroups);
+}
 
 contract Account is
     IAccount,
@@ -67,7 +66,7 @@ contract Account is
         uint256 allowNonOwnerSpendingTimestamp;
         WhoCanAddMeToGroups whoCanAddMeToGroups;
         mapping(address group => bool wasRequestSent) didSendRequestToGroup;
-        mapping(address graph => bool usedGraph) didFollowOnGraph;
+        mapping(address graph => bool usedGraph) didFollowOnGraph; // Written in current impl for future use.
         mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition; // Not written in current impl.
     }
 
@@ -335,33 +334,11 @@ contract Account is
         return returnData;
     }
 
-    function setWhoCanAddMeToGroups(WhoCanAddMeToGroups whoCanAddMeToGroups) external {
-        require(
-            msg.sender == owner() || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
-            Errors.NotAllowed()
-        );
-        // We only allow setting it to NOBODY or ANYONE in current account implementation.
-        require(
-            whoCanAddMeToGroups == WhoCanAddMeToGroups.ANYONE || whoCanAddMeToGroups == WhoCanAddMeToGroups.NOBODY,
-            Errors.InvalidParameter()
-        );
-        $storage().whoCanAddMeToGroups = whoCanAddMeToGroups;
-        emit Lens_Account_WhoCanAddMeToGroupsSet(whoCanAddMeToGroups);
-    }
-
     // Receiver
 
     receive() external payable override {}
 
     // Getters
-
-    function getWhoCanAddMeToGroups() external view returns (WhoCanAddMeToGroups) {
-        return $storage().whoCanAddMeToGroups;
-    }
-
-    function isGraphAllowedForGroupAddition(address graph) external view returns (bool) {
-        return $storage().isGraphAllowedForGroupAddition[graph];
-    }
 
     function canExecuteTransactions(address executor) external view override returns (bool) {
         return $storage().accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
