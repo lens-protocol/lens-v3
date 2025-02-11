@@ -123,12 +123,11 @@ contract Group is
         uint256 membershipId = Core._grantMembership(account);
         if (_amountOfRules(IGroupRule.processAddition.selector) == 0) {
             _requireAccess(msg.sender, PID__ADD_MEMBER);
-        } else {
-            if (_hasAccess(msg.sender, PID__SKIP_ADD_MEMBER_RULES)) {
-                _requireAccess(msg.sender, PID__ADD_MEMBER);
-            } else {
-                _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
-            }
+        } else if (
+            _hasAccess(msg.sender, PID__ADD_MEMBER) == false
+                || _hasAccess(msg.sender, PID__SKIP_ADD_MEMBER_RULES) == false
+        ) {
+            _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         }
         IAccountGroupAdditionSettings(account).canBeAddedToGroup({
             group: address(this),
@@ -146,12 +145,11 @@ contract Group is
     ) external override {
         if (_amountOfRules(IGroupRule.processRemoval.selector) == 0) {
             _requireAccess(msg.sender, PID__REMOVE_MEMBER);
-        } else {
-            if (_hasAccess(msg.sender, PID__SKIP_REMOVE_MEMBER_RULES)) {
-                _requireAccess(msg.sender, PID__REMOVE_MEMBER);
-            } else {
-                _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
-            }
+        } else if (
+            _hasAccess(msg.sender, PID__REMOVE_MEMBER) == false
+                || _hasAccess(msg.sender, PID__SKIP_REMOVE_MEMBER_RULES) == false
+        ) {
+            _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
         }
         uint256 membershipId = Core._revokeMembership(account);
         address source = _processSourceStamp(membershipId, customParams);
