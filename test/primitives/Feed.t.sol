@@ -1066,752 +1066,82 @@ contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
         feed.getPost(postId);
     }
 
-    function test_CannotDeletePost_NonexistentPost(address postAuthor, uint256 nonexistentPostId) public {
-        vm.assume(postAuthor != address(0));
-        vm.assume(nonexistentPostId != 0);
-        vm.assume(!feed.postExists(nonexistentPostId));
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        // Try to delete a nonexistent post
-        vm.prank(postAuthor);
-        vm.expectRevert(Errors.DoesNotExist.selector);
-        feed.deletePost({
-            postId: nonexistentPostId,
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray()
-        });
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        IFeed(feedForRules).changeFeedRules(ruleChanges);
     }
 
-    function test_CannotDeletePost_IfAlreadyDeleted(address postAuthor) public {
-        vm.assume(postAuthor != address(0));
-
-        // Create a post
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "ipfs://QmTest",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Delete the post
-        vm.prank(postAuthor);
-        feed.deletePost({
-            postId: postId,
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Try to delete the post again
-        vm.prank(postAuthor);
-        vm.expectRevert(Errors.DoesNotExist.selector);
-        feed.deletePost({
-            postId: postId,
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray()
-        });
+    function _primitiveAddress() internal view override returns (address) {
+        return feedForRules;
     }
 
-    function test_DeletedPost_NotAccessible(address postAuthor, uint256 deletedPostId) public {
-        vm.assume(postAuthor != address(0));
-        vm.assume(deletedPostId != 0);
-        vm.assume(!feed.postExists(deletedPostId));
-
-        // Try to get the deleted post
-        vm.expectRevert(Errors.DoesNotExist.selector);
-        feed.getPost(deletedPostId);
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
+        return IFeedRule.processCreatePost.selector;
     }
 
-    function test_PostId_Generation(address postAuthor) public {
-        vm.assume(postAuthor != address(0));
-
-        // Get the expected post IDs before creating posts
-        uint256 expectedFirstPostId = feed.getNextPostId(postAuthor);
-
-        // Create multiple posts from the same author
-        vm.startPrank(postAuthor);
-
-        uint256 firstPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "first post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        uint256 expectedSecondPostId = feed.getNextPostId(postAuthor);
-
-        uint256 secondPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "second post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        vm.stopPrank();
-
-        // Verify that the post IDs match what we expected
-        assertEq(firstPostId, expectedFirstPostId, "First post ID should match expected");
-        assertEq(secondPostId, expectedSecondPostId, "Second post ID should match expected");
-
-        // Verify that post IDs are different
-        assertTrue(firstPostId != secondPostId, "Post IDs should be unique");
-
-        // Verify author post sequential IDs
-        assertEq(feed.getAuthorPostSequentialId(firstPostId), 1, "First post should have authorPostSequentialId = 1");
-        assertEq(feed.getAuthorPostSequentialId(secondPostId), 2, "Second post should have authorPostSequentialId = 2");
-
-        // Create a post from a different author to verify post IDs are author-specific
-        address differentAuthor = makeAddr("DIFFERENT_AUTHOR");
-        uint256 expectedDifferentAuthorPostId = feed.getNextPostId(differentAuthor);
-
-        vm.prank(differentAuthor);
-        uint256 differentAuthorPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: differentAuthor,
-                contentURI: "different author post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify that the different author's post ID matches what we expected
-        assertEq(differentAuthorPostId, expectedDifferentAuthorPostId, "Different author post ID should match expected");
-
-        // Verify that post IDs from different authors are different
-        assertTrue(firstPostId != differentAuthorPostId, "Post IDs should be unique across authors");
-        assertTrue(secondPostId != differentAuthorPostId, "Post IDs should be unique across authors");
-
-        // Verify different author's post sequential ID starts at 1
-        assertEq(
-            feed.getAuthorPostSequentialId(differentAuthorPostId),
-            1,
-            "Different author's first post should have authorPostSequentialId = 1"
-        );
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IFeedRule.processCreatePost.selector;
+        selectors[1] = IFeedRule.processEditPost.selector;
+        selectors[2] = IFeedRule.processDeletePost.selector;
+        selectors[3] = IFeedRule.processPostRuleChanges.selector;
+        return selectors;
     }
 
-    function test_PostSequentialId_Uniqueness(address firstAuthor, address secondAuthor) public {
-        vm.assume(firstAuthor != address(0));
-        vm.assume(secondAuthor != address(0));
-        vm.assume(firstAuthor != secondAuthor);
-
-        // Get initial post count
-        uint256 initialPostCount = feed.getPostCount();
-
-        // Create first post
-        vm.prank(firstAuthor);
-        uint256 firstPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: firstAuthor,
-                contentURI: "first post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Create second post
-        vm.prank(secondAuthor);
-        uint256 secondPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: secondAuthor,
-                contentURI: "second post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify sequential IDs
-        Post memory firstPost = feed.getPost(firstPostId);
-        Post memory secondPost = feed.getPost(secondPostId);
-
-        assertEq(firstPost.postSequentialId, initialPostCount + 1, "First post should have sequential ID 1");
-        assertEq(secondPost.postSequentialId, initialPostCount + 2, "Second post should have sequential ID 2");
-
-        assertEq(feed.getPostSequentialId(firstPostId), initialPostCount + 1, "First post sequential ID should match");
-        assertEq(feed.getPostSequentialId(secondPostId), initialPostCount + 2, "Second post sequential ID should match");
-
-        // Verify global post count increased correctly
-        assertEq(feed.getPostCount(), initialPostCount + 2, "Global post count should increase by 2");
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return IFeed(feedForRules).getFeedRules(selector, required);
     }
 
-    function test_AuthorPostSequentialId_Uniqueness(address firstAuthor, address secondAuthor) public {
-        vm.assume(firstAuthor != address(0));
-        vm.assume(secondAuthor != address(0));
-        vm.assume(firstAuthor != secondAuthor);
-
-        // Get initial author post counts
-        uint256 initialFirstAuthorCount = feed.getPostCount(firstAuthor);
-        uint256 initialSecondAuthorCount = feed.getPostCount(secondAuthor);
-
-        // Create two posts from first author
-        vm.startPrank(firstAuthor);
-        uint256 firstAuthorPostId1 = feed.createPost({
-            postParams: CreatePostParams({
-                author: firstAuthor,
-                contentURI: "first author post 1",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        uint256 firstAuthorPostId2 = feed.createPost({
-            postParams: CreatePostParams({
-                author: firstAuthor,
-                contentURI: "first author post 2",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-        vm.stopPrank();
-
-        // Create a post from second author
-        vm.prank(secondAuthor);
-        uint256 secondAuthorPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: secondAuthor,
-                contentURI: "second author post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify sequential IDs for first author's posts
-        Post memory firstAuthorPost1 = feed.getPost(firstAuthorPostId1);
-        Post memory firstAuthorPost2 = feed.getPost(firstAuthorPostId2);
-
-        assertEq(
-            firstAuthorPost1.authorPostSequentialId,
-            initialFirstAuthorCount + 1,
-            "First author's first post should have sequential ID 1"
-        );
-        assertEq(
-            firstAuthorPost2.authorPostSequentialId,
-            initialFirstAuthorCount + 2,
-            "First author's second post should have sequential ID 2"
-        );
-        assertTrue(
-            firstAuthorPost1.authorPostSequentialId != firstAuthorPost2.authorPostSequentialId,
-            "Author post sequential IDs should be unique"
-        );
-
-        // Verify sequential ID for second author's post
-        Post memory secondAuthorPost = feed.getPost(secondAuthorPostId);
-        assertEq(
-            secondAuthorPost.authorPostSequentialId,
-            initialSecondAuthorCount + 1,
-            "Second author's post should have sequential ID 1"
-        );
-
-        // Verify author post counts increased correctly
-        assertEq(
-            feed.getPostCount(firstAuthor), initialFirstAuthorCount + 2, "First author's post count should increase by 2"
-        );
-        assertEq(
-            feed.getPostCount(secondAuthor),
-            initialSecondAuthorCount + 1,
-            "Second author's post count should increase by 1"
-        );
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IFeedRule.configure.selector;
     }
 
-    function test_PostTimestamp_Ordering(address firstAuthor, address secondAuthor) public {
-        vm.assume(firstAuthor != address(0));
-        vm.assume(secondAuthor != address(0));
-        vm.assume(firstAuthor != secondAuthor);
+    function _generatePostId(address _feed, address _author, uint256 _authorPostSequentialId)
+        internal
+        view
+        returns (uint256)
+    {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(_feed), _author, _authorPostSequentialId)));
+    }
 
-        // Create first post
-        vm.prank(firstAuthor);
-        uint256 firstPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: firstAuthor,
-                contentURI: "first post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+contract FeedTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
+    IFeed feed;
+
+    address feedForRules;
+    MockAccessControl mockAccessControl;
+
+    address author = makeAddr("AUTHOR");
+    address feedOwner = makeAddr("FEED_OWNER");
+
+    function setUp() public virtual override(RulesTest, BaseDeployments, RuleExecutionTest) {
+        BaseDeployments.setUp();
+
+        mockAccessControl = new MockAccessControl();
+
+        feed = IFeed(
+            feedFactory.deployFeed({
+                metadataURI: "some metadata uri",
+                accessControl: mockAccessControl,
+                proxyAdminOwner: address(this),
                 ruleChanges: _emptyRuleChangeArray(),
                 extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Create second post in the same block
-        vm.prank(secondAuthor);
-        uint256 secondPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: secondAuthor,
-                contentURI: "second post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Create third post in a future block
-        vm.warp(block.timestamp + 1);
-        vm.prank(firstAuthor);
-        uint256 thirdPostId = feed.createPost({
-            postParams: CreatePostParams({
-                author: firstAuthor,
-                contentURI: "third post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Get post data
-        Post memory firstPost = feed.getPost(firstPostId);
-        Post memory secondPost = feed.getPost(secondPostId);
-        Post memory thirdPost = feed.getPost(thirdPostId);
-
-        // Verify timestamps are unique
-        assertTrue(
-            firstPost.creationTimestamp != secondPost.creationTimestamp
-                || firstPost.postSequentialId != secondPost.postSequentialId,
-            "Posts in same block should have unique identifiers"
-        );
-        assertTrue(
-            firstPost.creationTimestamp < thirdPost.creationTimestamp,
-            "Posts in different blocks should have different timestamps"
-        );
-        assertTrue(
-            secondPost.creationTimestamp < thirdPost.creationTimestamp,
-            "Posts in different blocks should have different timestamps"
+            })
         );
 
-        // Verify last updated timestamps match creation timestamps for new posts
-        assertEq(
-            firstPost.lastUpdatedTimestamp,
-            firstPost.creationTimestamp,
-            "Last updated should match creation for new post"
-        );
-        assertEq(
-            secondPost.lastUpdatedTimestamp,
-            secondPost.creationTimestamp,
-            "Last updated should match creation for new post"
-        );
-        assertEq(
-            thirdPost.lastUpdatedTimestamp,
-            thirdPost.creationTimestamp,
-            "Last updated should match creation for new post"
-        );
-    }
-
-    function test_CreationTimestamp_Set(address postAuthor) public {
-        vm.assume(postAuthor != address(0));
-
-        // Record current timestamp
-        uint256 currentTimestamp = block.timestamp;
-
-        // Create a post
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "test post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        feedForRules = feedFactory.deployFeed({
+            metadataURI: "uri://feed",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
         });
 
-        // Get post data
-        Post memory post = feed.getPost(postId);
-
-        // Verify creation timestamp is set to current block timestamp
-        assertEq(post.creationTimestamp, currentTimestamp, "Creation timestamp should be current block timestamp");
-
-        // Warp to future timestamp
-        vm.warp(block.timestamp + 1 hours);
-
-        // Edit the post
-        vm.prank(postAuthor);
-        feed.editPost({
-            postId: postId,
-            postParams: EditPostParams({contentURI: "edited post", extraData: _emptyKeyValueArray()}),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Get updated post data
-        Post memory editedPost = feed.getPost(postId);
-
-        // Verify creation timestamp remains unchanged after edit
-        assertEq(editedPost.creationTimestamp, currentTimestamp, "Creation timestamp should not change after edit");
-    }
-
-    function test_LastUpdatedTimestamp_Updates(address postAuthor) public {
-        vm.assume(postAuthor != address(0));
-
-        // Create a post
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "test post",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Get post data
-        Post memory post = feed.getPost(postId);
-
-        // Verify last updated timestamp matches creation timestamp for new post
-        assertEq(post.lastUpdatedTimestamp, post.creationTimestamp, "Last updated should match creation for new post");
-
-        // Warp to future timestamp
-        uint256 editTimestamp = block.timestamp + 1 hours;
-        vm.warp(editTimestamp);
-
-        // Edit the post
-        vm.prank(postAuthor);
-        feed.editPost({
-            postId: postId,
-            postParams: EditPostParams({contentURI: "edited post", extraData: _emptyKeyValueArray()}),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Get updated post data
-        Post memory editedPost = feed.getPost(postId);
-
-        // Verify last updated timestamp is updated to edit timestamp
-        assertEq(editedPost.lastUpdatedTimestamp, editTimestamp, "Last updated should be edit timestamp");
-        assertTrue(editedPost.lastUpdatedTimestamp > post.lastUpdatedTimestamp, "Last updated should increase");
-
-        // Warp to another future timestamp
-        uint256 secondEditTimestamp = block.timestamp + 1 hours;
-        vm.warp(secondEditTimestamp);
-
-        // Edit the post again
-        vm.prank(postAuthor);
-        feed.editPost({
-            postId: postId,
-            postParams: EditPostParams({contentURI: "edited again", extraData: _emptyKeyValueArray()}),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Get updated post data
-        Post memory secondEditedPost = feed.getPost(postId);
-
-        // Verify last updated timestamp is updated to second edit timestamp
-        assertEq(
-            secondEditedPost.lastUpdatedTimestamp, secondEditTimestamp, "Last updated should be second edit timestamp"
-        );
-        assertTrue(
-            secondEditedPost.lastUpdatedTimestamp > editedPost.lastUpdatedTimestamp, "Last updated should increase"
-        );
-    }
-
-    // TODO: Fill in empty arrays for all params and test with that
-    function test_GetPost(address postAuthor, string memory contentURI) public {
-        vm.assume(postAuthor != address(0));
-        vm.assume(bytes(contentURI).length > 0);
-
-        // Create a post first
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: contentURI,
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Get and verify the post
-        Post memory post = feed.getPost(postId);
-
-        assertEq(post.author, postAuthor, "Post author should match");
-        assertEq(post.contentURI, contentURI, "Content URI should match");
-        assertEq(post.postSequentialId, feed.getPostCount(), "Post sequential ID should match");
-        assertEq(post.authorPostSequentialId, feed.getPostCount(postAuthor), "Author post sequential ID should match");
-        assertEq(post.rootPostId, postId, "Root post ID should be self for new post");
-        assertEq(post.repostedPostId, 0, "Reposted post ID should be 0");
-        assertEq(post.quotedPostId, 0, "Quoted post ID should be 0");
-        assertEq(post.repliedPostId, 0, "Replied post ID should be 0");
-        assertEq(post.creationTimestamp, block.timestamp, "Creation timestamp should be current block");
-        assertEq(post.lastUpdatedTimestamp, block.timestamp, "Last updated timestamp should be current block");
-        assertEq(post.creationSource, address(0), "Creation source should be 0 address");
-        assertEq(post.lastUpdateSource, address(0), "Last update source should be 0 address");
-    }
-
-    function test_GetPostAuthor(address postAuthor, string memory contentURI) public {
-        vm.assume(postAuthor != address(0));
-        vm.assume(bytes(contentURI).length > 0);
-
-        // Create a post first
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: contentURI,
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        assertEq(feed.getPostAuthor(postId), postAuthor, "Post author should match");
-    }
-
-    function test_GetPostAuthor_NonexistentPost(uint256 nonexistentPostId) public {
-        vm.assume(!feed.postExists(nonexistentPostId));
-
-        vm.expectRevert(Errors.DoesNotExist.selector);
-        feed.getPostAuthor(nonexistentPostId);
-    }
-
-    function test_GetPostCount_Global(address postAuthor, uint8 numberOfPosts) public {
-        vm.assume(postAuthor != address(0));
-        numberOfPosts = uint8(bound(numberOfPosts, 1, 10));
-
-        uint256 startingPostCount = feed.getPostCount();
-
-        for (uint256 i = 0; i < numberOfPosts; i++) {
-            vm.prank(postAuthor);
-            feed.createPost({
-                postParams: CreatePostParams({
-                    author: postAuthor,
-                    contentURI: string.concat("content://", vm.toString(i)),
-                    repostedPostId: 0,
-                    quotedPostId: 0,
-                    repliedPostId: 0,
-                    ruleChanges: _emptyRuleChangeArray(),
-                    extraData: _emptyKeyValueArray()
-                }),
-                customParams: _emptyKeyValueArray(),
-                feedRulesParams: _emptyRuleProcessingParamsArray(),
-                rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-                quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-            });
-            assertEq(feed.getPostCount(), startingPostCount + i + 1, "Global post count should increment");
-        }
-    }
-
-    function test_GetPostCount_PerAuthor() public {
-        // Create multiple authors with different post counts
-        address[] memory authors = new address[](3);
-        uint8[] memory postCounts = new uint8[](3);
-
-        authors[0] = makeAddr("AUTHOR1");
-        authors[1] = makeAddr("AUTHOR2");
-        authors[2] = makeAddr("AUTHOR3");
-
-        postCounts[0] = 3;
-        postCounts[1] = 1;
-        postCounts[2] = 2;
-
-        for (uint256 i = 0; i < authors.length; i++) {
-            for (uint256 j = 0; j < postCounts[i]; j++) {
-                vm.prank(authors[i]);
-                feed.createPost({
-                    postParams: CreatePostParams({
-                        author: authors[i],
-                        contentURI: string.concat("content://", vm.toString(j)),
-                        repostedPostId: 0,
-                        quotedPostId: 0,
-                        repliedPostId: 0,
-                        ruleChanges: _emptyRuleChangeArray(),
-                        extraData: _emptyKeyValueArray()
-                    }),
-                    customParams: _emptyKeyValueArray(),
-                    feedRulesParams: _emptyRuleProcessingParamsArray(),
-                    rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-                    quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-                });
-            }
-            assertEq(feed.getPostCount(authors[i]), postCounts[i], "Author post count should match");
-        }
-
-        // Verify total post count
-        assertEq(feed.getPostCount(), 6, "Global post count should match sum of all authors' posts");
-    }
-
-    function test_GetNextPostId(address postAuthor) public {
-        vm.assume(postAuthor != address(0));
-
-        uint256 expectedNextPostId = feed.getNextPostId(postAuthor);
-
-        // Create a post
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "some content uri",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify the post ID matches what was predicted
-        assertEq(postId, expectedNextPostId, "Post ID should match predicted next ID");
-
-        // Verify next post ID is different
-        uint256 newNextPostId = feed.getNextPostId(postAuthor);
-        assertTrue(newNextPostId != postId, "New next post ID should be different");
-    }
-
-    function test_PostExists(address postAuthor) public {
-        vm.assume(postAuthor != address(0));
-
-        // Create a post
-        vm.prank(postAuthor);
-        uint256 postId = feed.createPost({
-            postParams: CreatePostParams({
-                author: postAuthor,
-                contentURI: "some content uri",
-                repostedPostId: 0,
-                quotedPostId: 0,
-                repliedPostId: 0,
-                ruleChanges: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            }),
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray(),
-            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
-            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify post exists
-        assertTrue(feed.postExists(postId), "Post should exist after creation");
-
-        // Delete the post
-        vm.prank(postAuthor);
-        feed.deletePost({
-            postId: postId,
-            customParams: _emptyKeyValueArray(),
-            feedRulesParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify post no longer exists
-        assertFalse(feed.postExists(postId), "Post should not exist after deletion");
-
-        // Verify a random post ID does not exist
-        uint256 randomPostId = uint256(keccak256(abi.encodePacked("nonexistent")));
-        assertFalse(feed.postExists(randomPostId), "Random post ID should not exist");
+        RulesTest.setUp();
+        RuleExecutionTest.setUp();
     }
 
     function test_SetPostExtraData(address postAuthor) public {
@@ -3309,5 +2639,831 @@ contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
             optional1_passes,
             optional2_passes
         );
+    }
+}
+
+contract FeedTest3 is RulesTest, BaseDeployments, RuleExecutionTest {
+    IFeed feed;
+
+    address feedForRules;
+    MockAccessControl mockAccessControl;
+
+    address author = makeAddr("AUTHOR");
+    address feedOwner = makeAddr("FEED_OWNER");
+
+    function setUp() public virtual override(RulesTest, BaseDeployments, RuleExecutionTest) {
+        BaseDeployments.setUp();
+
+        mockAccessControl = new MockAccessControl();
+
+        feed = IFeed(
+            feedFactory.deployFeed({
+                metadataURI: "some metadata uri",
+                accessControl: mockAccessControl,
+                proxyAdminOwner: address(this),
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
+
+        feedForRules = feedFactory.deployFeed({
+            metadataURI: "uri://feed",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        RulesTest.setUp();
+        RuleExecutionTest.setUp();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override returns (address) {
+        return feedForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
+        return IFeedRule.processCreatePost.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IFeedRule.processCreatePost.selector;
+        selectors[1] = IFeedRule.processEditPost.selector;
+        selectors[2] = IFeedRule.processDeletePost.selector;
+        selectors[3] = IFeedRule.processPostRuleChanges.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return IFeed(feedForRules).getFeedRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IFeedRule.configure.selector;
+    }
+
+    function _generatePostId(address _feed, address _author, uint256 _authorPostSequentialId)
+        internal
+        view
+        returns (uint256)
+    {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(_feed), _author, _authorPostSequentialId)));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function test_CannotDeletePost_NonexistentPost(address postAuthor, uint256 nonexistentPostId) public {
+        vm.assume(postAuthor != address(0));
+        vm.assume(nonexistentPostId != 0);
+        vm.assume(!feed.postExists(nonexistentPostId));
+
+        // Try to delete a nonexistent post
+        vm.prank(postAuthor);
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        feed.deletePost({
+            postId: nonexistentPostId,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_CannotDeletePost_IfAlreadyDeleted(address postAuthor) public {
+        vm.assume(postAuthor != address(0));
+
+        // Create a post
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "ipfs://QmTest",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Delete the post
+        vm.prank(postAuthor);
+        feed.deletePost({
+            postId: postId,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Try to delete the post again
+        vm.prank(postAuthor);
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        feed.deletePost({
+            postId: postId,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_DeletedPost_NotAccessible(address postAuthor, uint256 deletedPostId) public {
+        vm.assume(postAuthor != address(0));
+        vm.assume(deletedPostId != 0);
+        vm.assume(!feed.postExists(deletedPostId));
+
+        // Try to get the deleted post
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        feed.getPost(deletedPostId);
+    }
+
+    function test_PostId_Generation(address postAuthor) public {
+        vm.assume(postAuthor != address(0));
+
+        // Get the expected post IDs before creating posts
+        uint256 expectedFirstPostId = feed.getNextPostId(postAuthor);
+
+        // Create multiple posts from the same author
+        vm.startPrank(postAuthor);
+
+        uint256 firstPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "first post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        uint256 expectedSecondPostId = feed.getNextPostId(postAuthor);
+
+        uint256 secondPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "second post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        vm.stopPrank();
+
+        // Verify that the post IDs match what we expected
+        assertEq(firstPostId, expectedFirstPostId, "First post ID should match expected");
+        assertEq(secondPostId, expectedSecondPostId, "Second post ID should match expected");
+
+        // Verify that post IDs are different
+        assertTrue(firstPostId != secondPostId, "Post IDs should be unique");
+
+        // Verify author post sequential IDs
+        assertEq(feed.getAuthorPostSequentialId(firstPostId), 1, "First post should have authorPostSequentialId = 1");
+        assertEq(feed.getAuthorPostSequentialId(secondPostId), 2, "Second post should have authorPostSequentialId = 2");
+
+        // Create a post from a different author to verify post IDs are author-specific
+        address differentAuthor = makeAddr("DIFFERENT_AUTHOR");
+        uint256 expectedDifferentAuthorPostId = feed.getNextPostId(differentAuthor);
+
+        vm.prank(differentAuthor);
+        uint256 differentAuthorPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: differentAuthor,
+                contentURI: "different author post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify that the different author's post ID matches what we expected
+        assertEq(differentAuthorPostId, expectedDifferentAuthorPostId, "Different author post ID should match expected");
+
+        // Verify that post IDs from different authors are different
+        assertTrue(firstPostId != differentAuthorPostId, "Post IDs should be unique across authors");
+        assertTrue(secondPostId != differentAuthorPostId, "Post IDs should be unique across authors");
+
+        // Verify different author's post sequential ID starts at 1
+        assertEq(
+            feed.getAuthorPostSequentialId(differentAuthorPostId),
+            1,
+            "Different author's first post should have authorPostSequentialId = 1"
+        );
+    }
+
+    function test_PostSequentialId_Uniqueness(address firstAuthor, address secondAuthor) public {
+        vm.assume(firstAuthor != address(0));
+        vm.assume(secondAuthor != address(0));
+        vm.assume(firstAuthor != secondAuthor);
+
+        // Get initial post count
+        uint256 initialPostCount = feed.getPostCount();
+
+        // Create first post
+        vm.prank(firstAuthor);
+        uint256 firstPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: firstAuthor,
+                contentURI: "first post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create second post
+        vm.prank(secondAuthor);
+        uint256 secondPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: secondAuthor,
+                contentURI: "second post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify sequential IDs
+        Post memory firstPost = feed.getPost(firstPostId);
+        Post memory secondPost = feed.getPost(secondPostId);
+
+        assertEq(firstPost.postSequentialId, initialPostCount + 1, "First post should have sequential ID 1");
+        assertEq(secondPost.postSequentialId, initialPostCount + 2, "Second post should have sequential ID 2");
+
+        assertEq(feed.getPostSequentialId(firstPostId), initialPostCount + 1, "First post sequential ID should match");
+        assertEq(feed.getPostSequentialId(secondPostId), initialPostCount + 2, "Second post sequential ID should match");
+
+        // Verify global post count increased correctly
+        assertEq(feed.getPostCount(), initialPostCount + 2, "Global post count should increase by 2");
+    }
+
+    function test_AuthorPostSequentialId_Uniqueness(address firstAuthor, address secondAuthor) public {
+        vm.assume(firstAuthor != address(0));
+        vm.assume(secondAuthor != address(0));
+        vm.assume(firstAuthor != secondAuthor);
+
+        // Get initial author post counts
+        uint256 initialFirstAuthorCount = feed.getPostCount(firstAuthor);
+        uint256 initialSecondAuthorCount = feed.getPostCount(secondAuthor);
+
+        // Create two posts from first author
+        vm.startPrank(firstAuthor);
+        uint256 firstAuthorPostId1 = feed.createPost({
+            postParams: CreatePostParams({
+                author: firstAuthor,
+                contentURI: "first author post 1",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        uint256 firstAuthorPostId2 = feed.createPost({
+            postParams: CreatePostParams({
+                author: firstAuthor,
+                contentURI: "first author post 2",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+        vm.stopPrank();
+
+        // Create a post from second author
+        vm.prank(secondAuthor);
+        uint256 secondAuthorPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: secondAuthor,
+                contentURI: "second author post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify sequential IDs for first author's posts
+        Post memory firstAuthorPost1 = feed.getPost(firstAuthorPostId1);
+        Post memory firstAuthorPost2 = feed.getPost(firstAuthorPostId2);
+
+        assertEq(
+            firstAuthorPost1.authorPostSequentialId,
+            initialFirstAuthorCount + 1,
+            "First author's first post should have sequential ID 1"
+        );
+        assertEq(
+            firstAuthorPost2.authorPostSequentialId,
+            initialFirstAuthorCount + 2,
+            "First author's second post should have sequential ID 2"
+        );
+        assertTrue(
+            firstAuthorPost1.authorPostSequentialId != firstAuthorPost2.authorPostSequentialId,
+            "Author post sequential IDs should be unique"
+        );
+
+        // Verify sequential ID for second author's post
+        Post memory secondAuthorPost = feed.getPost(secondAuthorPostId);
+        assertEq(
+            secondAuthorPost.authorPostSequentialId,
+            initialSecondAuthorCount + 1,
+            "Second author's post should have sequential ID 1"
+        );
+
+        // Verify author post counts increased correctly
+        assertEq(
+            feed.getPostCount(firstAuthor), initialFirstAuthorCount + 2, "First author's post count should increase by 2"
+        );
+        assertEq(
+            feed.getPostCount(secondAuthor),
+            initialSecondAuthorCount + 1,
+            "Second author's post count should increase by 1"
+        );
+    }
+
+    function test_PostTimestamp_Ordering(address firstAuthor, address secondAuthor) public {
+        vm.assume(firstAuthor != address(0));
+        vm.assume(secondAuthor != address(0));
+        vm.assume(firstAuthor != secondAuthor);
+
+        // Create first post
+        vm.prank(firstAuthor);
+        uint256 firstPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: firstAuthor,
+                contentURI: "first post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create second post in the same block
+        vm.prank(secondAuthor);
+        uint256 secondPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: secondAuthor,
+                contentURI: "second post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Create third post in a future block
+        vm.warp(block.timestamp + 1);
+        vm.prank(firstAuthor);
+        uint256 thirdPostId = feed.createPost({
+            postParams: CreatePostParams({
+                author: firstAuthor,
+                contentURI: "third post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get post data
+        Post memory firstPost = feed.getPost(firstPostId);
+        Post memory secondPost = feed.getPost(secondPostId);
+        Post memory thirdPost = feed.getPost(thirdPostId);
+
+        // Verify timestamps are unique
+        assertTrue(
+            firstPost.creationTimestamp != secondPost.creationTimestamp
+                || firstPost.postSequentialId != secondPost.postSequentialId,
+            "Posts in same block should have unique identifiers"
+        );
+        assertTrue(
+            firstPost.creationTimestamp < thirdPost.creationTimestamp,
+            "Posts in different blocks should have different timestamps"
+        );
+        assertTrue(
+            secondPost.creationTimestamp < thirdPost.creationTimestamp,
+            "Posts in different blocks should have different timestamps"
+        );
+
+        // Verify last updated timestamps match creation timestamps for new posts
+        assertEq(
+            firstPost.lastUpdatedTimestamp,
+            firstPost.creationTimestamp,
+            "Last updated should match creation for new post"
+        );
+        assertEq(
+            secondPost.lastUpdatedTimestamp,
+            secondPost.creationTimestamp,
+            "Last updated should match creation for new post"
+        );
+        assertEq(
+            thirdPost.lastUpdatedTimestamp,
+            thirdPost.creationTimestamp,
+            "Last updated should match creation for new post"
+        );
+    }
+
+    function test_CreationTimestamp_Set(address postAuthor) public {
+        vm.assume(postAuthor != address(0));
+
+        // Record current timestamp
+        uint256 currentTimestamp = block.timestamp;
+
+        // Create a post
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "test post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get post data
+        Post memory post = feed.getPost(postId);
+
+        // Verify creation timestamp is set to current block timestamp
+        assertEq(post.creationTimestamp, currentTimestamp, "Creation timestamp should be current block timestamp");
+
+        // Warp to future timestamp
+        vm.warp(block.timestamp + 1 hours);
+
+        // Edit the post
+        vm.prank(postAuthor);
+        feed.editPost({
+            postId: postId,
+            postParams: EditPostParams({contentURI: "edited post", extraData: _emptyKeyValueArray()}),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get updated post data
+        Post memory editedPost = feed.getPost(postId);
+
+        // Verify creation timestamp remains unchanged after edit
+        assertEq(editedPost.creationTimestamp, currentTimestamp, "Creation timestamp should not change after edit");
+    }
+
+    function test_LastUpdatedTimestamp_Updates(address postAuthor) public {
+        vm.assume(postAuthor != address(0));
+
+        // Create a post
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "test post",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get post data
+        Post memory post = feed.getPost(postId);
+
+        // Verify last updated timestamp matches creation timestamp for new post
+        assertEq(post.lastUpdatedTimestamp, post.creationTimestamp, "Last updated should match creation for new post");
+
+        // Warp to future timestamp
+        uint256 editTimestamp = block.timestamp + 1 hours;
+        vm.warp(editTimestamp);
+
+        // Edit the post
+        vm.prank(postAuthor);
+        feed.editPost({
+            postId: postId,
+            postParams: EditPostParams({contentURI: "edited post", extraData: _emptyKeyValueArray()}),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get updated post data
+        Post memory editedPost = feed.getPost(postId);
+
+        // Verify last updated timestamp is updated to edit timestamp
+        assertEq(editedPost.lastUpdatedTimestamp, editTimestamp, "Last updated should be edit timestamp");
+        assertTrue(editedPost.lastUpdatedTimestamp > post.lastUpdatedTimestamp, "Last updated should increase");
+
+        // Warp to another future timestamp
+        uint256 secondEditTimestamp = block.timestamp + 1 hours;
+        vm.warp(secondEditTimestamp);
+
+        // Edit the post again
+        vm.prank(postAuthor);
+        feed.editPost({
+            postId: postId,
+            postParams: EditPostParams({contentURI: "edited again", extraData: _emptyKeyValueArray()}),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get updated post data
+        Post memory secondEditedPost = feed.getPost(postId);
+
+        // Verify last updated timestamp is updated to second edit timestamp
+        assertEq(
+            secondEditedPost.lastUpdatedTimestamp, secondEditTimestamp, "Last updated should be second edit timestamp"
+        );
+        assertTrue(
+            secondEditedPost.lastUpdatedTimestamp > editedPost.lastUpdatedTimestamp, "Last updated should increase"
+        );
+    }
+
+    // TODO: Fill in empty arrays for all params and test with that
+    function test_GetPost(address postAuthor, string memory contentURI) public {
+        vm.assume(postAuthor != address(0));
+        vm.assume(bytes(contentURI).length > 0);
+
+        // Create a post first
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: contentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Get and verify the post
+        Post memory post = feed.getPost(postId);
+
+        assertEq(post.author, postAuthor, "Post author should match");
+        assertEq(post.contentURI, contentURI, "Content URI should match");
+        assertEq(post.postSequentialId, feed.getPostCount(), "Post sequential ID should match");
+        assertEq(post.authorPostSequentialId, feed.getPostCount(postAuthor), "Author post sequential ID should match");
+        assertEq(post.rootPostId, postId, "Root post ID should be self for new post");
+        assertEq(post.repostedPostId, 0, "Reposted post ID should be 0");
+        assertEq(post.quotedPostId, 0, "Quoted post ID should be 0");
+        assertEq(post.repliedPostId, 0, "Replied post ID should be 0");
+        assertEq(post.creationTimestamp, block.timestamp, "Creation timestamp should be current block");
+        assertEq(post.lastUpdatedTimestamp, block.timestamp, "Last updated timestamp should be current block");
+        assertEq(post.creationSource, address(0), "Creation source should be 0 address");
+        assertEq(post.lastUpdateSource, address(0), "Last update source should be 0 address");
+    }
+
+    function test_GetPostAuthor(address postAuthor, string memory contentURI) public {
+        vm.assume(postAuthor != address(0));
+        vm.assume(bytes(contentURI).length > 0);
+
+        // Create a post first
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: contentURI,
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertEq(feed.getPostAuthor(postId), postAuthor, "Post author should match");
+    }
+
+    function test_GetPostAuthor_NonexistentPost(uint256 nonexistentPostId) public {
+        vm.assume(!feed.postExists(nonexistentPostId));
+
+        vm.expectRevert(Errors.DoesNotExist.selector);
+        feed.getPostAuthor(nonexistentPostId);
+    }
+
+    function test_GetPostCount_Global(address postAuthor, uint8 numberOfPosts) public {
+        vm.assume(postAuthor != address(0));
+        numberOfPosts = uint8(bound(numberOfPosts, 1, 10));
+
+        uint256 startingPostCount = feed.getPostCount();
+
+        for (uint256 i = 0; i < numberOfPosts; i++) {
+            vm.prank(postAuthor);
+            feed.createPost({
+                postParams: CreatePostParams({
+                    author: postAuthor,
+                    contentURI: string.concat("content://", vm.toString(i)),
+                    repostedPostId: 0,
+                    quotedPostId: 0,
+                    repliedPostId: 0,
+                    ruleChanges: _emptyRuleChangeArray(),
+                    extraData: _emptyKeyValueArray()
+                }),
+                customParams: _emptyKeyValueArray(),
+                feedRulesParams: _emptyRuleProcessingParamsArray(),
+                rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+                quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+            });
+            assertEq(feed.getPostCount(), startingPostCount + i + 1, "Global post count should increment");
+        }
+    }
+
+    function test_GetPostCount_PerAuthor() public {
+        // Create multiple authors with different post counts
+        address[] memory authors = new address[](3);
+        uint8[] memory postCounts = new uint8[](3);
+
+        authors[0] = makeAddr("AUTHOR1");
+        authors[1] = makeAddr("AUTHOR2");
+        authors[2] = makeAddr("AUTHOR3");
+
+        postCounts[0] = 3;
+        postCounts[1] = 1;
+        postCounts[2] = 2;
+
+        for (uint256 i = 0; i < authors.length; i++) {
+            for (uint256 j = 0; j < postCounts[i]; j++) {
+                vm.prank(authors[i]);
+                feed.createPost({
+                    postParams: CreatePostParams({
+                        author: authors[i],
+                        contentURI: string.concat("content://", vm.toString(j)),
+                        repostedPostId: 0,
+                        quotedPostId: 0,
+                        repliedPostId: 0,
+                        ruleChanges: _emptyRuleChangeArray(),
+                        extraData: _emptyKeyValueArray()
+                    }),
+                    customParams: _emptyKeyValueArray(),
+                    feedRulesParams: _emptyRuleProcessingParamsArray(),
+                    rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+                    quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+                });
+            }
+            assertEq(feed.getPostCount(authors[i]), postCounts[i], "Author post count should match");
+        }
+
+        // Verify total post count
+        assertEq(feed.getPostCount(), 6, "Global post count should match sum of all authors' posts");
+    }
+
+    function test_GetNextPostId(address postAuthor) public {
+        vm.assume(postAuthor != address(0));
+
+        uint256 expectedNextPostId = feed.getNextPostId(postAuthor);
+
+        // Create a post
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "some content uri",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify the post ID matches what was predicted
+        assertEq(postId, expectedNextPostId, "Post ID should match predicted next ID");
+
+        // Verify next post ID is different
+        uint256 newNextPostId = feed.getNextPostId(postAuthor);
+        assertTrue(newNextPostId != postId, "New next post ID should be different");
+    }
+
+    function test_PostExists(address postAuthor) public {
+        vm.assume(postAuthor != address(0));
+
+        // Create a post
+        vm.prank(postAuthor);
+        uint256 postId = feed.createPost({
+            postParams: CreatePostParams({
+                author: postAuthor,
+                contentURI: "some content uri",
+                repostedPostId: 0,
+                quotedPostId: 0,
+                repliedPostId: 0,
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            }),
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray(),
+            rootPostRulesParams: _emptyRuleProcessingParamsArray(),
+            quotedPostRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post exists
+        assertTrue(feed.postExists(postId), "Post should exist after creation");
+
+        // Delete the post
+        vm.prank(postAuthor);
+        feed.deletePost({
+            postId: postId,
+            customParams: _emptyKeyValueArray(),
+            feedRulesParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify post no longer exists
+        assertFalse(feed.postExists(postId), "Post should not exist after deletion");
+
+        // Verify a random post ID does not exist
+        uint256 randomPostId = uint256(keccak256(abi.encodePacked("nonexistent")));
+        assertFalse(feed.postExists(randomPostId), "Random post ID should not exist");
     }
 }

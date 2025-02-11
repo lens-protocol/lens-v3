@@ -570,6 +570,78 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertEq(followDataLater.timestamp, followTimestamp, "Follow timestamp should not change");
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        IGraph(graphForRules).changeGraphRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override returns (address) {
+        return graphForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override(RulesTest) returns (bytes4) {
+        return IGraphRule.processFollow.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](3);
+        selectors[0] = IGraphRule.processFollow.selector;
+        selectors[1] = IGraphRule.processUnfollow.selector;
+        selectors[2] = IGraphRule.processFollowRuleChanges.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return IGraph(graphForRules).getGraphRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IGraphRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+// Graph test split in two to fit within zksync 65535 instruction limit. Some functions copy-pasted (cleanup later)
+
+contract GraphTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
+    IGraph graph;
+
+    address sourceAccount = makeAddr("SOURCE");
+    address targetAccount = makeAddr("TARGET");
+    address graphOwner = makeAddr("GRAPH_OWNER");
+
+    MockAccessControl mockAccessControl;
+    address graphForRules;
+
+    function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
+        BaseDeployments.setUp();
+
+        graph = IGraph(
+            lensFactory.deployGraph({
+                metadataURI: "some metadata uri",
+                owner: graphOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
+
+        mockAccessControl = new MockAccessControl();
+
+        graphForRules = graphFactory.deployGraph({
+            metadataURI: "uri://graph",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        RulesTest.setUp();
+        RuleExecutionTest.setUp();
+    }
+
     function test_MultipleFollows_DifferentAccounts() public {
         address follower = makeAddr("FOLLOWER");
         address[] memory targets = new address[](5);
