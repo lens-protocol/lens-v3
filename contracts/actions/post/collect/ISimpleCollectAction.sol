@@ -4,6 +4,11 @@ pragma solidity ^0.8.26;
 
 import {IPostAction} from "contracts/extensions/actions/ActionHub.sol";
 
+struct RecipientData {
+    address recipient;
+    uint16 split; // fraction of BPS_MAX (10 000)
+}
+
 /**
  * @notice A storage struct containing all data regarding a post's collect action.
  *
@@ -20,13 +25,15 @@ struct CollectActionData {
     uint96 collectLimit;
     address token;
     uint96 currentCollects;
-    address recipient;
+    RecipientData[] recipients;
     uint72 endTimestamp;
     address followerOnlyGraph;
     address collectionAddress;
     bool isImmutable;
     bool isDisabled;
 }
+
+uint256 constant BPS_MAX = 10000;
 
 interface ISimpleCollectAction is IPostAction {
     function getCollectActionData(address feed, uint256 postId) external view returns (CollectActionData memory);
