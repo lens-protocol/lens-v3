@@ -16,6 +16,7 @@ import {Rule, KeyValue} from "@core/types/Types.sol";
 import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
 import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 import {Lock} from "@core/upgradeability/Lock.sol";
+import {MockAccountGroupAdditionSettings} from "test/mocks/MockAccountGroupAdditionSettings.sol";
 
 contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IGroup group;
@@ -24,6 +25,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     address groupOwner = makeAddr("GROUP_OWNER");
     MockAccessControl mockAccessControl;
     address groupForRules;
+    address mockAccountGroupAdditionSettings;
 
     function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
@@ -62,6 +64,8 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         mockAccessControl.mockAccess(groupOwner, address(group), PID__ADD_MEMBER, true);
         mockAccessControl.mockAccess(groupOwner, address(group), PID__REMOVE_MEMBER, true);
 
+        mockAccountGroupAdditionSettings = address(new MockAccountGroupAdditionSettings());
+
         RulesTest.setUp();
 
         RuleExecutionTest.setUp();
@@ -90,7 +94,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         return accountWithoutPID;
     }
 
-    function test_AddMember_viaPID(address newMember) public {
+    function test_AddMember_viaPID_NoRules(address newMember) public {
         vm.assume(newMember != address(0));
 
         address accountWithPID = _getAccountWithPID(PID__ADD_MEMBER);
@@ -98,6 +102,15 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(group.isMember(newMember) == false);
 
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
+
+        ////// Start of the account group addition settings mocking //////
+        // Assumes it's an EOA to avoid vm.etch'ing crucial addresses of the group::addMember flow.
+        vm.assume(newMember.code.length == 0);
+        // We need to vm.etch to mock the account group addition settings
+        bytes memory newMemberCode = newMember.code;
+        vm.etch(newMember, mockAccountGroupAdditionSettings.code);
+        MockAccountGroupAdditionSettings(newMember).mockCanBeAddedToGroup(address(group), true);
+        ////// End of the account group addition settings mocking //////
 
         vm.expectEmit(true, true, true, true);
         emit Lens_Group_MemberAdded(
@@ -110,6 +123,8 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
             customParams: _emptyKeyValueArray(),
             ruleProcessingParams: _emptyRuleProcessingParamsArray()
         });
+
+        vm.etch(newMember, newMemberCode); // Put the original code back, which should be empty anyways.
 
         assertTrue(group.isMember(newMember));
     }
@@ -129,14 +144,20 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     }
 
     // TODO: Add this to GroupHelpers or something
-    function _setGroupMember(address member) internal {
+    function _forceMemberIntoGroup_assumingIsEOA(address member) internal {
+        // Requires member to be an EOA to avoid vm.etch'ing crucial pieces of the group::addMember flow.
+        vm.assume(member.code.length == 0);
         if (group.isMember(member) == false) {
+            bytes memory memberCode = member.code;
+            vm.etch(member, mockAccountGroupAdditionSettings.code);
+            MockAccountGroupAdditionSettings(member).mockCanBeAddedToGroup(address(group), true);
             vm.prank(groupOwner);
             group.addMember({
                 account: member,
                 customParams: _emptyKeyValueArray(),
                 ruleProcessingParams: _emptyRuleProcessingParamsArray()
             });
+            vm.etch(member, memberCode);
         }
         assertTrue(group.isMember(member));
     }
@@ -167,7 +188,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         address accountWithPID = _getAccountWithPID(PID__REMOVE_MEMBER);
 
-        _setGroupMember(memberToRemove);
+        _forceMemberIntoGroup_assumingIsEOA(memberToRemove);
         uint256 expectedMembershipId = group.getMembershipId(memberToRemove);
 
         vm.expectEmit(true, true, true, true);
@@ -190,7 +211,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         address accountWithoutPID = _getAccountWithoutPID(PID__REMOVE_MEMBER);
 
-        _setGroupMember(memberToRemove);
+        _forceMemberIntoGroup_assumingIsEOA(memberToRemove);
         assertTrue(group.isMember(memberToRemove));
 
         vm.expectRevert(Errors.AccessDenied.selector);
@@ -242,7 +263,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     function test_leaveGroup(address memberToLeave) public {
         vm.assume(memberToLeave != address(0));
 
-        _setGroupMember(memberToLeave);
+        _forceMemberIntoGroup_assumingIsEOA(memberToLeave);
 
         uint256 expectedMembershipId = group.getMembershipId(memberToLeave);
 
@@ -265,7 +286,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(member != address(0));
 
         // First add the member
-        _setGroupMember(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         // Try to add the same member again
         vm.prank(groupOwner);
@@ -281,7 +302,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(member != address(0));
 
         // First add the member
-        _setGroupMember(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         // Try to join the group again
         vm.prank(member);
@@ -374,7 +395,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(sender != differentAccount);
 
         // Add the member first
-        _setGroupMember(differentAccount);
+        _forceMemberIntoGroup_assumingIsEOA(differentAccount);
 
         vm.prank(sender);
         vm.expectRevert(Errors.InvalidMsgSender.selector);
@@ -389,7 +410,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(member != address(0));
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
 
-        _setGroupMember(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         uint256 membershipId = group.getMembershipId(member);
         assertTrue(membershipId != 0);
@@ -408,7 +429,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         uint256 expectedTimestamp = block.timestamp;
 
-        _setGroupMember(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         uint256 membershipTimestamp = group.getMembershipTimestamp(member);
 
@@ -429,14 +450,14 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         uint256 startingNumberOfMembers = group.getNumberOfMembers();
 
         for (uint256 i = 0; i < numberOfMembers; i++) {
-            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
             assertEq(group.getNumberOfMembers(), startingNumberOfMembers + i + 1);
         }
     }
 
     function test_NumberOfMembers_DecreasesOnRemove() public {
         for (uint256 i = 0; i < 10; i++) {
-            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
 
         uint256 startingNumberOfMembers = group.getNumberOfMembers();
@@ -457,7 +478,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
         uint256 expectedTimestamp = block.timestamp;
 
-        _setGroupMember(member);
+        _forceMemberIntoGroup_assumingIsEOA(member);
 
         Membership memory membership = group.getMembership(member);
 
@@ -475,7 +496,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_NumberOfMembers_IncreasesOnJoin() public {
         for (uint256 i = 0; i < 10; i++) {
-            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
 
         uint256 memberCountBefore = group.getNumberOfMembers();
@@ -495,7 +516,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_NumberOfMembers_DecreasesOnLeave() public {
         for (uint256 i = 0; i < 10; i++) {
-            _setGroupMember(makeAddr(string.concat("MEMBER_", vm.toString(i))));
+            _forceMemberIntoGroup_assumingIsEOA(makeAddr(string.concat("MEMBER_", vm.toString(i))));
         }
 
         uint256 memberCountBefore = group.getNumberOfMembers();

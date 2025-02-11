@@ -5,7 +5,7 @@ pragma solidity ^0.8.26;
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {IAccount, AccountManagerPermissions, Transaction} from "contracts/extensions/account/IAccount.sol";
-import {SourceStamp, KeyValue} from "contracts/core/types/Types.sol";
+import {SourceStamp, KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
@@ -16,6 +16,9 @@ import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {ERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
+import {IGraph} from "contracts/core/interfaces/IGraph.sol";
+import {IAccountGroupAdditionSettings} from "contracts/core/interfaces/IAccountGroupAdditionSettings.sol";
+import {IRequestBasedGroupRule} from "contracts/core/interfaces/IRequestBasedGroupRule.sol";
 
 library PermissionsHelper {
     function equals(AccountManagerPermissions memory permissions, AccountManagerPermissions memory otherPermissions)
@@ -34,7 +37,24 @@ library PermissionsHelper {
     }
 }
 
-contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, MetadataBased, ERC1155Holder, ERC721Holder {
+enum WhoCanAddMeToGroups {
+    NOBODY, // Default value.
+    ANYONE, // Not allowed in current implementation.
+    ANYONE_I_FOLLOW_ON_SPECIFIC_GRAPHS, // Not allowed in current implementation.
+    ANYONE_I_FOLLOW // Not allowed in current implementation.
+
+}
+
+contract Account is
+    IAccount,
+    IAccountGroupAdditionSettings,
+    Initializable,
+    Ownable,
+    ExtraStorageBased,
+    MetadataBased,
+    ERC1155Holder,
+    ERC721Holder
+{
     using CallLib for address;
     using PermissionsHelper for AccountManagerPermissions;
 
@@ -42,12 +62,19 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     uint256 constant SPENDING_TIMELOCK = 1 hours;
 
     struct Storage {
-        mapping(address => AccountManagerPermissions) accountManagerPermissions;
+        mapping(address account => AccountManagerPermissions permissions) accountManagerPermissions;
         uint256 allowNonOwnerSpendingTimestamp;
+        WhoCanAddMeToGroups whoCanAddMeToGroups;
+        mapping(address group => bool wasRequestSent) didSendRequestToGroup;
+        mapping(address graph => bool usedGraph) didFollowOnGraph; // Written in current impl for future use.
+        mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition; // Not written in current impl.
     }
 
     /// @custom:keccak lens.storage.Account
     bytes32 constant STORAGE__ACCOUNT = 0xf08a5e3d2dd76739ff9f91dc2ff8af2860b120d00f7938b9baa4607e3fee9019;
+
+    /// @custom:keccak lens.param.graph
+    bytes32 constant PARAM__GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
 
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {
@@ -105,6 +132,85 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
             _setMetadataURI(metadataURI, sourceStamp.source);
         } else {
             _setMetadataURI(metadataURI);
+        }
+    }
+
+    function canBeAddedToGroup(address group, address addedBy, KeyValue[] calldata params)
+        external
+        view
+        override
+        returns (bool)
+    {
+        if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.ANYONE) {
+            return true;
+        }
+        if ($storage().didSendRequestToGroup[group]) {
+            return true;
+        }
+        if (addedBy == owner() || $storage().accountManagerPermissions[addedBy].canExecuteTransactions) {
+            return true;
+        }
+        if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.NOBODY) {
+            return false;
+        }
+        address graph = _extractGraphFromParams(params);
+        if (graph == address(0)) {
+            return false;
+        }
+        if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.ANYONE_I_FOLLOW) {
+            // We check for isGraphAllowedForGroupAddition so allowed graphs where you didn't manually follow can be used
+            return ($storage().didFollowOnGraph[graph] || $storage().isGraphAllowedForGroupAddition[graph])
+                && IGraph(graph).isFollowing(address(this), addedBy);
+        } else if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.ANYONE_I_FOLLOW_ON_SPECIFIC_GRAPHS) {
+            return $storage().isGraphAllowedForGroupAddition[graph] && IGraph(graph).isFollowing(address(this), addedBy);
+        }
+        return false;
+    }
+
+    function _extractGraphFromParams(KeyValue[] calldata params) internal pure returns (address) {
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == PARAM__GRAPH) {
+                return abi.decode(params[i].value, (address));
+            }
+        }
+        return address(0);
+    }
+
+    function _beforeExecuteTransaction(address target, uint256, /* value */ bytes calldata data) internal virtual {
+        bytes4 selector = bytes4(data[:4]);
+        if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
+            try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
+                $storage().didSendRequestToGroup[group] = true;
+            } catch {
+                return;
+            }
+        } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
+            try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
+                $storage().didSendRequestToGroup[group] = false;
+            } catch {
+                return;
+            }
+        } else if (selector == IGraph.follow.selector) {
+            try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address) {
+                $storage().didFollowOnGraph[target] = true;
+            } catch {
+                return;
+            }
+        }
+    }
+
+    function abiDecodeForKnownSelectorHelper(bytes4 selector, bytes calldata data) external pure returns (address) {
+        if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
+            (, address group,) = abi.decode(data, (bytes32, address, KeyValue[]));
+            return group;
+        } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
+            (, address group,) = abi.decode(data, (bytes32, address, KeyValue[]));
+            return group;
+        } else if (selector == IGraph.follow.selector) {
+            abi.decode(data, (address, address, KeyValue[], RuleProcessingParams[], RuleProcessingParams[], KeyValue[]));
+            return address(0);
+        } else {
+            revert Errors.NotImplemented();
         }
     }
 
@@ -222,12 +328,17 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
                 require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
             }
         }
+        _beforeExecuteTransaction(target, value, data);
         bytes memory returnData = target.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(target, value, data, msg.sender);
         return returnData;
     }
 
+    // Receiver
+
     receive() external payable override {}
+
+    // Getters
 
     function canExecuteTransactions(address executor) external view override returns (bool) {
         return $storage().accountManagerPermissions[executor].canExecuteTransactions || executor == owner();

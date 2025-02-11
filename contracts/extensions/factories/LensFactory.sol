@@ -246,6 +246,9 @@ contract LensFactory {
         address foundingMember,
         KeyValue[] memory addFoundingMemberCustomParams
     ) external returns (address) {
+        if (foundingMember != address(0)) {
+            require(foundingMember == msg.sender, Errors.InvalidParameter());
+        }
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
         return GROUP_FACTORY.deployGroup(
             metadataURI,
