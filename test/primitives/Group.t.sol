@@ -134,9 +134,10 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     // TODO: Add this to GroupHelpers or something
     function _addGroupMember_forceBypassingChecks(address member) internal {
-        // Assumptions needed to avoid calling a vm.etch'ed group
+        // Assumptions needed to avoid vm.etch'ing addresses that are crucial parts of the group::addMember flow.
         vm.assume(member != address(group));
         vm.assume(member != groupBeacon);
+        vm.assume(member != address(mockAccessControl));
         if (group.isMember(member) == false) {
             bytes memory memberCode = member.code;
             vm.etch(member, mockAccountGroupAdditionSettings.code);
