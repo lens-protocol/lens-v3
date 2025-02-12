@@ -58,10 +58,17 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
      * @notice A struct containing the params to configure this Collect Module on a post.
      *
      * @param amount The collecting cost associated with this post. 0 for free collect.
-     * @param token The token associated with this publication.
      * @param collectLimit The maximum number of collects for this publication. 0 for no limit.
+     * @param token The token associated with this publication.
      * @param endTimestamp The end timestamp after which collecting is impossible. 0 for no expiry.
-     * @param recipients Recipient(-s) of collect fees.
+     * @param followerOnlyGraph The graph that holds the follow relations that restrict who can collect this post.
+     * @param recipient Recipient of collect fees.
+     * @param isImmutable If true, it means that:
+     *          - The Post URI is snapshotted at configuration time and cannot be changed later.
+     *          - Collected posts' NFTs remain permanently available.
+     *          - What you see is what you get; editing the Post URI or deleting the post will disable collection.
+     *         Note: This immutability is only guaranteed if the URI is hosted on immutable storage. Mutability inherent
+     *         to the chosen storage technology exceeds the on-chain verification capabilities.
      */
     struct CollectActionConfigureParams {
         uint160 amount; ///////////// (Optional) Default: 0
@@ -157,9 +164,12 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
     ) internal override returns (bytes memory) {
         _validateSenderIsAuthor(originalMsgSender, feed, postId);
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
-        // We don't check for existence of collect before disabling, because it might be useful to disable it initially
-        // require(storedData.collectionAddress != address(0), Errors.DoesNotExist());
-        require(!storedData.isImmutable, Errors.Immutable());
+        /**
+         * We allow to disable/enable collections that have not been configured yet, might be useful to disable,
+         * configure, and enable it back after you double-checked your configuration.
+         *
+         * Immutable collections can also switch between disabled/enabled.
+         */
         require(storedData.isDisabled != isDisabled, Errors.RedundantStateChange());
         storedData.isDisabled = isDisabled;
         return abi.encode(isDisabled);
