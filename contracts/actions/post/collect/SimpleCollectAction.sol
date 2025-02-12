@@ -133,6 +133,7 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         override
         returns (bytes memory)
     {
+        require(IFeed(feed).postExists(postId), Errors.DoesNotExist());
         CollectActionExecutionParams memory executionParams = _extractCollectActionExecutionParams(params);
 
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
