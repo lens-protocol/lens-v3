@@ -44,3 +44,8 @@ struct SourceStamp {
     uint256 deadline;
     bytes signature;
 }
+
+struct RecipientData {
+    address recipient;
+    uint16 split; // fraction of BPS_MAX (10 000)
+}
