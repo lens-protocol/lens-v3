@@ -141,9 +141,12 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
     ) internal override returns (bytes memory) {
         _validateSenderIsAuthor(originalMsgSender, feed, postId);
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
-        // We don't check for existence of collect before disabling, because it might be useful to disable it initially
-        // require(storedData.collectionAddress != address(0), Errors.DoesNotExist());
-        require(!storedData.isImmutable, Errors.Immutable());
+        // We allow to disable/enable collections that have not been configured yet, might be useful to disable,
+        // configure, and enable it back after you double-checked your configuration.
+        // Immutable collections can switch between disabled/enabled as long as they have not been collected yet.
+        if (storedData.isImmutable) {
+            require(storedData.currentCollects == 0, Errors.Immutable());
+        }
         require(storedData.isDisabled != isDisabled, Errors.RedundantStateChange());
         storedData.isDisabled = isDisabled;
         return abi.encode(isDisabled);
