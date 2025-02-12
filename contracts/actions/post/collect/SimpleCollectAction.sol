@@ -54,7 +54,7 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
      * @param recipient Recipient of collect fees.
      * @param isImmutable If true, it means that:
      *          - The Post URI is snapshotted at configuration time and cannot be changed later.
-     *          - Collected posts remain permanently available.
+     *          - Collected posts' NFTs remain permanently available.
      *          - What you see is what you get; editing the Post URI or deleting the post will disable collection.
      *         Note: This immutability is only guaranteed if the URI is hosted on immutable storage. Mutability inherent
      *         to the chosen storage technology exceeds the on-chain verification capabilities.
