@@ -375,7 +375,7 @@ export async function deployLensAccessControl(primitivesOwner: string) {
   return accessControlAddress;
 }
 
-export async function deployLensActionHub(proxyOwner: string): Promise<string> {
+export async function deployLensActionHub(proxyOwner: string, treasuryAddress: string, treasuryFeeBps: number): Promise<string> {
   const contractName = 'ActionHub';
   const existingContract = loadContractFromAddressBook(contractName);
   if (existingContract && existingContract.address) {
@@ -386,7 +386,7 @@ export async function deployLensActionHub(proxyOwner: string): Promise<string> {
   // deploy action hub
   console.log('Deploying Action Hub...');
   const actionHub_artifactName = 'ActionHub';
-  const actionHub_args: any[] = [];
+  const actionHub_args: any[] = [treasuryAddress, treasuryFeeBps];
 
   const actionHub = await deployLensContractAsProxy({
     contractName: actionHub_artifactName,

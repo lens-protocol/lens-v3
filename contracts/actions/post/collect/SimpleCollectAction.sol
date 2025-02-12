@@ -2,15 +2,21 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {ISimpleCollectAction, CollectActionData} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
+import {
+    ISimpleCollectAction, CollectActionData, BPS_MAX
+} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
 import {OwnableMetadataBasedPostAction} from "contracts/actions/post/base/OwnableMetadataBasedPostAction.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {KeyValue} from "contracts/core/types/Types.sol";
+import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {PARAM__TREASURY} from "contracts/extensions/actions/ActionHub.sol";
+
+error InvalidSplits();
+error InvalidRecipient();
 
 contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAction {
     using SafeERC20 for IERC20;
@@ -36,12 +42,17 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
     bytes32 constant PARAM__COLLECT_LIMIT = 0xa3a202292a3a2b62eecfeb02565126445fa5c792f06c6222157d3244eca405d5;
     /// @custom:keccak lens.param.endTimestamp
     bytes32 constant PARAM__END_TIMESTAMP = 0xe2a4a768f409ba480a321a7d36ec9da16e9eae60a25bb0aeccf334822cc859a8;
-    /// @custom:keccak lens.param.recipient
-    bytes32 constant PARAM__RECIPIENT = 0xa402f27be0e1380b17f8a7ab131394fbdf24cd8b5c2745bd842d1ae1668867ff;
+    /// @custom:keccak lens.param.recipients
+    bytes32 constant PARAM__RECIPIENTS = 0x7f7e01c87d5278dd08505253491cf5d6b30930036f6afa2ae22a980882f2cac1;
+    /// @custom:keccak lens.param.referralFee
+    bytes32 constant PARAM__REFERRAL_FEE = 0x6dff2c1710f2154b19d8cf5d6f7d8f5b3909222c3cdd8801486403e4d423b1b6;
     /// @custom:keccak lens.param.graph
     bytes32 constant PARAM__FOLLOWER_ONLY_GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
     /// @custom:keccak lens.param.isImmutable
     bytes32 constant PARAM__IS_IMMUTABLE = 0x4d1cad3e438026974130ac84979964dd6019eace55216c3de16bc79e36a4c44b;
+
+    /// @custom:keccak lens.param.referrals
+    bytes32 constant PARAM__REFERRALS = 0x183a1b7fdb9626f5ae4e8cac88ee13cc03b29800d2690f61e2a2566f76d8773f;
 
     /**
      * @notice A struct containing the params to configure this Collect Module on a post.
@@ -51,7 +62,8 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
      * @param token The token associated with this publication.
      * @param endTimestamp The end timestamp after which collecting is impossible. 0 for no expiry.
      * @param followerOnlyGraph The graph that holds the follow relations that restrict who can collect this post.
-     * @param recipient Recipient of collect fees.
+     * @param recipients Recipient(s) of collect fees.
+     * @param referralFee The fee percentage that is distributed to referrals.
      * @param isImmutable If true, it means that:
      *          - The Post URI is snapshotted at configuration time and cannot be changed later.
      *          - Collected posts' NFTs remain permanently available.
@@ -65,7 +77,8 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         address token; /////////// (Optional, but required if amount > 0) Default: address(0)
         uint72 endTimestamp; //////// (Optional) Default: 0
         address followerOnlyGraph; // (Optional) Default: address(0)
-        address recipient; ////////// (Optional, but required if amount > 0) Default: address(0)
+        uint16 referralFee; //////// (Optional) Default: 0
+        RecipientData[] recipients; ////////// (Optional, but required if amount > 0)
         bool isImmutable; /////////// (Optional) Default: true
     }
 
@@ -73,12 +86,16 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
      * @notice A struct containing the params to execute a collect action on a post.
      * @notice Both should be either 0 (if optional) or both should be non-zero if required by collect configuration.
      *
-     * @param amount The amount to pay for collect.
-     * @param token The token to pay for collect.
+     * @param amountToPay The amount to pay for collect.
+     * @param paymentToken The token to pay for collect.
+     * @param treasury Recipient of the treasury fees.
+     * @param referrals Recipients of the referral fees.
      */
     struct CollectActionExecutionParams {
-        uint256 amount; //// (Optional) Default: 0
-        address token; // (Optional, but required if amount > 0) Default: address(0)
+        uint256 amountToPay; //// (Optional) Default: 0
+        address paymentToken; // (Optional, but required if amount > 0) Default: address(0)
+        RecipientData treasury;
+        RecipientData[] referrals;
     }
 
     constructor(address actionHub, address owner, string memory metadataURI)
@@ -110,7 +127,8 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
                 storedData.amount = configData.amount;
                 storedData.collectLimit = configData.collectLimit;
                 storedData.token = configData.token;
-                storedData.recipient = configData.recipient;
+                _updateRecipients(storedData, configData.recipients);
+                storedData.referralFee = configData.referralFee;
                 storedData.followerOnlyGraph = configData.followerOnlyGraph;
                 storedData.endTimestamp = configData.endTimestamp;
                 // Immutability cannot be changed after the first collect was made.
@@ -125,14 +143,15 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         override
         returns (bytes memory)
     {
-        CollectActionExecutionParams memory expectedParams = _extractCollectActionExecutionParams(params);
+        require(IFeed(feed).postExists(postId), Errors.DoesNotExist());
+        CollectActionExecutionParams memory executionParams = _extractCollectActionExecutionParams(params);
 
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
         uint256 tokenId = ++storedData.currentCollects;
 
-        _validateCollect(originalMsgSender, feed, postId, expectedParams);
+        _validateCollect(originalMsgSender, feed, postId, executionParams);
 
-        _processCollect(originalMsgSender, feed, postId);
+        _processCollect(originalMsgSender, feed, postId, executionParams);
 
         LensCollectedPost(storedData.collectionAddress).mint(originalMsgSender, tokenId);
 
@@ -172,8 +191,13 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
     function _validateConfigureParams(CollectActionConfigureParams memory configData) internal virtual {
         if (configData.amount == 0) {
             require(configData.token == address(0), Errors.InvalidParameter());
+            require(configData.recipients.length == 0, Errors.InvalidParameter());
+            require(configData.referralFee == 0, Errors.InvalidParameter());
         } else {
-            require(configData.token != address(0), Errors.InvalidParameter());
+            // We expect token to support ERC-20 interface (call balanceOf and expect it to not revert)
+            IERC20(configData.token).balanceOf(address(this));
+            require(configData.recipients.length > 0, Errors.InvalidParameter());
+            require(configData.referralFee <= BPS_MAX, Errors.InvalidParameter());
         }
         if (configData.endTimestamp != 0 && configData.endTimestamp < block.timestamp) {
             revert Errors.InvalidParameter();
@@ -181,6 +205,52 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         if (configData.followerOnlyGraph != address(0)) {
             // Check if the Graph supports isFollowing() interface with two random addresses
             IGraph(configData.followerOnlyGraph).isFollowing(address(this), msg.sender);
+        }
+        _validateRecipients(configData.recipients, true);
+    }
+
+    function _validateRecipients(RecipientData[] memory recipients, bool allowAddressZero) internal virtual {
+        if (recipients.length > 0) {
+            uint16 totalSplit = 0;
+            for (uint256 i = 0; i < recipients.length; i++) {
+                require(recipients[i].split > 0, InvalidSplits());
+                if (!allowAddressZero) {
+                    require(recipients[i].recipient != address(0), InvalidRecipient());
+                }
+                totalSplit += recipients[i].split;
+            }
+            require(totalSplit == BPS_MAX, InvalidSplits());
+        }
+    }
+
+    function _storeRecipients(CollectActionData storage storedData, RecipientData[] memory recipients)
+        internal
+        virtual
+    {
+        for (uint256 i = 0; i < recipients.length; i++) {
+            storedData.recipients.push(recipients[i]);
+        }
+    }
+
+    // A weird update function, might fix later
+    function _updateRecipients(CollectActionData storage storedData, RecipientData[] memory recipients)
+        internal
+        virtual
+    {
+        // Popping extra recipients from storage (if there were more existing than new ones)
+        if (storedData.recipients.length > recipients.length) {
+            uint256 recipientsToPop = storedData.recipients.length - recipients.length;
+            for (uint256 i = 0; i < recipientsToPop; i++) {
+                storedData.recipients.pop();
+            }
+        }
+        // Filling in existing storage with new recipients (if there were any)
+        for (uint256 i = 0; i < storedData.recipients.length; i++) {
+            storedData.recipients[i] = recipients[i];
+        }
+        // Pushing new recipients to storage (if there are more new than existing ones)
+        for (uint256 i = storedData.recipients.length; i < recipients.length; i++) {
+            storedData.recipients.push(recipients[i]);
         }
     }
 
@@ -194,7 +264,8 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         storedData.amount = configData.amount;
         storedData.collectLimit = configData.collectLimit;
         storedData.token = configData.token;
-        storedData.recipient = configData.recipient;
+        _storeRecipients(storedData, configData.recipients);
+        storedData.referralFee = configData.referralFee;
         storedData.endTimestamp = configData.endTimestamp;
         storedData.followerOnlyGraph = configData.followerOnlyGraph;
         storedData.collectionAddress = collectionAddress;
@@ -219,7 +290,7 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
             revert Errors.LimitReached();
         }
 
-        if (expectedParams.amount != data.amount || expectedParams.token != data.token) {
+        if (expectedParams.amountToPay != data.amount || expectedParams.paymentToken != data.token) {
             revert Errors.InvalidParameter();
         }
 
@@ -245,15 +316,66 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         }
     }
 
-    function _processCollect(address originalMsgSender, address feed, uint256 postId) internal virtual {
+    function _processCollect(
+        address originalMsgSender,
+        address feed,
+        uint256 postId,
+        CollectActionExecutionParams memory executionParams
+    ) internal virtual {
         CollectActionData storage data = $collectDataStorage().collectData[feed][postId];
+        _validateRecipients(executionParams.referrals, false);
+        uint256 amountLeftAfterTreasury =
+            _transferToTreasury(originalMsgSender, executionParams.treasury, data.token, data.amount);
+        uint256 amountLeftAfterReferrals = _transferToReferrals(
+            originalMsgSender, executionParams.referrals, data.referralFee, data.token, amountLeftAfterTreasury
+        );
+        _transferToRecipients(originalMsgSender, data.recipients, data.token, amountLeftAfterReferrals);
+    }
 
-        uint256 amount = data.amount;
-        address token = data.token;
-        address recipient = data.recipient;
+    function _transferToTreasury(
+        address originalMsgSender,
+        RecipientData memory treasury,
+        address currency,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 amountForTreasury = (amount * treasury.split) / BPS_MAX;
+        if (treasury.recipient != address(0) && amountForTreasury > 0) {
+            IERC20(currency).safeTransferFrom(originalMsgSender, treasury.recipient, amountForTreasury);
+        }
+        return amount - amountForTreasury;
+    }
 
-        if (amount > 0) {
-            IERC20(token).safeTransferFrom(originalMsgSender, recipient, amount);
+    function _transferToReferrals(
+        address originalMsgSender,
+        RecipientData[] memory referrals,
+        uint256 referralFee,
+        address currency,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 totalReferralsAmount = (amount * referralFee) / BPS_MAX;
+        uint256 numberOfReferrals = referrals.length;
+        if (totalReferralsAmount > 0 && numberOfReferrals > 0) {
+            for (uint256 i = 0; i < numberOfReferrals; i++) {
+                uint256 amountForReferral = (totalReferralsAmount * referrals[i].split) / BPS_MAX;
+                if (amountForReferral > 0) {
+                    IERC20(currency).safeTransferFrom(originalMsgSender, referrals[i].recipient, amountForReferral);
+                }
+            }
+        }
+        return numberOfReferrals > 0 ? amount - totalReferralsAmount : amount;
+    }
+
+    function _transferToRecipients(
+        address originalMsgSender,
+        RecipientData[] storage recipients,
+        address currency,
+        uint256 amount
+    ) internal {
+        for (uint256 i = 0; i < recipients.length; i++) {
+            uint256 amountForRecipient = (amount * recipients[i].split) / BPS_MAX;
+            if (amountForRecipient > 0) {
+                IERC20(currency).safeTransferFrom(originalMsgSender, recipients[i].recipient, amountForRecipient);
+            }
         }
     }
 
@@ -267,8 +389,9 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
             collectLimit: 0,
             token: address(0),
             endTimestamp: 0,
+            referralFee: 0,
             followerOnlyGraph: address(0),
-            recipient: address(0),
+            recipients: new RecipientData[](0),
             isImmutable: true
         });
 
@@ -281,8 +404,10 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
                 configData.collectLimit = abi.decode(params[i].value, (uint96));
             } else if (params[i].key == PARAM__END_TIMESTAMP) {
                 configData.endTimestamp = abi.decode(params[i].value, (uint72));
-            } else if (params[i].key == PARAM__RECIPIENT) {
-                configData.recipient = abi.decode(params[i].value, (address));
+            } else if (params[i].key == PARAM__REFERRAL_FEE) {
+                configData.referralFee = abi.decode(params[i].value, (uint16));
+            } else if (params[i].key == PARAM__RECIPIENTS) {
+                configData.recipients = abi.decode(params[i].value, (RecipientData[]));
             } else if (params[i].key == PARAM__FOLLOWER_ONLY_GRAPH) {
                 configData.followerOnlyGraph = abi.decode(params[i].value, (address));
             } else if (params[i].key == PARAM__IS_IMMUTABLE) {
@@ -297,14 +422,22 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         pure
         returns (CollectActionExecutionParams memory)
     {
-        CollectActionExecutionParams memory executionParams =
-            CollectActionExecutionParams({amount: 0, token: address(0)});
+        CollectActionExecutionParams memory executionParams = CollectActionExecutionParams({
+            amountToPay: 0,
+            paymentToken: address(0),
+            treasury: RecipientData({recipient: address(0), split: 0}),
+            referrals: new RecipientData[](0)
+        });
 
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == PARAM__AMOUNT) {
-                executionParams.amount = abi.decode(params[i].value, (uint256));
+                executionParams.amountToPay = abi.decode(params[i].value, (uint256));
             } else if (params[i].key == PARAM__TOKEN) {
-                executionParams.token = abi.decode(params[i].value, (address));
+                executionParams.paymentToken = abi.decode(params[i].value, (address));
+            } else if (params[i].key == PARAM__TREASURY) {
+                executionParams.treasury = abi.decode(params[i].value, (RecipientData));
+            } else if (params[i].key == PARAM__REFERRALS) {
+                executionParams.referrals = abi.decode(params[i].value, (RecipientData[]));
             }
         }
         return executionParams;

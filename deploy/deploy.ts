@@ -55,6 +55,16 @@ async function deploy() {
     throw new Error('PRIMITIVES_OWNER not found in environment variables');
   }
 
+  const treasuryAddress = process.env.TREASURY_ADDRESS;
+  if (!treasuryAddress && DEPLOYING_FR) {
+    throw new Error('TREASURY_ADDRESS not found in environment variables');
+  }
+
+  const treasuryFeeBps = process.env.TREASURY_FEE_BPS;
+  if (!treasuryFeeBps && DEPLOYING_FR) {
+    throw new Error('TREASURY_FEE_BPS not found in environment variables');
+  }
+
   if (DEPLOYING_FR) {
     console.log('ProxyAdminLockOwner', proxyAdminLockOwner);
     console.log('AccessControlAdminLockOwner', accessControlLockOwner);
@@ -89,7 +99,7 @@ async function deploy() {
   await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);
   await deployLensPrimitives(primitivesOwner ?? deployerAddress, DEPLOYING_MIGRATION);
   if (!DEPLOYING_MIGRATION) {
-    const actionHub = await deployLensActionHub(factoriesProxyOwner ?? deployerAddress);
+    const actionHub = await deployLensActionHub(factoriesProxyOwner ?? deployerAddress, treasuryAddress ?? deployerAddress, treasuryFeeBps ?? 0);
     await deployLensAccessControl(primitivesOwner ?? deployerAddress);
     await deployRules(rulesOwner ?? deployerAddress);
     await deployActions(actionHub, actionsOwner ?? deployerAddress);
