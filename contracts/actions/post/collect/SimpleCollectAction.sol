@@ -62,7 +62,8 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
      * @param token The token associated with this publication.
      * @param endTimestamp The end timestamp after which collecting is impossible. 0 for no expiry.
      * @param followerOnlyGraph The graph that holds the follow relations that restrict who can collect this post.
-     * @param recipient Recipient of collect fees.
+     * @param recipients Recipient(s) of collect fees.
+     * @param referralFee The fee percentage that is distributed to referrals.
      * @param isImmutable If true, it means that:
      *          - The Post URI is snapshotted at configuration time and cannot be changed later.
      *          - Collected posts' NFTs remain permanently available.
@@ -85,8 +86,10 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
      * @notice A struct containing the params to execute a collect action on a post.
      * @notice Both should be either 0 (if optional) or both should be non-zero if required by collect configuration.
      *
-     * @param amount The amount to pay for collect.
-     * @param token The token to pay for collect.
+     * @param amountToPay The amount to pay for collect.
+     * @param paymentToken The token to pay for collect.
+     * @param treasury Recipient of the treasury fees.
+     * @param referrals Recipients of the referral fees.
      */
     struct CollectActionExecutionParams {
         uint256 amountToPay; //// (Optional) Default: 0
