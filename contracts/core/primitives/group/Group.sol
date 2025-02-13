@@ -152,7 +152,8 @@ contract Group is
             _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
         }
         uint256 membershipId = Core._revokeMembership(account);
-        address source = _processSourceStamp(membershipId, customParams);
+        address source = _processSourceStamp(customParams);
+        _clearSource(membershipId);
         emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
@@ -176,7 +177,8 @@ contract Group is
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
-        address source = _processSourceStamp(membershipId, customParams);
+        address source = _processSourceStamp(customParams);
+        _clearSource(membershipId);
         emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
@@ -223,5 +225,9 @@ contract Group is
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getExtraStorage_Self(key);
+    }
+
+    function getMembershipSource(uint256 membershipId) external view returns (address) {
+        return _getSource(membershipId);
     }
 }

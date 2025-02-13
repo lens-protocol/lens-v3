@@ -107,7 +107,7 @@ contract Graph is
         KeyValue[] calldata extraData
     ) external virtual override returns (uint256) {
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
-        // followId is now in customParams - think if we want to implement this now, or later. For now passing 0 always.
+        // If some implementation wants to allow followId specification, it can be implemented using customParams.
         uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);
         address source = _processSourceStamp(assignedFollowId, customParams);
         _graphProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, graphRulesProcessingParams);
@@ -133,8 +133,14 @@ contract Graph is
     ) external virtual override returns (uint256) {
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
-        address source = _processSourceStamp(followId, customParams);
+        address source = _processSourceStamp(customParams);
         _graphProcessUnfollow(msg.sender, followerAccount, accountToUnfollow, customParams, graphRulesProcessingParams);
+        /**
+         * Clears follow source when unfollowing. A Graph primitive implementation that tokenizes follows might want to
+         * store an additional DATA__CREATION_SOURCE for when the first follow, which minted the token, was done, and
+         * keep it until the follow token is burnt.
+         */
+        _clearSource(followId);
         emit Lens_Graph_Unfollowed(
             followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, source
         );
@@ -169,5 +175,9 @@ contract Graph is
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getExtraStorage_Self(key);
+    }
+
+    function getFollowSource(uint256 followId) external view returns (address) {
+        return _getSource(followId);
     }
 }

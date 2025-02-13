@@ -12,28 +12,35 @@ abstract contract SourceStampBased is ExtraStorageBased {
     bytes32 constant DATA__SOURCE = 0xe256f222b2a828c71663f947d88e5c36216c58578c760b915641bf46ffe6a66e;
 
     // Functions with generic key
-    function _processSourceStamp(bytes32 key, uint256 entityId, KeyValue[] memory customParams, bool storeSource)
+
+    function _processSourceStamp(bytes32 key, uint256 entityId, KeyValue[] memory customParams)
         internal
         returns (address)
     {
+        address source = _processSourceStamp(customParams);
+        if (source != address(0)) {
+            _storeSource(key, entityId, source);
+        }
+    }
+
+    function _processSourceStamp(KeyValue[] memory customParams) internal returns (address) {
         for (uint256 i = 0; i < customParams.length; i++) {
             if (customParams[i].key == PARAM__SOURCE_STAMP) {
-                if (customParams[i].value.length > 0) {
-                    SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
-                    require(sourceStamp.originalMsgSender == msg.sender);
-                    ISource(sourceStamp.source).validateSource(sourceStamp);
-                    if (storeSource) {
-                        _setEntityExtraStorage(entityId, KeyValue(key, abi.encode(sourceStamp.source)));
-                    }
-                    return sourceStamp.source;
-                } else {
-                    if (storeSource) {
-                        _setEntityExtraStorage(entityId, KeyValue(key, ""));
-                    }
-                }
+                SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
+                require(sourceStamp.originalMsgSender == msg.sender);
+                ISource(sourceStamp.source).validateSource(sourceStamp);
+                return sourceStamp.source;
             }
         }
         return address(0);
+    }
+
+    function _storeSource(bytes32 key, uint256 entityId, address source) internal {
+        _setEntityExtraStorage(entityId, KeyValue(key, abi.encode(source)));
+    }
+
+    function _clearSource(bytes32 key, uint256 entityId) internal {
+        _setEntityExtraStorage(entityId, KeyValue(key, ""));
     }
 
     function _getSource(bytes32 key, uint256 entityId) internal view returns (address) {
@@ -45,17 +52,18 @@ abstract contract SourceStampBased is ExtraStorageBased {
         }
     }
 
-    // Functions with hardcoded `lens.data.source` key
-
-    function _processSourceStamp(uint256 entityId, KeyValue[] memory customParams, bool storeSource)
-        internal
-        returns (address)
-    {
-        return _processSourceStamp(DATA__SOURCE, entityId, customParams, storeSource);
-    }
+    // Functions with default `lens.data.source` key hardcoded
 
     function _processSourceStamp(uint256 entityId, KeyValue[] memory customParams) internal returns (address) {
-        return _processSourceStamp(entityId, customParams, true);
+        return _processSourceStamp(DATA__SOURCE, entityId, customParams);
+    }
+
+    function _storeSource(uint256 entityId, address source) internal {
+        _storeSource(DATA__SOURCE, entityId, source);
+    }
+
+    function _clearSource(uint256 entityId) internal {
+        _clearSource(DATA__SOURCE, entityId);
     }
 
     function _getSource(uint256 entityId) internal view returns (address) {

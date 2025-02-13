@@ -38,6 +38,9 @@ contract Namespace is
     uint256 constant PID__SET_TOKEN_URI_PROVIDER =
         uint256(0x32b3651aa4f96bc363c3045558bf6accc2b6027323bee86f6b4a570142cbd469);
 
+    /// @custom:keccak lens.data.assignmentSource
+    bytes32 constant DATA__ASSIGNMENT_SOURCE = 0x8bc73a48d2dc60da20efb89fc5618c638ad593255415dd355096e39ab76af582;
+
     /// @custom:keccak lens.storage.Namespace
     uint256 constant STORAGE__NAMESPACE = 0x643a2517af0a90463c06865bbd358f4e5d1271f6ad1b8352aca5bb2e89b867f6;
 
@@ -132,6 +135,7 @@ contract Namespace is
         emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source, extraData);
         _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
         Core._assignUsername(account, username);
+        _storeSource(DATA__ASSIGNMENT_SOURCE, id, source); // Stores after unassign, as unassign could clear the source
         emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
         _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
         _processAssigning(msg.sender, account, username, customParams, assigningProcessingParams);
@@ -148,8 +152,8 @@ contract Namespace is
         _safeMint(account, id);
         $storage().idToUsername[id] = username;
         Core._createUsername(username);
-        _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
+        _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
         _decodeAndSetUsernameExtraData(id, extraData);
         emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source, extraData);
     }
@@ -163,9 +167,10 @@ contract Namespace is
         uint256 id = _computeId(username);
         address owner = ownerOf(id);
         require(msg.sender == owner, Errors.InvalidMsgSender()); // msg.sender must be the owner of the username
+        address source = _processSourceStamp(customParams);
         _processRemoval(msg.sender, username, customParams, removalRuleProcessingParams);
-        address source = _processSourceStamp(id, customParams);
-        _unassignIfAssigned(username, customParams, unassigningRuleProcessingParams, source);
+        _unassignIfAssigned(username, customParams, unassigningRuleProcessingParams, source); // Clears DATA__ASSIGNMENT_SOURCE
+        _clearSource(id); // Clears DATA__SOURCE, which is the creation source
         _burn(id);
         Core._removeUsername(username);
         emit Lens_Username_Removed(username, owner, customParams, removalRuleProcessingParams, source);
@@ -184,9 +189,10 @@ contract Namespace is
         require(msg.sender == ownerOf(id) && msg.sender == account, Errors.InvalidMsgSender());
         // Check if username is not already assigned to this account
         require(account != Core.$storage().usernameToAccount[username], Errors.RedundantStateChange());
-        address source = _processSourceStamp(id, customParams);
+        address source = _processSourceStamp(customParams);
         _unassignIfAssigned(account, customParams, unassignAccountRuleProcessingParams, source);
         _unassignIfAssigned(username, customParams, unassignUsernameRuleProcessingParams, source);
+        _storeSource(DATA__ASSIGNMENT_SOURCE, id, source); // Stores after unassign, as unassign could clear the source
         Core._assignUsername(account, username);
         _processAssigning(msg.sender, account, username, customParams, assignRuleProcessingParams);
         emit Lens_Username_Assigned(username, account, customParams, assignRuleProcessingParams, source);
@@ -202,7 +208,8 @@ contract Namespace is
         require(msg.sender == ownerOf(id) || msg.sender == account, Errors.InvalidMsgSender());
         Core._unassignUsername(username);
         _processUnassigning(msg.sender, account, username, customParams, ruleProcessingParams);
-        address source = _processSourceStamp(id, customParams);
+        address source = _processSourceStamp(customParams);
+        _clearSource(DATA__ASSIGNMENT_SOURCE, id);
         emit Lens_Username_Unassigned(username, account, customParams, ruleProcessingParams, source);
     }
 
@@ -272,6 +279,7 @@ contract Namespace is
     ) internal virtual {
         address assignedAccount = Core.$storage().usernameToAccount[username];
         if (assignedAccount != address(0)) {
+            _clearSource(DATA__ASSIGNMENT_SOURCE, _computeId(username));
             Core._unassignUsername(username);
             _processUnassigning(msg.sender, assignedAccount, username, customParams, ruleProcessingParams);
             emit Lens_Username_Unassigned(username, assignedAccount, customParams, ruleProcessingParams, source);
@@ -286,6 +294,7 @@ contract Namespace is
     ) internal virtual {
         string memory assignedUsername = Core.$storage().accountToUsername[account];
         if (bytes(assignedUsername).length != 0) {
+            _clearSource(DATA__ASSIGNMENT_SOURCE, _computeId(assignedUsername));
             Core._unassignUsername(assignedUsername);
             _processUnassigning(msg.sender, account, assignedUsername, customParams, ruleProcessingParams);
             emit Lens_Username_Unassigned(assignedUsername, account, customParams, ruleProcessingParams, source);
@@ -344,5 +353,13 @@ contract Namespace is
     function getUsernameByTokenId(uint256 tokenId) external view override returns (string memory) {
         require(_exists(tokenId), Errors.DoesNotExist());
         return $storage().idToUsername[tokenId];
+    }
+
+    function getUsernameCreationSource(string calldata username) external view returns (address) {
+        return _getSource(_computeId(username));
+    }
+
+    function getUsernameAssignmentSource(string calldata username) external view returns (address) {
+        return _getSource(DATA__ASSIGNMENT_SOURCE, _computeId(username));
     }
 }

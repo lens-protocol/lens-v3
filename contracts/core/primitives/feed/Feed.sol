@@ -100,7 +100,7 @@ contract Feed is
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         _validateExpectedPostIdIfPresent(customParams, postId);
         address source = _processSourceStamp(postId, customParams);
-        _setEntityExtraStorage(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
+        _storeSource(DATA__LAST_UPDATED_SOURCE, postId, source);
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
@@ -174,12 +174,7 @@ contract Feed is
         if (postId != rootPostId && Core._postExists(rootPostId)) {
             _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         }
-        address source = _processSourceStamp({
-            key: DATA__LAST_UPDATED_SOURCE,
-            entityId: postId,
-            customParams: customParams,
-            storeSource: true
-        });
+        address source = _processSourceStamp(DATA__LAST_UPDATED_SOURCE, postId, customParams);
         emit Lens_Feed_PostEdited(
             postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
         );
@@ -206,7 +201,7 @@ contract Feed is
         require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());
         Core._removePost(postId);
         _processPostDeletion(postId, customParams, feedRulesParams);
-        address source = _processSourceStamp(postId, customParams);
+        address source = _processSourceStamp(DATA__LAST_UPDATED_SOURCE, postId, customParams);
         emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
