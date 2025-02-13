@@ -55,7 +55,6 @@ contract LensFactoryTest is Test, BaseDeployments {
             createUsernameCustomParams: _emptyKeyValueArray(),
             createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             assignUsernameCustomParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             assignRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             usernameExtraData: _emptyKeyValueArray()
         });

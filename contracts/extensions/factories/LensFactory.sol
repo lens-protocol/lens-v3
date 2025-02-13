@@ -60,7 +60,6 @@ struct CreateUsernameParams {
     KeyValue[] createUsernameCustomParams;
     RuleProcessingParams[] createUsernameRuleProcessingParams;
     KeyValue[] assignUsernameCustomParams;
-    RuleProcessingParams[] unassignAccountRuleProcessingParams;
     RuleProcessingParams[] assignRuleProcessingParams;
     KeyValue[] usernameExtraData;
 }
@@ -137,7 +136,7 @@ contract LensFactory {
                 account,
                 usernameParams.username,
                 usernameParams.assignUsernameCustomParams,
-                usernameParams.unassignAccountRuleProcessingParams,
+                new RuleProcessingParams[](0),
                 new RuleProcessingParams[](0),
                 usernameParams.assignRuleProcessingParams
             )

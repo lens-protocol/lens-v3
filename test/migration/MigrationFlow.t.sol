@@ -200,7 +200,6 @@ contract MigrationFlowTest is BaseDeployments {
                 createUsernameCustomParams: _emptyKeyValueArray(),
                 createUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
                 assignUsernameCustomParams: _emptyKeyValueArray(),
-                unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
                 assignRuleProcessingParams: _emptyRuleProcessingParamsArray(),
                 usernameExtraData: _emptyKeyValueArray()
             })
