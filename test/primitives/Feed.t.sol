@@ -39,6 +39,7 @@ contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         mockAccessControl = new MockAccessControl();
 
+        vm.prank(address(lensFactory));
         feed = IFeed(
             feedFactory.deployFeed({
                 metadataURI: "some metadata uri",
@@ -49,6 +50,7 @@ contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
             })
         );
 
+        vm.prank(address(lensFactory));
         feedForRules = feedFactory.deployFeed({
             metadataURI: "uri://feed",
             accessControl: mockAccessControl,
@@ -1122,6 +1124,7 @@ contract FeedTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
 
         mockAccessControl = new MockAccessControl();
 
+        vm.prank(address(lensFactory));
         feed = IFeed(
             feedFactory.deployFeed({
                 metadataURI: "some metadata uri",
@@ -1132,6 +1135,7 @@ contract FeedTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
             })
         );
 
+        vm.prank(address(lensFactory));
         feedForRules = feedFactory.deployFeed({
             metadataURI: "uri://feed",
             accessControl: mockAccessControl,
@@ -2656,6 +2660,7 @@ contract FeedTest3 is RulesTest, BaseDeployments, RuleExecutionTest {
 
         mockAccessControl = new MockAccessControl();
 
+        vm.prank(address(lensFactory));
         feed = IFeed(
             feedFactory.deployFeed({
                 metadataURI: "some metadata uri",
@@ -2666,6 +2671,7 @@ contract FeedTest3 is RulesTest, BaseDeployments, RuleExecutionTest {
             })
         );
 
+        vm.prank(address(lensFactory));
         feedForRules = feedFactory.deployFeed({
             metadataURI: "uri://feed",
             accessControl: mockAccessControl,

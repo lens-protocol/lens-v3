@@ -6,5 +6,7 @@ import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
 import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 
 contract MigrationGraphFactory is GraphFactory, EventEmitter {
-    constructor(address primitiveBeacon, address proxyAdminLock) GraphFactory(primitiveBeacon, proxyAdminLock) {}
+    constructor(address primitiveBeacon, address proxyAdminLock, address lensFactory)
+        GraphFactory(primitiveBeacon, proxyAdminLock, lensFactory)
+    {}
 }

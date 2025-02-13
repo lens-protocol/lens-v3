@@ -6,5 +6,7 @@ import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.
 import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 
 contract MigrationNamespaceFactory is NamespaceFactory, EventEmitter {
-    constructor(address primitiveBeacon, address proxyAdminLock) NamespaceFactory(primitiveBeacon, proxyAdminLock) {}
+    constructor(address primitiveBeacon, address proxyAdminLock, address lensFactory)
+        NamespaceFactory(primitiveBeacon, proxyAdminLock, lensFactory)
+    {}
 }

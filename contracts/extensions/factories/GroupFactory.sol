@@ -12,7 +12,9 @@ import {PrimitiveFactory} from "contracts/extensions/factories/PrimitiveFactory.
 contract GroupFactory is PrimitiveFactory {
     event Lens_GroupFactory_Deployment(address indexed group, string metadataURI);
 
-    constructor(address primitiveBeacon, address proxyAdminLock) PrimitiveFactory(primitiveBeacon, proxyAdminLock) {}
+    constructor(address primitiveBeacon, address proxyAdminLock, address lensFactory)
+        PrimitiveFactory(primitiveBeacon, proxyAdminLock, lensFactory)
+    {}
 
     function deployGroup(
         string memory metadataURI,
@@ -22,7 +24,7 @@ contract GroupFactory is PrimitiveFactory {
         KeyValue[] calldata extraData,
         address foundingMember,
         KeyValue[] calldata addFoundingMemberCustomParams
-    ) external returns (address) {
+    ) external onlyLensFactory returns (address) {
         address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, PROXY_ADMIN_LOCK));
         Group group = Group(address(new BeaconProxy(proxyAdmin, PRIMITIVE_BEACON)));
         group.initialize(metadataURI, TEMPORARY_ACCESS_CONTROL);

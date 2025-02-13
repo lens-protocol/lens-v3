@@ -47,6 +47,9 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         mockAccessControl = new MockAccessControl();
 
+        LensUsernameTokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
+
+        vm.prank(address(lensFactory));
         namespaceForRules = namespaceFactory.deployNamespace({
             namespace: "ethereum",
             metadataURI: "vitalik://buterin",
@@ -56,7 +59,7 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
             extraData: _emptyKeyValueArray(),
             nftName: "Ethereum",
             nftSymbol: "ETH",
-            tokenURIProvider: new LensUsernameTokenURIProvider()
+            tokenURIProvider: tokenURIProvider
         });
 
         RulesTest.setUp();

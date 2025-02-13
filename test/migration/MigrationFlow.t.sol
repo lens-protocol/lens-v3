@@ -454,9 +454,10 @@ contract MigrationFlowTest is BaseDeployments {
         address accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
         address accountFactoryImpl = address(new AccountFactory(accountBeacon, proxyAdminLock));
         address appFactoryImpl = address(new AppFactory(appBeacon, proxyAdminLock));
-        address feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock));
-        address graphFactoryImpl = address(new GraphFactory(graphBeacon, proxyAdminLock));
-        address namespaceFactoryImpl = address(new NamespaceFactory(namespaceBeacon, proxyAdminLock));
+        address feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)));
+        address graphFactoryImpl = address(new GraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)));
+        address namespaceFactoryImpl =
+            address(new NamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)));
 
         vm.startPrank(newOwner);
         ITransparentUpgradeableProxy(address(accessControlFactory)).upgradeTo(accessControlFactoryImpl);

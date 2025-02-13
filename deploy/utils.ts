@@ -252,6 +252,8 @@ export const deployContract = async (
   // Check if the wallet has enough balance
   await verifyEnoughBalance(wallet, estimatedDeployFee);
 
+  console.log(`Deployer Nonce: ${await wallet.getNonce()}`);
+
   // Deploy the contract to ZKsync
   const contract = await deployer.deploy(artifact, constructorArguments);
   const address = await contract.getAddress();

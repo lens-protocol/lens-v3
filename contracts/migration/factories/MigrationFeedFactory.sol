@@ -6,5 +6,7 @@ import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
 import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 
 contract MigrationFeedFactory is FeedFactory, EventEmitter {
-    constructor(address primitiveBeacon, address proxyAdminLock) FeedFactory(primitiveBeacon, proxyAdminLock) {}
+    constructor(address primitiveBeacon, address proxyAdminLock, address lensFactory)
+        FeedFactory(primitiveBeacon, proxyAdminLock, lensFactory)
+    {}
 }

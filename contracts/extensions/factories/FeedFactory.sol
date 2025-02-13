@@ -12,7 +12,9 @@ import {PrimitiveFactory} from "contracts/extensions/factories/PrimitiveFactory.
 contract FeedFactory is PrimitiveFactory {
     event Lens_FeedFactory_Deployment(address indexed feed, string metadataURI);
 
-    constructor(address primitiveBeacon, address proxyAdminLock) PrimitiveFactory(primitiveBeacon, proxyAdminLock) {}
+    constructor(address primitiveBeacon, address proxyAdminLock, address lensFactory)
+        PrimitiveFactory(primitiveBeacon, proxyAdminLock, lensFactory)
+    {}
 
     function deployFeed(
         string memory metadataURI,
@@ -20,7 +22,7 @@ contract FeedFactory is PrimitiveFactory {
         address proxyAdminOwner,
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
-    ) external returns (address) {
+    ) external onlyLensFactory returns (address) {
         address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, PROXY_ADMIN_LOCK));
         Feed feed = Feed(address(new BeaconProxy(proxyAdmin, PRIMITIVE_BEACON)));
         feed.initialize(metadataURI, TEMPORARY_ACCESS_CONTROL);

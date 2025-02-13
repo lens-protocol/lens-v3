@@ -43,6 +43,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         mockAccessControl = new MockAccessControl();
 
+        vm.prank(address(lensFactory));
         groupForRules = groupFactory.deployGroup({
             metadataURI: "uri://group",
             accessControl: mockAccessControl,
