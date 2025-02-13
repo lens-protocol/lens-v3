@@ -182,6 +182,9 @@ contract LensFactory {
         s.owner = owner;
 
         {
+            if (groupFoundingMember != address(0)) {
+                require(groupFoundingMember == msg.sender, Errors.InvalidParameter());
+            }
             s.group = GROUP_FACTORY.deployGroup(
                 groupMetadataURI,
                 TEMPORARY_ACCESS_CONTROL,
