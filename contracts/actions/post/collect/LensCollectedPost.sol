@@ -21,6 +21,8 @@ import {Errors} from "contracts/core/types/Errors.sol";
  * Collect creation.
  */
 contract LensCollectedPost is LensERC721, IERC7572 {
+    event Lens_LensCollectedPost_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
     string internal _contentURISnapshot;
     string internal _contractURI;
     address internal immutable _feed;
@@ -64,6 +66,10 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     }
 
     // Internal
+
+    function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
+        emit Lens_LensCollectedPost_Transfer(from, to, tokenId);
+    }
 
     // Disabling integrated LensERC721 tokenURIProvider
     function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal pure override {
