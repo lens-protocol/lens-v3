@@ -165,7 +165,7 @@ contract ProxyAdminTest is Test {
     }
 
     function test_Call_CallingToNonContractFails(address eoa, bytes4 selector) public {
-        vm.assume(uint160(eoa) > type(uint64).max); // skip system contracts
+        vm.assume(uint160(eoa) > type(uint16).max); // skip system contracts
         vm.assume(eoa.code.length == 0);
 
         vm.assume(selector != BeaconProxy.proxy__changeProxyAdmin.selector);
