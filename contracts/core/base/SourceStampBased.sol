@@ -13,14 +13,15 @@ abstract contract SourceStampBased is ExtraStorageBased {
 
     // Functions with generic key
 
-    function _processSourceStamp(bytes32 key, uint256 entityId, KeyValue[] memory customParams)
+    function _processSourceStamp(bytes32 key, uint256 entityType, uint256 entityId, KeyValue[] memory customParams)
         internal
         returns (address)
     {
         address source = _processSourceStamp(customParams);
         if (source != address(0)) {
-            _storeSource(key, entityId, source);
+            _storeSource(key, entityType, entityId, source);
         }
+        return source;
     }
 
     function _processSourceStamp(KeyValue[] memory customParams) internal returns (address) {
@@ -35,16 +36,16 @@ abstract contract SourceStampBased is ExtraStorageBased {
         return address(0);
     }
 
-    function _storeSource(bytes32 key, uint256 entityId, address source) internal {
-        _setEntityExtraStorage(entityId, KeyValue(key, abi.encode(source)));
+    function _storeSource(bytes32 key, uint256 entityType, uint256 entityId, address source) internal {
+        _setEntityExtraStorage(entityType, entityId, KeyValue(key, abi.encode(source)));
     }
 
-    function _clearSource(bytes32 key, uint256 entityId) internal {
-        _setEntityExtraStorage(entityId, KeyValue(key, ""));
+    function _clearSource(bytes32 key, uint256 entityType, uint256 entityId) internal {
+        _setEntityExtraStorage(entityType, entityId, KeyValue(key, ""));
     }
 
-    function _getSource(bytes32 key, uint256 entityId) internal view returns (address) {
-        bytes memory encodedSource = _getEntityExtraStorage(entityId, key);
+    function _getSource(bytes32 key, uint256 entityType, uint256 entityId) internal view returns (address) {
+        bytes memory encodedSource = _getEntityExtraStorage(entityType, entityId, key);
         if (encodedSource.length == 0) {
             return address(0);
         } else {
@@ -52,21 +53,63 @@ abstract contract SourceStampBased is ExtraStorageBased {
         }
     }
 
+    // Functions with default 0 entityType hardcoded
+
+    function _processSourceStamp(bytes32 key, uint256 entityId, KeyValue[] memory customParams)
+        internal
+        returns (address)
+    {
+        return _processSourceStamp(key, 0, entityId, customParams);
+    }
+
+    function _storeSource(bytes32 key, uint256 entityId, address source) internal {
+        _storeSource(key, 0, entityId, source);
+    }
+
+    function _clearSource(bytes32 key, uint256 entityId) internal {
+        _clearSource(key, 0, entityId);
+    }
+
+    function _getSource(bytes32 key, uint256 entityId) internal view returns (address) {
+        return _getSource(key, 0, entityId);
+    }
+
     // Functions with default `lens.data.source` key hardcoded
 
+    function _processSourceStamp(uint256 entityType, uint256 entityId, KeyValue[] memory customParams)
+        internal
+        returns (address)
+    {
+        return _processSourceStamp(DATA__SOURCE, entityType, entityId, customParams);
+    }
+
+    function _storeSource(uint256 entityType, uint256 entityId, address source) internal {
+        _storeSource(DATA__SOURCE, entityType, entityId, source);
+    }
+
+    function _clearSource(uint256 entityType, uint256 entityId) internal {
+        _clearSource(DATA__SOURCE, entityType, entityId);
+    }
+
+    function _getSource(uint256 entityType, uint256 entityId) internal view returns (address) {
+        return _getSource(DATA__SOURCE, entityType, entityId);
+    }
+
+    // Functions with default `lens.data.source` key and default 0 entityType hardcoded
+
     function _processSourceStamp(uint256 entityId, KeyValue[] memory customParams) internal returns (address) {
-        return _processSourceStamp(DATA__SOURCE, entityId, customParams);
+        return _processSourceStamp(DATA__SOURCE, 0, entityId, customParams);
     }
 
     function _storeSource(uint256 entityId, address source) internal {
-        _storeSource(DATA__SOURCE, entityId, source);
+        _storeSource(DATA__SOURCE, 0, entityId, source);
     }
 
     function _clearSource(uint256 entityId) internal {
-        _clearSource(DATA__SOURCE, entityId);
+        _clearSource(DATA__SOURCE, 0, entityId);
     }
 
     function _getSource(uint256 entityId) internal view returns (address) {
-        return _getSource(DATA__SOURCE, entityId);
+        return _getSource(DATA__SOURCE, 0, entityId);
     }
 }

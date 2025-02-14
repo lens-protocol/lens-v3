@@ -32,8 +32,8 @@ contract MigrationNamespace is Namespace, EventEmitter {
         uint256 entityId,
         KeyValue memory extraDataToSet
     ) private {
-        // In this release we always set the entityID to zero
+        // In this release we always set the entityType to zero
         $migrationExtraStorage().slot[addressScope][0][entityId].set(extraDataToSet);
-        emit Lens_ExtraStorageSet(addressScope, entityId, extraDataToSet.key, extraDataToSet.value);
+        emit Lens_ExtraStorageSet(addressScope, 0, entityId, extraDataToSet.key, extraDataToSet.value);
     }
 }
