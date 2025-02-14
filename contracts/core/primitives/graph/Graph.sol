@@ -33,6 +33,9 @@ contract Graph is
     /// @custom:keccak lens.permission.SetExtraData
     uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
 
+    /// @custom:keccak lens.entityType.Follow
+    bytes32 constant ENTITY_TYPE__FOLLOW = 0x36d2d2080fb90910eb85e01c8f8dd668252334986cbeed5f3f2a0d51ae9a49fb;
+
     constructor() {
         _disableInitializers();
     }
@@ -109,7 +112,7 @@ contract Graph is
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         // If some implementation wants to allow followId specification, it can be implemented using customParams.
         uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);
-        address source = _processSourceStamp(assignedFollowId, customParams);
+        address source = _processSourceStamp(_getFollowEntityType(accountToFollow), assignedFollowId, customParams);
         _graphProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, graphRulesProcessingParams);
         _accountProcessFollow(msg.sender, followerAccount, accountToFollow, customParams, followRulesProcessingParams);
         emit Lens_Graph_Followed(
@@ -140,11 +143,15 @@ contract Graph is
          * store an additional DATA__CREATION_SOURCE for when the first follow, which minted the token, was done, and
          * keep it until the follow token is burnt.
          */
-        _clearSource(followId);
+        _clearSource(_getFollowEntityType(accountToUnfollow), followId);
         emit Lens_Graph_Unfollowed(
             followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, source
         );
         return followId;
+    }
+
+    function _getFollowEntityType(address targetAccount) internal pure virtual returns (uint256) {
+        return uint256(keccak256(abi.encode(ENTITY_TYPE__FOLLOW, targetAccount)));
     }
 
     // Getters
