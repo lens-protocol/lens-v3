@@ -20,6 +20,8 @@ abstract contract SourceStampBased is ExtraStorageBased {
         address source = _processSourceStamp(customParams);
         if (source != address(0)) {
             _storeSource(key, entityType, entityId, source);
+        } else {
+            _clearSource(key, entityType, entityId);
         }
         return source;
     }
