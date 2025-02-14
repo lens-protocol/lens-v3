@@ -16,7 +16,6 @@ import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 import {IAccessControlled} from "contracts/core/interfaces/IAccessControlled.sol";
 
@@ -30,8 +29,6 @@ contract Namespace is
     SourceStampBased,
     MetadataBased
 {
-    using AccessControlLib for IAccessControl;
-
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
     /// @custom:keccak lens.permission.ChangeRules
