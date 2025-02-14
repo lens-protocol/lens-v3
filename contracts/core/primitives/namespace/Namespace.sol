@@ -9,7 +9,6 @@ import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/T
 import {RuleBasedNamespace} from "contracts/core/primitives/namespace/RuleBasedNamespace.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
-import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {LensERC721} from "contracts/core/base/LensERC721.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
@@ -17,6 +16,9 @@ import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
+import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
+import {IAccessControlled} from "contracts/core/interfaces/IAccessControlled.sol";
 
 contract Namespace is
     IERC721Namespace,
@@ -28,6 +30,8 @@ contract Namespace is
     SourceStampBased,
     MetadataBased
 {
+    using AccessControlLib for IAccessControl;
+
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
     /// @custom:keccak lens.permission.ChangeRules
@@ -37,6 +41,8 @@ contract Namespace is
     /// @custom:keccak lens.permission.SetTokenURIProvider
     uint256 constant PID__SET_TOKEN_URI_PROVIDER =
         uint256(0x32b3651aa4f96bc363c3045558bf6accc2b6027323bee86f6b4a570142cbd469);
+    /// @custom:keccak lens.permission.AssignUsername
+    uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
 
     /// @custom:keccak lens.data.assignmentSource
     bytes32 constant DATA__ASSIGNMENT_SOURCE = 0x8bc73a48d2dc60da20efb89fc5618c638ad593255415dd355096e39ab76af582;
@@ -185,8 +191,10 @@ contract Namespace is
         RuleProcessingParams[] calldata assignRuleProcessingParams
     ) external override {
         uint256 id = _computeId(username);
-        // account should own the tokenized username and be the msg.sender
-        require(msg.sender == ownerOf(id) && msg.sender == account, Errors.InvalidMsgSender());
+        // msg.sender should own the tokenized username
+        require(msg.sender == ownerOf(id), Errors.InvalidMsgSender());
+        // msg.sender should either be the account or control the account
+        require(msg.sender == account || _doesMsgSenderControlAccount(account), Errors.InvalidMsgSender());
         // Check if username is not already assigned to this account
         require(account != Core.$storage().usernameToAccount[username], Errors.RedundantStateChange());
         address source = _processSourceStamp(customParams);
@@ -196,6 +204,22 @@ contract Namespace is
         Core._assignUsername(account, username);
         _processAssigning(msg.sender, account, username, customParams, assignRuleProcessingParams);
         emit Lens_Username_Assigned(username, account, customParams, assignRuleProcessingParams, source);
+    }
+
+    function _doesMsgSenderControlAccount(address account) internal view returns (bool) {
+        try IOwnable(account).owner() returns (address accountOwner) {
+            if (msg.sender == accountOwner) {
+                return true;
+            }
+        } catch {
+            // Do nothing, still needs to check if msg.sender has access through the access control.
+        }
+        try IAccessControlled(account).getAccessControl().hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME)
+        returns (bool hasAccessToAssignUsername) {
+            return hasAccessToAssignUsername;
+        } catch {
+            return false;
+        }
     }
 
     function unassignUsername(

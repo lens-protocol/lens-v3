@@ -562,7 +562,7 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
         // Try to assign username to zero address
         vm.prank(account);
-        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        vm.expectRevert();
         namespace.assignUsername({
             account: address(0),
             username: localName,
