@@ -184,7 +184,7 @@ contract Graph is
         return _getExtraStorage_Self(key);
     }
 
-    function getFollowSource(uint256 followId) external view returns (address) {
-        return _getSource(followId);
+    function getFollowSource(address followedAccount, uint256 followId) external view returns (address) {
+        return _getSource(_getFollowEntityType(followedAccount), followId);
     }
 }
