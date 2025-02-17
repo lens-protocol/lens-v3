@@ -28,7 +28,7 @@ library NamespaceCore {
     function _createUsername(string memory username) internal {
         require(!$storage().usernameExists[username], Errors.AlreadyExists()); // Username must not exist yet
         require(bytes(username).length > 0, Errors.InvalidParameter()); // Username must not be empty
-        require(bytes(username).length <= type(uint8).max, Errors.InvalidParameter()); // Length must be less than 256
+        require(bytes(username).length < type(uint8).max, Errors.InvalidParameter()); // Length must be less than 256
         $storage().usernameExists[username] = true;
     }
 
