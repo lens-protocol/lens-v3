@@ -129,11 +129,14 @@ contract Group is
         ) {
             _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         }
-        IAccountGroupAdditionSettings(account).canBeAddedToGroup({
-            group: address(this),
-            addedBy: msg.sender,
-            params: _extractAccountAdditionSettingsParamsFromParams(customParams)
-        });
+        require(
+            IAccountGroupAdditionSettings(account).canBeAddedToGroup({
+                group: address(this),
+                addedBy: msg.sender,
+                params: _extractAccountAdditionSettingsParamsFromParams(customParams)
+            }),
+            Errors.NotAllowed()
+        );
         address source = _processSourceStamp(membershipId, customParams);
         emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
     }
