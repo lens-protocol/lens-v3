@@ -40,6 +40,8 @@ import {Errors} from "contracts/core/types/Errors.sol";
 
 import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 
+import {LibString} from "solady/src/utils/LibString.sol";
+
 /// @custom:keccak lens.data.groupFeed
 bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92d4ee5701c6d20b721221326b94ae1;
 
@@ -65,6 +67,8 @@ struct CreateUsernameParams {
 }
 
 contract LensFactory {
+    using LibString for string;
+
     AccessControlFactory internal immutable ACCESS_CONTROL_FACTORY;
     AccountFactory internal immutable ACCOUNT_FACTORY;
     AppFactory internal immutable APP_FACTORY;
@@ -77,6 +81,8 @@ contract LensFactory {
     address internal immutable GROUP_GATED_FEED_RULE;
     address internal immutable USERNAME_SIMPLE_CHARSET_RULE;
     address internal immutable BAN_MEMBER_GROUP_RULE;
+
+    uint128 internal immutable namespaceAllowedCharsLookup;
 
     constructor(
         AccessControlFactory accessControlFactory,
@@ -103,6 +109,8 @@ contract LensFactory {
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
         USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
         BAN_MEMBER_GROUP_RULE = banMemberGroupRule;
+
+        namespaceAllowedCharsLookup = string("abcdefghijklmnopqrstuvwxyz0123456789_").to7BitASCIIAllowedLookup();
     }
 
     function createAccountWithUsernameFree(
@@ -307,6 +315,7 @@ contract LensFactory {
         string memory nftName,
         string memory nftSymbol
     ) external returns (address) {
+        _validateNamespaceStrings(namespace, nftName, nftSymbol);
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
         RuleChange[] memory modifiedRules = _injectRulesForNamespace(rules, address(accessControl));
 
@@ -321,6 +330,22 @@ contract LensFactory {
             nftSymbol,
             new LensUsernameTokenURIProvider()
         );
+    }
+
+    function _validateNamespaceStrings(string memory namespace, string memory nftName, string memory nftSymbol)
+        internal
+        view
+    {
+        require(bytes(namespace).length > 0 && bytes(namespace).length < type(uint8).max, Errors.InvalidParameter());
+        require(bytes(nftName).length > 0 && bytes(nftName).length < type(uint8).max, Errors.InvalidParameter());
+        require(bytes(nftSymbol).length > 0 && bytes(nftSymbol).length < type(uint8).max, Errors.InvalidParameter());
+
+        require(nftName.is7BitASCII(), Errors.InvalidParameter());
+        require(nftSymbol.is7BitASCII(), Errors.InvalidParameter());
+
+        require(namespace.is7BitASCII(namespaceAllowedCharsLookup), Errors.InvalidParameter());
+        require(namespace.eq("lens") == false, Errors.InvalidParameter());
+        require(bytes(namespace)[0] != "_", Errors.InvalidParameter());
     }
 
     function _deployAccessControl(address owner, address[] memory admins)
