@@ -115,15 +115,17 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         CollectActionData storage storedData = $collectDataStorage().collectData[feed][postId];
 
         if (storedData.collectionAddress == address(0)) {
-            // First time? :)
-            // create and deploy the Lens Collected Post contract
+            // This is an Initial collect configuration - we just store the data and
+            // create and deploy the Lens Collected Post contract.
             address collectionAddress = address(new LensCollectedPost(feed, postId, configData.isImmutable));
             _storeCollectParams(feed, postId, configData, collectionAddress);
         } else {
-            // Editing existing collect action config
+            // Editing existing collect action config (it may or may not have collects made already)
             if (storedData.isImmutable) {
+                // Cannot reconfigure anything in the immutable collect.
                 revert Errors.Immutable();
             } else {
+                // Non-immutable collect can be reconfigured (except making it immutable).
                 storedData.amount = configData.amount;
                 storedData.collectLimit = configData.collectLimit;
                 storedData.token = configData.token;
@@ -131,7 +133,7 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
                 storedData.referralFee = configData.referralFee;
                 storedData.followerOnlyGraph = configData.followerOnlyGraph;
                 storedData.endTimestamp = configData.endTimestamp;
-                // Immutability cannot be changed after the first collect was made.
+                // Immutability cannot be flipped to true.
                 require(configData.isImmutable == false, Errors.InvalidParameter());
             }
         }
