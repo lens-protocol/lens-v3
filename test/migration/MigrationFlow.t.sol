@@ -160,7 +160,7 @@ contract MigrationFlowTest is BaseDeployments {
 
         lensDefaultNamespace = INamespace(
             lensFactory.deployNamespace({
-                namespace: "lens.global",
+                namespace: "lens_migration",
                 metadataURI: "uri://namespace",
                 owner: primitivesOwner,
                 admins: _emptyAddressArray(),
