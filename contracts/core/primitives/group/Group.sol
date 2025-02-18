@@ -129,6 +129,7 @@ contract Group is
         ) {
             _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         }
+        // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
         require(
             IAccountGroupAdditionSettings(account).canBeAddedToGroup({
                 group: address(this),
