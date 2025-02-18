@@ -242,7 +242,11 @@ contract App is IApp, ExtraStorageBased, MetadataBased, Initializable, BaseSourc
     }
 
     function _removeGroups(address[] memory groups) internal {
+        address defaultGroup = Core.$storage().defaultGroup;
         for (uint256 i = 0; i < groups.length; i++) {
+            if (groups[i] == defaultGroup) {
+                _setDefaultGroup(address(0));
+            }
             Core._removeGroup(groups[i]);
             emit Lens_App_GroupRemoved(groups[i]);
         }
