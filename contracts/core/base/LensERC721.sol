@@ -92,6 +92,7 @@ abstract contract LensERC721 is IERC721Metadata, ERC165 {
 
     function setTokenURIProvider(ITokenURIProvider tokenURIProvider) external virtual {
         _beforeTokenURIProviderSet(tokenURIProvider);
+        // solc-ignore-next-line unreachable
         $erc721Storage().tokenURIProvider = tokenURIProvider;
         emit IERC4906Events.BatchMetadataUpdate(0, type(uint256).max);
         emit Lens_ERC721_TokenURIProviderSet(address(tokenURIProvider));

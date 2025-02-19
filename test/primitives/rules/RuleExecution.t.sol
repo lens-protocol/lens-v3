@@ -107,7 +107,8 @@ abstract contract RuleExecutionTest is Test {
 
         vm.expectCall(address(rule1), expectedRuleExecutionCallData);
 
-        primitive.call(executionFunctionCallData);
+        (bool success,) = primitive.call(executionFunctionCallData);
+        require(success == success); // Dummy require to silence warning.
 
         vm.stopPrank();
     }

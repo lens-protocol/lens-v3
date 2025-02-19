@@ -118,6 +118,7 @@ contract RoleBasedAccessControl is Ownable, IRoleBasedAccessControl {
         override
     {
         _beforeSettingAccess(roleId, contractAddress, permissionId, access);
+        // solc-ignore-next-line unreachable
         _setAccess(roleId, contractAddress, permissionId, access);
     }
 

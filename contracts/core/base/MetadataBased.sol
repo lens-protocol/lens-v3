@@ -22,6 +22,7 @@ abstract contract MetadataBased is IMetadataBased {
 
     function setMetadataURI(string memory metadataURI) external override {
         _beforeMetadataURIUpdate(metadataURI);
+        // solc-ignore-next-line unreachable
         _setMetadataURI(metadataURI);
     }
 

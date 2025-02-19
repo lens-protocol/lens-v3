@@ -3,6 +3,7 @@ import { HardhatUserConfig } from 'hardhat/config';
 import '@matterlabs/hardhat-zksync';
 import '@nomicfoundation/hardhat-foundry';
 import 'hardhat-contract-sizer';
+import 'hardhat-ignore-warnings';
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'lensSepoliaTestnet',
