@@ -7,12 +7,33 @@ import {Errors} from "contracts/core/types/Errors.sol";
 
 library AccessControlLib {
     function requireAccess(address accessControl, address account, uint256 permissionId) internal view {
-        requireAccess(IAccessControl(accessControl), account, permissionId);
+        requireAccess({
+            accessControl: IAccessControl(accessControl),
+            account: account,
+            scope: address(this),
+            permissionId: permissionId
+        });
+    }
+
+    function requireAccess(address accessControl, address account, address scope, uint256 permissionId) internal view {
+        requireAccess({
+            accessControl: IAccessControl(accessControl),
+            account: account,
+            scope: scope,
+            permissionId: permissionId
+        });
     }
 
     function requireAccess(IAccessControl accessControl, address account, uint256 permissionId) internal view {
+        requireAccess({accessControl: accessControl, account: account, scope: address(this), permissionId: permissionId});
+    }
+
+    function requireAccess(IAccessControl accessControl, address account, address scope, uint256 permissionId)
+        internal
+        view
+    {
         require(
-            accessControl.hasAccess({account: account, contractAddress: address(this), permissionId: permissionId}),
+            accessControl.hasAccess({account: account, contractAddress: scope, permissionId: permissionId}),
             Errors.AccessDenied()
         );
     }
