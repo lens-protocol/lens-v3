@@ -122,4 +122,8 @@ interface INamespace is IMetadataBased {
     function getUsernameExtraData(string calldata username, bytes32 key) external view returns (bytes memory);
 
     function exists(string calldata username) external view returns (bool);
+
+    function getUsernameCreationSource(string calldata username) external view returns (address);
+
+    function getUsernameAssignmentSource(string calldata username) external view returns (address);
 }

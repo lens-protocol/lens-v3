@@ -114,4 +114,6 @@ interface IGraph is IMetadataBased {
         returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
+
+    function getFollowSource(address followedAccount, uint256 followId) external view returns (address);
 }

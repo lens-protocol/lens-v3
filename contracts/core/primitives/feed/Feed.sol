@@ -7,7 +7,7 @@ import {FeedCore as Core} from "contracts/core/primitives/feed/FeedCore.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleBasedFeed} from "contracts/core/primitives/feed/RuleBasedFeed.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
@@ -20,7 +20,7 @@ contract Feed is
     Initializable,
     RuleBasedFeed,
     AccessControlled,
-    ExtraStorageBased,
+    ExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
@@ -85,6 +85,18 @@ contract Feed is
         require(Core._postExists(entityId), Errors.DoesNotExist());
         require(msg.sender == Core.$storage().posts[entityId].author, Errors.InvalidMsgSender());
         require(entityId == Core.$storage().posts[entityId].rootPostId, Errors.CannotHaveRules());
+    }
+
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Feed_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Feed_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Feed_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     // Public user functions
@@ -207,21 +219,7 @@ contract Feed is
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Feed_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Feed_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Feed_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+        _setExtraData(extraDataToSet);
     }
 
     // Getters
@@ -277,7 +275,7 @@ contract Feed is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
+        return _getExtraData(key);
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {

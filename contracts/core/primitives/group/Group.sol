@@ -8,7 +8,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedGroup} from "contracts/core/primitives/group/RuleBasedGroup.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
@@ -43,7 +43,7 @@ contract Group is
     Initializable,
     RuleBasedGroup,
     AccessControlled,
-    ExtraStorageBased,
+    ExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
@@ -94,23 +94,16 @@ contract Group is
         override
     {}
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Group_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Group_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Group_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Group_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Group_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Group_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     // Public functions
@@ -186,6 +179,11 @@ contract Group is
         emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
+        _setExtraData(extraDataToSet);
+    }
+
     function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] calldata customParams)
         internal
         pure
@@ -228,10 +226,10 @@ contract Group is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
+        return _getExtraData(key);
     }
 
-    function getMembershipSource(uint256 membershipId) external view returns (address) {
+    function getMembershipSource(uint256 membershipId) external view override returns (address) {
         return _getSource(membershipId);
     }
 }
