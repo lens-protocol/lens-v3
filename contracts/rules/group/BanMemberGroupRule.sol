@@ -2,13 +2,15 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
+import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
-import {KeyValue} from "contracts/core/types/Types.sol";
+import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {GroupKicker} from "contracts/extensions/primitives/group/GroupKicker.sol";
 
 contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
@@ -26,34 +28,49 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     /// @custom:keccak lens.param.banMember
     bytes32 public constant PARAM__BAN_MEMBER = 0xc18b1794d154829be8985d985e210a3ff29be11c97069d5a0558da13bdbf2277;
 
-    event Lens_BanMemberGroupRule_MemberBanned(
-        address indexed group, bytes32 indexed configSalt, address indexed bannedAccount, address bannedBy
-    );
+    event Lens_BanMemberGroupRule_MemberBanned(address indexed group, address indexed bannedAccount, address bannedBy);
     event Lens_BanMemberGroupRule_MemberUnbanned(
-        address indexed group, bytes32 indexed configSalt, address indexed unbannedAccount, address unbannedBy
+        address indexed group, address indexed unbannedAccount, address unbannedBy
     );
 
-    mapping(address => mapping(bytes32 => address)) internal _accessControl;
-    mapping(address => mapping(bytes32 => mapping(address => bool))) internal _isMemberBanned;
+    event Lens_GroupKicker_Created(address indexed groupKicker);
+
+    GroupKicker internal immutable _groupKicker;
+
+    mapping(address => address) internal _groupAccessControl;
+    mapping(address => mapping(address => bool)) internal _isMemberBannedInGroup;
 
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
+        _groupKicker = new GroupKicker(address(this));
         emit Events.Lens_PermissionId_Available(PID__BAN_MEMBER, "lens.permission.BanMember");
         emit Events.Lens_PermissionId_Available(PID__UNBAN_MEMBER, "lens.permission.UnbanMember");
+        emit Lens_GroupKicker_Created(address(_groupKicker));
     }
 
-    function ban(bytes32 configSalt, address group, address account) external {
-        _accessControl[group][configSalt].requireAccess(msg.sender, PID__BAN_MEMBER);
-        _isMemberBanned[group][configSalt][account] = true;
-        emit Lens_BanMemberGroupRule_MemberBanned(group, configSalt, account, msg.sender);
+    function ban(
+        address group,
+        address account,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams
+    ) external {
+        _groupAccessControl[group].requireAccess({account: msg.sender, scope: group, permissionId: PID__BAN_MEMBER});
+        _isMemberBannedInGroup[group][account] = true;
+        emit Lens_BanMemberGroupRule_MemberBanned(group, account, msg.sender);
+        if (IGroup(group).isMember(account)) {
+            _groupKicker.kick(group, account, customParams, ruleProcessingParams);
+        }
     }
 
-    function unban(bytes32 configSalt, address group, address account) external {
-        _accessControl[group][configSalt].requireAccess(msg.sender, PID__UNBAN_MEMBER);
-        _isMemberBanned[group][configSalt][account] = false;
-        emit Lens_BanMemberGroupRule_MemberUnbanned(group, configSalt, account, msg.sender);
+    function unban(address group, address account) external {
+        _groupAccessControl[group].requireAccess({account: msg.sender, scope: group, permissionId: PID__UNBAN_MEMBER});
+        _isMemberBannedInGroup[group][account] = false;
+        emit Lens_BanMemberGroupRule_MemberUnbanned(group, account, msg.sender);
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
+    // If multiple instances of this rule are configured for the same group (which is a bad practice),
+    // only the last configuration will be applied.
+    function configure(bytes32, /* configSalt */ KeyValue[] calldata ruleParams) external override {
+        address group = msg.sender;
         address accessControl;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__ACCESS_CONTROL) {
@@ -62,7 +79,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
             }
         }
         accessControl.verifyHasAccessFunction();
-        _accessControl[msg.sender][configSalt] = accessControl;
+        _groupAccessControl[group] = accessControl;
     }
 
     function processAddition(
@@ -86,12 +103,13 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     }
 
     function processJoining(
-        bytes32 configSalt,
+        bytes32, /* configSalt */
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(!_isMemberBanned[msg.sender][configSalt][account], Errors.Banned());
+        address group = msg.sender;
+        require(_isMemberBannedInGroup[group][account] == false, Errors.Banned());
     }
 
     function processLeaving(
@@ -101,5 +119,13 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert Errors.NotImplemented();
+    }
+
+    function isMemberBanned(address group, address account) external view returns (bool) {
+        return _isMemberBannedInGroup[group][account];
+    }
+
+    function getGroupKicker() external view returns (address) {
+        return address(_groupKicker);
     }
 }

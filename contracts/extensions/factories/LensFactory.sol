@@ -184,7 +184,7 @@ contract LensFactory {
         s.feedMetadataURI = feedMetadataURI;
         s.feedAccessControl = _deployAccessControl(owner, admins);
         {
-            s.groupAccessControl = _deployAccessControl(owner, admins);
+            s.groupAccessControl = _deployAccessControl(owner, _addGroupKickerToGroupAdmins(admins));
         }
         s.owner = owner;
 
@@ -259,7 +259,7 @@ contract LensFactory {
         if (foundingMember != address(0)) {
             require(foundingMember == msg.sender, Errors.InvalidParameter());
         }
-        IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
+        IRoleBasedAccessControl accessControl = _deployAccessControl(owner, _addGroupKickerToGroupAdmins(admins));
         return GROUP_FACTORY.deployGroup(
             metadataURI,
             accessControl,
@@ -387,6 +387,15 @@ contract LensFactory {
             modifiedRules[i] = _injectRuleAccessControl(rules[i], accessControl);
         }
         return modifiedRules;
+    }
+
+    function _addGroupKickerToGroupAdmins(address[] memory admins) internal view returns (address[] memory) {
+        address[] memory modifiedAdmins = new address[](admins.length + 1);
+        for (uint256 i = 0; i < admins.length; i++) {
+            modifiedAdmins[i] = admins[i];
+        }
+        modifiedAdmins[admins.length] = BanMemberGroupRule(BAN_MEMBER_GROUP_RULE).getGroupKicker();
+        return modifiedAdmins;
     }
 
     function _prepareGroupRules(RuleChange[] memory rules, address accessControl)
