@@ -11,7 +11,7 @@ import {Events} from "contracts/core/types/Events.sol";
 import {BaseSource} from "contracts/core/base/BaseSource.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 struct AppInitialProperties {
@@ -25,7 +25,7 @@ struct AppInitialProperties {
     address treasury;
 }
 
-contract App is IApp, ExtraStorageBased, MetadataBased, Initializable, BaseSource, AccessControlled {
+contract App is IApp, ExtraDataBased, MetadataBased, Initializable, BaseSource, AccessControlled {
     // Resource IDs involved in the contract
 
     /// @custom:keccak lens.permission.SetPrimitives
@@ -53,7 +53,7 @@ contract App is IApp, ExtraStorageBased, MetadataBased, Initializable, BaseSourc
         bool isSourceStampVerificationEnabled,
         IAccessControl accessControl,
         AppInitialProperties memory initialProps,
-        KeyValue[] memory extraData
+        KeyValue[] calldata extraData
     ) external override initializer {
         _initialize(metadataURI, isSourceStampVerificationEnabled, initialProps, extraData);
         AccessControlled._initialize(accessControl);
@@ -63,7 +63,7 @@ contract App is IApp, ExtraStorageBased, MetadataBased, Initializable, BaseSourc
         string memory metadataURI,
         bool isSourceStampVerificationEnabled,
         AppInitialProperties memory initialProps,
-        KeyValue[] memory extraData
+        KeyValue[] calldata extraData
     ) internal {
         if (bytes(metadataURI).length > 0) {
             _setMetadataURI(metadataURI);
@@ -341,22 +341,16 @@ contract App is IApp, ExtraStorageBased, MetadataBased, Initializable, BaseSourc
         _setExtraData(extraDataToSet);
     }
 
-    function _setExtraData(KeyValue[] memory extraDataToSet) internal {
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_App_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_App_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_App_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_App_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_App_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_App_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     //////////////////////////////////////////////////////////////////////////

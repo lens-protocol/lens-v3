@@ -5,16 +5,13 @@ import {KeyValue} from "contracts/core/types/Types.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
 
 abstract contract ExtraDataBased is ExtraStorageBased {
-    function _beforeSetExtraData(KeyValue[] calldata extraDataToSet) internal virtual;
-
     function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal virtual;
 
     function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal virtual;
 
     function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal virtual;
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external {
-        _beforeSetExtraData(extraDataToSet);
+    function _setExtraData(KeyValue[] calldata extraDataToSet) internal {
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
             bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
@@ -30,7 +27,7 @@ abstract contract ExtraDataBased is ExtraStorageBased {
         }
     }
 
-    function getExtraData(bytes32 key) external view returns (bytes memory) {
+    function _getExtraData(bytes32 key) internal view returns (bytes memory) {
         return _getExtraStorage_Self(key);
     }
 }

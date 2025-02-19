@@ -8,7 +8,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedNamespace} from "contracts/core/primitives/namespace/RuleBasedNamespace.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {LensERC721} from "contracts/core/base/LensERC721.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
@@ -25,7 +25,7 @@ contract Namespace is
     LensERC721,
     RuleBasedNamespace,
     AccessControlled,
-    ExtraStorageBased,
+    ExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
@@ -117,6 +117,17 @@ contract Namespace is
         override
     {}
 
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Namespace_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Namespace_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Namespace_ExtraDataRemoved(extraDataRemoved.key);
+    }
     // Permissionless functions
 
     function createAndAssignUsername(
@@ -236,23 +247,7 @@ contract Namespace is
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Namespace_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Namespace_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Namespace_ExtraDataAdded(
-                    extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                );
-            }
-        }
+        _setExtraData(extraDataToSet);
     }
 
     function setUsernameExtraData(string calldata username, KeyValue[] calldata extraDataToSet) external {
@@ -349,7 +344,7 @@ contract Namespace is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
+        return _getExtraData(key);
     }
 
     function getUsernameExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
@@ -380,7 +375,7 @@ contract Namespace is
         return _getSource(_computeId(username));
     }
 
-    function getUsernameAssignmentSource(string calldata username) external view returns (address) {
+    function getUsernameAssignmentSource(string calldata username) external view override returns (address) {
         return _getSource(DATA__ASSIGNMENT_SOURCE, _computeId(username));
     }
 }

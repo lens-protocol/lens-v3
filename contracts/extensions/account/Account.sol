@@ -7,7 +7,7 @@ import {Events} from "contracts/core/types/Events.sol";
 import {IAccount, AccountManagerPermissions, Transaction} from "contracts/extensions/account/IAccount.sol";
 import {SourceStamp, KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
@@ -50,7 +50,7 @@ contract Account is
     IAccountGroupAdditionSettings,
     Initializable,
     Ownable,
-    ExtraStorageBased,
+    ExtraDataBased,
     MetadataBased,
     ERC1155Holder,
     ERC721Holder
@@ -92,7 +92,7 @@ contract Account is
         address[] memory accountManagers,
         AccountManagerPermissions[] memory accountManagerPermissions,
         SourceStamp memory sourceStamp,
-        KeyValue[] memory extraData
+        KeyValue[] calldata extraData
     ) external initializer {
         _initialize(metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
         _transferOwnership(owner);
@@ -103,13 +103,13 @@ contract Account is
         address[] memory accountManagers,
         AccountManagerPermissions[] memory accountManagerPermissions,
         SourceStamp memory sourceStamp,
-        KeyValue[] memory extraData
+        KeyValue[] calldata extraData
     ) internal {
         for (uint256 i = 0; i < accountManagers.length; i++) {
             $storage().accountManagerPermissions[accountManagers[i]] = accountManagerPermissions[i];
             emit Lens_Account_AccountManagerAdded(accountManagers[i], accountManagerPermissions[i]);
         }
-        _decodeAndSetExtraData(extraData);
+        _setExtraData(extraData);
         if (sourceStamp.source != address(0)) {
             ISource(sourceStamp.source).validateSource(sourceStamp);
             _setMetadataURI(metadataURI, sourceStamp.source);
@@ -121,6 +121,18 @@ contract Account is
 
     function _emitMetadataURISet(string memory metadataURI, address source) internal override {
         emit Lens_Account_MetadataURISet(metadataURI, source);
+    }
+
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Account_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Account_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Account_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
@@ -273,7 +285,7 @@ contract Account is
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external onlyOwner {
-        _decodeAndSetExtraData(extraDataToSet);
+        _setExtraData(extraDataToSet);
     }
 
     function executeTransaction(address target, uint256 value, bytes calldata data)
@@ -362,25 +374,7 @@ contract Account is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
-    }
-
-    function _decodeAndSetExtraData(KeyValue[] memory extraDataToSet) internal {
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Account_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Account_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Account_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+        return _getExtraData(key);
     }
 
     function _isTransferRelatedSelector(bytes4 selector) internal pure returns (bool) {

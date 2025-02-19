@@ -80,10 +80,6 @@ contract Graph is
         require(msg.sender == address(uint160(entityId)), Errors.InvalidMsgSender()); // Follow rules can only be changed in your own account
     }
 
-    function _beforeSetExtraData(KeyValue[] calldata /* extraDataToSet */ ) internal view override {
-        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-    }
-
     function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
         emit Lens_Graph_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
     }
@@ -147,6 +143,11 @@ contract Graph is
         return followId;
     }
 
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
+        _setExtraData(extraDataToSet);
+    }
+
     function _getFollowEntityType(address targetAccount) internal pure virtual returns (uint256) {
         return uint256(keccak256(abi.encode(ENTITY_TYPE__FOLLOW, targetAccount)));
     }
@@ -177,7 +178,11 @@ contract Graph is
         return Core.$storage().followingCount[account];
     }
 
-    function getFollowSource(address followedAccount, uint256 followId) external view returns (address) {
+    function getExtraData(bytes32 key) external view override returns (bytes memory) {
+        return _getExtraData(key);
+    }
+
+    function getFollowSource(address followedAccount, uint256 followId) external view override returns (address) {
         return _getSource(_getFollowEntityType(followedAccount), followId);
     }
 }
