@@ -10,7 +10,6 @@ import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {GroupKicker} from "contracts/extensions/primitives/group/GroupKicker.sol";
 
 contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
@@ -33,44 +32,43 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address indexed group, address indexed unbannedAccount, address unbannedBy
     );
 
-    event Lens_GroupKicker_Created(address indexed groupKicker);
-
-    GroupKicker internal immutable _groupKicker;
-
-    mapping(address => address) internal _groupAccessControl;
-    mapping(address => mapping(address => bool)) internal _isMemberBannedInGroup;
+    mapping(address group => address accessControl) internal _groupAccessControl;
+    mapping(address group => mapping(address account => bool isBanned)) internal _isMemberBanned;
 
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
-        _groupKicker = new GroupKicker(address(this));
         emit Events.Lens_PermissionId_Available(PID__BAN_MEMBER, "lens.permission.BanMember");
         emit Events.Lens_PermissionId_Available(PID__UNBAN_MEMBER, "lens.permission.UnbanMember");
-        emit Lens_GroupKicker_Created(address(_groupKicker));
     }
 
     function ban(
         address group,
         address account,
-        KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata ruleProcessingParams
+        KeyValue[] calldata groupParams,
+        RuleProcessingParams[] calldata groupRuleProcessingParams
     ) external {
-        _groupAccessControl[group].requireAccess({account: msg.sender, scope: group, permissionId: PID__BAN_MEMBER});
-        _isMemberBannedInGroup[group][account] = true;
+        _groupAccessControl[group].requireAccess(msg.sender, group, PID__BAN_MEMBER);
+        _isMemberBanned[group][account] = true;
         emit Lens_BanMemberGroupRule_MemberBanned(group, account, msg.sender);
         if (IGroup(group).isMember(account)) {
-            _groupKicker.kick(group, account, customParams, ruleProcessingParams);
+            IGroup(group).removeMember(account, groupParams, groupRuleProcessingParams);
         }
     }
 
     function unban(address group, address account) external {
-        _groupAccessControl[group].requireAccess({account: msg.sender, scope: group, permissionId: PID__UNBAN_MEMBER});
-        _isMemberBannedInGroup[group][account] = false;
+        _groupAccessControl[group].requireAccess(msg.sender, group, PID__UNBAN_MEMBER);
+        _isMemberBanned[group][account] = false;
         emit Lens_BanMemberGroupRule_MemberUnbanned(group, account, msg.sender);
     }
 
-    // If multiple instances of this rule are configured for the same group (which is a bad practice),
-    // only the last configuration will be applied.
+    function isMemberBanned(address group, address account) external view returns (bool) {
+        return _isMemberBanned[group][account];
+    }
+
+    /**
+     * If multiple instances of this rule are configured for the same group (which is a bad practice),
+     * only the last configuration will be applied (as it will override the previous ones).
+     */
     function configure(bytes32, /* configSalt */ KeyValue[] calldata ruleParams) external override {
-        address group = msg.sender;
         address accessControl;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__ACCESS_CONTROL) {
@@ -79,7 +77,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
             }
         }
         accessControl.verifyHasAccessFunction();
-        _groupAccessControl[group] = accessControl;
+        _groupAccessControl[msg.sender] = accessControl;
     }
 
     function processAddition(
@@ -108,8 +106,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        address group = msg.sender;
-        require(_isMemberBannedInGroup[group][account] == false, Errors.Banned());
+        require(_isMemberBanned[msg.sender][account] == false, Errors.Banned());
     }
 
     function processLeaving(
@@ -119,13 +116,5 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert Errors.NotImplemented();
-    }
-
-    function isMemberBanned(address group, address account) external view returns (bool) {
-        return _isMemberBannedInGroup[group][account];
-    }
-
-    function getGroupKicker() external view returns (address) {
-        return address(_groupKicker);
     }
 }
