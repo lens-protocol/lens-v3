@@ -92,7 +92,7 @@ interface IGraph is IMetadataBased {
         RuleProcessingParams[] calldata graphRulesProcessingParams
     ) external returns (uint256);
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external;
+    // function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
     // Getters
 
@@ -113,5 +113,5 @@ interface IGraph is IMetadataBased {
         view
         returns (Rule[] memory);
 
-    function getExtraData(bytes32 key) external view returns (bytes memory);
+    // function getExtraData(bytes32 key) external view returns (bytes memory);
 }

@@ -8,7 +8,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedGraph} from "contracts/core/primitives/graph/RuleBasedGraph.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
@@ -20,7 +20,7 @@ contract Graph is
     Initializable,
     RuleBasedGraph,
     AccessControlled,
-    ExtraStorageBased,
+    ExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
@@ -80,23 +80,20 @@ contract Graph is
         require(msg.sender == address(uint160(entityId)), Errors.InvalidMsgSender()); // Follow rules can only be changed in your own account
     }
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+    function _beforeSetExtraData(KeyValue[] calldata /* extraDataToSet */ ) internal view override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setExtraStorage_Self(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Graph_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Graph_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Graph_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+    }
+
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Graph_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Graph_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Graph_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     // Public functions
@@ -178,10 +175,6 @@ contract Graph is
 
     function getFollowingCount(address account) external view override returns (uint256) {
         return Core.$storage().followingCount[account];
-    }
-
-    function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
     }
 
     function getFollowSource(address followedAccount, uint256 followId) external view returns (address) {
