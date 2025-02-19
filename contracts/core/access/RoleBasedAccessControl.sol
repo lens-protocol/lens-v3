@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {Access, IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
+import {Access, IRoleBasedAccessControl, Role} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
@@ -67,9 +67,32 @@ contract RoleBasedAccessControl is Ownable, IRoleBasedAccessControl {
         return _hasAccess(account, contractAddress, permissionId);
     }
 
+    function grantRoles(Role[] calldata roles) external virtual override {
+        for (uint256 i = 0; i < roles.length; i++) {
+            address account = roles[i].account;
+            uint256 roleId = roles[i].roleId;
+            _beforeGrantingRole(account, roleId);
+            _grantRole(account, roleId);
+        }
+    }
+
+    function revokeRoles(Role[] calldata roles) external virtual override {
+        for (uint256 i = 0; i < roles.length; i++) {
+            address account = roles[i].account;
+            uint256 roleId = roles[i].roleId;
+            _beforeRevokingRole(account, roleId);
+            _revokeRole(account, roleId);
+        }
+    }
+
     function grantRole(address account, uint256 roleId) external virtual override {
         _beforeGrantingRole(account, roleId);
         _grantRole(account, roleId);
+    }
+
+    function revokeRole(address account, uint256 roleId) external virtual override {
+        _beforeRevokingRole(account, roleId);
+        _revokeRole(account, roleId);
     }
 
     function _beforeGrantingRole(address, /* account */ uint256 roleId) internal virtual onlyOwner {
@@ -80,11 +103,6 @@ contract RoleBasedAccessControl is Ownable, IRoleBasedAccessControl {
         require(!_hasRole(account, roleId), Errors.RedundantStateChange());
         _roles[account].push(roleId);
         emit Lens_AccessControl_RoleGranted(account, roleId);
-    }
-
-    function revokeRole(address account, uint256 roleId) external virtual override {
-        _beforeRevokingRole(account, roleId);
-        _revokeRole(account, roleId);
     }
 
     function _beforeRevokingRole(address, /* account */ uint256 roleId) internal virtual onlyOwner {
