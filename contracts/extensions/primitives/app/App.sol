@@ -398,6 +398,6 @@ contract App is IApp, ExtraDataBased, MetadataBased, Initializable, BaseSource, 
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
+        return _getExtraData(key);
     }
 }

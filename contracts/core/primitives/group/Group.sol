@@ -226,7 +226,7 @@ contract Group is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getExtraStorage_Self(key);
+        return _getExtraData(key);
     }
 
     function getMembershipSource(uint256 membershipId) external view override returns (address) {
