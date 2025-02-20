@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from 'hardhat/config';
 
 import '@matterlabs/hardhat-zksync';
+import '@openzeppelin/hardhat-upgrades';
 import '@nomicfoundation/hardhat-foundry';
 import 'hardhat-contract-sizer';
 import 'hardhat-ignore-warnings';
