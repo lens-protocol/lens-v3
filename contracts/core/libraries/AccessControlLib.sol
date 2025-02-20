@@ -6,15 +6,29 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 library AccessControlLib {
+    function requireAccess(address accessControl, address account, address contractAddress, uint256 permissionId)
+        internal
+        view
+    {
+        requireAccess(IAccessControl(accessControl), account, contractAddress, permissionId);
+    }
+
+    function requireAccess(IAccessControl accessControl, address account, address contractAddress, uint256 permissionId)
+        internal
+        view
+    {
+        require(
+            accessControl.hasAccess({account: account, contractAddress: contractAddress, permissionId: permissionId}),
+            Errors.AccessDenied()
+        );
+    }
+
     function requireAccess(address accessControl, address account, uint256 permissionId) internal view {
         requireAccess(IAccessControl(accessControl), account, permissionId);
     }
 
     function requireAccess(IAccessControl accessControl, address account, uint256 permissionId) internal view {
-        require(
-            accessControl.hasAccess({account: account, contractAddress: address(this), permissionId: permissionId}),
-            Errors.AccessDenied()
-        );
+        requireAccess(accessControl, account, address(this), permissionId);
     }
 
     function hasAccess(address accessControl, address account, uint256 permissionId) internal view returns (bool) {
