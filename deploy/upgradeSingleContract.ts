@@ -35,6 +35,8 @@ async function deploy() {
     throw new Error(`${contractToUpgrade.contractName} not found in address book`);
   }
 
+  console.log(`${contractToUpgrade.contractName} transparent upgradeable proxy address: ${transparentUpgradeableProxyAddress}`);
+
   // const proxyAdmin = await getProvider().getStorage(transparentUpgradeableProxyAddress, proxyAdminSlot);
   const proxyAdmin = await hre.upgrades.erc1967.getAdminAddress(transparentUpgradeableProxyAddress);
 
