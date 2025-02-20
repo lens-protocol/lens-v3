@@ -38,7 +38,14 @@ struct RuleProcessingParams {
 
 struct SourceStamp {
     address source;
+    address originalMsgSender; // Who called the validator to execute some action with a source (e.g. Account)
+    address validator; // Who is calling the source to validate the source stamp (e.g. Lens Primitives)
     uint256 nonce;
     uint256 deadline;
     bytes signature;
+}
+
+struct RecipientData {
+    address recipient;
+    uint16 split; // fraction of BPS_MAX (10 000)
 }

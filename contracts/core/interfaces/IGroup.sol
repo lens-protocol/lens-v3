@@ -107,4 +107,6 @@ interface IGroup is IMetadataBased {
     function getGroupRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
 
     function getExtraData(bytes32 key) external view returns (bytes memory);
+
+    function getMembershipSource(uint256 membershipId) external view returns (address);
 }

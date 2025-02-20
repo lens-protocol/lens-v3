@@ -10,6 +10,11 @@ enum Access {
     DENIED
 }
 
+struct Role {
+    address account;
+    uint256 roleId;
+}
+
 interface IRoleBasedAccessControl is IAccessControl {
     event Lens_AccessControl_RoleGranted(address indexed account, uint256 indexed roleId);
     event Lens_AccessControl_RoleRevoked(address indexed account, uint256 indexed roleId);
@@ -28,6 +33,10 @@ interface IRoleBasedAccessControl is IAccessControl {
     function grantRole(address account, uint256 roleId) external;
 
     function revokeRole(address account, uint256 roleId) external;
+
+    function grantRoles(Role[] calldata roles) external;
+
+    function revokeRoles(Role[] calldata roles) external;
 
     function hasRole(address account, uint256 roleId) external view returns (bool);
 

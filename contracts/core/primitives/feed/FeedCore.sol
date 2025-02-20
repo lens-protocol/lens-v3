@@ -16,6 +16,7 @@ struct PostStorage {
     uint256 repliedPostId;
     uint80 creationTimestamp;
     uint80 lastUpdatedTimestamp;
+    bool isDeleted;
 }
 
 library FeedCore {
@@ -75,8 +76,8 @@ library FeedCore {
     }
 
     function _editPost(uint256 postId, EditPostParams calldata postParams) internal {
+        require(_postExists(postId), Errors.DoesNotExist());
         PostStorage storage _post = $storage().posts[postId];
-        require(_post.creationTimestamp != 0, Errors.DoesNotExist()); // Post must exist
         if (_post.repostedPostId != 0) {
             require(bytes(postParams.contentURI).length == 0, Errors.InvalidParameter());
         } else {
@@ -86,10 +87,11 @@ library FeedCore {
     }
 
     function _removePost(uint256 postId) internal {
-        delete $storage().posts[postId];
+        require(_postExists(postId), Errors.DoesNotExist());
+        $storage().posts[postId].isDeleted = true;
     }
 
     function _postExists(uint256 postId) internal view returns (bool) {
-        return $storage().posts[postId].creationTimestamp != 0;
+        return $storage().posts[postId].creationTimestamp != 0 && $storage().posts[postId].isDeleted == false;
     }
 }

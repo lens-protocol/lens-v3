@@ -8,6 +8,7 @@ describe('Account', function () {
   let lensFactory: Contract;
   let accountBlockingRule: Contract;
   let groupGatedFeedRule: Contract;
+  let usernameSimpleCharsetNamespaceRule: Contract;
 
   before(async function () {
     ownerWallet = getWallet(LOCAL_RICH_WALLETS[0].privateKey);
@@ -15,19 +16,26 @@ describe('Account', function () {
 
     // Global Rules for primitives
 
-    accountBlockingRule = await deployContract('AccountBlockingRule', ['uri://any'], {
+    accountBlockingRule = await deployContract('AccountBlockingRule', [ownerWallet.address, 'uri://any'], {
       wallet: ownerWallet,
       silent: true,
     });
     let accountBlockingRuleAddress = await accountBlockingRule.getAddress();
     console.log('AccountBlockingRule:', accountBlockingRuleAddress);
 
-    groupGatedFeedRule = await deployContract('GroupGatedFeedRule', ['uri://any'], {
+    groupGatedFeedRule = await deployContract('GroupGatedFeedRule', [ownerWallet.address, 'uri://any'], {
       wallet: ownerWallet,
       silent: true,
     });
     let groupGatedFeedRuleAddress = await groupGatedFeedRule.getAddress();
     console.log('GroupGatedFeedRule:', groupGatedFeedRuleAddress);
+
+    usernameSimpleCharsetNamespaceRule = await deployContract('UsernameSimpleCharsetNamespaceRule', [ownerWallet.address, 'uri://any'], {
+      wallet: ownerWallet,
+      silent: true,
+    });
+    let usernameSimpleCharsetNamespaceRuleAddress = await usernameSimpleCharsetNamespaceRule.getAddress();
+    console.log('UsernameSimpleCharsetNamespaceRule:', usernameSimpleCharsetNamespaceRuleAddress);
 
     // Proxy stuff
 
@@ -166,6 +174,7 @@ describe('Account', function () {
         namespaceFactoryAddress,
         accountBlockingRuleAddress,
         groupGatedFeedRuleAddress,
+        usernameSimpleCharsetNamespaceRuleAddress
       ],
       { wallet: ownerWallet, silent: true }
     );

@@ -21,6 +21,8 @@ import {Errors} from "contracts/core/types/Errors.sol";
  * Collect creation.
  */
 contract LensCollectedPost is LensERC721, IERC7572 {
+    event Lens_LensCollectedPost_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
     string internal _contentURISnapshot;
     string internal _contractURI;
     address internal immutable _feed;
@@ -57,7 +59,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
             return _contentURISnapshot;
         } else {
             string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
-            // TODO: If content was deleted - should we fail or return empty string?
+            // If content was deleted we fail. You can override this to return the empty URI if preferred.
             require(bytes(contentURI).length > 0, Errors.DoesNotExist());
             return contentURI;
         }
@@ -65,8 +67,11 @@ contract LensCollectedPost is LensERC721, IERC7572 {
 
     // Internal
 
+    function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
+        emit Lens_LensCollectedPost_Transfer(from, to, tokenId);
+    }
+
     // Disabling integrated LensERC721 tokenURIProvider
-    // TODO: Is this approach more favorable than deploying the LensCollectedPostTokenURIProvider over and over?
     function _beforeTokenURIProviderSet(ITokenURIProvider /* tokenURIProvider */ ) internal pure override {
         revert Errors.NotImplemented();
     }

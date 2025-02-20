@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 import "./helpers/TypeHelpers.sol";
 import {IAccount, AccountManagerPermissions} from "@extensions/account/IAccount.sol";
 import {Account} from "@extensions/account/Account.sol";
-import {Feed} from "@core/primitives/Feed/Feed.sol";
+import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "@core/types/Errors.sol";
@@ -72,7 +72,7 @@ contract AccountTest is Test, BaseDeployments {
         );
 
         vm.prank(owner);
-        bytes memory returnData = account.executeTransaction({to: address(feed), value: 0, data: txData});
+        bytes memory returnData = account.executeTransaction({target: address(feed), value: 0, data: txData});
         console.log("Return Data length:", returnData.length);
         uint256 postId = abi.decode(returnData, (uint256));
 
@@ -102,7 +102,7 @@ contract AccountTest is Test, BaseDeployments {
         );
 
         vm.prank(manager);
-        bytes memory returnData = account.executeTransaction({to: address(feed), value: 0, data: txData});
+        bytes memory returnData = account.executeTransaction({target: address(feed), value: 0, data: txData});
         uint256 postId = abi.decode(returnData, (uint256));
 
         Post memory post = feed.getPost(postId);
@@ -162,6 +162,9 @@ contract AccountTest is Test, BaseDeployments {
         vm.assume(accountManager != address(0));
         vm.assume(accountManager != owner);
         vm.assume(accountManager != manager);
+        vm.assume(canTransferTokensBefore != canTransferTokensAfter);
+        vm.assume(canTransferNativeBefore != canTransferNativeAfter);
+        vm.assume(canSetMetadataURIBefore != canSetMetadataURIAfter);
 
         vm.prank(owner);
         account.addAccountManager(
@@ -228,16 +231,16 @@ contract AccountTest is Test, BaseDeployments {
 
         vm.expectRevert("This is an error message");
         vm.prank(owner);
-        account.executeTransaction({to: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.stringError, ())});
+        account.executeTransaction({target: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.stringError, ())});
 
         vm.expectRevert(ErrorsTest.CustomError.selector);
         vm.prank(owner);
-        account.executeTransaction({to: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.customError, ())});
+        account.executeTransaction({target: errorsTest, value: 0, data: abi.encodeCall(ErrorsTest.customError, ())});
 
         vm.expectRevert(abi.encodeWithSelector(ErrorsTest.CustomErrorWithValue.selector, uint256(123)));
         vm.prank(owner);
         account.executeTransaction({
-            to: errorsTest,
+            target: errorsTest,
             value: 0,
             data: abi.encodeWithSelector(ErrorsTest.customErrorWithValue.selector, uint256(123))
         });
@@ -245,6 +248,10 @@ contract AccountTest is Test, BaseDeployments {
 }
 
 contract ErrorsTest {
+    function testErrorsTest() public {
+        // Prevents being counted in Foundry Coverage
+    }
+
     function stringError() public pure {
         revert("This is an error message");
     }

@@ -22,19 +22,48 @@ function getSolFiles(dir, fileList = []) {
   return fileList;
 }
 
+function preprocessFileContent(content) {
+  // Merge lines ending with '=' into a single line
+  const lines = content.split('\n');
+  const mergedLines = [];
+  let tempLine = '';
+
+  lines.forEach((line) => {
+    const trimmedLine = line.trim();
+    if (tempLine) {
+      tempLine += ' ' + trimmedLine; // Append current line to the tempLine
+      if (!trimmedLine.endsWith('=')) {
+        mergedLines.push(tempLine);
+        tempLine = '';
+      }
+    } else if (trimmedLine.endsWith('=')) {
+      tempLine = trimmedLine;
+    } else {
+      mergedLines.push(trimmedLine);
+    }
+  });
+
+  if (tempLine) {
+    mergedLines.push(tempLine); // Push any remaining line
+  }
+
+  return mergedLines;
+}
+
 // Extract and validate keccak256 hashes
 function extractAndValidateKeccak(folderPath) {
   let someUnmatch = false;
   const files = getSolFiles(folderPath);
 
-  const annotationRegex = /\/\/\/ @custom:keccak\s+([a-zA-Z0-9_.]+)/;
-  const bytes32Regex = /(uint256|bytes32)\s+constant\s+([A-Z_]+)\s*=\s*(0x[a-fA-F0-9]+);/;
+  const annotationRegex = /\/\/\/ @custom:keccak\s+([\w.]+)/;
+  const bytes32Regex = /^\s*(uint256|bytes32)\s+(?:public\s)?constant\s+([\w]+)\s*=\s*(0x[a-fA-F0-9]+);/;
   const uint256CastedRegex =
-    /(uint256|bytes32)\s+constant\s+([A-Z_]+)\s*=\s*\w+\((0x[a-fA-F0-9]+)\);/;
+    /^\s*(uint256|bytes32)\s+(?:public\s)?constant\s+([\w]+)\s*=\s*\w+\((0x[a-fA-F0-9]+)\);/;
 
   files.forEach((filePath) => {
     let hasSomeHashToCompute = false;
-    const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const lines = preprocessFileContent(content);
 
     let hashToCompute = null;
 
@@ -59,7 +88,7 @@ function extractAndValidateKeccak(folderPath) {
           //   hasSomeHashToCompute = true;
           // }
           // console.log(`• Hash to compute:   "${hashToCompute}"`);
-          // console.log(`• Constant name:     ${constantName}:`);
+          // console.log(`• Constant name:     ${constantName}`);
           // console.log(`• Computed:          ${computedHash}`);
           // console.log(`• Extracted:         ${value}`);
           // console.log(`⦿ Match status:      Correct ✅`);
@@ -71,7 +100,7 @@ function extractAndValidateKeccak(folderPath) {
             hasSomeHashToCompute = true;
           }
           console.error(`• Hash to compute:   "${hashToCompute}"`);
-          console.error(`• Constant name:     ${constantName}:`);
+          console.error(`• Constant name:     ${constantName}`);
           console.error(`• Computed:          ${computedHash}`);
           console.error(`• Extracted:         ${value}`);
           console.error(`⦿ Match status:      Incorrect ❌`);

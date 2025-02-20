@@ -8,35 +8,45 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {RuleBasedGroup} from "contracts/core/primitives/group/RuleBasedGroup.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {IAccountGroupAdditionSettings} from "contracts/core/interfaces/IAccountGroupAdditionSettings.sol";
+
+// Resource IDs involved in the contract
+/// @custom:keccak lens.permission.SetMetadata
+uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
+/// @custom:keccak lens.permission.ChangeRules
+uint256 constant PID__CHANGE_RULES = uint256(0x550b12ef6572134aefc5804fd2b13ab3d8451e067ad453f67afe134cffebd977);
+/// @custom:keccak lens.permission.SetExtraData
+uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
+/// @custom:keccak lens.permission.AddMember
+uint256 constant PID__ADD_MEMBER = uint256(0x19ef038b2d9618004143e998c9c636d9796ef58a03b5e2351e9f8d8446b0c2ab);
+/// @custom:keccak lens.permission.RemoveMember
+uint256 constant PID__REMOVE_MEMBER = uint256(0x8c204b72f1086f607fac077224053e94d5f8a69311195889c42430ffa8646e23);
+/// @custom:keccak lens.permission.SkipAddMemberRules
+uint256 constant PID__SKIP_ADD_MEMBER_RULES = uint256(0xd2a5a9d31c1be4f87f450917f4a33dadddde87ef034ecd45fa79c2067bb0b434);
+/// @custom:keccak lens.permission.SkipRemoveMemberRules
+uint256 constant PID__SKIP_REMOVE_MEMBER_RULES =
+    uint256(0x2c3e2cd5ab51b79b73a15b273d9b9ccfee8d62a91defe98fd96370db5e5564e0);
+
+/// @custom:keccak lens.param.accountAdditionSettingsParams
+bytes32 constant PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS =
+    0xc5602d6fdc6b403d800fd4d9c15c7ff231b8994478f8df567d4554ab356cdd55;
 
 contract Group is
     IGroup,
     Initializable,
     RuleBasedGroup,
     AccessControlled,
-    ExtraStorageBased,
+    ExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
-    // Resource IDs involved in the contract
-    /// @custom:keccak lens.permission.SetMetadata
-    uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
-    /// @custom:keccak lens.permission.ChangeRules
-    uint256 constant PID__CHANGE_RULES = uint256(0x550b12ef6572134aefc5804fd2b13ab3d8451e067ad453f67afe134cffebd977);
-    /// @custom:keccak lens.permission.SetExtraData
-    uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
-    /// @custom:keccak lens.permission.AddMember
-    uint256 constant PID__ADD_MEMBER = uint256(0x19ef038b2d9618004143e998c9c636d9796ef58a03b5e2351e9f8d8446b0c2ab);
-    /// @custom:keccak lens.permission.RemoveMember
-    uint256 constant PID__REMOVE_MEMBER = uint256(0x8c204b72f1086f607fac077224053e94d5f8a69311195889c42430ffa8646e23);
-
     constructor() {
         _disableInitializers();
     }
@@ -49,10 +59,10 @@ contract Group is
     function _initialize(string memory metadataURI) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
-        emit Events.Lens_Contract_Deployed("group", "lens.group", "group", "lens.group");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Group", flavour: "lens.contract.Group"});
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_Group_MetadataURISet(metadataURI);
     }
 
@@ -63,6 +73,8 @@ contract Group is
         emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
         emit Events.Lens_PermissionId_Available(PID__ADD_MEMBER, "lens.permission.AddMember");
         emit Events.Lens_PermissionId_Available(PID__REMOVE_MEMBER, "lens.permission.RemoveMember");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_ADD_MEMBER_RULES, "lens.permission.SkipAddMemberRules");
+        emit Events.Lens_PermissionId_Available(PID__SKIP_REMOVE_MEMBER_RULES, "lens.permission.SkipRemoveMemberRules");
     }
 
     // Access Controlled functions
@@ -82,23 +94,16 @@ contract Group is
         override
     {}
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
-        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Group_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Group_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Group_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Group_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Group_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Group_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     // Public functions
@@ -109,11 +114,23 @@ contract Group is
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         uint256 membershipId = Core._grantMembership(account);
-        if (_amountOfRules(IGroupRule.processAddition.selector) != 0) {
-            _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
-        } else {
+        if (_amountOfRules(IGroupRule.processAddition.selector) == 0) {
             _requireAccess(msg.sender, PID__ADD_MEMBER);
+        } else if (
+            _hasAccess(msg.sender, PID__ADD_MEMBER) == false
+                || _hasAccess(msg.sender, PID__SKIP_ADD_MEMBER_RULES) == false
+        ) {
+            _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
         }
+        // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
+        require(
+            IAccountGroupAdditionSettings(account).canBeAddedToGroup({
+                group: address(this),
+                addedBy: msg.sender,
+                params: _extractAccountAdditionSettingsParamsFromParams(customParams)
+            }),
+            Errors.NotAllowed()
+        );
         address source = _processSourceStamp(membershipId, customParams);
         emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
     }
@@ -123,10 +140,17 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        _requireAccess(msg.sender, PID__REMOVE_MEMBER);
+        if (_amountOfRules(IGroupRule.processRemoval.selector) == 0) {
+            _requireAccess(msg.sender, PID__REMOVE_MEMBER);
+        } else if (
+            _hasAccess(msg.sender, PID__REMOVE_MEMBER) == false
+                || _hasAccess(msg.sender, PID__SKIP_REMOVE_MEMBER_RULES) == false
+        ) {
+            _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
+        }
         uint256 membershipId = Core._revokeMembership(account);
-        _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
-        address source = _processSourceStamp(membershipId, customParams);
+        address source = _processSourceStamp(customParams);
+        _clearSource(membershipId);
         emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
     }
 
@@ -150,8 +174,27 @@ contract Group is
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);
-        address source = _processSourceStamp(membershipId, customParams);
+        address source = _processSourceStamp(customParams);
+        _clearSource(membershipId);
         emit Lens_Group_MemberLeft(account, membershipId, customParams, ruleProcessingParams, source);
+    }
+
+    function setExtraData(KeyValue[] calldata extraDataToSet) external override {
+        _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
+        _setExtraData(extraDataToSet);
+    }
+
+    function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] calldata customParams)
+        internal
+        pure
+        returns (KeyValue[] memory)
+    {
+        for (uint256 i = 0; i < customParams.length; i++) {
+            if (customParams[i].key == PARAM__ACCOUNT_ADDITION_SETTINGS_PARAMS) {
+                return abi.decode(customParams[i].value, (KeyValue[]));
+            }
+        }
+        return new KeyValue[](0);
     }
 
     // Getters
@@ -183,6 +226,10 @@ contract Group is
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getPrimitiveExtraData(key);
+        return _getExtraData(key);
+    }
+
+    function getMembershipSource(uint256 membershipId) external view override returns (address) {
+        return _getSource(membershipId);
     }
 }

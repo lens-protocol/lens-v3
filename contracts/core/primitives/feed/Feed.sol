@@ -7,7 +7,8 @@ import {FeedCore as Core} from "contracts/core/primitives/feed/FeedCore.sol";
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleBasedFeed} from "contracts/core/primitives/feed/RuleBasedFeed.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
-import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
+import {EntityExtraDataBased} from "contracts/core/base/EntityExtraDataBased.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
@@ -20,13 +21,11 @@ contract Feed is
     Initializable,
     RuleBasedFeed,
     AccessControlled,
-    ExtraStorageBased,
+    ExtraDataBased,
+    EntityExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
-    // TODO: Move these to respective contracts
-    // Resource IDs involved in the contract
-
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
     /// @custom:keccak lens.permission.ChangeRules
@@ -35,6 +34,12 @@ contract Feed is
     uint256 constant PID__SET_EXTRA_DATA = uint256(0x9b4afa2e6d7162f878076bb1210736928cd607a384b985eca0dba5e94790e72a);
     /// @custom:keccak lens.permission.RemovePost
     uint256 constant PID__REMOVE_POST = uint256(0x25b86c749bcf827bec85b3f107e1d65771462eb329e68ff158d50a2f4b301c89);
+
+    /// @custom:keccak lens.param.expectedPostId
+    bytes32 constant PARAM__EXPECTED_POST_ID = 0x5c421319b1e3c75e7c7239e8e44abd0f35e3e7f7fcc9a98fdbbcbd19deb4202e;
+
+    /// @custom:keccak lens.data.lastUpdatedSource
+    bytes32 constant DATA__LAST_UPDATED_SOURCE = 0x3cd0f450c58e5572a9f19a4af172d526fb9645ba11a751c1e6fe7f53c4d956eb;
 
     constructor() {
         _disableInitializers();
@@ -48,10 +53,10 @@ contract Feed is
     function _initialize(string memory metadataURI) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
-        emit Events.Lens_Contract_Deployed("feed", "lens.feed", "feed", "lens.feed");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Feed", flavour: "lens.contract.Feed"});
     }
 
-    function _emitMetadataURISet(string memory metadataURI) internal override {
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_Feed_MetadataURISet(metadataURI);
     }
 
@@ -79,7 +84,35 @@ contract Feed is
         virtual
         override
     {
+        require(Core._postExists(entityId), Errors.DoesNotExist());
         require(msg.sender == Core.$storage().posts[entityId].author, Errors.InvalidMsgSender());
+        require(entityId == Core.$storage().posts[entityId].rootPostId, Errors.CannotHaveRules());
+    }
+
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_Feed_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_Feed_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_Feed_ExtraDataRemoved(extraDataRemoved.key);
+    }
+
+    function _emitEntityExtraDataAddedEvent(uint256 postId, KeyValue memory extraDataAdded) internal override {
+        emit Lens_Feed_Post_ExtraDataAdded(postId, extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitEntityExtraDataUpdatedEvent(uint256 postId, KeyValue memory extraDataUpdated) internal override {
+        emit Lens_Feed_Post_ExtraDataUpdated(
+            postId, extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value
+        );
+    }
+
+    function _emitEntityExtraDataRemovedEvent(uint256 postId, KeyValue memory extraDataRemoved) internal override {
+        emit Lens_Feed_Post_ExtraDataRemoved(postId, extraDataRemoved.key);
     }
 
     // Public user functions
@@ -92,29 +125,34 @@ contract Feed is
         RuleProcessingParams[] memory quotedPostRulesParams
     ) external virtual override returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
-        (uint256 postId, uint256 authorPostSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
+        _validateExpectedPostIdIfPresent(customParams, postId);
         address source = _processSourceStamp(postId, customParams);
-        _setPrimitiveInternalExtraDataForEntity(postId, KeyValue(DATA__LAST_UPDATED_SOURCE, abi.encode(source)));
+        _storeSource(DATA__LAST_UPDATED_SOURCE, postId, source);
         _processPostCreationOnFeed(postId, postParams, customParams, feedRulesParams);
         // Process rules of the Quote (if quoting)
         if (postParams.quotedPostId != 0) {
-            // TODO: Maybe quotes shouldn't be limited by rules... Just a brave thought. Like quotations in real life.
+            // Existence of the quotedPost post was checked in the Core
+            // Just a thought: Maybe quotes shouldn't be limited by rules... Like quotations in real life.
             uint256 rootOfQuotedPost = Core.$storage().posts[postParams.quotedPostId].rootPostId;
-            if (rootOfQuotedPost != rootPostId) {
+            if (rootOfQuotedPost != rootPostId && Core._postExists(rootOfQuotedPost)) {
                 _processPostCreationOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
             }
         }
         if (postId != rootPostId) {
+            // Existence of the Replied/Reposted Post is checked in the Core
             require(postParams.ruleChanges.length == 0, Errors.CannotHaveRules());
-            // This covers the Reply or Repost cases
-            _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
+            if (Core._postExists(rootPostId)) {
+                // This covers the Reply or Repost cases
+                _processPostCreationOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
+            }
         } else {
             _addPostRulesAtCreation(postId, postParams, feedRulesParams);
         }
         emit Lens_Feed_PostCreated(
             postId,
             postParams.author,
-            authorPostSequentialId,
+            localSequentialId,
             rootPostId,
             postParams,
             customParams,
@@ -123,12 +161,7 @@ contract Feed is
             quotedPostRulesParams,
             source
         );
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraData(postId, postParams.extraData[i]);
-            emit Lens_Feed_Post_ExtraDataAdded(
-                postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-            );
-        }
+        _setEntityExtraData(postId, postParams.extraData);
         return postId;
     }
 
@@ -142,47 +175,29 @@ contract Feed is
     ) external virtual override {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;
-        // TODO: We can have this for moderators:
+        // You can have this if you want to allow moderator editing:
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, Errors.InvalidMsgSender());
-
         Core._editPost(postId, postParams);
-
-        bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            wereExtraDataValuesSet[i] = _setEntityExtraData(postId, postParams.extraData[i]);
-        }
-
-        _processPostEditingOnFeed(postId, postParams, customParams, rootPostRulesParams);
+        _setEntityExtraData(postId, postParams.extraData);
+        _processPostEditingOnFeed(postId, postParams, customParams, feedRulesParams);
         uint256 quotedPostId = Core.$storage().posts[postId].quotedPostId;
         if (quotedPostId != 0) {
             uint256 rootOfQuotedPost = Core.$storage().posts[quotedPostId].rootPostId;
-            _processPostEditingOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            // Skip the Root rules processing if the Root post was deleted
+            if (Core._postExists(rootOfQuotedPost)) {
+                _processPostEditingOnRootPost(rootOfQuotedPost, postId, postParams, customParams, quotedPostRulesParams);
+            }
         }
         uint256 rootPostId = Core.$storage().posts[postId].rootPostId;
-        if (postId != rootPostId) {
+        // Skip the Root rules processing if the Root post was deleted
+        if (postId != rootPostId && Core._postExists(rootPostId)) {
             _processPostEditingOnRootPost(rootPostId, postId, postParams, customParams, rootPostRulesParams);
         }
-        address source = _processSourceStamp({
-            entityId: postId,
-            customParams: customParams,
-            storeSource: true,
-            lastUpdatedSourceType: true
-        });
+        address source = _processSourceStamp(DATA__LAST_UPDATED_SOURCE, postId, customParams);
         emit Lens_Feed_PostEdited(
             postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
         );
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            if (wereExtraDataValuesSet[i]) {
-                emit Lens_Feed_Post_ExtraDataUpdated(
-                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-                );
-            } else {
-                emit Lens_Feed_Post_ExtraDataAdded(
-                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-                );
-            }
-        }
     }
 
     function deletePost(
@@ -195,33 +210,27 @@ contract Feed is
         require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());
         Core._removePost(postId);
         _processPostDeletion(postId, customParams, feedRulesParams);
-        address source = _processSourceStamp(postId, customParams);
+        address source = _processSourceStamp(DATA__LAST_UPDATED_SOURCE, postId, customParams);
         emit Lens_Feed_PostDeleted(postId, author, customParams, source);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external override {
         _requireAccess(msg.sender, PID__SET_EXTRA_DATA);
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setPrimitiveExtraData(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Feed_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Feed_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Feed_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+        _setExtraData(extraDataToSet);
     }
 
     // Getters
 
     function getPost(uint256 postId) external view override returns (Post memory) {
         require(Core._postExists(postId), Errors.DoesNotExist());
+        return _getPostUnchecked(postId);
+    }
+
+    function getPostUnchecked(uint256 postId) external view override returns (Post memory) {
+        return _getPostUnchecked(postId);
+    }
+
+    function _getPostUnchecked(uint256 postId) internal view returns (Post memory) {
         return Post({
             author: Core.$storage().posts[postId].author,
             authorPostSequentialId: Core.$storage().posts[postId].authorPostSequentialId,
@@ -234,7 +243,8 @@ contract Feed is
             creationTimestamp: Core.$storage().posts[postId].creationTimestamp,
             creationSource: _getSource(postId),
             lastUpdatedTimestamp: Core.$storage().posts[postId].lastUpdatedTimestamp,
-            lastUpdateSource: _getLastUpdateSource(postId)
+            lastUpdateSource: _getSource(DATA__LAST_UPDATED_SOURCE, postId),
+            isDeleted: Core.$storage().posts[postId].isDeleted
         });
     }
 
@@ -258,11 +268,11 @@ contract Feed is
     function getPostExtraData(uint256 postId, bytes32 key) external view override returns (bytes memory) {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address postAuthor = Core.$storage().posts[postId].author;
-        return _getEntityExtraData(postAuthor, postId, key);
+        return _getEntityExtraStorage_Account(postAuthor, postId, key);
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return _getPrimitiveExtraData(key);
+        return _getExtraData(key);
     }
 
     function getPostSequentialId(uint256 postId) external view override returns (uint256) {
@@ -277,5 +287,14 @@ contract Feed is
 
     function getNextPostId(address author) external view returns (uint256) {
         return Core._generatePostId(author, Core.$storage().authorPostCount[author] + 1);
+    }
+
+    function _validateExpectedPostIdIfPresent(KeyValue[] memory customParams, uint256 postId) internal pure {
+        for (uint256 i = 0; i < customParams.length; i++) {
+            if (customParams[i].key == PARAM__EXPECTED_POST_ID) {
+                require(postId == abi.decode(customParams[i].value, (uint256)), Errors.UnexpectedValue());
+                return;
+            }
+        }
     }
 }

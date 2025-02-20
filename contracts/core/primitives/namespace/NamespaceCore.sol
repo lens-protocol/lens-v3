@@ -9,7 +9,7 @@ library NamespaceCore {
 
     struct Storage {
         string namespace;
-        mapping(string => bool) usernameExists; // TODO: Should this store the owner instead???
+        mapping(string => bool) usernameExists;
         mapping(string => address) usernameToAccount;
         mapping(address => string) accountToUsername;
     }
@@ -28,6 +28,7 @@ library NamespaceCore {
     function _createUsername(string memory username) internal {
         require(!$storage().usernameExists[username], Errors.AlreadyExists()); // Username must not exist yet
         require(bytes(username).length > 0, Errors.InvalidParameter()); // Username must not be empty
+        require(bytes(username).length < type(uint8).max, Errors.InvalidParameter()); // Length must be less than 255
         $storage().usernameExists[username] = true;
     }
 

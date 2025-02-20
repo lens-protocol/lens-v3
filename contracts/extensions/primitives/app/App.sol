@@ -11,6 +11,8 @@ import {Events} from "contracts/core/types/Events.sol";
 import {BaseSource} from "contracts/core/base/BaseSource.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
+import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 
 struct AppInitialProperties {
     address graph;
@@ -23,7 +25,7 @@ struct AppInitialProperties {
     address treasury;
 }
 
-contract App is IApp, Initializable, BaseSource, AccessControlled {
+contract App is IApp, ExtraDataBased, MetadataBased, Initializable, BaseSource, AccessControlled {
     // Resource IDs involved in the contract
 
     /// @custom:keccak lens.permission.SetPrimitives
@@ -51,7 +53,7 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
         bool isSourceStampVerificationEnabled,
         IAccessControl accessControl,
         AppInitialProperties memory initialProps,
-        KeyValue[] memory extraData
+        KeyValue[] calldata extraData
     ) external override initializer {
         _initialize(metadataURI, isSourceStampVerificationEnabled, initialProps, extraData);
         AccessControlled._initialize(accessControl);
@@ -61,23 +63,35 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
         string memory metadataURI,
         bool isSourceStampVerificationEnabled,
         AppInitialProperties memory initialProps,
-        KeyValue[] memory extraData
+        KeyValue[] calldata extraData
     ) internal {
-        _setMetadataURI(metadataURI);
+        if (bytes(metadataURI).length > 0) {
+            _setMetadataURI(metadataURI);
+        }
         _setSourceStampVerification(isSourceStampVerificationEnabled);
-        _setTreasury(initialProps.treasury);
-        _setGraph(initialProps.graph);
+        if (initialProps.treasury != address(0)) {
+            _setTreasury(initialProps.treasury);
+        }
+        if (initialProps.graph != address(0)) {
+            _setGraph(initialProps.graph);
+        }
         _addFeeds(initialProps.feeds);
-        _setNamespace(initialProps.namespace);
+        if (initialProps.namespace != address(0)) {
+            _setNamespace(initialProps.namespace);
+        }
         _addGroups(initialProps.groups);
-        _setDefaultFeed(initialProps.defaultFeed);
+        if (initialProps.defaultFeed != address(0)) {
+            _setDefaultFeed(initialProps.defaultFeed);
+        }
         _addSigners(initialProps.signers);
-        _setPaymaster(initialProps.paymaster);
+        if (initialProps.paymaster != address(0)) {
+            _setPaymaster(initialProps.paymaster);
+        }
         _setExtraData(extraData);
 
         _emitPIDs();
 
-        emit Events.Lens_Contract_Deployed("app", "lens.app", "app", "lens.app");
+        emit Events.Lens_Contract_Deployed({contractType: "lens.contract.App", flavour: "lens.contract.App"});
     }
 
     function _emitPIDs() internal override {
@@ -99,7 +113,8 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     }
 
     function _isValidSourceStampSigner(address signer) internal virtual override returns (bool) {
-        return Core.$storage().signerStorageHelper[signer].isSet; // TODO: What about the app's owner?
+        // Owner is not by default a signer, should be explicitly enabled as it.
+        return Core.$storage().signerStorageHelper[signer].isSet;
     }
 
     function _setSourceStampVerification(bool isEnabled) internal virtual {
@@ -200,6 +215,15 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
 
     ///////////////// Group
 
+    function setDefaultGroup(address group) external override {
+        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
+        if (group != address(0) && !Core._isGroupPresent(group)) {
+            Core._addGroup(group);
+            emit Lens_App_GroupAdded(group);
+        }
+        _setDefaultGroup(group);
+    }
+
     function addGroups(address[] memory groups) external override {
         _requireAccess(msg.sender, PID__SET_PRIMITIVES);
         _addGroups(groups);
@@ -218,10 +242,19 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     }
 
     function _removeGroups(address[] memory groups) internal {
+        address defaultGroup = Core.$storage().defaultGroup;
         for (uint256 i = 0; i < groups.length; i++) {
+            if (groups[i] == defaultGroup) {
+                _setDefaultGroup(address(0));
+            }
             Core._removeGroup(groups[i]);
             emit Lens_App_GroupRemoved(groups[i]);
         }
+    }
+
+    function _setDefaultGroup(address group) internal {
+        Core._setDefaultGroup(group);
+        emit Lens_App_DefaultGroupSet(group);
     }
 
     ///////////////// Signers
@@ -253,7 +286,7 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     ///////////////// Paymaster
 
     function setPaymaster(address paymaster) external override {
-        _requireAccess(msg.sender, PID__SET_PRIMITIVES);
+        _requireAccess(msg.sender, PID__SET_PAYMASTER);
         _setPaymaster(paymaster);
     }
 
@@ -293,13 +326,11 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
 
     ///////////////// Metadata URI
 
-    function setMetadataURI(string calldata metadataURI) external override {
+    function _beforeMetadataURIUpdate(string memory /* metadataURI */ ) internal view override {
         _requireAccess(msg.sender, PID__SET_METADATA);
-        _setMetadataURI(metadataURI);
     }
 
-    function _setMetadataURI(string memory metadataURI) internal {
-        Core._setMetadataURI(metadataURI);
+    function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
         emit Lens_App_MetadataURISet(metadataURI);
     }
 
@@ -310,22 +341,16 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
         _setExtraData(extraDataToSet);
     }
 
-    function _setExtraData(KeyValue[] memory extraDataToSet) internal {
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = Core._setExtraData(extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_App_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_App_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_App_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
-            }
-        }
+    function _emitExtraDataAddedEvent(KeyValue calldata extraDataAdded) internal override {
+        emit Lens_App_ExtraDataAdded(extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitExtraDataUpdatedEvent(KeyValue calldata extraDataUpdated) internal override {
+        emit Lens_App_ExtraDataUpdated(extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value);
+    }
+
+    function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
+        emit Lens_App_ExtraDataRemoved(extraDataRemoved.key);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -373,10 +398,6 @@ contract App is IApp, Initializable, BaseSource, AccessControlled {
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
-        return Core.$storage().extraData[key];
-    }
-
-    function getMetadataURI() external view override returns (string memory) {
-        return Core.$storage().metadataURI;
+        return _getExtraData(key);
     }
 }

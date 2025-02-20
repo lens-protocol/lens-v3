@@ -12,7 +12,9 @@ import {PrimitiveFactory} from "contracts/extensions/factories/PrimitiveFactory.
 contract GraphFactory is PrimitiveFactory {
     event Lens_GraphFactory_Deployment(address indexed graph, string metadataURI);
 
-    constructor(address primitiveBeacon, address proxyAdminLock) PrimitiveFactory(primitiveBeacon, proxyAdminLock) {}
+    constructor(address primitiveBeacon, address proxyAdminLock, address lensFactory)
+        PrimitiveFactory(primitiveBeacon, proxyAdminLock, lensFactory)
+    {}
 
     function deployGraph(
         string memory metadataURI,
@@ -20,7 +22,7 @@ contract GraphFactory is PrimitiveFactory {
         address proxyAdminOwner,
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData
-    ) external returns (address) {
+    ) external onlyLensFactory returns (address) {
         address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, PROXY_ADMIN_LOCK));
         Graph graph = Graph(address(new BeaconProxy(proxyAdmin, PRIMITIVE_BEACON)));
         graph.initialize(metadataURI, TEMPORARY_ACCESS_CONTROL);

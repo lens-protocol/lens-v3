@@ -3,9 +3,10 @@
 pragma solidity ^0.8.26;
 
 import {Errors} from "contracts/core/types/Errors.sol";
+import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 
-abstract contract Ownable {
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+abstract contract Ownable is IOwnable {
+    event Lens_Ownable_OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     struct OwnableStorage {
         address owner;
@@ -25,17 +26,17 @@ abstract contract Ownable {
         _;
     }
 
-    function owner() public view virtual returns (address) {
+    function owner() public view virtual override returns (address) {
         return $ownableStorage().owner;
     }
 
-    function transferOwnership(address newOwner) public virtual onlyOwner {
+    function transferOwnership(address newOwner) public virtual override onlyOwner {
         _transferOwnership(newOwner);
     }
 
     function _transferOwnership(address newOwner) internal virtual {
         address oldOwner = $ownableStorage().owner;
         $ownableStorage().owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
+        emit Lens_Ownable_OwnershipTransferred(oldOwner, newOwner);
     }
 }

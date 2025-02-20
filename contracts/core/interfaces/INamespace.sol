@@ -56,9 +56,13 @@ interface INamespace is IMetadataBased {
     event Lens_Namespace_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Namespace_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Namespace_ExtraDataRemoved(bytes32 indexed key);
-    event Lens_Username_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
-    event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
-    event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
+    event Lens_Username_ExtraDataAdded(
+        uint256 indexed usernameId, bytes32 indexed key, bytes value, bytes indexed valueIndexed
+    );
+    event Lens_Username_ExtraDataUpdated(
+        uint256 indexed usernameId, bytes32 indexed key, bytes value, bytes indexed valueIndexed
+    );
+    event Lens_Username_ExtraDataRemoved(uint256 indexed usernameId, bytes32 indexed key);
 
     event Lens_Namespace_MetadataURISet(string metadataURI);
 
@@ -111,6 +115,8 @@ interface INamespace is IMetadataBased {
 
     function accountOf(string calldata name) external view returns (address);
 
+    function ownerOf(string memory username) external view returns (address);
+
     function getNamespace() external view returns (string memory);
 
     function getNamespaceRules(bytes4 ruleSelector, bool isRequired) external view returns (Rule[] memory);
@@ -121,7 +127,7 @@ interface INamespace is IMetadataBased {
 
     function exists(string calldata username) external view returns (bool);
 
-    function exists(uint256 tokenId) external view returns (bool);
+    function getUsernameCreationSource(string calldata username) external view returns (address);
 
-    function getUsernameTokenId(string calldata username) external view returns (uint256);
+    function getUsernameAssignmentSource(string calldata username) external view returns (address);
 }

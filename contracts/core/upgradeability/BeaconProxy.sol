@@ -115,6 +115,22 @@ contract BeaconProxy {
         _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
     }
 
+    function proxy__getImplementation() external view returns (address) {
+        return $implementation().value;
+    }
+
+    function proxy__getBeacon() external view returns (address) {
+        return $beacon().value;
+    }
+
+    function proxy__getProxyAdmin() external view returns (address) {
+        return $proxyAdmin().value;
+    }
+
+    function proxy__getAutoUpgrade() external view returns (bool) {
+        return $autoUpgrade().value;
+    }
+
     // Function copied from @openzeppelin/contracts/proxy/Proxy.sol::_delegate
     function _delegateCallToImplementation(address implementation) internal virtual {
         assembly {

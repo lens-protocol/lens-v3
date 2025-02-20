@@ -1,5 +1,6 @@
 # Compiler files
 cache/
+cache_forge/
 out/
 zkout/
 

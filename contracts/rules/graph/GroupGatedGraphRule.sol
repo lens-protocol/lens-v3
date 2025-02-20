@@ -8,14 +8,12 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
-import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
+import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract GroupGatedGraphRule is IGraphRule, MetadataBased {
+contract GroupGatedGraphRule is IGraphRule, OwnableMetadataBasedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
-
-    event Lens_Rule_MetadataURISet(string metadataURI);
 
     /// @custom:keccak lens.permission.SkipGate
     uint256 constant PID__SKIP_GATE = uint256(0xeb7f30e4c97d5211e2534aa42375c26931bd55b57a8101e5eb7918daead714eb);
@@ -32,13 +30,8 @@ contract GroupGatedGraphRule is IGraphRule, MetadataBased {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(string memory metadataURI) {
-        _setMetadataURI(metadataURI);
+    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
-    }
-
-    function _emitMetadataURISet(string memory metadataURI) internal override {
-        emit Lens_Rule_MetadataURISet(metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {

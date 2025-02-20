@@ -4,8 +4,9 @@ pragma solidity ^0.8.26;
 
 import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
+import {IAccessControlled} from "contracts/core/interfaces/IAccessControlled.sol";
 
-abstract contract AccessControlled {
+abstract contract AccessControlled is IAccessControlled {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -70,7 +71,7 @@ abstract contract AccessControlled {
 
     // Getters
 
-    function getAccessControl() external view returns (IAccessControl) {
+    function getAccessControl() external view override returns (IAccessControl) {
         return _accessControl();
     }
 }

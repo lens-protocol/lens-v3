@@ -40,6 +40,7 @@ library Errors {
     error ActionOnSelf();
     error SingleAnyOfRule();
     error UnexpectedContractImpl();
+    error UnexpectedValue();
     error UnsupportedSelector();
     error Untrusted();
     error UsernameAssigned();

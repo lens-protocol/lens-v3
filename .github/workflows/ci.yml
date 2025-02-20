@@ -33,3 +33,5 @@ jobs:
         run: npx hardhat compile
       - name: Verify Hashed Constants
         run: node verify_hashed_constants.js
+      - name: Run Tests
+        run: forge test -vvv

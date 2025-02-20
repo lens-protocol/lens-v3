@@ -5,8 +5,9 @@ import {
   loadContractAddressFromAddressBook,
 } from './lensUtils';
 
-export async function deployProxyAdminLock(lockOwner: string): Promise<void> {
-  const proxyAdminLock = await deployLensContract({
+export async function deployLock(lockType: string, lockOwner: string): Promise<void> {
+  const lock = await deployLensContract({
+    name: lockType,
     contractName: 'Lock',
     contractType: ContractType.Aux,
     constructorArguments: [lockOwner, true],

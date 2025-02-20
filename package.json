@@ -5,15 +5,19 @@
   "author": "avara",
   "license": "UNLICENSED. Copyright (C) 2024 Lens Labs. All Rights Reserved.",
   "scripts": {
-    "deploy": "hardhat deploy-zksync --script deploy.ts",
-    "deploy:fr": "DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts",
-    "deploy:migration": "DEPLOY_MIGRATION=true hardhat deploy-zksync --script deploy.ts",
-    "deploy:migration:fr": "DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts",
-    "deploy:local": "hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
-    "deploy:local:fr": "DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
-    "deploy:local:migration": "DEPLOY_MIGRATION=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
-    "deploy:local:migration:fr": "DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
-    "deploy:zkstack::migration": "DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network zkstackMigrationNode",
+    "deploy": "hardhat compile && hardhat deploy-zksync --script deploy.ts",
+    "deploy:single": "hardhat compile && hardhat deploy-zksync --script deploySingleContract.ts",
+    "deploy:upgradeSingle": "hardhat compile && hardhat deploy-zksync --script upgradeSingleContract.ts",
+    "deploy:fr": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts",
+    "deploy:migration": "hardhat compile && DEPLOY_MIGRATION=true hardhat deploy-zksync --script deploy.ts",
+    "deploy:migration:fr": "hardhat compile && DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts",
+    "deploy:local": "hardhat compile && hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
+    "deploy:local:single": "hardhat compile && hardhat deploy-zksync --script deploySingleContract.ts --network inMemoryNode",
+    "deploy:local:upgradeSingle": "hardhat compile && hardhat deploy-zksync --script upgradeSingleContract.ts --network inMemoryNode",
+    "deploy:local:fr": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
+    "deploy:local:migration": "hardhat compile && DEPLOY_MIGRATION=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
+    "deploy:local:migration:fr": "hardhat compile && DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
+    "deploy:zkstack::migration": "hardhat compile &&DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network zkstackMigrationNode",
     "interact": "hardhat deploy-zksync --script interact.ts",
     "compile": "hardhat compile",
     "clean": "hardhat clean",
@@ -23,16 +27,18 @@
     "prepare": "husky",
     "format": "forge fmt",
     "prod:abis": "npm run abis && cp -r out/abis ./ABIs",
-    "abis": "forge build --out ./out/__ABIS__ --skip 'test/**/*.sol' --extra-output-files abi --via-ir && ts-node ./parseAbisToBackendFolders.ts",
-    "bind": "forge bind --bindings-path ./out/__BINDINGS__ --alloy --skip 'test/**/*.sol' --via-ir",
+    "abis": "forge build --out ./out/__ABIS__ --skip 'test/**/*.sol' --extra-output-files abi && ts-node ./parseAbisToBackendFolders.ts",
+    "bind": "forge bind --bindings-path ./out/__BINDINGS__ --alloy --skip 'test/**/*.sol'",
     "build-and-bind": "npm run bind && npm run abis"
   },
   "devDependencies": {
     "@matterlabs/hardhat-zksync": "^1.1.0",
     "@matterlabs/zksync-contracts": "^0.6.1",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-verify": "^2.0.9",
     "@openzeppelin/contracts": "^4.9.2",
+    "@openzeppelin/hardhat-upgrades": "^3.9.0",
     "@types/chai": "^4.3.16",
     "@types/mocha": "^10.0.7",
     "chai": "^4.5.0",
@@ -50,5 +56,9 @@
   "lint-staged": {
     "**/*.sol": "forge fmt"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "dependencies": {
+    "hardhat-ignore-warnings": "^0.2.12",
+    "solady": "^0.1.8"
+  }
 }

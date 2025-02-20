@@ -1,19 +1,28 @@
-import {
-  deployLensContract,
-  ContractType,
-  ContractInfo,
-} from './lensUtils';
+import { deployLensContract, deployLensContractAsProxy, ContractType, ContractInfo, loadContractFromAddressBook } from './lensUtils';
 
-export async function deployActions(actionHub: string): Promise<void> {
-  const metadataURI = 'https://lens.dev/metadata'; // TODO: Change this to the actual metadata URI
+export async function deployActions(actionHub: string, actionsOwner: string): Promise<void> {
+  const metadataURI = '';
   const contracts: ContractInfo[] = [
     // Actions
-    { contractName: 'TippingAccountAction', contractType: ContractType.Action, constructorArguments: [actionHub, metadataURI] },
-    { contractName: 'TippingPostAction', contractType: ContractType.Action, constructorArguments: [actionHub, metadataURI] },
-    { contractName: 'SimpleCollectAction', contractType: ContractType.Action, constructorArguments: [actionHub, metadataURI] },
+    {
+      contractName: 'TippingAccountAction',
+      contractType: ContractType.Action,
+      constructorArguments: [actionHub, actionsOwner, metadataURI],
+    },
+    {
+      contractName: 'TippingPostAction',
+      contractType: ContractType.Action,
+      constructorArguments: [actionHub, actionsOwner, metadataURI],
+    }
   ];
 
   for (const contract of contracts) {
     await deployLensContract(contract);
   }
+
+  await deployLensContractAsProxy({
+    contractName: 'SimpleCollectAction',
+    contractType: ContractType.Action,
+    constructorArguments: [actionHub, actionsOwner, metadataURI],
+  }, actionsOwner);
 }

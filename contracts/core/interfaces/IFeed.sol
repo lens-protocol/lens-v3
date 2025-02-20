@@ -35,6 +35,7 @@ struct Post {
     address creationSource;
     uint80 lastUpdatedTimestamp;
     address lastUpdateSource;
+    bool isDeleted;
 }
 
 interface IFeed is IMetadataBased {
@@ -156,6 +157,8 @@ interface IFeed is IMetadataBased {
     // Getters
 
     function getPost(uint256 postId) external view returns (Post memory);
+
+    function getPostUnchecked(uint256 postId) external view returns (Post memory);
 
     function postExists(uint256 postId) external view returns (bool);
 

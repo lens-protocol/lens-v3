@@ -8,6 +8,7 @@ solc_version = '0.8.28'
 # via_ir = true
 optimizer = false
 # optimizer_runs = 10
+fs_permissions = [{ access = "read", path = "./test/token-uri/expected-svgs/"}]
 
 [profile.default.fuzz]
 runs = 1024

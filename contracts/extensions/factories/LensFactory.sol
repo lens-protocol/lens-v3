@@ -24,27 +24,23 @@ import {AccessControlFactory} from "contracts/extensions/factories/AccessControl
 import {AccountFactory} from "contracts/extensions/factories/AccountFactory.sol";
 import {IAccount, AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
 import {INamespace} from "contracts/core/interfaces/INamespace.sol";
-import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {LensUsernameTokenURIProvider} from "contracts/core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
+import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
+
 import {IFeedRule} from "contracts/core/interfaces/IFeedRule.sol";
 import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
+import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
+import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
+
 import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-// TODO: Move this some place else or remove
-interface IOwnable {
-    function transferOwnership(address newOwner) external;
-    function owner() external view returns (address);
-}
+import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 
-// struct AccessConfiguration {
-//     uint256 permissionId;
-//     address contractAddress;
-//     uint256 roleId;
-//     IRoleBasedAccessControl.Access access;
-// }
+import {LibString} from "solady/src/utils/LibString.sol";
 
 /// @custom:keccak lens.data.groupFeed
 bytes32 constant DATA__GROUP_LINKED_FEED = 0xfec1c12508813d27a0104e0d1f0ad007b92d4ee5701c6d20b721221326b94ae1;
@@ -66,12 +62,13 @@ struct CreateUsernameParams {
     KeyValue[] createUsernameCustomParams;
     RuleProcessingParams[] createUsernameRuleProcessingParams;
     KeyValue[] assignUsernameCustomParams;
-    RuleProcessingParams[] unassignAccountRuleProcessingParams;
     RuleProcessingParams[] assignRuleProcessingParams;
     KeyValue[] usernameExtraData;
 }
 
 contract LensFactory {
+    using LibString for string;
+
     AccessControlFactory internal immutable ACCESS_CONTROL_FACTORY;
     AccountFactory internal immutable ACCOUNT_FACTORY;
     AppFactory internal immutable APP_FACTORY;
@@ -82,6 +79,10 @@ contract LensFactory {
     IAccessControl internal immutable TEMPORARY_ACCESS_CONTROL;
     address internal immutable ACCOUNT_BLOCKING_RULE;
     address internal immutable GROUP_GATED_FEED_RULE;
+    address internal immutable USERNAME_SIMPLE_CHARSET_RULE;
+    address internal immutable BAN_MEMBER_GROUP_RULE;
+
+    uint128 internal immutable namespaceAllowedCharsLookup;
 
     constructor(
         AccessControlFactory accessControlFactory,
@@ -92,7 +93,9 @@ contract LensFactory {
         GraphFactory graphFactory,
         NamespaceFactory namespaceFactory,
         address accountBlockingRule,
-        address groupGatedFeedRule
+        address groupGatedFeedRule,
+        address usernameSimpleCharsetRule,
+        address banMemberGroupRule
     ) {
         ACCESS_CONTROL_FACTORY = accessControlFactory;
         ACCOUNT_FACTORY = accountFactory;
@@ -104,9 +107,12 @@ contract LensFactory {
         TEMPORARY_ACCESS_CONTROL = new PermissionlessAccessControl();
         ACCOUNT_BLOCKING_RULE = accountBlockingRule;
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
+        USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
+        BAN_MEMBER_GROUP_RULE = banMemberGroupRule;
+
+        namespaceAllowedCharsLookup = string("abcdefghijklmnopqrstuvwxyz0123456789_").to7BitASCIIAllowedLookup();
     }
 
-    // TODO: This function belongs to an App probably.
     function createAccountWithUsernameFree(
         address namespacePrimitiveAddress,
         CreateAccountParams calldata accountParams,
@@ -138,21 +144,25 @@ contract LensFactory {
                 account,
                 usernameParams.username,
                 usernameParams.assignUsernameCustomParams,
-                usernameParams.unassignAccountRuleProcessingParams,
+                new RuleProcessingParams[](0),
                 new RuleProcessingParams[](0),
                 usernameParams.assignRuleProcessingParams
             )
         );
         IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(accountParams.owner);
+        IOwnable(BeaconProxy(payable(account)).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
         return account;
     }
 
     struct CreateGroupWithFeedParams {
+        address owner;
         address group;
         IRoleBasedAccessControl groupAccessControl;
         IRoleBasedAccessControl feedAccessControl;
         RuleChange[] modifiedFeedRules;
+        string feedMetadataURI;
+        RuleChange[] feedRules;
         KeyValue[] feedExtraData;
     }
 
@@ -162,62 +172,42 @@ contract LensFactory {
         string memory groupMetadataURI,
         RuleChange[] memory groupRules,
         KeyValue[] memory groupExtraData,
+        address groupFoundingMember,
+        KeyValue[] memory groupAddFoundingMemberCustomParams,
         string memory feedMetadataURI,
         RuleChange[] memory feedRules,
         KeyValue[] memory feedExtraData
     ) external returns (address, address) {
         CreateGroupWithFeedParams memory s;
         s.feedExtraData = feedExtraData;
+        s.feedRules = feedRules;
+        s.feedMetadataURI = feedMetadataURI;
         s.feedAccessControl = _deployAccessControl(owner, admins);
-
         {
             s.groupAccessControl = _deployAccessControl(owner, admins);
+        }
+        s.owner = owner;
 
+        {
+            if (groupFoundingMember != address(0)) {
+                require(groupFoundingMember == msg.sender, Errors.InvalidParameter());
+            }
             s.group = GROUP_FACTORY.deployGroup(
                 groupMetadataURI,
                 TEMPORARY_ACCESS_CONTROL,
-                owner,
+                s.owner,
                 _injectRuleAccessControl(groupRules, address(s.groupAccessControl)),
-                groupExtraData
+                groupExtraData,
+                groupFoundingMember,
+                groupAddFoundingMemberCustomParams
             );
         }
 
-        s.modifiedFeedRules = new RuleChange[](feedRules.length + 2);
+        s.modifiedFeedRules = _injectRulesForFeedAndGroup(s.feedRules, s.feedAccessControl, s.group);
 
-        {
-            RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
-            // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
-            selectorChanges[0] =
-                RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
-
-            s.modifiedFeedRules[0] = RuleChange({
-                ruleAddress: ACCOUNT_BLOCKING_RULE,
-                configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-                selectorChanges: selectorChanges
-            });
-
-            KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
-            groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(s.group)});
-
-            s.modifiedFeedRules[1] = RuleChange({
-                ruleAddress: GROUP_GATED_FEED_RULE,
-                configSalt: bytes32(0),
-                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
-                selectorChanges: selectorChanges
-            });
-        }
-
-        {
-            for (uint256 i = 0; i < feedRules.length; i++) {
-                require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
-                require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
-                s.modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(s.feedAccessControl));
-            }
-        }
-
-        address feed =
-            FEED_FACTORY.deployFeed(feedMetadataURI, s.feedAccessControl, owner, s.modifiedFeedRules, s.feedExtraData);
+        address feed = FEED_FACTORY.deployFeed(
+            s.feedMetadataURI, s.feedAccessControl, s.owner, s.modifiedFeedRules, s.feedExtraData
+        );
 
         KeyValue[] memory groupExtraDataWithFeed = new KeyValue[](1);
         groupExtraDataWithFeed[0] = KeyValue({key: DATA__GROUP_LINKED_FEED, value: abi.encode(feed)});
@@ -262,11 +252,22 @@ contract LensFactory {
         address owner,
         address[] calldata admins,
         RuleChange[] calldata rules,
-        KeyValue[] calldata extraData
+        KeyValue[] calldata extraData,
+        address foundingMember,
+        KeyValue[] memory addFoundingMemberCustomParams
     ) external returns (address) {
+        if (foundingMember != address(0)) {
+            require(foundingMember == msg.sender, Errors.InvalidParameter());
+        }
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
         return GROUP_FACTORY.deployGroup(
-            metadataURI, accessControl, owner, _injectRuleAccessControl(rules, address(accessControl)), extraData
+            metadataURI,
+            accessControl,
+            owner,
+            _prepareGroupRules(rules, address(accessControl)),
+            extraData,
+            foundingMember,
+            addFoundingMemberCustomParams
         );
     }
 
@@ -314,28 +315,51 @@ contract LensFactory {
         string memory nftName,
         string memory nftSymbol
     ) external returns (address) {
-        ITokenURIProvider tokenURIProvider = new LensUsernameTokenURIProvider();
+        _validateNamespaceStrings(namespace, nftName, nftSymbol);
         IRoleBasedAccessControl accessControl = _deployAccessControl(owner, admins);
+        RuleChange[] memory modifiedRules = _injectRulesForNamespace(rules, address(accessControl));
+
         return NAMESPACE_FACTORY.deployNamespace(
             namespace,
             metadataURI,
             accessControl,
             owner,
-            _injectRuleAccessControl(rules, address(accessControl)),
+            modifiedRules,
             extraData,
             nftName,
             nftSymbol,
-            tokenURIProvider
+            new LensUsernameTokenURIProvider()
         );
     }
 
-    function _deployAccessControl(address owner, address[] memory admins) internal returns (IRoleBasedAccessControl) {
+    function _validateNamespaceStrings(string memory namespace, string memory nftName, string memory nftSymbol)
+        internal
+        view
+    {
+        require(bytes(namespace).length > 0 && bytes(namespace).length < type(uint8).max, Errors.InvalidParameter());
+        require(bytes(nftName).length > 0 && bytes(nftName).length < type(uint8).max, Errors.InvalidParameter());
+        require(bytes(nftSymbol).length > 0 && bytes(nftSymbol).length < type(uint8).max, Errors.InvalidParameter());
+
+        require(nftName.is7BitASCII(), Errors.InvalidParameter());
+        require(nftSymbol.is7BitASCII(), Errors.InvalidParameter());
+
+        require(namespace.is7BitASCII(namespaceAllowedCharsLookup), Errors.InvalidParameter());
+        require(namespace.eq("lens") == false, Errors.InvalidParameter());
+        require(bytes(namespace)[0] != "_", Errors.InvalidParameter());
+    }
+
+    function _deployAccessControl(address owner, address[] memory admins)
+        internal
+        virtual
+        returns (IRoleBasedAccessControl)
+    {
         return ACCESS_CONTROL_FACTORY.deployOwnerAdminOnlyAccessControl(owner, admins);
     }
 
     function _injectRuleAccessControl(RuleChange memory rule, address accessControl)
         internal
         pure
+        virtual
         returns (RuleChange memory)
     {
         bool found;
@@ -355,6 +379,7 @@ contract LensFactory {
     function _injectRuleAccessControl(RuleChange[] memory rules, address accessControl)
         internal
         pure
+        virtual
         returns (RuleChange[] memory)
     {
         RuleChange[] memory modifiedRules = new RuleChange[](rules.length);
@@ -364,9 +389,38 @@ contract LensFactory {
         return modifiedRules;
     }
 
+    function _prepareGroupRules(RuleChange[] memory rules, address accessControl)
+        internal
+        view
+        virtual
+        returns (RuleChange[] memory)
+    {
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        KeyValue[] memory banMemberGroupRuleParams = new KeyValue[](1);
+        banMemberGroupRuleParams[0] = KeyValue({
+            key: BanMemberGroupRule(BAN_MEMBER_GROUP_RULE).PARAM__ACCESS_CONTROL(),
+            value: abi.encode(accessControl)
+        });
+        selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IGroupRule.processJoining.selector, isRequired: true, enabled: true});
+        modifiedRules[0] = RuleChange({
+            ruleAddress: BAN_MEMBER_GROUP_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: banMemberGroupRuleParams}),
+            selectorChanges: selectorChanges
+        });
+        for (uint256 i = 0; i < rules.length; i++) {
+            require(rules[i].ruleAddress != BAN_MEMBER_GROUP_RULE, Errors.DuplicatedValue());
+            modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
+        }
+        return modifiedRules;
+    }
+
     function _prepareRules(RuleChange[] memory rules, bytes4 ruleSelector, address accessControl)
         internal
         view
+        virtual
         returns (RuleChange[] memory)
     {
         RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
@@ -383,5 +437,98 @@ contract LensFactory {
             modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
         }
         return modifiedRules;
+    }
+
+    function _injectRulesForFeedAndGroup(
+        RuleChange[] memory feedRules,
+        IRoleBasedAccessControl feedAccessControl,
+        address group
+    ) internal view virtual returns (RuleChange[] memory) {
+        RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
+
+        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+        // Both rules only operate on IFeedRule.processCreatePost.selector (at least at the moment of writing this)
+        selectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IFeedRule.processCreatePost.selector, isRequired: true, enabled: true});
+
+        modifiedFeedRules[0] = RuleChange({
+            ruleAddress: ACCOUNT_BLOCKING_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: selectorChanges
+        });
+
+        KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
+        groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(group)});
+
+        modifiedFeedRules[1] = RuleChange({
+            ruleAddress: GROUP_GATED_FEED_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: groupGatedRuleParams}),
+            selectorChanges: selectorChanges
+        });
+
+        for (uint256 i = 0; i < feedRules.length; i++) {
+            require(feedRules[i].ruleAddress != ACCOUNT_BLOCKING_RULE, Errors.DuplicatedValue());
+            require(feedRules[i].ruleAddress != GROUP_GATED_FEED_RULE, Errors.DuplicatedValue());
+            modifiedFeedRules[i + 2] = _injectRuleAccessControl(feedRules[i], address(feedAccessControl));
+        }
+
+        return modifiedFeedRules;
+    }
+
+    function _injectRulesForNamespace(RuleChange[] memory rules, address accessControl)
+        internal
+        view
+        virtual
+        returns (RuleChange[] memory)
+    {
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
+
+        {
+            RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
+            selectorChanges[0] = RuleSelectorChange({
+                ruleSelector: INamespaceRule.processCreation.selector,
+                isRequired: true,
+                enabled: true
+            });
+            modifiedRules[0] = RuleChange({
+                ruleAddress: USERNAME_SIMPLE_CHARSET_RULE,
+                configSalt: bytes32(0),
+                configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+                selectorChanges: selectorChanges
+            });
+            for (uint256 i = 0; i < rules.length; i++) {
+                require(rules[i].ruleAddress != USERNAME_SIMPLE_CHARSET_RULE, Errors.DuplicatedValue());
+                modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], address(accessControl));
+            }
+        }
+
+        return modifiedRules;
+    }
+
+    function getFactories() external view returns (address, address, address, address, address, address, address) {
+        return (
+            address(ACCESS_CONTROL_FACTORY),
+            address(ACCOUNT_FACTORY),
+            address(APP_FACTORY),
+            address(FEED_FACTORY),
+            address(GRAPH_FACTORY),
+            address(GROUP_FACTORY),
+            address(NAMESPACE_FACTORY)
+        );
+    }
+
+    function getTemporaryAccessControl() external view returns (address) {
+        return address(TEMPORARY_ACCESS_CONTROL);
+    }
+
+    function getRules() external view returns (address, address, address, address) {
+        return (
+            address(ACCOUNT_BLOCKING_RULE),
+            address(GROUP_GATED_FEED_RULE),
+            address(USERNAME_SIMPLE_CHARSET_RULE),
+            address(BAN_MEMBER_GROUP_RULE)
+        );
     }
 }
