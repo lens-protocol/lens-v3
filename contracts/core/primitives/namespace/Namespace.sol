@@ -9,6 +9,7 @@ import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/T
 import {RuleBasedNamespace} from "contracts/core/primitives/namespace/RuleBasedNamespace.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
+import {EntityExtraDataBased} from "contracts/core/base/EntityExtraDataBased.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {LensERC721} from "contracts/core/base/LensERC721.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
@@ -26,6 +27,7 @@ contract Namespace is
     RuleBasedNamespace,
     AccessControlled,
     ExtraDataBased,
+    EntityExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
@@ -128,6 +130,21 @@ contract Namespace is
     function _emitExtraDataRemovedEvent(KeyValue calldata extraDataRemoved) internal override {
         emit Lens_Namespace_ExtraDataRemoved(extraDataRemoved.key);
     }
+
+    function _emitEntityExtraDataAddedEvent(uint256 usernameId, KeyValue memory extraDataAdded) internal override {
+        emit Lens_Username_ExtraDataAdded(usernameId, extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitEntityExtraDataUpdatedEvent(uint256 usernameId, KeyValue memory extraDataUpdated) internal override {
+        emit Lens_Username_ExtraDataUpdated(
+            usernameId, extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value
+        );
+    }
+
+    function _emitEntityExtraDataRemovedEvent(uint256 usernameId, KeyValue memory extraDataRemoved) internal override {
+        emit Lens_Username_ExtraDataRemoved(usernameId, extraDataRemoved.key);
+    }
+
     // Permissionless functions
 
     function createAndAssignUsername(
@@ -145,7 +162,7 @@ contract Namespace is
         $storage().idToUsername[id] = username;
         Core._createUsername(username);
         address source = _processSourceStamp(id, customParams);
-        _decodeAndSetUsernameExtraData(id, extraData);
+        _setEntityExtraData(id, extraData);
         emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source, extraData);
         _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
         Core._assignUsername(account, username);
@@ -168,7 +185,7 @@ contract Namespace is
         Core._createUsername(username);
         address source = _processSourceStamp(id, customParams);
         _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
-        _decodeAndSetUsernameExtraData(id, extraData);
+        _setEntityExtraData(id, extraData);
         emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source, extraData);
     }
 
@@ -254,30 +271,10 @@ contract Namespace is
         uint256 id = _computeId(username);
         address owner = _ownerOf(id);
         require(msg.sender == owner, Errors.InvalidMsgSender());
-        _decodeAndSetUsernameExtraData(id, extraDataToSet);
+        _setEntityExtraData(id, extraDataToSet);
     }
 
     // Internal
-
-    function _decodeAndSetUsernameExtraData(uint256 tokenId, KeyValue[] memory extraDataToSet) internal virtual {
-        for (uint256 i = 0; i < extraDataToSet.length; i++) {
-            bool hadAValueSetBefore = _setEntityExtraStorage_Account(tokenId, extraDataToSet[i]);
-            bool isNewValueEmpty = extraDataToSet[i].value.length == 0;
-            if (hadAValueSetBefore) {
-                if (isNewValueEmpty) {
-                    emit Lens_Username_ExtraDataRemoved(extraDataToSet[i].key);
-                } else {
-                    emit Lens_Username_ExtraDataUpdated(
-                        extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                    );
-                }
-            } else if (!isNewValueEmpty) {
-                emit Lens_Username_ExtraDataAdded(
-                    extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
-                );
-            }
-        }
-    }
 
     function _afterTokenTransfer(address from, address to, uint256 tokenId) internal virtual override {
         emit Lens_Username_Transfer(from, to, tokenId);
@@ -350,7 +347,7 @@ contract Namespace is
     function getUsernameExtraData(string calldata username, bytes32 key) external view override returns (bytes memory) {
         uint256 tokenId = _computeId(username);
         address owner = ownerOf(tokenId);
-        return _getEntityExtraStorage_Account(owner, tokenId, key);
+        return _getEntityExtraData(owner, tokenId, key);
     }
 
     function exists(string calldata username) external view override returns (bool) {

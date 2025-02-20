@@ -16,14 +16,16 @@ contract MigrationNamespace is Namespace, EventEmitter {
         }
     }
 
-    function _decodeAndSetUsernameExtraData(uint256 tokenId, KeyValue[] memory extraDataToSet) internal override {
+    function _setEntityExtraData(uint256 tokenId, KeyValue[] memory extraDataToSet) internal override {
         address usernameOwner = ownerOf(tokenId);
         for (uint256 i = 0; i < extraDataToSet.length; i++) {
             // Storing extra data in the native extra storage for data integrity
             _setEntityExtraStorage(tokenId, extraDataToSet[i]);
             // Forcing ExtraStorageBased::_setEntityExtraStorage_Account with injected addressScope
             _migration_force__setEntityExtraStorage_Account(usernameOwner, tokenId, extraDataToSet[i]);
-            emit Lens_Username_ExtraDataAdded(extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value);
+            emit Lens_Username_ExtraDataAdded(
+                tokenId, extraDataToSet[i].key, extraDataToSet[i].value, extraDataToSet[i].value
+            );
         }
     }
 

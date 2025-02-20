@@ -56,9 +56,13 @@ interface INamespace is IMetadataBased {
     event Lens_Namespace_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Namespace_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Namespace_ExtraDataRemoved(bytes32 indexed key);
-    event Lens_Username_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
-    event Lens_Username_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
-    event Lens_Username_ExtraDataRemoved(bytes32 indexed key);
+    event Lens_Username_ExtraDataAdded(
+        uint256 indexed usernameId, bytes32 indexed key, bytes value, bytes indexed valueIndexed
+    );
+    event Lens_Username_ExtraDataUpdated(
+        uint256 indexed usernameId, bytes32 indexed key, bytes value, bytes indexed valueIndexed
+    );
+    event Lens_Username_ExtraDataRemoved(uint256 indexed usernameId, bytes32 indexed key);
 
     event Lens_Namespace_MetadataURISet(string metadataURI);
 

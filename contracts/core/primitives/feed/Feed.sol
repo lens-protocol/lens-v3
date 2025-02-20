@@ -8,6 +8,7 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {RuleBasedFeed} from "contracts/core/primitives/feed/RuleBasedFeed.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
+import {EntityExtraDataBased} from "contracts/core/base/EntityExtraDataBased.sol";
 import {RuleChange, RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
@@ -21,6 +22,7 @@ contract Feed is
     RuleBasedFeed,
     AccessControlled,
     ExtraDataBased,
+    EntityExtraDataBased,
     SourceStampBased,
     MetadataBased
 {
@@ -99,6 +101,20 @@ contract Feed is
         emit Lens_Feed_ExtraDataRemoved(extraDataRemoved.key);
     }
 
+    function _emitEntityExtraDataAddedEvent(uint256 postId, KeyValue memory extraDataAdded) internal override {
+        emit Lens_Feed_Post_ExtraDataAdded(postId, extraDataAdded.key, extraDataAdded.value, extraDataAdded.value);
+    }
+
+    function _emitEntityExtraDataUpdatedEvent(uint256 postId, KeyValue memory extraDataUpdated) internal override {
+        emit Lens_Feed_Post_ExtraDataUpdated(
+            postId, extraDataUpdated.key, extraDataUpdated.value, extraDataUpdated.value
+        );
+    }
+
+    function _emitEntityExtraDataRemovedEvent(uint256 postId, KeyValue memory extraDataRemoved) internal override {
+        emit Lens_Feed_Post_ExtraDataRemoved(postId, extraDataRemoved.key);
+    }
+
     // Public user functions
 
     function createPost(
@@ -145,12 +161,7 @@ contract Feed is
             quotedPostRulesParams,
             source
         );
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            _setEntityExtraStorage_Account(postId, postParams.extraData[i]);
-            emit Lens_Feed_Post_ExtraDataAdded(
-                postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-            );
-        }
+        _setEntityExtraData(postId, postParams.extraData);
         return postId;
     }
 
@@ -168,10 +179,7 @@ contract Feed is
         // require(msg.sender == author || _hasAccess(msg.sender, EDIT_POST_PID));
         require(msg.sender == author, Errors.InvalidMsgSender());
         Core._editPost(postId, postParams);
-        bool[] memory wereExtraDataValuesSet = new bool[](postParams.extraData.length);
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            wereExtraDataValuesSet[i] = _setEntityExtraStorage_Account(postId, postParams.extraData[i]);
-        }
+        _setEntityExtraData(postId, postParams.extraData);
         _processPostEditingOnFeed(postId, postParams, customParams, feedRulesParams);
         uint256 quotedPostId = Core.$storage().posts[postId].quotedPostId;
         if (quotedPostId != 0) {
@@ -190,17 +198,6 @@ contract Feed is
         emit Lens_Feed_PostEdited(
             postId, author, postParams, customParams, feedRulesParams, rootPostRulesParams, quotedPostRulesParams, source
         );
-        for (uint256 i = 0; i < postParams.extraData.length; i++) {
-            if (wereExtraDataValuesSet[i]) {
-                emit Lens_Feed_Post_ExtraDataUpdated(
-                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-                );
-            } else {
-                emit Lens_Feed_Post_ExtraDataAdded(
-                    postId, postParams.extraData[i].key, postParams.extraData[i].value, postParams.extraData[i].value
-                );
-            }
-        }
     }
 
     function deletePost(
