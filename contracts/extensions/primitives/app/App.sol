@@ -65,9 +65,8 @@ contract App is IApp, ExtraDataBased, MetadataBased, Initializable, BaseSource, 
         AppInitialProperties memory initialProps,
         KeyValue[] calldata extraData
     ) internal {
-        if (bytes(metadataURI).length > 0) {
-            _setMetadataURI(metadataURI);
-        }
+        _setMetadataURI(metadataURI);
+
         _setSourceStampVerification(isSourceStampVerificationEnabled);
         if (initialProps.treasury != address(0)) {
             _setTreasury(initialProps.treasury);
