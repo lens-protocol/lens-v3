@@ -27,12 +27,15 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
     function blockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
         require(source != target, Errors.ActionOnSelf());
-        accountBlocks[source][target] = block.timestamp;
+        uint256 timestamp = block.timestamp;
+        accountBlocks[source][target] = timestamp;
+        emit Lens_AccountBlocking_AccountBlocked(source, target, timestamp);
     }
 
     function unblockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
         accountBlocks[msg.sender][target] = 0;
+        emit Lens_AccountBlocking_UserUnblocked(source, target);
     }
 
     function processCreatePost(
