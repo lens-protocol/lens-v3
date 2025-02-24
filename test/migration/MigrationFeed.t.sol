@@ -8,9 +8,12 @@ import {PostCreationParams} from "contracts/migration/primitives/MigrationFeed.s
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {WhitelistedAddresses} from "contracts/migration/WhitelistedAddresses.sol";
 
 contract MigrationFeedTest is BaseDeployments {
     IFeed migrationFeed;
+
+    address whitelistedAddress = 0x76Ba7483A15F4bA358D38eC14B80bCeB7193A190;
 
     function setUp() public override(BaseDeployments) {
         BaseDeployments.switchMigrationMode(true);
@@ -35,8 +38,11 @@ contract MigrationFeedTest is BaseDeployments {
     ) public {
         vm.assume(author != address(0));
         vm.assume(authorPostSequentialId != 0);
+        vm.assume(authorPostSequentialId < type(uint256).max);
         vm.assume(creationTimestamp != 0);
         vm.assume(source != address(0));
+
+        assertTrue(WhitelistedAddresses.isWhitelisted(whitelistedAddress), "Whitelisted address should be whitelisted");
 
         KeyValue[] memory extraData = new KeyValue[](2);
         extraData[0] = KeyValue(keccak256("extraData1"), abi.encode(author, authorPostSequentialId));
@@ -61,6 +67,7 @@ contract MigrationFeedTest is BaseDeployments {
             extraData: extraData
         });
 
+        vm.prank(whitelistedAddress);
         uint256 postId = migrationFeed.createPost(
             postParams,
             customParams,
@@ -86,7 +93,7 @@ contract MigrationFeedTest is BaseDeployments {
 
         assertTrue(migrationFeed.postExists(postId), "Post should exist");
         assertEq(migrationFeed.getPostCount(), 1, "getPostCount() mismatch");
-        assertEq(migrationFeed.getPostCount(author), 1, "getPostCount(author) mismatch");
+        assertEq(migrationFeed.getPostCount(author), authorPostSequentialId, "getPostCount(author) mismatch");
         assertEq(migrationFeed.getPostAuthor(postId), author, "getPostAuthor()   mismatch");
         assertEq(
             migrationFeed.getAuthorPostSequentialId(postId),
@@ -95,7 +102,7 @@ contract MigrationFeedTest is BaseDeployments {
         );
         assertEq(
             migrationFeed.getNextPostId(author),
-            _generatePostId(address(migrationFeed), author, 2),
+            _generatePostId(address(migrationFeed), author, authorPostSequentialId + 1),
             "getNextPostId() mismatch"
         );
     }
@@ -110,6 +117,8 @@ contract MigrationFeedTest is BaseDeployments {
         vm.assume(authorPostSequentialId != 0);
         vm.assume(creationTimestamp != 0);
         vm.assume(source != address(0));
+
+        assertTrue(WhitelistedAddresses.isWhitelisted(whitelistedAddress), "Whitelisted address should be whitelisted");
 
         PostCreationParams memory postCreationParams = PostCreationParams({
             authorPostSequentialId: authorPostSequentialId,
@@ -130,6 +139,7 @@ contract MigrationFeedTest is BaseDeployments {
             extraData: _emptyKeyValueArray()
         });
 
+        vm.prank(whitelistedAddress);
         migrationFeed.createPost(
             postParams,
             customParams,
@@ -138,7 +148,52 @@ contract MigrationFeedTest is BaseDeployments {
             _emptyRuleProcessingParamsArray()
         );
 
+        vm.prank(whitelistedAddress);
         vm.expectRevert(Errors.AlreadyExists.selector);
+        migrationFeed.createPost(
+            postParams,
+            customParams,
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray(),
+            _emptyRuleProcessingParamsArray()
+        );
+    }
+
+    function test_CannotCreatePost_ifNotWhitelisted(
+        address author,
+        uint256 authorPostSequentialId,
+        uint80 creationTimestamp,
+        address source,
+        address nonWhitelistedAddress
+    ) public {
+        vm.assume(author != address(0));
+        vm.assume(authorPostSequentialId != 0);
+        vm.assume(creationTimestamp != 0);
+        vm.assume(source != address(0));
+        vm.assume(nonWhitelistedAddress != address(0));
+        vm.assume(WhitelistedAddresses.isWhitelisted(nonWhitelistedAddress) == false);
+
+        PostCreationParams memory postCreationParams = PostCreationParams({
+            authorPostSequentialId: authorPostSequentialId,
+            creationTimestamp: creationTimestamp,
+            source: source
+        });
+
+        KeyValue[] memory customParams = new KeyValue[](1);
+        customParams[0] = KeyValue(bytes32(0), abi.encode(postCreationParams));
+
+        CreatePostParams memory postParams = CreatePostParams({
+            author: author,
+            contentURI: "some content uri",
+            repostedPostId: 0,
+            quotedPostId: 0,
+            repliedPostId: 0,
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        vm.prank(nonWhitelistedAddress);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
         migrationFeed.createPost(
             postParams,
             customParams,
