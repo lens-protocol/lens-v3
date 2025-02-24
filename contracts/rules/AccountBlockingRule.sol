@@ -11,10 +11,10 @@ import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBase
 import {Errors} from "contracts/core/types/Errors.sol";
 
 contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule {
-    event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target, uint256 timestamp);
-    event Lens_AccountBlocking_UserUnblocked(address indexed source, address indexed target);
+    event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target);
+    event Lens_AccountBlocking_AccountUnblocked(address indexed source, address indexed target);
 
-    mapping(address => mapping(address => uint256)) public accountBlocks;
+    mapping(address source => mapping(address target => bool isBlocked)) internal _isBlocked;
 
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
@@ -27,15 +27,16 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
     function blockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
         require(source != target, Errors.ActionOnSelf());
-        uint256 timestamp = block.timestamp;
-        accountBlocks[source][target] = timestamp;
-        emit Lens_AccountBlocking_AccountBlocked(source, target, timestamp);
+        require(!_isBlocked[source][target], Errors.RedundantStateChange());
+        _isBlocked[source][target] = true;
+        emit Lens_AccountBlocking_AccountBlocked(source, target);
     }
 
     function unblockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
-        accountBlocks[msg.sender][target] = 0;
-        emit Lens_AccountBlocking_UserUnblocked(source, target);
+        require(_isBlocked[source][target], Errors.RedundantStateChange());
+        _isBlocked[source][target] = false;
+        emit Lens_AccountBlocking_AccountUnblocked(source, target);
     }
 
     function processCreatePost(
@@ -50,10 +51,10 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
             address repliedToAuthor = IFeed(msg.sender).getPostAuthor(postParams.repliedPostId);
             uint256 rootPostId = IFeed(msg.sender).getPost(postId).rootPostId;
             address rootAuthor = IFeed(msg.sender).getPostAuthor(rootPostId);
-            if (_isBlocked({source: repliedToAuthor, blockTarget: author})) {
+            if (_isBlocked[repliedToAuthor][author]) {
                 revert Errors.Blocked();
             }
-            if (_isBlocked({source: rootAuthor, blockTarget: author})) {
+            if (_isBlocked[rootAuthor][author]) {
                 revert Errors.Blocked();
             }
         }
@@ -67,17 +68,13 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external view {
-        if (_isBlocked({source: accountToFollow, blockTarget: followerAccount})) {
+        if (_isBlocked[accountToFollow][followerAccount]) {
             revert Errors.Blocked();
         }
     }
 
     function isBlocked(address source, address blockTarget) external view returns (bool) {
-        return _isBlocked(source, blockTarget);
-    }
-
-    function _isBlocked(address source, address blockTarget) internal view returns (bool) {
-        return accountBlocks[source][blockTarget] > 0;
+        return _isBlocked[source][blockTarget];
     }
 
     // Unimplemented functions
