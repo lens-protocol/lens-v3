@@ -17,18 +17,10 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
-import {MigrationApp} from "contracts/migration/primitives/MigrationApp.sol";
-import {MigrationAccount} from "contracts/migration/primitives/MigrationAccount.sol";
 import {MigrationFeed} from "contracts/migration/primitives/MigrationFeed.sol";
 import {MigrationGraph} from "contracts/migration/primitives/MigrationGraph.sol";
 import {MigrationNamespace} from "contracts/migration/primitives/MigrationNamespace.sol";
 
-import {MigrationAccessControlFactory} from "contracts/migration/factories/MigrationAccessControlFactory.sol";
-import {MigrationAppFactory} from "contracts/migration/factories/MigrationAppFactory.sol";
-import {MigrationAccountFactory} from "contracts/migration/factories/MigrationAccountFactory.sol";
-import {MigrationFeedFactory} from "contracts/migration/factories/MigrationFeedFactory.sol";
-import {MigrationGraphFactory} from "contracts/migration/factories/MigrationGraphFactory.sol";
-import {MigrationNamespaceFactory} from "contracts/migration/factories/MigrationNamespaceFactory.sol";
 import {MigrationLensFactory} from "contracts/migration/factories/MigrationLensFactory.sol";
 
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
@@ -173,8 +165,8 @@ contract BaseDeployments is Test {
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
-        appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
-        accountImpl = migrationMode ? address(new MigrationAccount()) : address(new AccountContract());
+        appImpl = address(new App());
+        accountImpl = address(new AccountContract());
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());
@@ -191,31 +183,19 @@ contract BaseDeployments is Test {
     }
 
     function _deployFactoryImplementations() internal {
-        accessControlFactoryImpl = migrationMode
-            ? address(new MigrationAccessControlFactory(accessControlLock))
-            : address(new AccessControlFactory(accessControlLock));
+        accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
 
-        accountFactoryImpl = migrationMode
-            ? address(new MigrationAccountFactory(accountBeacon, proxyAdminLock))
-            : address(new AccountFactory(accountBeacon, proxyAdminLock));
+        accountFactoryImpl = address(new AccountFactory(accountBeacon, proxyAdminLock));
 
-        appFactoryImpl = migrationMode
-            ? address(new MigrationAppFactory(appBeacon, proxyAdminLock))
-            : address(new AppFactory(appBeacon, proxyAdminLock));
+        appFactoryImpl = address(new AppFactory(appBeacon, proxyAdminLock));
 
-        feedFactoryImpl = migrationMode
-            ? address(new MigrationFeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)))
-            : address(new FeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)));
+        feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)));
 
-        graphFactoryImpl = migrationMode
-            ? address(new MigrationGraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)))
-            : address(new GraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)));
+        graphFactoryImpl = address(new GraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)));
 
         groupFactoryImpl = address(new GroupFactory(groupBeacon, proxyAdminLock, address(lensFactory)));
 
-        namespaceFactoryImpl = migrationMode
-            ? address(new MigrationNamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)))
-            : address(new NamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)));
+        namespaceFactoryImpl = address(new NamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)));
     }
 
     function _deployFactoryProxies() internal {

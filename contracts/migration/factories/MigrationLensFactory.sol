@@ -3,7 +3,6 @@
 pragma solidity ^0.8.26;
 
 import {LensFactory} from "contracts/extensions/factories/LensFactory.sol";
-import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 import {IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
 import {RuleChange} from "contracts/core/types/Types.sol";
 import {PermissionlessAccessControl} from "contracts/extensions/access/PermissionlessAccessControl.sol";
@@ -15,7 +14,7 @@ import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
 import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
 import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
 
-contract MigrationLensFactory is LensFactory, EventEmitter {
+contract MigrationLensFactory is LensFactory {
     constructor(
         AccessControlFactory accessControlFactory,
         AccountFactory accountFactory,

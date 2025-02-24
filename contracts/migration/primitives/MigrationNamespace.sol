@@ -3,11 +3,10 @@
 pragma solidity ^0.8.26;
 
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
-import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {KeyValueStorageLib} from "contracts/core/libraries/KeyValueStorageLib.sol";
 
-contract MigrationNamespace is Namespace, EventEmitter {
+contract MigrationNamespace is Namespace {
     using KeyValueStorageLib for mapping(bytes32 => bytes);
 
     function $migrationExtraStorage() private pure returns (ExtraStorage storage _storage) {

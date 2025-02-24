@@ -7,12 +7,11 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {Follow} from "contracts/core/interfaces/IGraph.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 
 /**
  * Special Graph implementation to allow data migrations from Lens V2 to Lens V3
  */
-contract MigrationGraph is Graph, EventEmitter {
+contract MigrationGraph is Graph {
     function follow(
         address followerAccount,
         address accountToFollow,
