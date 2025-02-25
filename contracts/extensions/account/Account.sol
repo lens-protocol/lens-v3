@@ -78,7 +78,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         emit Lens_Account_MetadataURISet(metadataURI, source);
     }
 
-    function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
+    function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external virtual override {
         if (msg.sender != owner()) {
             require($storage().accountManagerPermissions[msg.sender].canSetMetadataURI, Errors.NotAllowed());
         }
@@ -105,6 +105,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
 
     function addAccountManager(address accountManager, AccountManagerPermissions calldata accountManagerPermissions)
         external
+        virtual
         override
         onlyOwner
     {
@@ -117,7 +118,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         emit Lens_Account_AccountManagerAdded(accountManager, accountManagerPermissions);
     }
 
-    function removeAccountManager(address accountManager) external override onlyOwner {
+    function removeAccountManager(address accountManager) external virtual override onlyOwner {
         require(
             $storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.RedundantStateChange()
         );
@@ -128,20 +129,21 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     function updateAccountManagerPermissions(
         address accountManager,
         AccountManagerPermissions calldata accountManagerPermissions
-    ) external override onlyOwner {
+    ) external virtual override onlyOwner {
         require($storage().accountManagerPermissions[accountManager].canExecuteTransactions, Errors.InvalidParameter());
         require(accountManagerPermissions.canExecuteTransactions, Errors.InvalidParameter());
         $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
 
-    function setExtraData(KeyValue[] calldata extraDataToSet) external onlyOwner {
+    function setExtraData(KeyValue[] calldata extraDataToSet) external virtual onlyOwner {
         _decodeAndSetExtraData(extraDataToSet);
     }
 
     function executeTransaction(address target, uint256 value, bytes calldata data)
         external
         payable
+        virtual
         override
         returns (bytes memory)
     {
@@ -155,6 +157,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
     function executeTransactions(Transaction[] calldata transactions)
         external
         payable
+        virtual
         override
         returns (bytes[] memory)
     {

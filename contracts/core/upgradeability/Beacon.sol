@@ -5,9 +5,8 @@ pragma solidity ^0.8.26;
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {EventEmitterEarly} from "contracts/migration/EventEmitterEarly.sol";
 
-contract Beacon is Ownable, IVersionedBeacon, EventEmitterEarly {
+contract Beacon is Ownable, IVersionedBeacon {
     event ImplementationSetForVersion(uint256 indexed version, address indexed implementation);
     event DefaultVersionSet(uint256 indexed version);
 

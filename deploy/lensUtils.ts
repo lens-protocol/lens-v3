@@ -55,7 +55,7 @@ export function loadContractAddressFromAddressBook(name: string): string | undef
   return addressBook[name]?.address;
 }
 
-export async function deployLensContract(contractToDeploy: ContractInfo): Promise<ContractInfo> {
+export async function deployLensContract(contractToDeploy: ContractInfo, override: Boolean = false): Promise<ContractInfo> {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
   const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
@@ -65,7 +65,7 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
   const addressBook = loadAddressBook();
   const existingContract = addressBook[name];
 
-  if (existingContract && existingContract.bytecodeHash === bytecodeHash) {
+  if (existingContract && existingContract.bytecodeHash === bytecodeHash && override == false) {
     console.log(`${name} already deployed at ${existingContract.address}. Skipping...`);
     return {
       name: contractToDeploy.name,

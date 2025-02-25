@@ -159,7 +159,7 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningRuleProcessingParams,
         RuleProcessingParams[] calldata removalRuleProcessingParams
-    ) external override {
+    ) external virtual override {
         uint256 id = _computeId(username);
         address owner = ownerOf(id);
         require(msg.sender == owner, Errors.InvalidMsgSender()); // msg.sender must be the owner of the username
@@ -178,7 +178,7 @@ contract Namespace is
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
-    ) external override {
+    ) external virtual override {
         uint256 id = _computeId(username);
         // account should own the tokenized username and be the msg.sender
         require(msg.sender == ownerOf(id) && msg.sender == account, Errors.InvalidMsgSender());
@@ -196,7 +196,7 @@ contract Namespace is
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external virtual override {
         address account = Core.$storage().usernameToAccount[username];
         uint256 id = _computeId(username);
         require(msg.sender == ownerOf(id) || msg.sender == account, Errors.InvalidMsgSender());

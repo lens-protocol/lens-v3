@@ -7,8 +7,8 @@ import {CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
 import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/FeedCore.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 import {KeyValueStorageLib} from "contracts/core/libraries/KeyValueStorageLib.sol";
+import {WHITELISTED_MULTICALL_ADDRESS} from "contracts/migration/WhitelistedMulticall.sol";
 
 struct PostCreationParams {
     uint256 authorPostSequentialId;
@@ -16,8 +16,13 @@ struct PostCreationParams {
     address source;
 }
 
-contract MigrationFeed is Feed, EventEmitter {
+contract MigrationFeed is Feed {
     using KeyValueStorageLib for mapping(bytes32 => bytes);
+
+    modifier onlyWhitelistedMulticall() {
+        require(msg.sender == WHITELISTED_MULTICALL_ADDRESS, Errors.InvalidMsgSender());
+        _;
+    }
 
     function $migrationExtraStorage() private pure returns (ExtraStorage storage _storage) {
         assembly {
@@ -31,7 +36,7 @@ contract MigrationFeed is Feed, EventEmitter {
         RuleProcessingParams[] memory feedRulesParams,
         RuleProcessingParams[] memory rootPostRulesParams,
         RuleProcessingParams[] memory quotedPostRulesParams
-    ) external override returns (uint256) {
+    ) external override onlyWhitelistedMulticall returns (uint256) {
         require(customParams.length > 0, Errors.InvalidParameter());
         PostCreationParams memory postCreationParams = abi.decode(customParams[0].value, (PostCreationParams));
         (uint256 postId, uint256 rootPostId) =
@@ -87,7 +92,11 @@ contract MigrationFeed is Feed, EventEmitter {
         require(creationTimestamp != 0, Errors.InvalidParameter());
 
         uint256 postSequentialId = ++Core.$storage().postCount;
-        Core.$storage().authorPostCount[postParams.author]++;
+
+        if (Core.$storage().authorPostCount[postParams.author] < authorPostSequentialId) {
+            Core.$storage().authorPostCount[postParams.author] = authorPostSequentialId;
+        }
+
         uint256 postId = Core._generatePostId(postParams.author, authorPostSequentialId);
         require(Core._postExists(postId) == false, Errors.AlreadyExists());
         PostStorage storage _newPost = Core.$storage().posts[postId];
@@ -122,5 +131,19 @@ contract MigrationFeed is Feed, EventEmitter {
         _newPost.creationTimestamp = creationTimestamp;
         _newPost.lastUpdatedTimestamp = creationTimestamp;
         return (postId, rootPostId);
+    }
+
+    // This should be removed after the migration
+    function migration_force__setAuthorPostCount(address author, uint256 authorPostCount)
+        external
+        onlyWhitelistedMulticall
+    {
+        if (Core.$storage().authorPostCount[author] < authorPostCount) {
+            require(Core._postExists(Core._generatePostId(author, authorPostCount)), Errors.DoesNotExist());
+            require(
+                Core._postExists(Core._generatePostId(author, authorPostCount + 1)) == false, Errors.InvalidParameter()
+            );
+            Core.$storage().authorPostCount[author] = authorPostCount;
+        }
     }
 }

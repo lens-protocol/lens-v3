@@ -7,12 +7,17 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {RuleProcessingParams, KeyValue} from "contracts/core/types/Types.sol";
 import {Follow} from "contracts/core/interfaces/IGraph.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {EventEmitter} from "contracts/migration/EventEmitter.sol";
+import {WHITELISTED_MULTICALL_ADDRESS} from "contracts/migration/WhitelistedMulticall.sol";
 
 /**
  * Special Graph implementation to allow data migrations from Lens V2 to Lens V3
  */
-contract MigrationGraph is Graph, EventEmitter {
+contract MigrationGraph is Graph {
+    modifier onlyWhitelistedMulticall() {
+        require(msg.sender == WHITELISTED_MULTICALL_ADDRESS, Errors.InvalidMsgSender());
+        _;
+    }
+
     function follow(
         address followerAccount,
         address accountToFollow,
@@ -20,7 +25,7 @@ contract MigrationGraph is Graph, EventEmitter {
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external override returns (uint256) {
+    ) external override onlyWhitelistedMulticall returns (uint256) {
         require(customParams.length > 0, Errors.InvalidParameter());
         (uint256 followId, uint256 timestamp) = abi.decode(customParams[0].value, (uint256, uint256));
         _migrateFollow(followerAccount, accountToFollow, followId, timestamp);
@@ -53,5 +58,23 @@ contract MigrationGraph is Graph, EventEmitter {
         Core.$storage().followers[accountToFollow][followId] = followerAccount;
         Core.$storage().followersCount[accountToFollow]++;
         Core.$storage().followingCount[followerAccount]++;
+    }
+
+    function unfollow(
+        address followerAccount,
+        address accountToUnfollow,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata graphRulesProcessingParams
+    ) external override onlyWhitelistedMulticall returns (uint256) {
+        // !!! MIGRATION ONLY
+        // require(msg.sender == followerAccount, Errors.InvalidMsgSender());
+        uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
+        address source = _processSourceStamp(followId, customParams);
+        // !!! MIGRATION ONLY
+        // _graphProcessUnfollow(msg.sender, followerAccount, accountToUnfollow, customParams, graphRulesProcessingParams);
+        emit Lens_Graph_Unfollowed(
+            followerAccount, accountToUnfollow, followId, customParams, graphRulesProcessingParams, source
+        );
+        return followId;
     }
 }
