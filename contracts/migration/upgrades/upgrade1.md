@@ -4,12 +4,16 @@
 
 - We need to deploy a new Multicall contract that is only allowed to be called by Whitelisted senders.
   - We deploy it from an empty wallet, so the nonce is 0 (from `0x56EDD365d9b00C82E5D3C09e5A295224e076321c`)
-  - The Multicall address will be `0x0Ac587520A86688a4af0E9202C6BFf6Ff68db104`
+  - The Multicall will be Upgradeable so the Whitelisted Senders list can be updated.
+  - The Multicall Implementationaddress will be `0x0Ac587520A86688a4af0E9202C6BFf6Ff68db104` (nonce 0)
+  - The Multicall Proxy address will be `0xC9A7A3762cC1073b40B19f7A333c046ce464e8Db` (nonce 1)
 
 ### Beacons
 
 - Feed: MigrationFeed -> MigrationFeed (with some fixes)
   - Removed the `EventEmitter` from the bytecode
+  - Overriden `createPost` function with custom logic
+  - Overriden `deletePost` function with msg.sender check removed and processDeletion() rules removed
   - Added `migration_force__setAuthorPostCount` function to set the author post count
   - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions (both `createPost` and postCount fix)
 
@@ -22,12 +26,13 @@
   - Overriden `_unassignIfAssigned` functions with process rules removed
   - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions
 
-- Graph: MigrationGraph -> Graph
+- Graph: MigrationGraph -> MigrationGraph (with overriden functions)
   - Removed `EventEmitter` from the bytecode
+  - Overriden `follow` function with custom logic
   - Overriden `unfollow` function with msg.sender check removed and processUnfollow() rules removed
   - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions (both `follow` and `unfollow`)
 
-- Account: MigrationAccount -> Account
+- Account: MigrationAccount -> MigrationAccount (with overriden functions)
   - Removed `EventEmitter` from the bytecode
   - Overriden `setMetadataURI` function with `msg.sender` check removed
   - Overriden `addAccountManager` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
@@ -54,9 +59,11 @@
 
 - NamespaceFactory: MigrationNamespaceFactory -> NamespaceFactory (old code, but with event emitter removed)
 
+- LensFactory: MigrationLensFactory -> MigrationLensFactory (old code, but with event emitter removed)
+
 ### Beacons
 
-- App: MigrationApp -> App (old code, but with event emitter removed)
+- App: MigrationApp -> App (old code, but with event emitter removed, no migration-related functions left)
 
 ---
 

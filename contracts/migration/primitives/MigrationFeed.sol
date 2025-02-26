@@ -133,7 +133,22 @@ contract MigrationFeed is Feed {
         return (postId, rootPostId);
     }
 
-    // This should be removed after the migration
+    function deletePost(
+        uint256 postId,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata feedRulesParams
+    ) external override onlyWhitelistedMulticall {
+        require(Core._postExists(postId), Errors.DoesNotExist());
+        address author = Core.$storage().posts[postId].author;
+        // !!! MIGRATION ONLY
+        // require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());
+        Core._removePost(postId);
+        // !!! MIGRATION ONLY
+        // _processPostDeletion(postId, customParams, feedRulesParams);
+        address source = _processSourceStamp(postId, customParams);
+        emit Lens_Feed_PostDeleted(postId, author, customParams, source);
+    }
+
     function migration_force__setAuthorPostCount(address author, uint256 authorPostCount)
         external
         onlyWhitelistedMulticall

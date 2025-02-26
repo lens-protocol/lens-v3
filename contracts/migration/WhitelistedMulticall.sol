@@ -8,8 +8,8 @@ pragma solidity ^0.8.20;
 
 import {WhitelistedAddresses} from "contracts/migration/WhitelistedAddresses.sol";
 
-// If using the first nonce of 0x56EDD365d9b00C82E5D3C09e5A295224e076321c
-address constant WHITELISTED_MULTICALL_ADDRESS = 0x0Ac587520A86688a4af0E9202C6BFf6Ff68db104;
+// If using the [1] nonce of 0x56EDD365d9b00C82E5D3C09e5A295224e076321c (cause [0] nonce is implementation)
+address constant WHITELISTED_MULTICALL_ADDRESS = 0xC9A7A3762cC1073b40B19f7A333c046ce464e8Db;
 
 /// @title WhitelistedMulticall (based on Multicall3 + Whitelist)
 /// @notice Aggregate results from multiple function calls

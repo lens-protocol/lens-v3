@@ -4,6 +4,7 @@ import {
   deployLensContract,
   loadContractAddressFromAddressBook,
 } from '../../lensUtils';
+import { ZeroAddress } from 'ethers';
 
 async function deploy() {
   const contractsToDeploy: ContractInfo[] = [
@@ -20,22 +21,22 @@ async function deploy() {
       contractType: ContractType.Implementation,
       constructorArguments: [],
     },
-    // Beacon Implementations (final versions)
     {
-      name: 'AccountImpl',
-      contractName: 'Account',
+      name: 'GraphImpl',
+      contractName: 'MigrationGraph',
       contractType: ContractType.Implementation,
       constructorArguments: [],
     },
+    {
+      name: 'AccountImpl',
+      contractName: 'MigrationAccount',
+      contractType: ContractType.Implementation,
+      constructorArguments: [],
+    },
+    // Beacon Implementations (final versions)
     {
       name: 'AppImpl',
       contractName: 'App',
-      contractType: ContractType.Implementation,
-      constructorArguments: [],
-    },
-    {
-      name: 'GraphImpl',
-      contractName: 'Graph',
       contractType: ContractType.Implementation,
       constructorArguments: [],
     },
@@ -112,6 +113,40 @@ async function deploy() {
     console.table(deployedContracts[name].constructorArguments);
     console.log('\n');
   }
+
+  const lensFactory_args = [
+    loadContractAddressFromAddressBook('AccessControlFactory'),
+    loadContractAddressFromAddressBook('AccountFactory'),
+    loadContractAddressFromAddressBook('AppFactory'),
+    loadContractAddressFromAddressBook('GroupFactory'),
+    loadContractAddressFromAddressBook('FeedFactory'),
+    loadContractAddressFromAddressBook('GraphFactory'),
+    loadContractAddressFromAddressBook('NamespaceFactory'),
+    ZeroAddress,
+    ZeroAddress,
+    ZeroAddress,
+  ];
+
+  const lensFactoryInfo: ContractInfo = {
+    name: 'LensFactoryImpl',
+    contractName: 'MigrationLensFactory',
+    contractType: ContractType.Factory,
+    constructorArguments: lensFactory_args,
+  }
+
+  const deployedLensFactoryImpl = await deployLensContract(lensFactoryInfo, true);
+
+  console.log(
+    '\x1b[33m\n------------------------------------------------------------------------------------------------\x1b[0m'
+  );
+  console.log(
+    `\x1b[33m${deployedLensFactoryImpl.name} deployed at ${deployedLensFactoryImpl.address}\x1b[0m`
+  );
+  console.log(
+    '\x1b[33m\n------------------------------------------------------------------------------------------------\x1b[0m'
+  );
+  console.table(deployedLensFactoryImpl.constructorArguments);
+  console.log('\n');
 }
 
 if (require.main === module) {

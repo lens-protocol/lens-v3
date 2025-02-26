@@ -1,121 +1,114 @@
 import {
-    ContractType,
-    ContractInfo,
-    loadContractAddressFromAddressBook,
-    saveContractToAddressBook,
-  } from '../../lensUtils';
-  import { deployContract, getWallet } from '../../utils';
-  import * as hre from 'hardhat';
-  import { ethers } from 'ethers';
+  ContractType,
+  ContractInfo,
+  loadContractAddressFromAddressBook,
+  saveContractToAddressBook,
+} from '../../lensUtils';
+import { deployContract, getWallet } from '../../utils';
+import * as hre from 'hardhat';
+import { ethers, Wallet } from 'ethers';
 
-  async function deploy() {
-    const proxyOwnerPrivateKey = process.env.PROXY_ADMIN_PRIVATE_KEY;
-    if (!proxyOwnerPrivateKey) {
-      throw new Error('PROXY_ADMIN_PRIVATE_KEY not found in environment variables');
-    }
+async function deploy() {
+  const proxyOwnerPrivateKey = process.env.PROXY_ADMIN_PRIVATE_KEY;
+  if (!proxyOwnerPrivateKey) {
+    throw new Error('PROXY_ADMIN_PRIVATE_KEY not found in environment variables');
+  }
 
-    const proxyOwnerBalance = await getWallet(proxyOwnerPrivateKey).getBalance();
-    if (proxyOwnerBalance < ethers.parseEther('0.01')) {
-      throw new Error('Proxy owner balance is less than 0.01 ETH');
-    }
+  const proxyOwnerWallet = await getWallet(proxyOwnerPrivateKey);
+  const proxyOwnerAddress = await proxyOwnerWallet.getAddress();
 
-    console.log(
-      `Using proxy owner private key with address: ${await getWallet(
-        proxyOwnerPrivateKey
-      ).getAddress()}`
+  const proxyOwnerBalance = await proxyOwnerWallet.getBalance();
+  if (proxyOwnerBalance < ethers.parseEther('0.01')) {
+    throw new Error('Proxy owner balance is less than 0.01 ETH');
+  }
+
+  console.log(`Using proxy owner private key with address: ${proxyOwnerAddress}`);
+  console.log(`Proxy owner balance: ${ethers.formatEther(proxyOwnerBalance)}`);
+
+  await transparentProxyUpgrade('AccessControlFactory', proxyOwnerWallet, proxyOwnerAddress);
+  await transparentProxyUpgrade('AccountFactory', proxyOwnerWallet, proxyOwnerAddress);
+  await transparentProxyUpgrade('AppFactory', proxyOwnerWallet, proxyOwnerAddress);
+  await transparentProxyUpgrade('FeedFactory', proxyOwnerWallet, proxyOwnerAddress);
+  await transparentProxyUpgrade('GraphFactory', proxyOwnerWallet, proxyOwnerAddress);
+  // GroupFactory was already deployed as normal, non-migration implementation
+  // await transparentProxyUpgrade('GroupFactory', proxyOwnerWallet, proxyOwnerAddress);
+  await transparentProxyUpgrade('NamespaceFactory', proxyOwnerWallet, proxyOwnerAddress);
+  await transparentProxyUpgrade('LensFactory', proxyOwnerWallet, proxyOwnerAddress);
+}
+
+async function transparentProxyUpgrade(
+  contractToUpgradeName: string,
+  proxyOwnerWallet: Wallet,
+  proxyOwnerAddress: string
+) {
+  const contractToUpgrade: ContractInfo =
+    {
+      name: contractToUpgradeName + 'Impl',
+      contractName: contractToUpgradeName,
+      contractType: ContractType.Implementation,
+    };
+
+  const transparentUpgradeableProxyAddress = loadContractAddressFromAddressBook(
+    contractToUpgrade.contractName
+  );
+  if (!transparentUpgradeableProxyAddress) {
+    throw new Error(`${contractToUpgrade.contractName} not found in address book`);
+  }
+
+  console.log(
+    `${contractToUpgrade.contractName} transparent upgradeable proxy address: ${transparentUpgradeableProxyAddress}`
+  );
+
+  const proxyAdmin = await hre.upgrades.erc1967.getAdminAddress(transparentUpgradeableProxyAddress);
+
+  if (proxyAdmin !== proxyOwnerAddress) {
+    throw new Error(
+      `Proxy admin (${proxyAdmin}) in the contract is not the proxy owner derived from private key: ${proxyOwnerAddress}`
     );
-    console.log(`Proxy owner balance: ${ethers.formatEther(proxyOwnerBalance)}`);
+  }
 
-    const contractToUpgrade: ContractInfo =
-      // Factories
-      {
-        name: 'AccessControlFactoryImpl',
-        contractName: 'AccessControlFactory',
-        contractType: ContractType.Factory,
-        constructorArguments: [loadContractAddressFromAddressBook('AccessControlLock')],
-      };
+  const beforeImplementation = await hre.upgrades.erc1967.getImplementationAddress(
+    transparentUpgradeableProxyAddress
+  );
+  console.log(`Old implementation in the Proxy: ${beforeImplementation}`);
 
-    if (contractToUpgrade.constructorArguments === undefined) {
-      throw new Error('AccessControlLock not found in address book');
-    }
+  const newImplementation = loadContractAddressFromAddressBook(contractToUpgrade.name!);
+  if (!newImplementation) {
+    throw new Error(`${contractToUpgrade.contractName} implementation not found in address book`);
+  }
 
-    const transparentUpgradeableProxyAddress = loadContractAddressFromAddressBook(
-      contractToUpgrade.contractName
-    );
-    if (!transparentUpgradeableProxyAddress) {
-      throw new Error(`${contractToUpgrade.contractName} not found in address book`);
-    }
+  console.log(`New ${contractToUpgrade.contractName} implementation to upgrade to: ${newImplementation}`);
 
-    console.log(
-      `${contractToUpgrade.contractName} transparent upgradeable proxy address: ${transparentUpgradeableProxyAddress}`
-    );
+  const transparentUpgradeableProxyArtifact = await hre.artifacts.readArtifact(
+    'ITransparentUpgradeableProxy'
+  );
+  const transparentUpgradeableProxy = new ethers.Contract(
+    transparentUpgradeableProxyAddress,
+    transparentUpgradeableProxyArtifact.abi,
+    proxyOwnerWallet
+  );
 
-    // const proxyAdmin = await getProvider().getStorage(transparentUpgradeableProxyAddress, proxyAdminSlot);
-    const proxyAdmin = await hre.upgrades.erc1967.getAdminAddress(transparentUpgradeableProxyAddress);
+  const upgradeTx = await transparentUpgradeableProxy.upgradeTo(newImplementation);
+  await upgradeTx.wait();
 
-    if (proxyAdmin !== (await getWallet(proxyOwnerPrivateKey).getAddress())) {
-      throw new Error(
-        `Proxy admin (${proxyAdmin}) in the contract is not the proxy owner derived from private key: ${await getWallet(
-          proxyOwnerPrivateKey
-        ).getAddress()}`
-      );
-    }
+  const upgradedImplementation = await hre.upgrades.erc1967.getImplementationAddress(
+    transparentUpgradeableProxyAddress
+  );
 
-    const oldImplementation = await hre.upgrades.erc1967.getImplementationAddress(
-      transparentUpgradeableProxyAddress
-    );
-    console.log(`Old implementation in the Proxy: ${oldImplementation}`);
+  if (upgradedImplementation !== newImplementation) {
+    throw new Error(`${contractToUpgrade.contractName} upgrade failed`);
+  }
 
-    const deployedImplementation = await deployContract(
-      contractToUpgrade.contractName,
-      contractToUpgrade.constructorArguments
-    );
+  console.log(`${contractToUpgrade.contractName} upgraded to ${upgradedImplementation}`);
+}
 
-    console.log(
-      `${
-        contractToUpgrade.contractName
-      } implementation deployed at ${await deployedImplementation.getAddress()}`
-    );
-
-    const proxyOwnerWallet = getWallet(proxyOwnerPrivateKey);
-
-    const transparentUpgradeableProxyArtifact = await hre.artifacts.readArtifact(
-      'ITransparentUpgradeableProxy'
-    );
-    const transparentUpgradeableProxy = new ethers.Contract(
-      transparentUpgradeableProxyAddress,
-      transparentUpgradeableProxyArtifact.abi,
-      proxyOwnerWallet
-    );
-
-    const upgradeTx = await transparentUpgradeableProxy.upgradeTo(
-      await deployedImplementation.getAddress()
-    );
-    await upgradeTx.wait();
-
-    const newImplementation = await hre.upgrades.erc1967.getImplementationAddress(
-      transparentUpgradeableProxyAddress
-    );
-
-    if (newImplementation !== (await deployedImplementation.getAddress())) {
-      throw new Error(`${contractToUpgrade.contractName} upgrade failed`);
-    }
-
-    console.log(`${contractToUpgrade.contractName} upgraded to ${newImplementation}`);
-
-    saveContractToAddressBook({
-      ...contractToUpgrade,
-      address: newImplementation,
+if (require.main === module) {
+  deploy()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
     });
-  }
+}
 
-  if (require.main === module) {
-    deploy()
-      .then(() => process.exit(0))
-      .catch((error) => {
-        console.error(error);
-        process.exit(1);
-      });
-  }
-
-  export default deploy;
+export default deploy;
