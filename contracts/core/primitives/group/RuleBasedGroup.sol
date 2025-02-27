@@ -145,7 +145,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     function _processMemberRemoval(
         address originalMsgSender,
         address account,
-        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory primitiveCustomParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) internal {
         _processGroupRule(
@@ -182,7 +182,7 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
     function _processMemberAddition(
         address originalMsgSender,
         address account,
-        KeyValue[] calldata primitiveCustomParams,
+        KeyValue[] memory primitiveCustomParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) internal {
         _processGroupRule(
