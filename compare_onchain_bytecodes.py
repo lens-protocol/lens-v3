@@ -57,7 +57,8 @@ def main():
         return
 
     # RPC URLs
-    local_rpc = "http://127.0.0.1:8011/"
+    # local_rpc = "http://127.0.0.1:8011/"
+    local_rpc = "https://rpc.testnet.lens.dev/"
     mainnet_rpc = "https://api.lens.matterhosted.dev/"
 
     # Prepare output CSV
