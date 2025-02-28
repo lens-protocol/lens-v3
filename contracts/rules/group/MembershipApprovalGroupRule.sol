@@ -59,9 +59,20 @@ contract MembershipApprovalGroupRule is IRequestBasedGroupRule, OwnableMetadataB
     }
 
     function rejectMembershipRequest(bytes32 configSalt, address group, address account) external {
+        _accessControl[group][configSalt].requireAccess(msg.sender, PID__APPROVE_MEMBER);
+        _rejectMembershipRequest(configSalt, group, account);
+    }
+
+    function rejectMembershipRequests(bytes32 configSalt, address group, address[] calldata accounts) external {
+        _accessControl[group][configSalt].requireAccess(msg.sender, PID__APPROVE_MEMBER);
+        for (uint256 i = 0; i < accounts.length; i++) {
+            _rejectMembershipRequest(configSalt, group, accounts[i]);
+        }
+    }
+
+    function _rejectMembershipRequest(bytes32 configSalt, address group, address account) internal {
         require(_isMembershipRequested[group][account][configSalt], Errors.DoesNotExist());
         delete _isMembershipRequested[group][account][configSalt];
-        _accessControl[group][configSalt].requireAccess(msg.sender, PID__APPROVE_MEMBER);
         emit Lens_ApprovalGroupRule_MembershipRejected(group, configSalt, account, msg.sender);
     }
 
