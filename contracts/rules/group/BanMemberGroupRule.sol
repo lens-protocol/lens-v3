@@ -56,6 +56,36 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
 
     function unban(address group, address account) external {
         _groupAccessControl[group].requireAccess(msg.sender, group, PID__UNBAN_MEMBER);
+        _unban(group, account);
+    }
+
+    struct MemberBatchParams {
+        address account;
+        KeyValue[] customParams;
+        RuleProcessingParams[] ruleProcessingParams;
+    }
+
+    function ban(address group, MemberBatchParams[] calldata membersToBan) external {
+        _groupAccessControl[group].requireAccess(msg.sender, group, PID__BAN_MEMBER);
+        for (uint256 i = 0; i < membersToBan.length; i++) {
+            _isMemberBanned[group][membersToBan[i].account] = true;
+            emit Lens_BanMemberGroupRule_MemberBanned(group, membersToBan[i].account, msg.sender);
+            if (IGroup(group).isMember(membersToBan[i].account)) {
+                IGroup(group).removeMember(
+                    membersToBan[i].account, membersToBan[i].customParams, membersToBan[i].ruleProcessingParams
+                );
+            }
+        }
+    }
+
+    function unban(address group, address[] calldata accounts) external {
+        _groupAccessControl[group].requireAccess(msg.sender, group, PID__UNBAN_MEMBER);
+        for (uint256 i = 0; i < accounts.length; i++) {
+            _unban(group, accounts[i]);
+        }
+    }
+
+    function _unban(address group, address account) internal {
         _isMemberBanned[group][account] = false;
         emit Lens_BanMemberGroupRule_MemberUnbanned(group, account, msg.sender);
     }
