@@ -5,11 +5,11 @@ pragma solidity ^0.8.26;
 import "contracts/core/types/Errors.sol";
 
 library WhitelistedAddresses {
-    function requireWhitelisted(address account) internal view {
+    function requireWhitelisted(address account) internal pure {
         require(isWhitelisted(account), Errors.InvalidMsgSender());
     }
 
-    function isWhitelisted(address account) internal view returns (bool) {
+    function isWhitelisted(address account) internal pure returns (bool) {
         return account == address(0x9248090e86BCE5Ae1420B98751404D654C35cf0D)
             || account == address(0x16552D1533294D668dd3538f1067589b56aEa117)
             || account == address(0xe4B55234eC0411724E038500290D0E289A905231)
