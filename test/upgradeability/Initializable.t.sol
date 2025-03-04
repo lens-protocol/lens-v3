@@ -7,6 +7,10 @@ import {Initializable} from "@core/upgradeability/Initializable.sol";
 import {Errors} from "@core/types/Errors.sol";
 
 contract InitializableContract is Initializable {
+    function testInitializableContract() public {
+        // Prevents being counted in Foundry Coverage
+    }
+
     function initialize() public initializer {
         return;
     }
