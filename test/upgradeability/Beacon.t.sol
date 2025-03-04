@@ -28,6 +28,11 @@ contract BeaconTest is Test {
         assertEq(beacon.owner(), owner);
     }
 
+    function test_Constructor_CannotSet_InitialImplAsZeroAddress(address owner, uint256 version) public {
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        new Beacon({owner: owner, version: version, initialImplementation: address(0)});
+    }
+
     function test_Cannot_SetImplementation_IfNotOwner(address nonOwner, uint256 version, address implementation)
         public
     {
@@ -113,5 +118,12 @@ contract BeaconTest is Test {
         vm.prank(newOwner);
         beacon.transferOwnership({newOwner: address(this)});
         assertEq(beacon.owner(), address(this));
+    }
+
+    function test_Cannot_SetDefaultVersion_IfImplIsZeroAddress(uint256 version) public {
+        vm.assume(version != DEFAULT_INIT_VERSION);
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        beacon.setDefaultVersion(version);
     }
 }
