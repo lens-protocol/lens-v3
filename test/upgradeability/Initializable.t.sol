@@ -8,7 +8,7 @@ import {Errors} from "@core/types/Errors.sol";
 
 contract InitializableContract is Initializable {
     function testInitializableContract() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     function initialize() public initializer {

@@ -6,7 +6,7 @@ import {IVersionedBeacon} from "@core/interfaces/IVersionedBeacon.sol";
 
 contract MockVersionedBeacon is IVersionedBeacon {
     function testMockVersionedBeacon() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     address _mockedImplementation;

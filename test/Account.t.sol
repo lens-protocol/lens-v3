@@ -249,7 +249,7 @@ contract AccountTest is Test, BaseDeployments {
 
 contract ErrorsTest {
     function testErrorsTest() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     function stringError() public pure {

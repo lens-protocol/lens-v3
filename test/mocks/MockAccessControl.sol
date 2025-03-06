@@ -6,7 +6,7 @@ import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
 
 contract MockAccessControl is IAccessControl {
     function testMockAccessControl() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     mapping(address => mapping(address => bool)) _mockedCanChangeAccessControl;

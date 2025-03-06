@@ -11,7 +11,7 @@ import {Errors} from "@core/types/Errors.sol";
 
 abstract contract RuleExecutionTest is Test {
     function test__RuleExecutionTest() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     MockRule rule1;

@@ -9,7 +9,7 @@ import {Errors} from "@core/types/Errors.sol";
 
 contract Impl {
     function testImpl() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     address immutable IMPL_ADDRESS;

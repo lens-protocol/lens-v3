@@ -56,7 +56,7 @@ import {
 
 contract BaseDeployments is Test {
     function testBaseDeployments() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     IAccessControl simpleAccessControl;

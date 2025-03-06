@@ -18,7 +18,7 @@ interface IPrimitiveRule {
 
 contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowRule, IPostRule {
     function testMockRule() public {
-        // Prevents being counted in Foundry Coverage
+        // Prevents being included in the foundry coverage report
     }
 
     mapping(bytes4 => bool) internal _shouldSelectorRevert;
