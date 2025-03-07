@@ -29,8 +29,6 @@ jobs:
           version: nightly
       - name: Install ZKsync's Foundry
         uses: dutterbutter/foundry-zksync-toolchain@v1
-        with:
-          version: nightly
       - name: Install Dependencies
         run: yarn
       - name: Compile Project
