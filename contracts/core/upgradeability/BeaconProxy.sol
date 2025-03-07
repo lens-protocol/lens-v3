@@ -121,6 +121,14 @@ contract BeaconProxy {
         return $implementation().value;
     }
 
+    function proxy__getEffectiveImplementation() external view returns (address) {
+        if ($autoUpgrade().value == true) {
+            return IVersionedBeacon($beacon().value).implementation();
+        } else {
+            return $implementation().value;
+        }
+    }
+
     function proxy__getBeacon() external view returns (address) {
         return $beacon().value;
     }
@@ -155,7 +163,7 @@ contract BeaconProxy {
         }
     }
 
-    function _resolveImplementation() internal returns (address) {
+    function _resolveImplementation() internal view returns (address) {
         address implementation;
         if ($autoUpgrade().value) {
             implementation = IVersionedBeacon($beacon().value).implementation();
