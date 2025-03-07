@@ -59,7 +59,7 @@ contract BeaconProxy {
         emit AutoUpgradeChanged(true);
         $beacon().value = beacon;
         emit BeaconUpgraded(beacon);
-        _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
+        _fetchImplFromBeaconAndUpgrade();
     }
 
     function proxy__changeProxyAdmin(address proxyAdmin) external {
@@ -70,6 +70,8 @@ contract BeaconProxy {
 
     function proxy__optOutFromAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
+        // Forces an upgrade so the latest implementation is cached into storage before opting-out from auto-upgrades.
+        _fetchImplFromBeaconAndUpgrade();
         $autoUpgrade().value = false;
         emit AutoUpgradeChanged(false);
     }
@@ -78,7 +80,7 @@ contract BeaconProxy {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $autoUpgrade().value = true;
         emit AutoUpgradeChanged(true);
-        _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
+        _fetchImplFromBeaconAndUpgrade();
     }
 
     function proxy__setImplementation(address implementation) external {
@@ -97,7 +99,7 @@ contract BeaconProxy {
             emit BeaconUpgraded(beacon);
         }
         if ($autoUpgrade().value) {
-            _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
+            _fetchImplFromBeaconAndUpgrade();
         }
     }
 
@@ -112,7 +114,7 @@ contract BeaconProxy {
 
     function proxy__triggerUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
-        _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
+        _fetchImplFromBeaconAndUpgrade();
     }
 
     function proxy__getImplementation() external view returns (address) {
@@ -156,14 +158,14 @@ contract BeaconProxy {
     function _resolveImplementation() internal returns (address) {
         address implementation;
         if ($autoUpgrade().value) {
-            implementation = _fetchImplFromBeaconAndAutoUpgradeIfNeeded();
+            implementation = IVersionedBeacon($beacon().value).implementation();
         } else {
             implementation = $implementation().value;
         }
         return implementation;
     }
 
-    function _fetchImplFromBeaconAndAutoUpgradeIfNeeded() internal returns (address) {
+    function _fetchImplFromBeaconAndUpgrade() internal returns (address) {
         address implementationFromBeacon = IVersionedBeacon($beacon().value).implementation();
         if (implementationFromBeacon != $implementation().value) {
             emit Upgraded(implementationFromBeacon);
