@@ -581,227 +581,6 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
         namespace.accountOf("");
     }
 
-    function test_AssignUsername_ToAnotherAccount_ControlledThroughOwnable() public {
-        string memory localName = "satoshi";
-
-        // Create username
-        vm.prank(account);
-        namespace.createUsername({
-            account: account,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        // Verify username exists but is not assigned
-        assertTrue(namespace.exists(localName), "Username should exist after creation");
-        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
-
-        address ownedAccount = address(new MockOwnable());
-        MockOwnable(ownedAccount).mockOwner(account);
-
-        // Assign username
-        vm.prank(account);
-        namespace.assignUsername({
-            account: ownedAccount,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify username is assigned
-        assertEq(namespace.accountOf(localName), ownedAccount, "Username should be assigned to account");
-        assertEq(namespace.usernameOf(ownedAccount), localName, "Account should have the username");
-    }
-
-    function test_AssignUsername_ToAnotherAccount_ControlledThroughAccessControl() public {
-        string memory localName = "satoshi";
-
-        // Create username
-        vm.prank(account);
-        namespace.createUsername({
-            account: account,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        // Verify username exists but is not assigned
-        assertTrue(namespace.exists(localName), "Username should exist after creation");
-        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
-
-        address controlledAccount = address(new MockAccessControllable());
-        MockAccessControllable(controlledAccount).mockAccessControl(mockAccessControl);
-        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, true);
-
-        // Assign username
-        vm.prank(account);
-        namespace.assignUsername({
-            account: controlledAccount,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify username is assigned
-        assertEq(namespace.accountOf(localName), controlledAccount, "Username should be assigned to account");
-        assertEq(namespace.usernameOf(controlledAccount), localName, "Account should have the username");
-    }
-
-    function test_Cannot_AssignUsername_ToAnotherAccount_IfEOA(address eoa) public {
-        vm.assume(uint160(eoa) > type(uint16).max); // skip system contracts
-        vm.assume(eoa.code.length == 0);
-
-        string memory localName = "satoshi";
-
-        // Create username
-        vm.prank(account);
-        namespace.createUsername({
-            account: account,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        // Verify username exists but is not assigned
-        assertTrue(namespace.exists(localName), "Username should exist after creation");
-        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
-
-        // Assign username
-        vm.prank(account);
-        vm.expectRevert();
-        namespace.assignUsername({
-            account: eoa,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-    }
-
-    function test_AssignUsername_ToAnotherAccount_OwnedByAnotherAddressButControlledThroughAccessControl(
-        address anotherOwner
-    ) public {
-        vm.assume(anotherOwner != account);
-
-        string memory localName = "satoshi";
-
-        // Create username
-        vm.prank(account);
-        namespace.createUsername({
-            account: account,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        // Verify username exists but is not assigned
-        assertTrue(namespace.exists(localName), "Username should exist after creation");
-        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
-
-        // Ownable pattern, but owned by an address different than `account`
-        address controlledAccount = address(new MockOwnableAccessControllable());
-        MockOwnable(controlledAccount).mockOwner(anotherOwner);
-        // However, controlled by `account` through Access Control
-        MockAccessControllable(controlledAccount).mockAccessControl(mockAccessControl);
-        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, true);
-
-        // Assign username
-        vm.prank(account);
-        namespace.assignUsername({
-            account: controlledAccount,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        // Verify username is assigned
-        assertEq(namespace.accountOf(localName), controlledAccount, "Username should be assigned to account");
-        assertEq(namespace.usernameOf(controlledAccount), localName, "Account should have the username");
-    }
-
-    function test_Cannot_AssignUsername_ToAnotherAccount_IfNotControlled(address anotherOwner) public {
-        vm.assume(anotherOwner != account);
-
-        string memory localName = "satoshi";
-
-        // Create username
-        vm.prank(account);
-        namespace.createUsername({
-            account: account,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        // Verify username exists but is not assigned
-        assertTrue(namespace.exists(localName), "Username should exist after creation");
-        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
-
-        // Ownable pattern, but owned by an address different than `account`
-        address controlledAccount = address(new MockOwnableAccessControllable());
-        MockOwnable(controlledAccount).mockOwner(anotherOwner);
-        // And `account` does not have permissions to assign username.
-        MockAccessControllable(controlledAccount).mockAccessControl(mockAccessControl);
-        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, false);
-
-        // Assign username
-        vm.prank(account);
-        vm.expectRevert(Errors.InvalidMsgSender.selector);
-        namespace.assignUsername({
-            account: controlledAccount,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-    }
-
-    function test_Cannot_AssignUsername_ToAnotherAccount_IfContractButNotFollowingControlPatterns() public {
-        string memory localName = "satoshi";
-
-        // Create username
-        vm.prank(account);
-        namespace.createUsername({
-            account: account,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
-            extraData: _emptyKeyValueArray()
-        });
-
-        // Verify username exists but is not assigned
-        assertTrue(namespace.exists(localName), "Username should exist after creation");
-        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
-
-        address uncontrolledContract = address(new MockNonOwnableNonAccessControllable());
-
-        // Assign username
-        vm.prank(account);
-        vm.expectRevert();
-        namespace.assignUsername({
-            account: uncontrolledContract,
-            username: localName,
-            customParams: _emptyKeyValueArray(),
-            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
-            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-    }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
@@ -1067,6 +846,258 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
         bytes calldata /* data */
     ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+}
+
+contract NamespaceTestII is BaseDeployments {
+    /// @custom:keccak lens.permission.AssignUsername
+    uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
+
+    INamespace namespace;
+
+    address account = makeAddr("ACCOUNT");
+    address namespaceOwner = makeAddr("NAMESPACE_OWNER");
+
+    MockAccessControl mockAccessControl;
+
+    function setUp() public override(BaseDeployments) {
+        BaseDeployments.setUp();
+
+        namespace = INamespace(
+            lensFactory.deployNamespace({
+                namespace: "bitcoin",
+                metadataURI: "satoshi://nakamoto",
+                owner: namespaceOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray(),
+                nftName: "Bitcoin",
+                nftSymbol: "BTC"
+            })
+        );
+
+        mockAccessControl = new MockAccessControl();
+    }
+
+    function test_AssignUsername_ToAnotherAccount_ControlledThroughOwnable() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        address ownedAccount = address(new MockOwnable());
+        MockOwnable(ownedAccount).mockOwner(account);
+
+        // Assign username
+        vm.prank(account);
+        namespace.assignUsername({
+            account: ownedAccount,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify username is assigned
+        assertEq(namespace.accountOf(localName), ownedAccount, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(ownedAccount), localName, "Account should have the username");
+    }
+
+    function test_AssignUsername_ToAnotherAccount_ControlledThroughAccessControl() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        address controlledAccount = address(new MockAccessControllable());
+        MockAccessControllable(controlledAccount).mockAccessControl(mockAccessControl);
+        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, true);
+
+        // Assign username
+        vm.prank(account);
+        namespace.assignUsername({
+            account: controlledAccount,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify username is assigned
+        assertEq(namespace.accountOf(localName), controlledAccount, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(controlledAccount), localName, "Account should have the username");
+    }
+
+    function test_Cannot_AssignUsername_ToAnotherAccount_IfEOA(address eoa) public {
+        vm.assume(uint160(eoa) > type(uint16).max); // skip system contracts
+        vm.assume(eoa.code.length == 0);
+
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        // Assign username
+        vm.prank(account);
+        vm.expectRevert();
+        namespace.assignUsername({
+            account: eoa,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_AssignUsername_ToAnotherAccount_OwnedByAnotherAddressButControlledThroughAccessControl(
+        address anotherOwner
+    ) public {
+        vm.assume(anotherOwner != account);
+
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        // Ownable pattern, but owned by an address different than `account`
+        address controlledAccount = address(new MockOwnableAccessControllable());
+        MockOwnable(controlledAccount).mockOwner(anotherOwner);
+        // However, controlled by `account` through Access Control
+        MockAccessControllable(controlledAccount).mockAccessControl(mockAccessControl);
+        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, true);
+
+        // Assign username
+        vm.prank(account);
+        namespace.assignUsername({
+            account: controlledAccount,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        // Verify username is assigned
+        assertEq(namespace.accountOf(localName), controlledAccount, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(controlledAccount), localName, "Account should have the username");
+    }
+
+    function test_Cannot_AssignUsername_ToAnotherAccount_IfNotControlled(address anotherOwner) public {
+        vm.assume(anotherOwner != account);
+
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        // Ownable pattern, but owned by an address different than `account`
+        address controlledAccount = address(new MockOwnableAccessControllable());
+        MockOwnable(controlledAccount).mockOwner(anotherOwner);
+        // And `account` does not have permissions to assign username.
+        MockAccessControllable(controlledAccount).mockAccessControl(mockAccessControl);
+        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, false);
+
+        // Assign username
+        vm.prank(account);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        namespace.assignUsername({
+            account: controlledAccount,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+    }
+
+    function test_Cannot_AssignUsername_ToAnotherAccount_IfContractButNotFollowingControlPatterns() public {
+        string memory localName = "satoshi";
+
+        // Create username
+        vm.prank(account);
+        namespace.createUsername({
+            account: account,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify username exists but is not assigned
+        assertTrue(namespace.exists(localName), "Username should exist after creation");
+        assertEq(namespace.accountOf(localName), address(0), "Username should not be assigned yet");
+
+        address uncontrolledContract = address(new MockNonOwnableNonAccessControllable());
+
+        // Assign username
+        vm.prank(account);
+        vm.expectRevert();
+        namespace.assignUsername({
+            account: uncontrolledContract,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassignAccountRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
+            assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
     }
 }
 
