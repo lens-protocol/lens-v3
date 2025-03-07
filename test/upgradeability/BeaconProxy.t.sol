@@ -294,10 +294,8 @@ contract BeaconProxyTest is Test {
     }
 
     function test_CanReceiveNativeToken_UsingTheImpl(uint256 msgValue) public {
-        unchecked {
-            vm.assume(address(this).balance + msgValue > address(this).balance);
-        }
-        vm.deal(address(this), address(this).balance + msgValue);
+        // Bound msgValue [0, 2^95), as test contract's native balance is 2^96, and vm.deal has issues in zksync foundry
+        msgValue = msgValue % 1 << 95;
         address someImpl = address(new Impl());
         beacon.mockImplementation(someImpl);
         proxy.proxy__triggerUpgrade();
@@ -311,10 +309,8 @@ contract BeaconProxyTest is Test {
     }
 
     function test_CanReceiveNativeToken_Directly(uint256 msgValue) public {
-        unchecked {
-            vm.assume(address(this).balance + msgValue > address(this).balance);
-        }
-        vm.deal(address(this), address(this).balance + msgValue);
+        // Bound msgValue [0, 2^95), as test contract's native balance is 2^96, and vm.deal has issues in zksync foundry
+        msgValue = msgValue % 1 << 95;
 
         assertEq(address(proxy).balance, 0);
 
