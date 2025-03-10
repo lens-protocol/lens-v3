@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
-import {CreatePostParams} from "contracts/core/interfaces/IFeed.sol";
+import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {FeedCore as Core, PostStorage} from "contracts/core/primitives/feed/FeedCore.sol";
 import {Feed} from "contracts/core/primitives/feed/Feed.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
@@ -133,10 +133,19 @@ contract MigrationFeed is Feed {
         return (postId, rootPostId);
     }
 
+    function _processPostEditingOnFeed(
+        uint256 postId,
+        EditPostParams memory postParams,
+        KeyValue[] memory primitiveCustomParams,
+        RuleProcessingParams[] memory feedRulesParams
+    ) internal override onlyWhitelistedMulticall {
+        super._processPostEditingOnFeed(postId, postParams, primitiveCustomParams, feedRulesParams);
+    }
+
     function deletePost(
         uint256 postId,
         KeyValue[] calldata customParams,
-        RuleProcessingParams[] calldata feedRulesParams
+        RuleProcessingParams[] calldata /* feedRulesParams */
     ) external override onlyWhitelistedMulticall {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;

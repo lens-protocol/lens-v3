@@ -326,7 +326,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         EditPostParams memory postParams,
         KeyValue[] memory primitiveCustomParams,
         RuleProcessingParams[] memory feedRulesParams
-    ) internal {
+    ) internal virtual {
         _processPostEditing(
             _encodeAndCallProcessEditPostOnFeed,
             ProcessPostEditingParams({
