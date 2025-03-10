@@ -13,6 +13,9 @@
 - Feed: MigrationFeed -> MigrationFeed (with some fixes)
   - Removed the `EventEmitter` from the bytecode
   - Overriden `createPost` function with custom logic
+  - Overriden `editPost` through `_processPostEditingOnFeed` so nobody can call it.
+    + `editPost` requires msg.sender == author
+    + `_processPostEditingOnFeed` requires msg.sender == whitelisted address
   - Overriden `deletePost` function with msg.sender check removed and processDeletion() rules removed
   - Added `migration_force__setAuthorPostCount` function to set the author post count
   - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions (both `createPost` and postCount fix)
@@ -25,6 +28,10 @@
   - Overriden `unassignUsername` function with msg.sender check removed and processUnassigning() rules removed
   - Overriden `_unassignIfAssigned` functions with process rules removed
   - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions
+  - `createAndAssignUsername` only whitelisted multicall
+  - `createUsername`
+    + Add LensFactory to whitelisted addresses as well as multical
+
 
 - Graph: MigrationGraph -> MigrationGraph (with overriden functions)
   - Removed `EventEmitter` from the bytecode

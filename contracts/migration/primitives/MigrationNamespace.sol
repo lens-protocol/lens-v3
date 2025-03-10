@@ -13,9 +13,38 @@ import {WHITELISTED_MULTICALL_ADDRESS} from "contracts/migration/WhitelistedMult
 contract MigrationNamespace is Namespace {
     using KeyValueStorageLib for mapping(bytes32 => bytes);
 
+    /// @custom:keccak lens.storage.LensFactory
+    bytes32 constant STORAGE__LENS_FACTORY = 0x693c7aa9b36894cf47d816ba6924c41c2b869eee973e360eacb8f3e4239e8cb3;
+
+    struct AddressStorage {
+        address value;
+    }
+
     modifier onlyWhitelistedMulticall() {
         require(msg.sender == WHITELISTED_MULTICALL_ADDRESS, Errors.InvalidMsgSender());
         _;
+    }
+
+    modifier onlyLensFactory() {
+        require(msg.sender == $lensFactory().value, Errors.InvalidMsgSender());
+        _;
+    }
+
+    modifier onlyLensFactoryOrMulticall() {
+        require(
+            msg.sender == $lensFactory().value || msg.sender == WHITELISTED_MULTICALL_ADDRESS, Errors.InvalidMsgSender()
+        );
+        _;
+    }
+
+    function $lensFactory() internal pure returns (AddressStorage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__LENS_FACTORY
+        }
+    }
+
+    function setLensFactory(address lensFactory) external onlyWhitelistedMulticall {
+        $lensFactory().value = lensFactory;
     }
 
     function $migrationExtraStorage() private pure returns (ExtraStorage storage _storage) {
@@ -108,6 +137,50 @@ contract MigrationNamespace is Namespace {
         // _processUnassigning(msg.sender, account, username, customParams, ruleProcessingParams);
         address source = _processSourceStamp(id, customParams);
         emit Lens_Username_Unassigned(username, account, customParams, ruleProcessingParams, source);
+    }
+
+    function createAndAssignUsername(
+        address account,
+        string memory username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata unassigningProcessingParams,
+        RuleProcessingParams[] calldata creationProcessingParams,
+        RuleProcessingParams[] calldata assigningProcessingParams,
+        KeyValue[] memory extraData
+    ) external virtual override onlyWhitelistedMulticall {
+        // !!! MIGRATION ONLY
+        // require(msg.sender == account, Errors.InvalidMsgSender());
+        uint256 id = _computeId(username);
+        _safeMint(account, id);
+        $storage().idToUsername[id] = username;
+        Core._createUsername(username);
+        address source = _processSourceStamp(id, customParams);
+        _decodeAndSetUsernameExtraData(id, extraData);
+        emit Lens_Username_Created(username, account, customParams, creationProcessingParams, source, extraData);
+        _unassignIfAssigned(account, customParams, unassigningProcessingParams, source);
+        Core._assignUsername(account, username);
+        emit Lens_Username_Assigned(username, account, customParams, assigningProcessingParams, source);
+        // !!! MIGRATION ONLY
+        // _processCreation(msg.sender, account, username, customParams, creationProcessingParams);
+        // _processAssigning(msg.sender, account, username, customParams, assigningProcessingParams);
+    }
+
+    function createUsername(
+        address account,
+        string calldata username,
+        KeyValue[] calldata customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        KeyValue[] calldata extraData
+    ) external virtual override onlyLensFactoryOrMulticall {
+        uint256 id = _computeId(username);
+        _safeMint(account, id);
+        $storage().idToUsername[id] = username;
+        Core._createUsername(username);
+        // !!! MIGRATION ONLY
+        // _processCreation(msg.sender, account, username, customParams, ruleProcessingParams);
+        address source = _processSourceStamp(id, customParams);
+        _decodeAndSetUsernameExtraData(id, extraData);
+        emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source, extraData);
     }
 
     function _unassignIfAssigned(

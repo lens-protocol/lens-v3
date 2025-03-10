@@ -121,7 +121,7 @@ contract Namespace is
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams,
         KeyValue[] memory extraData
-    ) external {
+    ) external virtual {
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
@@ -143,7 +143,7 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
-    ) external override {
+    ) external virtual override {
         uint256 id = _computeId(username);
         _safeMint(account, id);
         $storage().idToUsername[id] = username;
