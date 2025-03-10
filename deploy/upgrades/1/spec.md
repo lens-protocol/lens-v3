@@ -67,6 +67,7 @@
 - NamespaceFactory: MigrationNamespaceFactory -> NamespaceFactory (old code, but with event emitter removed)
 
 - LensFactory: MigrationLensFactory -> MigrationLensFactory (old code, but with event emitter removed)
+  - Add restriction to createAccountWithUsernameFree and deployAccount only by whitelisted multicall
 
 ### Beacons
 

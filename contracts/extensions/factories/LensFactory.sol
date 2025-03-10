@@ -104,7 +104,7 @@ contract LensFactory {
         address namespacePrimitiveAddress,
         CreateAccountParams calldata accountParams,
         CreateUsernameParams calldata usernameParams
-    ) external returns (address) {
+    ) external virtual returns (address) {
         address account = ACCOUNT_FACTORY.deployAccount(
             address(this),
             accountParams.metadataURI,
@@ -207,7 +207,7 @@ contract LensFactory {
         AccountManagerPermissions[] calldata accountManagersPermissions,
         SourceStamp calldata sourceStamp,
         KeyValue[] calldata extraData
-    ) external returns (address) {
+    ) external virtual returns (address) {
         return ACCOUNT_FACTORY.deployAccount(
             owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData
         );
