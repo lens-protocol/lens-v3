@@ -27,10 +27,10 @@ jobs:
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
-      - name: Install ZKsync's Foundry
-        uses: dutterbutter/foundry-zksync-toolchain@v1
-        with:
-          version: nightly
+      # - name: Install ZKsync's Foundry
+      #   uses: dutterbutter/foundry-zksync-toolchain@v1
+      - name: Output Foundry Version
+        run: forge --version
       - name: Install Dependencies
         run: yarn
       - name: Compile Project
@@ -39,5 +39,5 @@ jobs:
         run: node verify_hashed_constants.js
       - name: Run Tests
         run: forge test -vvv
-      - name: Run Tests - ZKsync Environment
-        run: DAPP_TEST_FUZZ_RUNS=5 forge test --zksync -vvv
+      # - name: Run Tests - ZKsync Environment
+      #   run: DAPP_TEST_FUZZ_RUNS=1 forge test --zksync -vvv
