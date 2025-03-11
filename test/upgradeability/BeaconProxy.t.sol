@@ -243,7 +243,8 @@ contract BeaconProxyTest is Test {
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
 
         assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
-        assertEq(proxy.proxy__getImplementation(), someImpl);
+        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
+        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
         assertEq(Impl(address(proxy)).returnInteger(), 69);
         assertEq(Impl(address(proxy)).returnString(), "gm lens friends!");
         assertEq(Impl(address(proxy)).getStorageValue(), 0);
@@ -257,7 +258,8 @@ contract BeaconProxyTest is Test {
         beacon.mockImplementation(anotherImpl);
 
         assertEq(Impl(address(proxy)).returnImplAddress(), anotherImpl);
-        assertEq(proxy.proxy__getImplementation(), anotherImpl);
+        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
+        assertEq(proxy.proxy__getEffectiveImplementation(), anotherImpl);
         assertEq(Impl(address(proxy)).getStorageValue(), 71);
     }
 
@@ -270,7 +272,8 @@ contract BeaconProxyTest is Test {
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
 
         assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
-        assertEq(proxy.proxy__getImplementation(), someImpl);
+        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
+        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
         assertEq(Impl(address(proxy)).returnInteger(), 69);
         assertEq(Impl(address(proxy)).returnString(), "gm lens friends!");
         assertEq(Impl(address(proxy)).getStorageValue(), 0);
@@ -282,15 +285,24 @@ contract BeaconProxyTest is Test {
         Impl(address(proxy)).revertWithMessage("custom error message");
 
         proxy.proxy__optOutFromAutoUpgrade();
+        assertEq(proxy.proxy__getImplementation(), someImpl);
+        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
+
         beacon.mockImplementation(anotherImpl);
 
-        assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
         assertEq(proxy.proxy__getImplementation(), someImpl);
+        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
+
+        assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
+
+        assertEq(proxy.proxy__getImplementation(), someImpl);
+        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
 
         proxy.proxy__triggerUpgrade();
 
         assertEq(Impl(address(proxy)).returnImplAddress(), anotherImpl);
         assertEq(proxy.proxy__getImplementation(), anotherImpl);
+        assertEq(proxy.proxy__getEffectiveImplementation(), anotherImpl);
     }
 
     function test_CanReceiveNativeToken_UsingTheImpl(uint256 msgValue) public {
