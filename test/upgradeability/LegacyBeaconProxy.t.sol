@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {BeaconProxy} from "@core/upgradeability/BeaconProxy.sol";
+import {BeaconProxy} from "@core/upgradeability/LegacyBeaconProxy.sol";
 import {MockVersionedBeacon} from "test/mocks/MockVersionedBeacon.sol";
 import {Errors} from "@core/types/Errors.sol";
 
@@ -54,7 +54,7 @@ contract Impl {
     }
 }
 
-contract BeaconProxyTest is Test {
+contract LegacyBeaconProxyTest is Test {
     MockVersionedBeacon beacon;
     BeaconProxy proxy;
 
@@ -155,7 +155,6 @@ contract BeaconProxyTest is Test {
     function test_OptInToAutoUpgrade(address implToFetch) public {
         assertTrue(proxy.proxy__getAutoUpgrade());
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), DEFAULT_IMPL);
 
         proxy.proxy__optOutFromAutoUpgrade();
         assertFalse(proxy.proxy__getAutoUpgrade());
@@ -164,8 +163,7 @@ contract BeaconProxyTest is Test {
 
         proxy.proxy__optInToAutoUpgrade();
         assertTrue(proxy.proxy__getAutoUpgrade());
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), implToFetch);
+        assertEq(proxy.proxy__getImplementation(), implToFetch);
     }
 
     function test_SetImplementation(address newImpl) public {
@@ -188,8 +186,7 @@ contract BeaconProxyTest is Test {
 
         proxy.proxy__setBeacon(newBeacon);
         assertEq(proxy.proxy__getBeacon(), newBeacon);
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), newImpl);
+        assertEq(proxy.proxy__getImplementation(), newImpl);
     }
 
     function test_SetBeacon_AutoUpgradeDisabled(address newBeacon, address newImpl) public {
@@ -211,31 +208,12 @@ contract BeaconProxyTest is Test {
         assertEq(proxy.proxy__getImplementation(), newImpl);
     }
 
-    function test_Cannot_TriggerUpgrade_IfAutoUpgradeEnabled(address newImpl) public {
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        beacon.mockImplementation(newImpl);
-
-        vm.expectRevert(Errors.AutoUpgradeEnabled.selector);
-        proxy.proxy__triggerUpgrade();
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-    }
-
     function test_TriggerUpgrade(address newImpl) public {
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), DEFAULT_IMPL);
-
-        assertTrue(proxy.proxy__getAutoUpgrade());
-        proxy.proxy__optOutFromAutoUpgrade();
-        assertFalse(proxy.proxy__getAutoUpgrade());
-
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), DEFAULT_IMPL);
-
         beacon.mockImplementation(newImpl);
 
         proxy.proxy__triggerUpgrade();
         assertEq(proxy.proxy__getImplementation(), newImpl);
-        assertEq(proxy.proxy__getEffectiveImplementation(), newImpl);
     }
 
     function test_TriggerUpgradeToVersion(uint256 version, address newImpl, uint256 anotherVersion, address anotherImpl)
@@ -245,9 +223,6 @@ contract BeaconProxyTest is Test {
         beacon.mockImplementationForVersion(version, newImpl);
         beacon.mockImplementationForVersion(anotherVersion, anotherImpl);
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-
-        proxy.proxy__optOutFromAutoUpgrade();
-        assertFalse(proxy.proxy__getAutoUpgrade());
 
         proxy.proxy__triggerUpgradeToVersion(version);
         assertEq(proxy.proxy__getImplementation(), newImpl);
@@ -259,22 +234,6 @@ contract BeaconProxyTest is Test {
         assertEq(proxy.proxy__getImplementation(), newImpl);
     }
 
-    function test_Cannot_TriggerUpgradeToVersion_IfAutoUpgradeEnabled(
-        uint256 version,
-        address newImpl,
-        uint256 anotherVersion,
-        address anotherImpl
-    ) public {
-        vm.assume(version != anotherVersion);
-        beacon.mockImplementationForVersion(version, newImpl);
-        beacon.mockImplementationForVersion(anotherVersion, anotherImpl);
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-
-        vm.expectRevert(Errors.AutoUpgradeEnabled.selector);
-        proxy.proxy__triggerUpgradeToVersion(version);
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-    }
-
     function test_DelegateCall_AutoUpgradeEnabled() public {
         address someImpl = address(new Impl());
         address anotherImpl = address(new Impl());
@@ -284,8 +243,7 @@ contract BeaconProxyTest is Test {
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
 
         assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
+        assertEq(proxy.proxy__getImplementation(), someImpl);
         assertEq(Impl(address(proxy)).returnInteger(), 69);
         assertEq(Impl(address(proxy)).returnString(), "gm lens friends!");
         assertEq(Impl(address(proxy)).getStorageValue(), 0);
@@ -299,8 +257,7 @@ contract BeaconProxyTest is Test {
         beacon.mockImplementation(anotherImpl);
 
         assertEq(Impl(address(proxy)).returnImplAddress(), anotherImpl);
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), anotherImpl);
+        assertEq(proxy.proxy__getImplementation(), anotherImpl);
         assertEq(Impl(address(proxy)).getStorageValue(), 71);
     }
 
@@ -313,8 +270,7 @@ contract BeaconProxyTest is Test {
         assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
 
         assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
-        assertEq(proxy.proxy__getImplementation(), DEFAULT_IMPL);
-        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
+        assertEq(proxy.proxy__getImplementation(), someImpl);
         assertEq(Impl(address(proxy)).returnInteger(), 69);
         assertEq(Impl(address(proxy)).returnString(), "gm lens friends!");
         assertEq(Impl(address(proxy)).getStorageValue(), 0);
@@ -326,24 +282,15 @@ contract BeaconProxyTest is Test {
         Impl(address(proxy)).revertWithMessage("custom error message");
 
         proxy.proxy__optOutFromAutoUpgrade();
-        assertEq(proxy.proxy__getImplementation(), someImpl);
-        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
-
         beacon.mockImplementation(anotherImpl);
 
-        assertEq(proxy.proxy__getImplementation(), someImpl);
-        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
-
         assertEq(Impl(address(proxy)).returnImplAddress(), someImpl);
-
         assertEq(proxy.proxy__getImplementation(), someImpl);
-        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
 
         proxy.proxy__triggerUpgrade();
 
         assertEq(Impl(address(proxy)).returnImplAddress(), anotherImpl);
         assertEq(proxy.proxy__getImplementation(), anotherImpl);
-        assertEq(proxy.proxy__getEffectiveImplementation(), anotherImpl);
     }
 
     function test_CanReceiveNativeToken_UsingTheImpl(uint256 msgValue) public {
@@ -351,8 +298,8 @@ contract BeaconProxyTest is Test {
         msgValue = msgValue % 1 << 95;
         address someImpl = address(new Impl());
         beacon.mockImplementation(someImpl);
-
-        assertEq(proxy.proxy__getEffectiveImplementation(), someImpl);
+        proxy.proxy__triggerUpgrade();
+        assertEq(proxy.proxy__getImplementation(), someImpl);
 
         assertEq(address(proxy).balance, 0);
 
@@ -372,5 +319,22 @@ contract BeaconProxyTest is Test {
         assertTrue(callSucceed);
         assertEq(returnData.length, 0);
         assertEq(address(proxy).balance, msgValue);
+    }
+
+    /**
+     * NOTE: This test reproduces the following undesired scenario.
+     *
+     * The call to Impl::returnInteger is marked as view/pure function, so it is executed as a static call (STATICCALL),
+     * expecting no state changes. However, the proxy is doing a state change by executing the auto-upgrade logic and
+     * storing the implementation address in its storage.
+     */
+    function test_DelegateCall_AutoUpgradeDuringGetter_Fails() public {
+        vm.skip(true); // For now, skip this test.
+
+        address someImpl = address(new Impl());
+        beacon.mockImplementation(someImpl);
+
+        vm.expectRevert(); // StateChangeDuringStaticCall
+        Impl(address(proxy)).returnInteger();
     }
 }
