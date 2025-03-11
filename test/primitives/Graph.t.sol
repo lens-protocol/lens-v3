@@ -541,7 +541,7 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
         graph.getFollow(follower, target);
     }
 
-    function test_FollowTimestamp_IsCorrect(address follower, address target, uint72 followTimestamp) public {
+    function test_FollowTimestamp_IsCorrect(address follower, address target, uint56 followTimestamp) public {
         vm.assume(follower != address(0));
         vm.assume(target != address(0));
         vm.assume(follower != target);
