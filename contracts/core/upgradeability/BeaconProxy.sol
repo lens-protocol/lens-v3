@@ -6,6 +6,11 @@ import {IVersionedBeacon} from "contracts/core/interfaces/IVersionedBeacon.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 contract BeaconProxy {
+    /**
+     * `Upgraded` event will only be emitted while `autoUpgrade` is set to `false`.
+     * If the latest implementation wants to be tracked when `autoUpgrade` is set to `true`, it should be done by
+     * tracking the Beacon contract instead.
+     */
     event Upgraded(address indexed implementation);
     event BeaconUpgraded(address indexed beacon);
     event AdminChanged(address previousAdmin, address newAdmin);
@@ -53,13 +58,18 @@ contract BeaconProxy {
     }
 
     constructor(address proxyAdmin, address beacon) {
+        /**
+         * This `AutoUpgradeChanged(false)` is triggered to achieve event indexing consistency, so all `Upgrade` events
+         * can be expected after a `AutoUpgradeChanged(false)` is emitted.
+         */
+        emit AutoUpgradeChanged(false);
         $proxyAdmin().value = proxyAdmin;
         emit AdminChanged(address(0), proxyAdmin);
-        $autoUpgrade().value = true;
-        emit AutoUpgradeChanged(true);
         $beacon().value = beacon;
         emit BeaconUpgraded(beacon);
         _fetchImplFromBeaconAndUpgrade();
+        $autoUpgrade().value = true;
+        emit AutoUpgradeChanged(true);
     }
 
     function proxy__changeProxyAdmin(address proxyAdmin) external {
@@ -70,17 +80,16 @@ contract BeaconProxy {
 
     function proxy__optOutFromAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
-        // Forces an upgrade so the latest implementation is cached into storage before opting-out from auto-upgrades.
-        _fetchImplFromBeaconAndUpgrade();
         $autoUpgrade().value = false;
         emit AutoUpgradeChanged(false);
+        // Forces an upgrade so the latest implementation is cached into storage before opting-out from auto-upgrades.
+        _fetchImplFromBeaconAndUpgrade();
     }
 
     function proxy__optInToAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
         $autoUpgrade().value = true;
         emit AutoUpgradeChanged(true);
-        _fetchImplFromBeaconAndUpgrade();
     }
 
     function proxy__setImplementation(address implementation) external {
@@ -98,13 +107,11 @@ contract BeaconProxy {
             $beacon().value = beacon;
             emit BeaconUpgraded(beacon);
         }
-        if ($autoUpgrade().value) {
-            _fetchImplFromBeaconAndUpgrade();
-        }
     }
 
     function proxy__triggerUpgradeToVersion(uint256 implementationVersion) external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
+        require($autoUpgrade().value == false, Errors.AutoUpgradeEnabled());
         address implementationFromBeacon = IVersionedBeacon($beacon().value).implementation(implementationVersion);
         if (implementationFromBeacon != $implementation().value) {
             emit Upgraded(implementationFromBeacon);
@@ -114,6 +121,7 @@ contract BeaconProxy {
 
     function proxy__triggerUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
+        require($autoUpgrade().value == false, Errors.AutoUpgradeEnabled());
         _fetchImplFromBeaconAndUpgrade();
     }
 
