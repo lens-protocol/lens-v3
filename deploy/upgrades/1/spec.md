@@ -12,43 +12,43 @@
 
 - Feed: MigrationFeed -> MigrationFeed (with some fixes)
   - Removed the `EventEmitter` from the bytecode
-  - Overriden `createPost` function with custom logic
-  - Overriden `editPost` through `_processPostEditingOnFeed` so nobody can call it.
+  - Overridden `createPost` function with custom logic
+  - Overridden `editPost` through `_processPostEditingOnFeed` so nobody can call it.
     + `editPost` requires msg.sender == author
     + `_processPostEditingOnFeed` requires msg.sender == whitelisted address
-  - Overriden `deletePost` function with msg.sender check removed and processDeletion() rules removed
+  - Overridden `deletePost` function with msg.sender check removed and processDeletion() rules removed
   - Added `migration_force__setAuthorPostCount` function to set the author post count
-  - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions (both `createPost` and postCount fix)
+  - Added `onlyWhitelistedMulticall` modifier to migration-related and overridden functions (both `createPost` and postCount fix)
 
 - Namespace: MigrationNamespace -> MigrationNamespace (with Name and Symbol setters)
   - Removed `EventEmitter` from the bytecode
   - Added `migration_force__setNameAndSymbol` function to set the name and symbol
-  - Overriden `removeUsername` function with msg.sender check removed and processRemoval() rules removed
-  - Overriden `assignUsername` function with msg.sender check removed and processAssigning() rules removed
-  - Overriden `unassignUsername` function with msg.sender check removed and processUnassigning() rules removed
-  - Overriden `_unassignIfAssigned` functions with process rules removed
-  - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions
+  - Overridden `removeUsername` function with msg.sender check removed and processRemoval() rules removed
+  - Overridden `assignUsername` function with msg.sender check removed and processAssigning() rules removed
+  - Overridden `unassignUsername` function with msg.sender check removed and processUnassigning() rules removed
+  - Overridden `_unassignIfAssigned` functions with process rules removed
+  - Added `onlyWhitelistedMulticall` modifier to migration-related and overridden functions
   - `createAndAssignUsername` only whitelisted multicall
   - `createUsername`
     + Add LensFactory to whitelisted addresses as well as multical
 
 
-- Graph: MigrationGraph -> MigrationGraph (with overriden functions)
+- Graph: MigrationGraph -> MigrationGraph (with overridden functions)
   - Removed `EventEmitter` from the bytecode
-  - Overriden `follow` function with custom logic
-  - Overriden `unfollow` function with msg.sender check removed and processUnfollow() rules removed
-  - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions (both `follow` and `unfollow`)
+  - Overridden `follow` function with custom logic
+  - Overridden `unfollow` function with msg.sender check removed and processUnfollow() rules removed
+  - Added `onlyWhitelistedMulticall` modifier to migration-related and overridden functions (both `follow` and `unfollow`)
 
-- Account: MigrationAccount -> MigrationAccount (with overriden functions)
+- Account: MigrationAccount -> MigrationAccount (with overridden functions)
   - Removed `EventEmitter` from the bytecode
-  - Overriden `setMetadataURI` function with `msg.sender` check removed
-  - Overriden `addAccountManager` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
-  - Overriden `removeAccountManager` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
-  - Overriden `updateAccountManagerPermissions` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
-  - Overriden `setExtraData` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
-  - Overriden `executeTransactions` function with `msg.sender` check removed
-  - Overriden `_transferOwnership` internal function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
-  - Added `onlyWhitelistedMulticall` modifier to migration-related and overriden functions
+  - Overridden `setMetadataURI` function with `msg.sender` check removed
+  - Overridden `addAccountManager` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
+  - Overridden `removeAccountManager` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
+  - Overridden `updateAccountManagerPermissions` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
+  - Overridden `setExtraData` function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
+  - Overridden `executeTransactions` function with `msg.sender` check removed
+  - Overridden `_transferOwnership` internal function with `onlyOwner` replaced with `onlyWhitelistedMulticall`
+  - Added `onlyWhitelistedMulticall` modifier to migration-related and overridden functions
 
 ## Upgradeable (Final iteration):
 
