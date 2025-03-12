@@ -5,7 +5,7 @@
 - We need to deploy a new Multicall contract that is only allowed to be called by Whitelisted senders.
   - We deploy it from an empty wallet, so the nonce is 0 (from `0x56EDD365d9b00C82E5D3C09e5A295224e076321c`)
   - The Multicall will be Upgradeable so the Whitelisted Senders list can be updated.
-  - The Multicall Implementationaddress will be `0x0Ac587520A86688a4af0E9202C6BFf6Ff68db104` (nonce 0)
+  - The Multicall Implementation address will be `0x0Ac587520A86688a4af0E9202C6BFf6Ff68db104` (nonce 0)
   - The Multicall Proxy address will be `0xC9A7A3762cC1073b40B19f7A333c046ce464e8Db` (nonce 1)
 
 ### Beacons
