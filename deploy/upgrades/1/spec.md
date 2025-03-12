@@ -70,10 +70,11 @@
 
 - NamespaceFactory: MigrationNamespaceFactory -> NamespaceFactory (old code, but with event emitter removed)
 
+## Again - Migration Upgrade 1 (fixes with restrictions, later to be removed)
+
 - LensFactory: MigrationLensFactory -> MigrationLensFactory (old code, but with event emitter removed)
   - Add restriction to createAccountWithUsernameFree and deployAccount only by whitelisted multicall
 
----
 
 ## Non-upgradeable:
 

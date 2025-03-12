@@ -26,7 +26,7 @@ export interface ContractInfo {
 
 export type AddressBook = Record<string, Omit<ContractInfo, 'name'>>;
 
-export function loadAddressBook() {
+export function loadAddressBook(): AddressBook {
   try {
     const addressBook = require('../addressBook.json');
     return addressBook;
