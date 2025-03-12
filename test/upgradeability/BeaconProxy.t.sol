@@ -373,4 +373,22 @@ contract BeaconProxyTest is Test {
         assertEq(returnData.length, 0);
         assertEq(address(proxy).balance, msgValue);
     }
+
+    function test_Cannot_OptOutFromAutoUpgrade_IfAutoUpgradeIsDisabled() public {
+        assertTrue(proxy.proxy__getAutoUpgrade());
+
+        proxy.proxy__optOutFromAutoUpgrade();
+
+        assertFalse(proxy.proxy__getAutoUpgrade());
+
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        proxy.proxy__optOutFromAutoUpgrade();
+    }
+
+    function test_Cannot_OptInToAutoUpgrade_IfAutoUpgradeIsEnabled() public {
+        assertTrue(proxy.proxy__getAutoUpgrade());
+
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        proxy.proxy__optInToAutoUpgrade();
+    }
 }

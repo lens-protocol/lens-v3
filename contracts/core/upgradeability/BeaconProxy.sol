@@ -80,6 +80,7 @@ contract BeaconProxy {
 
     function proxy__optOutFromAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
+        require($autoUpgrade().value == true, Errors.RedundantStateChange());
         $autoUpgrade().value = false;
         emit AutoUpgradeChanged(false);
         // Forces an upgrade so the latest implementation is cached into storage before opting-out from auto-upgrades.
@@ -88,6 +89,7 @@ contract BeaconProxy {
 
     function proxy__optInToAutoUpgrade() external {
         require(msg.sender == $proxyAdmin().value, Errors.InvalidMsgSender());
+        require($autoUpgrade().value == false, Errors.RedundantStateChange());
         $autoUpgrade().value = true;
         emit AutoUpgradeChanged(true);
     }
