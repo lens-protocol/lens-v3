@@ -44,12 +44,30 @@ contract WhitelistedMulticall {
         bytes returnData;
     }
 
+    mapping(address => bool) public isWhitelisted;
+
+    modifier onlyWhitelisted() {
+        require(
+            WhitelistedAddresses.isWhitelisted(msg.sender) || isWhitelisted[msg.sender],
+            "Multicall3: sender not whitelisted"
+        );
+        _;
+    }
+
+    function whitelistAddress(address addr, bool whitelist) external onlyWhitelisted {
+        isWhitelisted[addr] = whitelist;
+    }
+
     /// @notice Backwards-compatible call aggregation with Multicall
     /// @param calls An array of Call structs
     /// @return blockNumber The block number where the calls were executed
     /// @return returnData An array of bytes containing the responses
-    function aggregate(Call[] calldata calls) public payable returns (uint256 blockNumber, bytes[] memory returnData) {
-        WhitelistedAddresses.requireWhitelisted(msg.sender);
+    function aggregate(Call[] calldata calls)
+        public
+        payable
+        onlyWhitelisted
+        returns (uint256 blockNumber, bytes[] memory returnData)
+    {
         blockNumber = block.number;
         uint256 length = calls.length;
         returnData = new bytes[](length);
@@ -73,9 +91,9 @@ contract WhitelistedMulticall {
     function tryAggregate(bool requireSuccess, Call[] calldata calls)
         public
         payable
+        onlyWhitelisted
         returns (Result[] memory returnData)
     {
-        WhitelistedAddresses.requireWhitelisted(msg.sender);
         uint256 length = calls.length;
         returnData = new Result[](length);
         Call calldata call;
@@ -123,8 +141,7 @@ contract WhitelistedMulticall {
     /// @notice Aggregate calls, ensuring each returns success if required
     /// @param calls An array of Call3 structs
     /// @return returnData An array of Result structs
-    function aggregate3(Call3[] calldata calls) public payable returns (Result[] memory returnData) {
-        WhitelistedAddresses.requireWhitelisted(msg.sender);
+    function aggregate3(Call3[] calldata calls) public payable onlyWhitelisted returns (Result[] memory returnData) {
         uint256 length = calls.length;
         returnData = new Result[](length);
         Call3 calldata calli;
@@ -157,8 +174,12 @@ contract WhitelistedMulticall {
     /// @notice Reverts if msg.value is less than the sum of the call values
     /// @param calls An array of Call3Value structs
     /// @return returnData An array of Result structs
-    function aggregate3Value(Call3Value[] calldata calls) public payable returns (Result[] memory returnData) {
-        WhitelistedAddresses.requireWhitelisted(msg.sender);
+    function aggregate3Value(Call3Value[] calldata calls)
+        public
+        payable
+        onlyWhitelisted
+        returns (Result[] memory returnData)
+    {
         uint256 valAccumulator;
         uint256 length = calls.length;
         returnData = new Result[](length);
