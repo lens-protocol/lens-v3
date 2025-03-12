@@ -52,6 +52,10 @@
 
 ## Upgradeable (Final iteration):
 
+### Beacons
+
+- App: MigrationApp -> App (old code, but with event emitter removed, no migration-related functions left)
+
 ### TranaparentUpgradeableProxy
 
 - AccessControlFactory: MigrationAccessControlFactory -> AccessControlFactory (old code, but with event emitter removed)
@@ -68,10 +72,6 @@
 
 - LensFactory: MigrationLensFactory -> MigrationLensFactory (old code, but with event emitter removed)
   - Add restriction to createAccountWithUsernameFree and deployAccount only by whitelisted multicall
-
-### Beacons
-
-- App: MigrationApp -> App (old code, but with event emitter removed, no migration-related functions left)
 
 ---
 
