@@ -70,28 +70,31 @@
     ]
   },
   "AppImpl": {
-    "contractName": "MigrationApp",
+    "contractName": "App",
     "contractType": 0,
-    "address": "0xE7e494707cDA8f3767d45EFB6187440d64a471B4",
-    "bytecodeHash": "0xf950267a7a5bf2003651cb5d0e28feaf42f77c7dd75fe26298a55e14bf4012e6"
+    "address": "0x3589395E89735B96424d0e2e19af4917f45EAACD",
+    "bytecodeHash": "0x6a4cb2cdbc4957eb58048cbccdd1688f2a458090e73dfe0bbbb050e6f5b45e8a",
+    "constructorArguments": []
   },
   "AccountImpl": {
     "contractName": "MigrationAccount",
     "contractType": 0,
-    "address": "0xEE68eFA6E190d9660Ac9de06A46f4Fa2BE967a2B",
-    "bytecodeHash": "0xd120c416c3f8a0eb11824ba2d87909add0ded6251b398d09271b1d7c52cd51eb"
+    "address": "0x4058F63c5334CF157589d1EE0dfD8a2AE9c07211",
+    "bytecodeHash": "0x8dec3495861a67d0ece24cc54472a4fc571abcafdbf7707c82f5aa6e6bd2a84b",
+    "constructorArguments": []
   },
   "FeedImpl": {
     "contractName": "MigrationFeed",
     "contractType": 0,
-    "address": "0xD2545381D7C71365ce4ec2D23C0f93783F10D236",
-    "bytecodeHash": "0xa460f8b41f70c728e9a051ff685eed5289832d409f84c6b06669d4eb5f563d11"
+    "address": "0xAe7162822b6FCB9cF30Fd076a5935570E5E079B7",
+    "bytecodeHash": "0x1a08930126033c0c5f1b2cc8f250bcb0c452a1db12a8627836c486f046003869",
+    "constructorArguments": []
   },
   "GraphImpl": {
     "contractName": "MigrationGraph",
     "contractType": 0,
-    "address": "0x5BB20A05c3632253D3a857e82f876EdA4F867D92",
-    "bytecodeHash": "0xec5396446773b2a6f4e43f641f7c22679fef07bf92e471c6898fcbbd1c6de122"
+    "address": "0x65e456188dC07075897A9eaFbE7421D75B769f54",
+    "constructorArguments": []
   },
   "GroupImpl": {
     "contractName": "Group",
@@ -102,8 +105,8 @@
   "NamespaceImpl": {
     "contractName": "MigrationNamespace",
     "contractType": 0,
-    "address": "0x701E3f4553D11978dC36163FEcBB1a327C6a2CFE",
-    "bytecodeHash": "0xca36cfb6c0029d75b5deb9da671d1a3b290ad910e2c3224219ab542806c9cac2"
+    "address": "0x4afe4BCe73e4100489687C326cCf81a9A078B5F7",
+    "constructorArguments": []
   },
   "AppBeacon": {
     "contractName": "Beacon",
@@ -276,5 +279,76 @@
     "contractName": "Namespace",
     "contractType": 3,
     "address": "0x1aA55B9042f08f45825dC4b651B64c9F98Af4615"
+  },
+  "AccessControlFactoryImpl": {
+    "contractName": "AccessControlFactory",
+    "contractType": 2,
+    "address": "0x59414586f8cb33BcCa119f84f3C89BA1A2461004",
+    "bytecodeHash": "0xca207b27709a63e20e4d32388394d52e572ec9838663f93874866180fffcfac8",
+    "constructorArguments": [
+      "0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984"
+    ]
+  },
+  "AccountFactoryImpl": {
+    "contractName": "AccountFactory",
+    "contractType": 2,
+    "address": "0x236bD30F6719458C0E0514C4e34e8dA826d18C8D",
+    "bytecodeHash": "0x8c1365c4cee03a6bb809f6240fada2df3280567ece46082174d723c5e60d35e1",
+    "constructorArguments": [
+      "0x677D8BEe894ae646Ceb1cfCe7dB16de2ef2792e5",
+      "0x793e4aeB8fd54f5Eb2B185f25F7767D417Ba5B94"
+    ]
+  },
+  "AppFactoryImpl": {
+    "contractName": "AppFactory",
+    "contractType": 2,
+    "address": "0xaABe72e39920B9Af3A27Df1c07652A07BA694424",
+    "bytecodeHash": "0x7a32870018bbec9b917230e854a0867a6e6b68f85f995db3f94858748295e047",
+    "constructorArguments": [
+      "0xF968b41ee7BF6f8bFFB71CD38905f9943Ff4ffbB",
+      "0xB19B9df023a9D372728cFc70847DBBB9AD59337f"
+    ]
+  },
+  "FeedFactoryImpl": {
+    "contractName": "FeedFactory",
+    "contractType": 2,
+    "address": "0x146ED5D7f9afB9C3DB64a956A300a8A393dfcb76",
+    "constructorArguments": [
+      "0xe8Cb8DA8d2Ea4C5A40E6d8D4F3181AfdB9409D66",
+      "0xA22DC11ED96Ce8f6c26a2361926910d5b8c56299"
+    ]
+  },
+  "GraphFactoryImpl": {
+    "contractName": "GraphFactory",
+    "contractType": 2,
+    "address": "0xC3cF01261050035Fe3cD8B16700C509Fe32ABC8A",
+    "bytecodeHash": "0xadf6d396960d41e54aca238014c5d8b834ba8b4d4e8705f9b0e24d3b51b935b4",
+    "constructorArguments": [
+      "0x3195c60A6869C3614949EE02eE21116891CF6c17",
+      "0x64ab11f8bAe0f75f071EfcE027E8AB3633252902"
+    ]
+  },
+  "NamespaceFactoryImpl": {
+    "contractName": "NamespaceFactory",
+    "contractType": 2,
+    "address": "0x498335d660e9f655e394114FF69DbCeb5ac9390A",
+    "constructorArguments": ["0xD381e0d1500bA1bddc2593CB8044eff3a68AB486","0x8d2eb35e3f4c10fEe90640C6051064426f368d16"]
+  },
+  "LensFactoryImpl": {
+    "contractName": "MigrationLensFactory",
+    "contractType": 2,
+    "address": "0x5c1351341378F7796E740a0618f65a1C2E357e21",
+    "constructorArguments": [
+      "0x0d028419c270C2d366929f459418a4905D1B778F",
+      "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
+      "0xB3b7502C47E16a1E3c6d660b73006f45Ec327B0B",
+      "0x9810C41e805164f30b58395b2Af976B3229b0CE6",
+      "0x591c6e036a6bC92C6bF0d1dB991D06E74C2B9a6A",
+      "0x837E95c3A69Cd6efa3eCDE87A3a07801AAB25Ba0",
+      "0x3155ccbeefbA266a4B6060fB1F9d4b8591d1De3F",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000",
+      "0x0000000000000000000000000000000000000000"
+    ]
   }
 }

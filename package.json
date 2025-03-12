@@ -5,9 +5,9 @@
   "author": "avara",
   "license": "UNLICENSED. Copyright (C) 2024 Lens Labs. All Rights Reserved.",
   "scripts": {
-    "upgrade:1:deployMulticall": "hardhat compile && hardhat deploy-zksync --script upgrades/1/deployWhitelistedMulticall.ts",
-    "upgrade:1:deployImplementations": "hardhat compile && hardhat deploy-zksync --script upgrades/1/deployImplementations.ts",
-    "upgrade:1:upgrade": "hardhat compile && hardhat deploy-zksync --script upgrades/1/upgrade.ts",
+    "upgrade:1:mainnet:deployMulticall": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgrades/1/deployWhitelistedMulticall.ts --network lensMainnet",
+    "upgrade:1:mainnet:deployImplementations": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgrades/1/deployImplementations.ts --network lensMainnet",
+    "upgrade:1:mainnet:upgrade": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgrades/1/upgrade.ts --network lensMainnet",
     "upgrade:1:local:deployMulticall": "hardhat compile && hardhat deploy-zksync --script upgrades/1/deployWhitelistedMulticall.ts --network inMemoryNode",
     "upgrade:1:local:deployImplementations": "hardhat compile && hardhat deploy-zksync --script upgrades/1/deployImplementations.ts --network inMemoryNode",
     "upgrade:1:local:upgrade": "hardhat compile && hardhat deploy-zksync --script upgrades/1/upgrade.ts --network inMemoryNode",

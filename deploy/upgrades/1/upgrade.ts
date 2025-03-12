@@ -20,13 +20,13 @@ async function deploy() {
   const proxyOwnerWallet = await getWallet(proxyOwnerPrivateKey);
   const proxyOwnerAddress = await proxyOwnerWallet.getAddress();
 
-  const proxyOwnerBalance = await proxyOwnerWallet.getBalance();
-  if (proxyOwnerBalance < ethers.parseEther('0.01')) {
-    throw new Error('Proxy owner balance is less than 0.01 ETH');
-  }
+  // const proxyOwnerBalance = await proxyOwnerWallet.getBalance();
+  // if (proxyOwnerBalance < ethers.parseEther('0.01')) {
+  //   throw new Error('Proxy owner balance is less than 0.01 ETH');
+  // }
 
   console.log(`Using proxy owner private key with address: ${proxyOwnerAddress}`);
-  console.log(`Proxy owner balance: ${ethers.formatEther(proxyOwnerBalance)}`);
+  // console.log(`Proxy owner balance: ${ethers.formatEther(proxyOwnerBalance)}`);
 
   ////////////////////////
   ///// BEACON OWNER /////
@@ -40,10 +40,10 @@ async function deploy() {
   const beaconOwnerWallet = await getWallet(beaconOwnerPrivateKey);
   const beaconOwnerAddress = await beaconOwnerWallet.getAddress();
 
-  const beaconOwnerBalance = await beaconOwnerWallet.getBalance();
-  if (beaconOwnerBalance < ethers.parseEther('0.01')) {
-    throw new Error('Beacon owner balance is less than 0.01 ETH');
-  }
+  // const beaconOwnerBalance = await beaconOwnerWallet.getBalance();
+  // if (beaconOwnerBalance < ethers.parseEther('0.01')) {
+  //   throw new Error('Beacon owner balance is less than 0.01 ETH');
+  // }
 
   ///////////////////////////// TRANSPARENT UPGRADEABLE PROXY UPGRADES ///////////////////////////////////
 
@@ -111,7 +111,7 @@ async function beaconUpgrade(
     throw new Error(`${contractToUpgradeName} implementation not found in address book`);
   }
 
-  console.log(`Setting new implementation ${beaconNewContractImplementation} for version ${beaconDefaultVersion}`);
+  console.log(`Setting new implementation ${beaconNewContractImplementation} for version ${beaconNewVersion}`);
 
   const beaconUpgradeTx = await beaconContract.setImplementationForVersion(beaconNewVersion, beaconNewContractImplementation);
   await beaconUpgradeTx.wait();
