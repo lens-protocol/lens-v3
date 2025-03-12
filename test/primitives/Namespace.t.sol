@@ -955,6 +955,7 @@ contract NamespaceTestII is BaseDeployments {
     function test_Cannot_AssignUsername_ToAnotherAccount_IfEOA(address eoa) public {
         vm.assume(uint160(eoa) > type(uint16).max); // skip system contracts
         vm.assume(eoa.code.length == 0);
+        vm.assume(eoa != account);
 
         string memory localName = "satoshi";
 
