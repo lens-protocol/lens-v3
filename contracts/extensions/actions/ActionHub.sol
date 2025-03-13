@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 
 import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 
 interface IPostAction {
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
@@ -52,6 +53,7 @@ contract ActionHub {
         address indexed msgSender,
         address feed,
         uint256 indexed postId,
+        address postAuthor,
         KeyValue[] params,
         bytes returnData
     );
@@ -61,6 +63,7 @@ contract ActionHub {
         address indexed msgSender,
         address feed,
         uint256 indexed postId,
+        address postAuthor,
         KeyValue[] params,
         bytes returnData
     );
@@ -70,6 +73,7 @@ contract ActionHub {
         address indexed msgSender,
         address feed,
         uint256 indexed postId,
+        address postAuthor,
         KeyValue[] params,
         bytes returnData
     );
@@ -79,6 +83,7 @@ contract ActionHub {
         address indexed msgSender,
         address feed,
         uint256 indexed postId,
+        address postAuthor,
         KeyValue[] params,
         bytes returnData
     );
@@ -88,6 +93,7 @@ contract ActionHub {
         address indexed msgSender,
         address feed,
         uint256 indexed postId,
+        address postAuthor,
         KeyValue[] params,
         bytes returnData
     );
@@ -164,11 +170,12 @@ contract ActionHub {
         returns (bytes memory)
     {
         bytes memory returnData = IPostAction(action).configure(msg.sender, feed, postId, params);
+        address postAuthor = IFeed(feed).getPostAuthor(postId);
         if ($postActionStatus()[action][feed][postId].wasConfigured == false) {
             $postActionStatus()[action][feed][postId].wasConfigured = true;
-            emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, params, returnData);
+            emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, postAuthor, params, returnData);
         } else {
-            emit Lens_ActionHub_PostAction_Reconfigured(action, msg.sender, feed, postId, params, returnData);
+            emit Lens_ActionHub_PostAction_Reconfigured(action, msg.sender, feed, postId, postAuthor, params, returnData);
         }
         return returnData;
     }
@@ -181,7 +188,10 @@ contract ActionHub {
         require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.Disabled());
         KeyValue[] memory paramsWithTreasury = _embedTreasury(params);
         bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, paramsWithTreasury);
-        emit Lens_ActionHub_PostAction_Executed(action, msg.sender, feed, postId, paramsWithTreasury, returnData);
+        address postAuthor = IFeed(feed).getPostAuthor(postId);
+        emit Lens_ActionHub_PostAction_Executed(
+            action, msg.sender, feed, postId, postAuthor, paramsWithTreasury, returnData
+        );
         return returnData;
     }
 
@@ -193,7 +203,8 @@ contract ActionHub {
         require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.RedundantStateChange());
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, true, params);
         $postActionStatus()[action][feed][postId].isDisabled = true;
-        emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, params, returnData);
+        address postAuthor = IFeed(feed).getPostAuthor(postId);
+        emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, postAuthor, params, returnData);
         return returnData;
     }
 
@@ -205,7 +216,8 @@ contract ActionHub {
         require($postActionStatus()[action][feed][postId].isDisabled, Errors.RedundantStateChange());
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, false, params);
         $postActionStatus()[action][feed][postId].isDisabled = false;
-        emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, params, returnData);
+        address postAuthor = IFeed(feed).getPostAuthor(postId);
+        emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, postAuthor, params, returnData);
         return returnData;
     }
 
