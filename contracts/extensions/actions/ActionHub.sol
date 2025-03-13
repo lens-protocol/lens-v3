@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 
 interface IPostAction {
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
@@ -45,7 +46,7 @@ bytes32 constant UNIVERSAL_ACTION_MAGIC_VALUE = 0xa12c06eea999f2a08fb2bd50e396b2
 /// @custom:keccak lens.constant.treasury
 bytes32 constant PARAM__TREASURY = 0xbb11f745546ed845ede751a92f918c8aaa9f3452fe531827e1098a36ed92ac50;
 
-contract ActionHub {
+contract ActionHub is SourceStampBased {
     event Lens_ActionHub_PostAction_Universal(address indexed action);
 
     event Lens_ActionHub_PostAction_Configured(
@@ -54,6 +55,7 @@ contract ActionHub {
         address feed,
         uint256 indexed postId,
         address postAuthor,
+        address source,
         KeyValue[] params,
         bytes returnData
     );
@@ -64,6 +66,7 @@ contract ActionHub {
         address feed,
         uint256 indexed postId,
         address postAuthor,
+        address source,
         KeyValue[] params,
         bytes returnData
     );
@@ -74,6 +77,7 @@ contract ActionHub {
         address feed,
         uint256 indexed postId,
         address postAuthor,
+        address source,
         KeyValue[] params,
         bytes returnData
     );
@@ -84,6 +88,7 @@ contract ActionHub {
         address feed,
         uint256 indexed postId,
         address postAuthor,
+        address source,
         KeyValue[] params,
         bytes returnData
     );
@@ -94,6 +99,7 @@ contract ActionHub {
         address feed,
         uint256 indexed postId,
         address postAuthor,
+        address source,
         KeyValue[] params,
         bytes returnData
     );
@@ -101,23 +107,48 @@ contract ActionHub {
     event Lens_ActionHub_AccountAction_Universal(address indexed action);
 
     event Lens_ActionHub_AccountAction_Configured(
-        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+        address indexed action,
+        address indexed msgSender,
+        address indexed account,
+        address source,
+        KeyValue[] params,
+        bytes returnData
     );
 
     event Lens_ActionHub_AccountAction_Reconfigured(
-        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+        address indexed action,
+        address indexed msgSender,
+        address indexed account,
+        address source,
+        KeyValue[] params,
+        bytes returnData
     );
 
     event Lens_ActionHub_AccountAction_Executed(
-        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+        address indexed action,
+        address indexed msgSender,
+        address indexed account,
+        address source,
+        KeyValue[] params,
+        bytes returnData
     );
 
     event Lens_ActionHub_AccountAction_Disabled(
-        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+        address indexed action,
+        address indexed msgSender,
+        address indexed account,
+        address source,
+        KeyValue[] params,
+        bytes returnData
     );
 
     event Lens_ActionHub_AccountAction_Enabled(
-        address indexed action, address indexed msgSender, address indexed account, KeyValue[] params, bytes returnData
+        address indexed action,
+        address indexed msgSender,
+        address indexed account,
+        address source,
+        KeyValue[] params,
+        bytes returnData
     );
 
     /// @custom:keccak lens.storage.ActionHub.PostActionStatus
@@ -171,11 +202,16 @@ contract ActionHub {
     {
         bytes memory returnData = IPostAction(action).configure(msg.sender, feed, postId, params);
         address postAuthor = IFeed(feed).getPostAuthor(postId);
+        address source = _processSourceStamp(params);
         if ($postActionStatus()[action][feed][postId].wasConfigured == false) {
             $postActionStatus()[action][feed][postId].wasConfigured = true;
-            emit Lens_ActionHub_PostAction_Configured(action, msg.sender, feed, postId, postAuthor, params, returnData);
+            emit Lens_ActionHub_PostAction_Configured(
+                action, msg.sender, feed, postId, postAuthor, source, params, returnData
+            );
         } else {
-            emit Lens_ActionHub_PostAction_Reconfigured(action, msg.sender, feed, postId, postAuthor, params, returnData);
+            emit Lens_ActionHub_PostAction_Reconfigured(
+                action, msg.sender, feed, postId, postAuthor, source, params, returnData
+            );
         }
         return returnData;
     }
@@ -189,8 +225,9 @@ contract ActionHub {
         KeyValue[] memory paramsWithTreasury = _embedTreasury(params);
         bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, paramsWithTreasury);
         address postAuthor = IFeed(feed).getPostAuthor(postId);
+        address source = _processSourceStamp(params);
         emit Lens_ActionHub_PostAction_Executed(
-            action, msg.sender, feed, postId, postAuthor, paramsWithTreasury, returnData
+            action, msg.sender, feed, postId, postAuthor, source, paramsWithTreasury, returnData
         );
         return returnData;
     }
@@ -204,7 +241,8 @@ contract ActionHub {
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, true, params);
         $postActionStatus()[action][feed][postId].isDisabled = true;
         address postAuthor = IFeed(feed).getPostAuthor(postId);
-        emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, postAuthor, params, returnData);
+        address source = _processSourceStamp(params);
+        emit Lens_ActionHub_PostAction_Disabled(action, msg.sender, feed, postId, postAuthor, source, params, returnData);
         return returnData;
     }
 
@@ -217,7 +255,8 @@ contract ActionHub {
         bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, false, params);
         $postActionStatus()[action][feed][postId].isDisabled = false;
         address postAuthor = IFeed(feed).getPostAuthor(postId);
-        emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, postAuthor, params, returnData);
+        address source = _processSourceStamp(params);
+        emit Lens_ActionHub_PostAction_Enabled(action, msg.sender, feed, postId, postAuthor, source, params, returnData);
         return returnData;
     }
 
@@ -234,11 +273,12 @@ contract ActionHub {
     {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
         bytes memory returnData = IAccountAction(action).configure(msg.sender, account, params);
+        address source = _processSourceStamp(params);
         if ($accountActionStatus()[action][account].wasConfigured == false) {
             $accountActionStatus()[action][account].wasConfigured = true;
-            emit Lens_ActionHub_AccountAction_Configured(action, msg.sender, account, params, returnData);
+            emit Lens_ActionHub_AccountAction_Configured(action, msg.sender, account, source, params, returnData);
         } else {
-            emit Lens_ActionHub_AccountAction_Reconfigured(action, msg.sender, account, params, returnData);
+            emit Lens_ActionHub_AccountAction_Reconfigured(action, msg.sender, account, source, params, returnData);
         }
         return returnData;
     }
@@ -251,7 +291,8 @@ contract ActionHub {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
         KeyValue[] memory paramsWithTreasury = _embedTreasury(params);
         bytes memory returnData = IAccountAction(action).execute(msg.sender, account, paramsWithTreasury);
-        emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, paramsWithTreasury, returnData);
+        address source = _processSourceStamp(params);
+        emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, source, paramsWithTreasury, returnData);
         return returnData;
     }
 
@@ -263,7 +304,8 @@ contract ActionHub {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.RedundantStateChange());
         bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, true, params);
         $accountActionStatus()[action][account].isDisabled = true;
-        emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, params, returnData);
+        address source = _processSourceStamp(params);
+        emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, source, params, returnData);
         return returnData;
     }
 
@@ -275,7 +317,8 @@ contract ActionHub {
         require($accountActionStatus()[action][account].isDisabled, Errors.RedundantStateChange());
         bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, false, params);
         $accountActionStatus()[action][account].isDisabled = false;
-        emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, params, returnData);
+        address source = _processSourceStamp(params);
+        emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, source, params, returnData);
         return returnData;
     }
 
