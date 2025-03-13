@@ -232,8 +232,8 @@ export async function deployLensNamespace(
 
   console.log('Deploying ' + name);
   const namespace = 'lens';
-  const nftName = 'nftName';
-  const nftSymbol = 'nftSymbol';
+  const nftName = 'LensGlobalNamespace';
+  const nftSymbol = 'LC';
 
   const transaction = await lensFactory.deployNamespace(
     namespace,

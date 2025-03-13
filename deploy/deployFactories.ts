@@ -17,11 +17,18 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
   console.log(`Deployer address: ${deployer.address}`);
 
   const nonce = await deployer.getNonce();
+  console.log(`Nonce: ${nonce}`);
 
   // TODO: This is a super-dirty hack which doesn't work half of the time (or if you change anything in deployment script).
   // Probably the problem has something to do with libraries already deployed or something.
   // If it fails - restart the node or play with nonce + values.
   const contractDeployer = new Contract(utils.CONTRACT_DEPLOYER_ADDRESS, utils.CONTRACT_DEPLOYER.fragments, deployer);
+
+  // // Print all addresses from nonce 0 to nonce + 20
+  // for (let i = 0; i < 20; i++) {
+  //   const address = await contractDeployer.getNewAddressCreate.staticCall(deployer.address, nonce + i);
+  //   console.log(`Nonce ${i} address: ${address}`);
+  // }
   let predictedLensFactoryAddress = await contractDeployer.getNewAddressCreate.staticCall(deployer.address, DEPLOYING_MIGRATION ? nonce + 15 : nonce + 19);
 
   const factories: ContractInfo[] = [

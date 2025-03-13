@@ -4,11 +4,11 @@ export async function deployRules(rulesOwner: string): Promise<void> {
   const metadataURI = '';
   const contracts: ContractInfo[] = [
     // Feed Rules
-    {
-      contractName: 'RestrictedSignersFeedRule',
-      contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
-    },
+    // {
+    //   contractName: 'RestrictedSignersFeedRule',
+    //   contractType: ContractType.Rule,
+    //   constructorArguments: [rulesOwner, metadataURI],
+    // },
     {
       contractName: 'SimplePaymentFeedRule',
       contractType: ContractType.Rule,
@@ -31,11 +31,11 @@ export async function deployRules(rulesOwner: string): Promise<void> {
       contractType: ContractType.Rule,
       constructorArguments: [rulesOwner, metadataURI],
     },
-    {
-      contractName: 'RestrictedSignersGraphRule',
-      contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
-    },
+    // {
+    //   contractName: 'RestrictedSignersGraphRule',
+    //   contractType: ContractType.Rule,
+    //   constructorArguments: [rulesOwner, metadataURI],
+    // },
     {
       contractName: 'TokenGatedGraphRule',
       contractType: ContractType.Rule,

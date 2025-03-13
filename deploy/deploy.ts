@@ -60,9 +60,10 @@ async function deploy() {
     throw new Error('TREASURY_ADDRESS not found in environment variables');
   }
 
-  const treasuryFeeBps = process.env.TREASURY_FEE_BPS;
-  if (!treasuryFeeBps && DEPLOYING_FR) {
-    throw new Error('TREASURY_FEE_BPS not found in environment variables');
+  const treasuryFeeBps = Number(process.env.TREASURY_FEE_BPS);
+  if (isNaN(treasuryFeeBps) && DEPLOYING_FR) {
+    console.error(`treasuryFeeBps: ${treasuryFeeBps}`)
+    throw new Error('TREASURY_FEE_BPS not found in environment variables or is not a valid number');
   }
 
   if (DEPLOYING_FR) {
