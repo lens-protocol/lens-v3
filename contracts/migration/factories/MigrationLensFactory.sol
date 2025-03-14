@@ -20,7 +20,7 @@ import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
 import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
 import {WHITELISTED_MULTICALL_ADDRESS} from "contracts/migration/WhitelistedMulticall.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {INamespace} from "contracts/core/interfaces/INamespace.sol";
+import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 import {IAccount} from "contracts/extensions/account/IAccount.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
@@ -63,39 +63,48 @@ contract MigrationLensFactory is LensFactory {
         CreateUsernameParams calldata usernameParams
     ) external override onlyWhitelistedMulticall returns (address) {
         address account = ACCOUNT_FACTORY.deployAccount(
-            address(this),
+            accountParams.owner,
             accountParams.metadataURI,
             accountParams.accountManagers,
             accountParams.accountManagersPermissions,
             accountParams.accountCreationSourceStamp,
             accountParams.accountExtraData
         );
-        INamespace namespacePrimitive = INamespace(namespacePrimitiveAddress);
-        bytes memory txData = abi.encodeCall(
-            namespacePrimitive.createUsername,
-            (
-                account,
-                usernameParams.username,
-                usernameParams.createUsernameCustomParams,
-                usernameParams.createUsernameRuleProcessingParams,
-                usernameParams.usernameExtraData
-            )
-        );
-        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
-        txData = abi.encodeCall(
-            namespacePrimitive.assignUsername,
-            (
-                account,
-                usernameParams.username,
-                usernameParams.assignUsernameCustomParams,
-                usernameParams.unassignAccountRuleProcessingParams,
-                new RuleProcessingParams[](0),
-                usernameParams.assignRuleProcessingParams
-            )
-        );
-        IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
-        IOwnable(account).transferOwnership(accountParams.owner);
-        IOwnable(BeaconProxy(payable(account)).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
+        Namespace namespacePrimitive = Namespace(namespacePrimitiveAddress);
+        namespacePrimitive.createAndAssignUsername({
+            account: account,
+            username: usernameParams.username,
+            customParams: usernameParams.createUsernameCustomParams,
+            unassigningProcessingParams: new RuleProcessingParams[](0),
+            creationProcessingParams: usernameParams.createUsernameRuleProcessingParams,
+            assigningProcessingParams: usernameParams.assignRuleProcessingParams,
+            extraData: usernameParams.usernameExtraData
+        });
+        // bytes memory txData = abi.encodeCall(
+        //     namespacePrimitive.createUsername,
+        //     (
+        //         account,
+        //         usernameParams.username,
+        //         usernameParams.createUsernameCustomParams,
+        //         usernameParams.createUsernameRuleProcessingParams,
+        //         usernameParams.usernameExtraData
+        //     )
+        // );
+        // IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
+        // txData = abi.encodeCall(
+        //     namespacePrimitive.assignUsername,
+        //     (
+        //         account,
+        //         usernameParams.username,
+        //         usernameParams.assignUsernameCustomParams,
+        //         usernameParams.unassignAccountRuleProcessingParams,
+        //         new RuleProcessingParams[](0),
+        //         usernameParams.assignRuleProcessingParams
+        //     )
+        // );
+        // IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
+        // IOwnable(account).transferOwnership(accountParams.owner);
+        // IOwnable(BeaconProxy(payable(account)).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
         return account;
     }
 

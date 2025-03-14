@@ -147,7 +147,7 @@ contract MigrationNamespace is Namespace {
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams,
         KeyValue[] memory extraData
-    ) external virtual override onlyWhitelistedMulticall {
+    ) external virtual override onlyLensFactoryOrMulticall {
         // !!! MIGRATION ONLY
         // require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
