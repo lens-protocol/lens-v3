@@ -70,8 +70,7 @@ contract MigrationLensFactory is LensFactory {
             accountParams.accountCreationSourceStamp,
             accountParams.accountExtraData
         );
-        Namespace namespacePrimitive = Namespace(namespacePrimitiveAddress);
-        namespacePrimitive.createAndAssignUsername({
+        Namespace(namespacePrimitiveAddress).createAndAssignUsername({
             account: account,
             username: usernameParams.username,
             customParams: usernameParams.createUsernameCustomParams,
@@ -80,31 +79,6 @@ contract MigrationLensFactory is LensFactory {
             assigningProcessingParams: usernameParams.assignRuleProcessingParams,
             extraData: usernameParams.usernameExtraData
         });
-        // bytes memory txData = abi.encodeCall(
-        //     namespacePrimitive.createUsername,
-        //     (
-        //         account,
-        //         usernameParams.username,
-        //         usernameParams.createUsernameCustomParams,
-        //         usernameParams.createUsernameRuleProcessingParams,
-        //         usernameParams.usernameExtraData
-        //     )
-        // );
-        // IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
-        // txData = abi.encodeCall(
-        //     namespacePrimitive.assignUsername,
-        //     (
-        //         account,
-        //         usernameParams.username,
-        //         usernameParams.assignUsernameCustomParams,
-        //         usernameParams.unassignAccountRuleProcessingParams,
-        //         new RuleProcessingParams[](0),
-        //         usernameParams.assignRuleProcessingParams
-        //     )
-        // );
-        // IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
-        // IOwnable(account).transferOwnership(accountParams.owner);
-        // IOwnable(BeaconProxy(payable(account)).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
         return account;
     }
 

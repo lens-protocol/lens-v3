@@ -4,70 +4,49 @@
     "contractType": 4,
     "address": "0xB19B9df023a9D372728cFc70847DBBB9AD59337f",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "AccountLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x793e4aeB8fd54f5Eb2B185f25F7767D417Ba5B94",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "FeedLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xA22DC11ED96Ce8f6c26a2361926910d5b8c56299",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "GraphLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x64ab11f8bAe0f75f071EfcE027E8AB3633252902",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "GroupLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xe6939785c7b36394B35e72E13B86F17b5223B75d",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "NamespaceLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x8d2eb35e3f4c10fEe90640C6051064426f368d16",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "AccessControlLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": [
-      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-      true
-    ]
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
   },
   "AppImpl": {
     "contractName": "App",
@@ -105,7 +84,7 @@
   "NamespaceImpl": {
     "contractName": "MigrationNamespace",
     "contractType": 0,
-    "address": "0x4afe4BCe73e4100489687C326cCf81a9A078B5F7",
+    "address": "0x01832FD3a6e4b3ad4Db36D062A4a9119703047cA",
     "constructorArguments": []
   },
   "AppBeacon": {
@@ -285,9 +264,7 @@
     "contractType": 2,
     "address": "0x59414586f8cb33BcCa119f84f3C89BA1A2461004",
     "bytecodeHash": "0xca207b27709a63e20e4d32388394d52e572ec9838663f93874866180fffcfac8",
-    "constructorArguments": [
-      "0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984"
-    ]
+    "constructorArguments": ["0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984"]
   },
   "AccountFactoryImpl": {
     "contractName": "AccountFactory",
@@ -332,12 +309,15 @@
     "contractName": "NamespaceFactory",
     "contractType": 2,
     "address": "0x498335d660e9f655e394114FF69DbCeb5ac9390A",
-    "constructorArguments": ["0xD381e0d1500bA1bddc2593CB8044eff3a68AB486","0x8d2eb35e3f4c10fEe90640C6051064426f368d16"]
+    "constructorArguments": [
+      "0xD381e0d1500bA1bddc2593CB8044eff3a68AB486",
+      "0x8d2eb35e3f4c10fEe90640C6051064426f368d16"
+    ]
   },
   "LensFactoryImpl": {
     "contractName": "MigrationLensFactory",
     "contractType": 2,
-    "address": "0x5c1351341378F7796E740a0618f65a1C2E357e21",
+    "address": "0xa3DE5362258F55a6937eD1DEA775917E8aC4F01a",
     "constructorArguments": [
       "0x0d028419c270C2d366929f459418a4905D1B778F",
       "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
