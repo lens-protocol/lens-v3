@@ -1,5 +1,4 @@
 import {
-  deployLensContract,
   deployLensContractAsProxy,
   ContractType,
   ContractInfo,
@@ -22,7 +21,13 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
   // Probably the problem has something to do with libraries already deployed or something.
   // If it fails - restart the node or play with nonce + values.
   const contractDeployer = new Contract(utils.CONTRACT_DEPLOYER_ADDRESS, utils.CONTRACT_DEPLOYER.fragments, deployer);
-  let predictedLensFactoryAddress = await contractDeployer.getNewAddressCreate.staticCall(deployer.address, DEPLOYING_MIGRATION ? nonce + 15 : nonce + 19);
+
+  // Print all addresses from nonce 0 to nonce + 20
+  for (let i = 0; i < 30; i++) {
+    const address = await contractDeployer.getNewAddressCreate.staticCall(deployer.address, nonce + i);
+    console.log(`Nonce ${i} address: ${address}`);
+  }
+  let predictedLensFactoryAddress = await contractDeployer.getNewAddressCreate.staticCall(deployer.address, DEPLOYING_MIGRATION ? nonce + 15 : nonce + 16);
 
   const factories: ContractInfo[] = [
     // Factories
@@ -123,7 +128,7 @@ export default async function deployFactories(rulesOwner: string, factoriesProxy
 
   if (!DEPLOYING_MIGRATION) {
     for (const rule of rules) {
-      deployedContracts[rule.contractName] = await deployLensContract(rule);
+      deployedContracts[rule.contractName] = await deployLensContractAsProxy(rule, rulesOwner);
     }
   }
 

@@ -1,4 +1,4 @@
-import { deployLensContract, deployLensContractAsProxy, ContractType, ContractInfo, loadContractFromAddressBook } from './lensUtils';
+import { deployLensContractAsProxy, ContractType, ContractInfo } from './lensUtils';
 
 export async function deployActions(actionHub: string, actionsOwner: string): Promise<void> {
   const metadataURI = '';
@@ -17,7 +17,7 @@ export async function deployActions(actionHub: string, actionsOwner: string): Pr
   ];
 
   for (const contract of contracts) {
-    await deployLensContract(contract);
+    await deployLensContractAsProxy(contract, actionsOwner);
   }
 
   await deployLensContractAsProxy({
