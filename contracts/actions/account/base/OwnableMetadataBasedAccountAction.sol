@@ -14,6 +14,11 @@ abstract contract OwnableMetadataBasedAccountAction is BaseAccountAction, Ownabl
         _setMetadataURI(metadataURI);
     }
 
+    function _initialize(address owner, string memory metadataURI) internal {
+        _transferOwnership(owner);
+        _setMetadataURI(metadataURI);
+    }
+
     function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal virtual override {
         emit Lens_AccountAction_MetadataURISet(metadataURI);
     }
