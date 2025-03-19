@@ -48,6 +48,7 @@ import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
+import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
 
 import {
     TransparentUpgradeableProxy,
@@ -108,6 +109,7 @@ contract BaseDeployments is Test {
     address groupGatedFeedRule;
     address usernameSimpleCharsetRule;
     address banMemberGroupRule;
+    address addRemovePidGroupRule;
 
     bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
 
@@ -128,6 +130,8 @@ contract BaseDeployments is Test {
         usernameSimpleCharsetRule =
             address(new UsernameSimpleCharsetNamespaceRule({owner: rulesOwner, metadataURI: "uri://any"}));
         banMemberGroupRule = address(new BanMemberGroupRule({owner: rulesOwner, metadataURI: "uri://any"}));
+        addRemovePidGroupRule =
+            address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://any"}));
 
         address lensFactoryImpl = migrationMode
             ? address(
@@ -142,7 +146,8 @@ contract BaseDeployments is Test {
                     accountBlockingRule: address(0),
                     groupGatedFeedRule: address(0),
                     usernameSimpleCharsetRule: address(0),
-                    banMemberGroupRule: address(0)
+                    banMemberGroupRule: address(0),
+                    addRemovePidGroupRule: address(0)
                 })
             )
             : address(
@@ -157,7 +162,8 @@ contract BaseDeployments is Test {
                     accountBlockingRule: accountBlockingRule,
                     groupGatedFeedRule: groupGatedFeedRule,
                     usernameSimpleCharsetRule: usernameSimpleCharsetRule,
-                    banMemberGroupRule: banMemberGroupRule
+                    banMemberGroupRule: banMemberGroupRule,
+                    addRemovePidGroupRule: addRemovePidGroupRule
                 })
             );
         TransparentUpgradeableProxy lensFactoryProxy =

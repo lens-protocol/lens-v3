@@ -35,6 +35,7 @@ import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
+import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
 
 import {
     TransparentUpgradeableProxy,
@@ -90,6 +91,7 @@ contract MyScript is Script {
     address groupGatedFeedRule;
     address usernameSimpleCharsetRule;
     address banMemberGroupRule;
+    address addRemovePidGroupRule;
 
     function run() external {
         proxyAdminLock = address(new Lock(lockOwner, true));
@@ -104,6 +106,8 @@ contract MyScript is Script {
         usernameSimpleCharsetRule =
             address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
         banMemberGroupRule = address(new BanMemberGroupRule({owner: address(this), metadataURI: "uri://any"}));
+        addRemovePidGroupRule =
+            address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://any"}));
 
         lensFactory = new LensFactory({
             accessControlFactory: accessControlFactory,
@@ -116,7 +120,8 @@ contract MyScript is Script {
             accountBlockingRule: accountBlockingRule,
             groupGatedFeedRule: groupGatedFeedRule,
             usernameSimpleCharsetRule: usernameSimpleCharsetRule,
-            banMemberGroupRule: banMemberGroupRule
+            banMemberGroupRule: banMemberGroupRule,
+            addRemovePidGroupRule: addRemovePidGroupRule
         });
 
         _deployFactoryImplementations();
