@@ -5,11 +5,6 @@ export async function deployRules(rulesOwner: string): Promise<void> {
   const contracts: ContractInfo[] = [
     // Feed Rules
     {
-      contractName: 'RestrictedSignersFeedRule',
-      contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
-    },
-    {
       contractName: 'SimplePaymentFeedRule',
       contractType: ContractType.Rule,
       constructorArguments: [rulesOwner, metadataURI],
@@ -28,11 +23,6 @@ export async function deployRules(rulesOwner: string): Promise<void> {
     // Graph Rules
     {
       contractName: 'GroupGatedGraphRule',
-      contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
-    },
-    {
-      contractName: 'RestrictedSignersGraphRule',
       contractType: ContractType.Rule,
       constructorArguments: [rulesOwner, metadataURI],
     },

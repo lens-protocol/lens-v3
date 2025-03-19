@@ -81,7 +81,10 @@ export async function deployLensPrimitives(primitivesOwner: string, DEPLOYING_MI
   }
 }
 
-async function deployLensAccount(lensFactory: ethers.Contract, primitivesOwner: string): Promise<string> {
+async function deployLensAccount(
+  lensFactory: ethers.Contract,
+  primitivesOwner: string
+): Promise<string> {
   const contractName = 'Account';
   const name = 'LensExampleAccount';
   const existingContract = loadContractFromAddressBook(name);
@@ -123,7 +126,10 @@ async function deployLensAccount(lensFactory: ethers.Contract, primitivesOwner: 
   return accountAddress;
 }
 
-async function deployLensFeed(lensFactory: ethers.Contract, primitivesOwner: string): Promise<string> {
+async function deployLensFeed(
+  lensFactory: ethers.Contract,
+  primitivesOwner: string
+): Promise<string> {
   const contractName = 'Feed';
   const name = 'LensGlobal' + contractName;
   const existingContract = loadContractFromAddressBook(name);
@@ -152,7 +158,10 @@ async function deployLensFeed(lensFactory: ethers.Contract, primitivesOwner: str
   return primitiveAddress;
 }
 
-async function deployLensGroup(lensFactory: ethers.Contract, primitivesOwner: string): Promise<string> {
+async function deployLensGroup(
+  lensFactory: ethers.Contract,
+  primitivesOwner: string
+): Promise<string> {
   const contractName = 'Group';
   const name = 'LensGlobal' + contractName;
   const existingContract = loadContractFromAddressBook(name);
@@ -189,7 +198,10 @@ async function deployLensGroup(lensFactory: ethers.Contract, primitivesOwner: st
   return primitiveAddress;
 }
 
-async function deployLensGraph(lensFactory: ethers.Contract, primitivesOwner: string): Promise<string> {
+async function deployLensGraph(
+  lensFactory: ethers.Contract,
+  primitivesOwner: string
+): Promise<string> {
   const contractName = 'Graph';
   const name = 'LensGlobal' + contractName;
   const existingContract = loadContractFromAddressBook(name);
@@ -232,8 +244,8 @@ export async function deployLensNamespace(
 
   console.log('Deploying ' + name);
   const namespace = 'lens';
-  const nftName = 'nftName';
-  const nftSymbol = 'nftSymbol';
+  const nftName = 'Lens Usernames';
+  const nftSymbol = 'LU';
 
   const transaction = await lensFactory.deployNamespace(
     namespace,
@@ -375,7 +387,11 @@ export async function deployLensAccessControl(primitivesOwner: string) {
   return accessControlAddress;
 }
 
-export async function deployLensActionHub(proxyOwner: string, treasuryAddress: string, treasuryFeeBps: number): Promise<string> {
+export async function deployLensActionHub(
+  proxyOwner: string,
+  treasuryAddress: string,
+  treasuryFeeBps: number
+): Promise<string> {
   const contractName = 'ActionHub';
   const existingContract = loadContractFromAddressBook(contractName);
   if (existingContract && existingContract.address) {
@@ -388,11 +404,14 @@ export async function deployLensActionHub(proxyOwner: string, treasuryAddress: s
   const actionHub_artifactName = 'ActionHub';
   const actionHub_args: any[] = [treasuryAddress, treasuryFeeBps];
 
-  const actionHub = await deployLensContractAsProxy({
-    contractName: actionHub_artifactName,
-    contractType: ContractType.Aux,
-    constructorArguments: actionHub_args,
-  }, proxyOwner);
+  const actionHub = await deployLensContractAsProxy(
+    {
+      contractName: actionHub_artifactName,
+      contractType: ContractType.Aux,
+      constructorArguments: actionHub_args,
+    },
+    proxyOwner
+  );
 
   return actionHub.address!;
 }
