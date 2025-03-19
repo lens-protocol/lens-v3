@@ -159,7 +159,10 @@ contract Account is
         if ($storage().didSendRequestToGroup[group]) {
             return true;
         }
-        if (addedBy == owner() || $storage().accountManagerPermissions[addedBy].canExecuteTransactions) {
+        if (
+            addedBy == address(this) || addedBy == owner()
+                || $storage().accountManagerPermissions[addedBy].canExecuteTransactions
+        ) {
             return true;
         }
         if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.NOBODY) {

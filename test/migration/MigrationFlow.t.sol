@@ -30,7 +30,9 @@ import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
 import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
 import {GroupFactory} from "contracts/extensions/factories/GroupFactory.sol";
 import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
-import {LensFactory} from "contracts/extensions/factories/LensFactory.sol";
+import {
+    LensFactory, FactoryConstructorParams, RuleConstructorParams
+} from "contracts/extensions/factories/LensFactory.sol";
 import {WhitelistedAddresses} from "contracts/migration/WhitelistedAddresses.sol";
 
 struct PostData {
@@ -459,37 +461,41 @@ contract MigrationFlowTest is BaseDeployments {
         ITransparentUpgradeableProxy(address(namespaceFactory)).upgradeTo(namespaceFactoryImpl);
         vm.stopPrank();
 
-        (
-            address lensAccessControlFactory,
-            address lensAccountFactory,
-            address lensAppFactory,
-            address lensFeedFactory,
-            address lensGraphFactory,
-            address lensGroupFactory,
-            address lensNamespaceFactory
-        ) = lensFactory.getFactories();
+        KeyValue[] memory factories = lensFactory.getFactories();
+        address lensAccessControlFactory = abi.decode(factories[0].value, (address));
+        address lensAccountFactory = abi.decode(factories[1].value, (address));
+        address lensAppFactory = abi.decode(factories[2].value, (address));
+        address lensFeedFactory = abi.decode(factories[3].value, (address));
+        address lensGraphFactory = abi.decode(factories[4].value, (address));
+        address lensGroupFactory = abi.decode(factories[5].value, (address));
+        address lensNamespaceFactory = abi.decode(factories[6].value, (address));
 
-        (
-            address lensAccountBlockingRule,
-            address lensGroupGatedFeedRule,
-            address lensUsernameSimpleCharsetRule,
-            address lensBanMemberGroupRule
-        ) = lensFactory.getRules();
+        KeyValue[] memory rules = lensFactory.getRules();
+        address lensAccountBlockingRule = abi.decode(rules[0].value, (address));
+        address lensGroupGatedFeedRule = abi.decode(rules[1].value, (address));
+        address lensUsernameSimpleCharsetRule = abi.decode(rules[2].value, (address));
+        address lensBanMemberGroupRule = abi.decode(rules[3].value, (address));
+        address lensAddRemovePidGroupRule = abi.decode(rules[4].value, (address));
 
         address lensFactoryImpl = address(
-            new LensFactory(
-                AccessControlFactory(lensAccessControlFactory),
-                AccountFactory(lensAccountFactory),
-                AppFactory(lensAppFactory),
-                GroupFactory(lensGroupFactory),
-                FeedFactory(lensFeedFactory),
-                GraphFactory(lensGraphFactory),
-                NamespaceFactory(lensNamespaceFactory),
-                lensAccountBlockingRule,
-                lensGroupGatedFeedRule,
-                lensUsernameSimpleCharsetRule,
-                lensBanMemberGroupRule
-            )
+            new LensFactory({
+                factories: FactoryConstructorParams({
+                    accessControlFactory: AccessControlFactory(lensAccessControlFactory),
+                    accountFactory: AccountFactory(lensAccountFactory),
+                    appFactory: AppFactory(lensAppFactory),
+                    groupFactory: GroupFactory(lensGroupFactory),
+                    feedFactory: FeedFactory(lensFeedFactory),
+                    graphFactory: GraphFactory(lensGraphFactory),
+                    namespaceFactory: NamespaceFactory(lensNamespaceFactory)
+                }),
+                rules: RuleConstructorParams({
+                    accountBlockingRule: lensAccountBlockingRule,
+                    groupGatedFeedRule: lensGroupGatedFeedRule,
+                    usernameSimpleCharsetRule: lensUsernameSimpleCharsetRule,
+                    banMemberGroupRule: lensBanMemberGroupRule,
+                    addRemovePidGroupRule: lensAddRemovePidGroupRule
+                })
+            })
         );
 
         vm.prank(newOwner);
