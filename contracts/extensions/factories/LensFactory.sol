@@ -81,6 +81,7 @@ contract LensFactory {
     address internal immutable GROUP_GATED_FEED_RULE;
     address internal immutable USERNAME_SIMPLE_CHARSET_RULE;
     address internal immutable BAN_MEMBER_GROUP_RULE;
+    address internal immutable ADD_REMOVE_PID_GROUP_RULE;
 
     uint128 internal immutable namespaceAllowedCharsLookup;
 
@@ -95,7 +96,8 @@ contract LensFactory {
         address accountBlockingRule,
         address groupGatedFeedRule,
         address usernameSimpleCharsetRule,
-        address banMemberGroupRule
+        address banMemberGroupRule,
+        address addRemovePidGroupRule
     ) {
         ACCESS_CONTROL_FACTORY = accessControlFactory;
         ACCOUNT_FACTORY = accountFactory;
@@ -109,7 +111,7 @@ contract LensFactory {
         GROUP_GATED_FEED_RULE = groupGatedFeedRule;
         USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
         BAN_MEMBER_GROUP_RULE = banMemberGroupRule;
-
+        ADD_REMOVE_PID_GROUP_RULE = addRemovePidGroupRule;
         namespaceAllowedCharsLookup = string("abcdefghijklmnopqrstuvwxyz0123456789_").to7BitASCIIAllowedLookup();
     }
 
@@ -404,26 +406,49 @@ contract LensFactory {
         virtual
         returns (RuleChange[] memory)
     {
-        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
-        RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
-        KeyValue[] memory banMemberGroupRuleParams = new KeyValue[](1);
-        banMemberGroupRuleParams[0] = KeyValue({
-            key: BanMemberGroupRule(BAN_MEMBER_GROUP_RULE).PARAM__ACCESS_CONTROL(),
-            value: abi.encode(accessControl)
-        });
-        selectorChanges[0] =
-            RuleSelectorChange({ruleSelector: IGroupRule.processJoining.selector, isRequired: true, enabled: true});
-        modifiedRules[0] = RuleChange({
-            ruleAddress: BAN_MEMBER_GROUP_RULE,
-            configSalt: bytes32(0),
-            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: banMemberGroupRuleParams}),
-            selectorChanges: selectorChanges
-        });
+        // Current passed rules + AdditionRemovalPidGroupRule + BanMemberGroupRule
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 2);
+        modifiedRules[0] = _getAddRemovePidGroupRuleAsRuleChange(accessControl);
+        modifiedRules[1] = _getBanGroupRuleAsRuleChange(accessControl);
         for (uint256 i = 0; i < rules.length; i++) {
             require(rules[i].ruleAddress != BAN_MEMBER_GROUP_RULE, Errors.DuplicatedValue());
+            require(rules[i].ruleAddress != ADD_REMOVE_PID_GROUP_RULE, Errors.DuplicatedValue());
             modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], accessControl);
         }
         return modifiedRules;
+    }
+
+    function _getAddRemovePidGroupRuleAsRuleChange(address accessControl) internal view returns (RuleChange memory) {
+        RuleSelectorChange[] memory addRemovePidRuleSelectorChanges = new RuleSelectorChange[](2);
+        KeyValue[] memory addRemovePidRuleConfigParams = new KeyValue[](1);
+        // Set the Access Control configuration parameter
+        addRemovePidRuleConfigParams[0] = KeyValue({key: PARAM__ACCESS_CONTROL, value: abi.encode(accessControl)});
+        // Enable it as required rule for processAddition selector
+        addRemovePidRuleSelectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IGroupRule.processAddition.selector, isRequired: true, enabled: true});
+        // Enable it as required rule for processRemoval selector
+        addRemovePidRuleSelectorChanges[1] =
+            RuleSelectorChange({ruleSelector: IGroupRule.processRemoval.selector, isRequired: true, enabled: true});
+        return RuleChange({
+            ruleAddress: ADD_REMOVE_PID_GROUP_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: addRemovePidRuleConfigParams}),
+            selectorChanges: addRemovePidRuleSelectorChanges
+        });
+    }
+
+    function _getBanGroupRuleAsRuleChange(address accessControl) internal view returns (RuleChange memory) {
+        RuleSelectorChange[] memory banRuleSelectorChanges = new RuleSelectorChange[](1);
+        KeyValue[] memory banRuleConfigParams = new KeyValue[](1);
+        banRuleConfigParams[0] = KeyValue({key: PARAM__ACCESS_CONTROL, value: abi.encode(accessControl)});
+        banRuleSelectorChanges[0] =
+            RuleSelectorChange({ruleSelector: IGroupRule.processJoining.selector, isRequired: true, enabled: true});
+        return RuleChange({
+            ruleAddress: BAN_MEMBER_GROUP_RULE,
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: banRuleConfigParams}),
+            selectorChanges: banRuleSelectorChanges
+        });
     }
 
     function _prepareRules(RuleChange[] memory rules, bytes4 ruleSelector, address accessControl)
@@ -516,28 +541,58 @@ contract LensFactory {
         return modifiedRules;
     }
 
-    function getFactories() external view returns (address, address, address, address, address, address, address) {
-        return (
-            address(ACCESS_CONTROL_FACTORY),
-            address(ACCOUNT_FACTORY),
-            address(APP_FACTORY),
-            address(FEED_FACTORY),
-            address(GRAPH_FACTORY),
-            address(GROUP_FACTORY),
-            address(NAMESPACE_FACTORY)
-        );
+    /// @custom:keccak lens.address.AccessControlFactory
+    bytes32 constant ADDRESS__ACCESS_CONTROL_FACTORY = 0x38469018f6bf7abe9a40b52a6d5d7a795dcc9a690ad417b52b9cb59600483878;
+    /// @custom:keccak lens.address.AccountFactory
+    bytes32 constant ADDRESS__ACCOUNT_FACTORY = 0x1e8467d8e79ccf76d07748a98ff313c2d763fdac1c7925d28bc99987f560f351;
+    /// @custom:keccak lens.address.AppFactory
+    bytes32 constant ADDRESS__APP_FACTORY = 0x44fb6a1a72560b727488a4c1044f20f82335325bfbd7c79d1f49937534ae4fda;
+    /// @custom:keccak lens.address.FeedFactory
+    bytes32 constant ADDRESS__FEED_FACTORY = 0x8536e0334327052be1037f8d5f85268965f846bcd26c0d6260fe0bacb70f49c3;
+    /// @custom:keccak lens.address.GraphFactory
+    bytes32 constant ADDRESS__GRAPH_FACTORY = 0xc4ab0a12449939eba4beaf050f7dd04a196604d5ae6a1260842e0d0e613828b7;
+    /// @custom:keccak lens.address.GroupFactory
+    bytes32 constant ADDRESS__GROUP_FACTORY = 0xedbb7e1f4528b962ff30e06f419f6a3040e00a02e9d0c0bcf299ed753932fbf1;
+    /// @custom:keccak lens.address.NamespaceFactory
+    bytes32 constant ADDRESS__NAMESPACE_FACTORY = 0x5a7e9a9d63453080b4e197c3ec9ac5e3a4551810dfa54b2effaae5178caa6dd4;
+
+    function getFactories() external view returns (KeyValue[] memory) {
+        KeyValue[] memory factories = new KeyValue[](7);
+        factories[0] = KeyValue({key: ADDRESS__ACCESS_CONTROL_FACTORY, value: abi.encode(ACCESS_CONTROL_FACTORY)});
+        factories[1] = KeyValue({key: ADDRESS__ACCOUNT_FACTORY, value: abi.encode(ACCOUNT_FACTORY)});
+        factories[2] = KeyValue({key: ADDRESS__APP_FACTORY, value: abi.encode(APP_FACTORY)});
+        factories[3] = KeyValue({key: ADDRESS__FEED_FACTORY, value: abi.encode(FEED_FACTORY)});
+        factories[4] = KeyValue({key: ADDRESS__GRAPH_FACTORY, value: abi.encode(GRAPH_FACTORY)});
+        factories[5] = KeyValue({key: ADDRESS__GROUP_FACTORY, value: abi.encode(GROUP_FACTORY)});
+        factories[6] = KeyValue({key: ADDRESS__NAMESPACE_FACTORY, value: abi.encode(NAMESPACE_FACTORY)});
+        return factories;
     }
 
     function getTemporaryAccessControl() external view returns (address) {
         return address(TEMPORARY_ACCESS_CONTROL);
     }
 
-    function getRules() external view returns (address, address, address, address) {
-        return (
-            address(ACCOUNT_BLOCKING_RULE),
-            address(GROUP_GATED_FEED_RULE),
-            address(USERNAME_SIMPLE_CHARSET_RULE),
-            address(BAN_MEMBER_GROUP_RULE)
-        );
+    /// @custom:keccak lens.address.AccountBlockingRule
+    bytes32 constant ADDRESS__ACCOUNT_BLOCKING_RULE = 0xc4294344bc78756577a4301db801cdd6e89c8cb9fec1140be067753f20d4f982;
+    /// @custom:keccak lens.address.GroupGatedFeedRule
+    bytes32 constant ADDRESS__GROUP_GATED_FEED_RULE = 0x0b1b89deaf47732914dd4ed50c1fad66561fae56fc934fde696b05a66e203ddf;
+    /// @custom:keccak lens.address.UsernameSimpleCharsetNamespaceRule
+    bytes32 constant ADDRESS__USERNAME_SIMPLE_CHARSET_RULE =
+        0x061e3aa922deee4e0ffaf1d31f5df99adf17f48ecd688a2d283432acd92efd63;
+    /// @custom:keccak lens.address.BanMemberGroupRule
+    bytes32 constant ADDRESS__BAN_MEMBER_GROUP_RULE = 0x5d99869e2e258ac9e17b5159023bc79788face7d0106f53d6b1da3d5b59434d7;
+    /// @custom:keccak lens.address.AdditionRemovalPidGroupRule
+    bytes32 constant ADDRESS__ADD_REMOVE_PID_GROUP_RULE =
+        0xb703736cdaa9dfb1a69dc6436a4e7c7dda22b4c8f06ac4346b70a192cb194251;
+
+    function getRules() external view returns (KeyValue[] memory) {
+        KeyValue[] memory rules = new KeyValue[](5);
+        rules[0] = KeyValue({key: ADDRESS__ACCOUNT_BLOCKING_RULE, value: abi.encode(ACCOUNT_BLOCKING_RULE)});
+        rules[1] = KeyValue({key: ADDRESS__GROUP_GATED_FEED_RULE, value: abi.encode(GROUP_GATED_FEED_RULE)});
+        rules[2] =
+            KeyValue({key: ADDRESS__USERNAME_SIMPLE_CHARSET_RULE, value: abi.encode(USERNAME_SIMPLE_CHARSET_RULE)});
+        rules[3] = KeyValue({key: ADDRESS__BAN_MEMBER_GROUP_RULE, value: abi.encode(BAN_MEMBER_GROUP_RULE)});
+        rules[4] = KeyValue({key: ADDRESS__ADD_REMOVE_PID_GROUP_RULE, value: abi.encode(ADD_REMOVE_PID_GROUP_RULE)});
+        return rules;
     }
 }
