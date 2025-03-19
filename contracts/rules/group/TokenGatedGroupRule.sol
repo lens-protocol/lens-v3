@@ -39,31 +39,29 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
     }
 
     function processAddition(
+        bytes32 configSalt,
+        address originalMsgSender,
+        address account,
+        KeyValue[] calldata, /* primitiveParams */
+        KeyValue[] calldata /* ruleParams */
+    ) external view {
+        if (_configuration[msg.sender][configSalt].accessControl.hasAccess(originalMsgSender, PID__SKIP_GATE) == false) {
+            _validateTokenBalance(
+                _configuration[msg.sender][configSalt].accessControl,
+                _configuration[msg.sender][configSalt].tokenGate,
+                account
+            );
+        }
+    }
+
+    function processRemoval(
         bytes32, /* configSalt */
         address, /* originalMsgSender */
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
-        revert Errors.NotImplemented();
-    }
-
-    function processRemoval(
-        bytes32 configSalt,
-        address, /* originalMsgSender */
-        address account,
-        KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
     ) external view {
-        // Anyone can kick out member of the group if they no longer hold the required token balance...
-        require(
-            _checkTokenBalance(_configuration[msg.sender][configSalt].tokenGate, account) == false, Errors.NotAllowed()
-        );
-        // ...unless it joined using the special skip gate permission.
-        require(
-            _configuration[msg.sender][configSalt].accessControl.hasAccess(account, PID__SKIP_GATE) == false,
-            Errors.NotAllowed()
-        );
+        revert Errors.NotImplemented();
     }
 
     function processJoining(
