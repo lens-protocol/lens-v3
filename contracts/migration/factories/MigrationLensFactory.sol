@@ -2,46 +2,17 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {LensFactory} from "contracts/extensions/factories/LensFactory.sol";
+import {
+    LensFactory, FactoryConstructorParams, RuleConstructorParams
+} from "contracts/extensions/factories/LensFactory.sol";
 import {EventEmitter} from "contracts/migration/EventEmitter.sol";
 import {IRoleBasedAccessControl} from "contracts/core/interfaces/IRoleBasedAccessControl.sol";
 import {RuleChange} from "contracts/core/types/Types.sol";
 import {PermissionlessAccessControl} from "contracts/extensions/access/PermissionlessAccessControl.sol";
-import {AccessControlFactory} from "contracts/extensions/factories/AccessControlFactory.sol";
-import {AccountFactory} from "contracts/extensions/factories/AccountFactory.sol";
-import {AppFactory} from "contracts/extensions/factories/AppFactory.sol";
-import {GroupFactory} from "contracts/extensions/factories/GroupFactory.sol";
-import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
-import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
-import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
 
 contract MigrationLensFactory is LensFactory, EventEmitter {
-    constructor(
-        AccessControlFactory accessControlFactory,
-        AccountFactory accountFactory,
-        AppFactory appFactory,
-        GroupFactory groupFactory,
-        FeedFactory feedFactory,
-        GraphFactory graphFactory,
-        NamespaceFactory namespaceFactory,
-        address accountBlockingRule,
-        address groupGatedFeedRule,
-        address usernameSimpleCharsetRule,
-        address banMemberGroupRule
-    )
-        LensFactory(
-            accessControlFactory,
-            accountFactory,
-            appFactory,
-            groupFactory,
-            feedFactory,
-            graphFactory,
-            namespaceFactory,
-            accountBlockingRule,
-            groupGatedFeedRule,
-            usernameSimpleCharsetRule,
-            banMemberGroupRule
-        )
+    constructor(FactoryConstructorParams memory factories, RuleConstructorParams memory rules)
+        LensFactory(factories, rules)
     {}
 
     function _deployAccessControl(address, /* owner */ address[] memory /* admins */ )
@@ -80,7 +51,7 @@ contract MigrationLensFactory is LensFactory, EventEmitter {
         return rules;
     }
 
-    function _injectRulesForFeedAndGroup(
+    function _prepareFeedRulesBasedOnGroup(
         RuleChange[] memory feedRules,
         IRoleBasedAccessControl, /* feedAccessControl */
         address /* group */

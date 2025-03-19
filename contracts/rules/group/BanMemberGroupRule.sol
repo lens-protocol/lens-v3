@@ -47,8 +47,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         RuleProcessingParams[] calldata groupRuleProcessingParams
     ) external {
         _groupAccessControl[group].requireAccess(msg.sender, group, PID__BAN_MEMBER);
-        _isMemberBanned[group][account] = true;
-        emit Lens_BanMemberGroupRule_MemberBanned(group, account, msg.sender);
+        _ban(group, account, msg.sender);
         if (IGroup(group).isMember(account)) {
             IGroup(group).removeMember(account, groupParams, groupRuleProcessingParams);
         }
@@ -56,7 +55,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
 
     function unban(address group, address account) external {
         _groupAccessControl[group].requireAccess(msg.sender, group, PID__UNBAN_MEMBER);
-        _unban(group, account);
+        _unban(group, account, msg.sender);
     }
 
     struct MemberBatchParams {
@@ -68,8 +67,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     function ban(address group, MemberBatchParams[] calldata membersToBan) external {
         _groupAccessControl[group].requireAccess(msg.sender, group, PID__BAN_MEMBER);
         for (uint256 i = 0; i < membersToBan.length; i++) {
-            _isMemberBanned[group][membersToBan[i].account] = true;
-            emit Lens_BanMemberGroupRule_MemberBanned(group, membersToBan[i].account, msg.sender);
+            _ban(group, membersToBan[i].account, msg.sender);
             if (IGroup(group).isMember(membersToBan[i].account)) {
                 IGroup(group).removeMember(
                     membersToBan[i].account, membersToBan[i].customParams, membersToBan[i].ruleProcessingParams
@@ -81,13 +79,8 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     function unban(address group, address[] calldata accounts) external {
         _groupAccessControl[group].requireAccess(msg.sender, group, PID__UNBAN_MEMBER);
         for (uint256 i = 0; i < accounts.length; i++) {
-            _unban(group, accounts[i]);
+            _unban(group, accounts[i], msg.sender);
         }
-    }
-
-    function _unban(address group, address account) internal {
-        _isMemberBanned[group][account] = false;
-        emit Lens_BanMemberGroupRule_MemberUnbanned(group, account, msg.sender);
     }
 
     function isMemberBanned(address group, address account) external view returns (bool) {
@@ -113,11 +106,11 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     function processAddition(
         bytes32, /* configSalt */
         address, /* originalMsgSender */
-        address, /* account */
+        address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure override {
-        revert Errors.NotImplemented();
+    ) external override {
+        _requireNotBanned({group: msg.sender, account: account});
     }
 
     function processRemoval(
@@ -136,7 +129,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(_isMemberBanned[msg.sender][account] == false, Errors.Banned());
+        _requireNotBanned({group: msg.sender, account: account});
     }
 
     function processLeaving(
@@ -146,5 +139,19 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata /* ruleParams */
     ) external pure override {
         revert Errors.NotImplemented();
+    }
+
+    function _unban(address group, address account, address unbannedBy) internal {
+        _isMemberBanned[group][account] = false;
+        emit Lens_BanMemberGroupRule_MemberUnbanned(group, account, unbannedBy);
+    }
+
+    function _ban(address group, address account, address bannedBy) internal {
+        _isMemberBanned[group][account] = true;
+        emit Lens_BanMemberGroupRule_MemberBanned(group, account, bannedBy);
+    }
+
+    function _requireNotBanned(address group, address account) internal view {
+        require(_isMemberBanned[group][account] == false, Errors.Banned());
     }
 }
