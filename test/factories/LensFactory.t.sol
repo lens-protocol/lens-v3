@@ -121,7 +121,7 @@ contract LensFactoryTest is Test, BaseDeployments {
     }
 
     function testCreateGroupWithFeed() public {
-        (address group, address feed) = abi.decode(
+        (address group, /* address feed */ ) = abi.decode(
             IAccount(payable(ownerAccount)).executeTransaction(
                 address(lensFactory),
                 0,

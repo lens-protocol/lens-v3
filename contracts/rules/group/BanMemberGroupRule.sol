@@ -109,7 +109,7 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external override {
+    ) external view override {
         _requireNotBanned({group: msg.sender, account: account});
     }
 
