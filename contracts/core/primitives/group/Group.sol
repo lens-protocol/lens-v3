@@ -74,10 +74,6 @@ contract Group is
         emit Events.Lens_PermissionId_Available(PID__CHANGE_RULES, "lens.permission.ChangeRules");
         emit Events.Lens_PermissionId_Available(PID__SET_METADATA, "lens.permission.SetMetadata");
         emit Events.Lens_PermissionId_Available(PID__SET_EXTRA_DATA, "lens.permission.SetExtraData");
-        emit Events.Lens_PermissionId_Available(PID__ADD_MEMBER, "lens.permission.AddMember");
-        emit Events.Lens_PermissionId_Available(PID__REMOVE_MEMBER, "lens.permission.RemoveMember");
-        emit Events.Lens_PermissionId_Available(PID__SKIP_ADD_MEMBER_RULES, "lens.permission.SkipAddMemberRules");
-        emit Events.Lens_PermissionId_Available(PID__SKIP_REMOVE_MEMBER_RULES, "lens.permission.SkipRemoveMemberRules");
     }
 
     // Access Controlled functions
@@ -113,45 +109,19 @@ contract Group is
 
     function addMember(
         address account,
-        KeyValue[] calldata customParams,
+        KeyValue[] memory customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        uint256 membershipId = Core._grantMembership(account);
-        if (_amountOfRules(IGroupRule.processAddition.selector) == 0) {
-            _requireAccess(msg.sender, PID__ADD_MEMBER);
-        } else if (
-            _hasAccess(msg.sender, PID__ADD_MEMBER) == false
-                || _hasAccess(msg.sender, PID__SKIP_ADD_MEMBER_RULES) == false
-        ) {
-            _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
-        }
-        // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
-        require(
-            IAccountGroupAdditionSettings(account).canBeAddedToGroup({
-                group: address(this),
-                addedBy: msg.sender,
-                params: _extractAccountAdditionSettingsParamsFromParams(customParams)
-            }),
-            Errors.NotAllowed()
-        );
-        address source = _processSourceStamp(membershipId, customParams);
-        emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
+        _addMember(account, customParams, ruleProcessingParams, _processSourceStamp(customParams));
     }
 
     function removeMember(
         address account,
-        KeyValue[] calldata customParams,
+        KeyValue[] memory customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        if (_amountOfRules(IGroupRule.processRemoval.selector) == 0) {
-            _requireAccess(msg.sender, PID__REMOVE_MEMBER);
-        } else if (
-            _hasAccess(msg.sender, PID__REMOVE_MEMBER) == false
-                || _hasAccess(msg.sender, PID__SKIP_REMOVE_MEMBER_RULES) == false
-        ) {
-            _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
-        }
         uint256 membershipId = Core._revokeMembership(account);
+        _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
         address source = _processSourceStamp(customParams);
         _clearSource(membershipId);
         emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
@@ -187,7 +157,40 @@ contract Group is
         _setExtraData(extraDataToSet);
     }
 
-    function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] calldata customParams)
+    function _addMember(
+        address account,
+        KeyValue[] memory customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        address source
+    ) internal {
+        uint256 membershipId = Core._grantMembership(account);
+        _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
+        // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
+        require(
+            IAccountGroupAdditionSettings(account).canBeAddedToGroup({
+                group: address(this),
+                addedBy: msg.sender,
+                params: _extractAccountAdditionSettingsParamsFromParams(customParams)
+            }),
+            Errors.NotAllowed()
+        );
+        _storeSource(membershipId, source);
+        emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
+    }
+
+    function _removeMember(
+        address account,
+        KeyValue[] memory customParams,
+        RuleProcessingParams[] calldata ruleProcessingParams,
+        address source
+    ) internal {
+        uint256 membershipId = Core._revokeMembership(account);
+        _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
+        _clearSource(membershipId);
+        emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
+    }
+
+    function _extractAccountAdditionSettingsParamsFromParams(KeyValue[] memory customParams)
         internal
         pure
         returns (KeyValue[] memory)
@@ -208,63 +211,24 @@ contract Group is
         RuleProcessingParams[] ruleProcessingParams;
     }
 
-    function addMembers(MemberBatchParams[] calldata membersToAdd, KeyValue[] calldata customParams) external {
-        bool mustProcessRules;
-        if (_amountOfRules(IGroupRule.processAddition.selector) == 0) {
-            _requireAccess(msg.sender, PID__ADD_MEMBER);
-        } else if (
-            _hasAccess(msg.sender, PID__ADD_MEMBER) == false
-                || _hasAccess(msg.sender, PID__SKIP_ADD_MEMBER_RULES) == false
-        ) {
-            mustProcessRules = true;
-        }
+    function addMembers(MemberBatchParams[] calldata membersToAdd, KeyValue[] memory customParams) external {
         address source = _processSourceStamp(customParams);
         for (uint256 i = 0; i < membersToAdd.length; i++) {
-            uint256 membershipId = Core._grantMembership(membersToAdd[i].account);
-            KeyValue[] memory mergedCustomParams = customParams.concat(membersToAdd[i].customParams);
-            if (mustProcessRules) {
-                _processMemberAddition(
-                    msg.sender, membersToAdd[i].account, mergedCustomParams, membersToAdd[i].ruleProcessingParams
-                );
-            }
-            // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
-            require(
-                IAccountGroupAdditionSettings(membersToAdd[i].account).canBeAddedToGroup({
-                    group: address(this),
-                    addedBy: msg.sender,
-                    params: _extractAccountAdditionSettingsParamsFromParams(membersToAdd[i].customParams)
-                }),
-                Errors.NotAllowed()
-            );
-            _storeSource(membershipId, source);
-            emit Lens_Group_MemberAdded(
-                membersToAdd[i].account, membershipId, mergedCustomParams, membersToAdd[i].ruleProcessingParams, source
+            _addMember(
+                membersToAdd[i].account,
+                customParams.concat(membersToAdd[i].customParams),
+                membersToAdd[i].ruleProcessingParams,
+                source
             );
         }
     }
 
-    function removeMembers(MemberBatchParams[] calldata membersToRemove, KeyValue[] calldata customParams) external {
-        bool mustProcessRules;
-        if (_amountOfRules(IGroupRule.processRemoval.selector) == 0) {
-            _requireAccess(msg.sender, PID__REMOVE_MEMBER);
-        } else if (
-            _hasAccess(msg.sender, PID__REMOVE_MEMBER) == false
-                || _hasAccess(msg.sender, PID__SKIP_REMOVE_MEMBER_RULES) == false
-        ) {
-            mustProcessRules = true;
-        }
+    function removeMembers(MemberBatchParams[] calldata membersToRemove, KeyValue[] memory customParams) external {
         address source = _processSourceStamp(customParams);
         for (uint256 i = 0; i < membersToRemove.length; i++) {
-            KeyValue[] memory mergedCustomParams = customParams.concat(membersToRemove[i].customParams);
-            _processMemberRemoval(
-                msg.sender, membersToRemove[i].account, mergedCustomParams, membersToRemove[i].ruleProcessingParams
-            );
-            uint256 membershipId = Core._revokeMembership(membersToRemove[i].account);
-            _clearSource(membershipId);
-            emit Lens_Group_MemberRemoved(
+            _removeMember(
                 membersToRemove[i].account,
-                membershipId,
-                mergedCustomParams,
+                customParams.concat(membersToRemove[i].customParams),
                 membersToRemove[i].ruleProcessingParams,
                 source
             );
