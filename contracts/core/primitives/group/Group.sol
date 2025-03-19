@@ -109,7 +109,7 @@ contract Group is
 
     function addMember(
         address account,
-        KeyValue[] memory customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         _addMember(account, customParams, ruleProcessingParams, _processSourceStamp(customParams));
@@ -117,7 +117,7 @@ contract Group is
 
     function removeMember(
         address account,
-        KeyValue[] memory customParams,
+        KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
         uint256 membershipId = Core._revokeMembership(account);
@@ -211,7 +211,7 @@ contract Group is
         RuleProcessingParams[] ruleProcessingParams;
     }
 
-    function addMembers(MemberBatchParams[] calldata membersToAdd, KeyValue[] memory customParams) external {
+    function addMembers(MemberBatchParams[] calldata membersToAdd, KeyValue[] calldata customParams) external {
         address source = _processSourceStamp(customParams);
         for (uint256 i = 0; i < membersToAdd.length; i++) {
             _addMember(
@@ -223,7 +223,7 @@ contract Group is
         }
     }
 
-    function removeMembers(MemberBatchParams[] calldata membersToRemove, KeyValue[] memory customParams) external {
+    function removeMembers(MemberBatchParams[] calldata membersToRemove, KeyValue[] calldata customParams) external {
         address source = _processSourceStamp(customParams);
         for (uint256 i = 0; i < membersToRemove.length; i++) {
             _removeMember(
