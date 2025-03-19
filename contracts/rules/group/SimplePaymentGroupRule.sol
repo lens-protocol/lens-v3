@@ -39,13 +39,18 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
     }
 
     function processAddition(
-        bytes32, /* configSalt */
-        address, /* originalMsgSender */
+        bytes32 configSalt,
+        address originalMsgSender,
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
-        KeyValue[] calldata /* ruleParams */
-    ) external pure {
-        revert Errors.NotImplemented();
+        KeyValue[] calldata ruleParams
+    ) external override {
+        _processPayment(
+            _configuration[msg.sender][configSalt].accessControl,
+            _configuration[msg.sender][configSalt].paymentConfiguration,
+            _extractPaymentConfigurationFromParams(ruleParams),
+            originalMsgSender
+        );
     }
 
     function processRemoval(
@@ -54,7 +59,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 
@@ -63,7 +68,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external override {
         _processPayment(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].paymentConfiguration,
@@ -77,7 +82,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 
