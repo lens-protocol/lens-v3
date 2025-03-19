@@ -125,13 +125,17 @@ contract BaseDeployments is Test {
         _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
         _deployFactoryProxies();
 
-        accountBlockingRule = address(new AccountBlockingRule({owner: rulesOwner, metadataURI: "uri://any"}));
-        groupGatedFeedRule = address(new GroupGatedFeedRule({owner: rulesOwner, metadataURI: "uri://any"}));
-        usernameSimpleCharsetRule =
-            address(new UsernameSimpleCharsetNamespaceRule({owner: rulesOwner, metadataURI: "uri://any"}));
-        banMemberGroupRule = address(new BanMemberGroupRule({owner: rulesOwner, metadataURI: "uri://any"}));
+        accountBlockingRule =
+            address(new AccountBlockingRule({owner: rulesOwner, metadataURI: "uri://accountBlockingRule"}));
+        groupGatedFeedRule =
+            address(new GroupGatedFeedRule({owner: rulesOwner, metadataURI: "uri://groupGatedFeedRule"}));
+        usernameSimpleCharsetRule = address(
+            new UsernameSimpleCharsetNamespaceRule({owner: rulesOwner, metadataURI: "uri://usernameSimpleCharsetRule"})
+        );
+        banMemberGroupRule =
+            address(new BanMemberGroupRule({owner: rulesOwner, metadataURI: "uri://banMemberGroupRule"}));
         addRemovePidGroupRule =
-            address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://any"}));
+            address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://addRemovePidGroupRule"}));
 
         address lensFactoryImpl = migrationMode
             ? address(
