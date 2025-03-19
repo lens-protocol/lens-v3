@@ -203,14 +203,14 @@ contract LensFactory {
                 groupMetadataURI,
                 TEMPORARY_ACCESS_CONTROL,
                 s.owner,
-                _injectRuleAccessControl(groupRules, address(s.groupAccessControl)),
+                _prepareGroupRules(groupRules, address(s.groupAccessControl)),
                 groupExtraData,
                 groupFoundingMember,
                 groupAddFoundingMemberCustomParams
             );
         }
 
-        s.modifiedFeedRules = _injectRulesForFeedAndGroup(s.feedRules, s.feedAccessControl, s.group);
+        s.modifiedFeedRules = _prepareFeedRulesBasedOnGroup(s.feedRules, s.feedAccessControl, s.group);
 
         address feed = FEED_FACTORY.deployFeed(
             s.feedMetadataURI, s.feedAccessControl, s.owner, s.modifiedFeedRules, s.feedExtraData
@@ -478,7 +478,7 @@ contract LensFactory {
         return modifiedRules;
     }
 
-    function _injectRulesForFeedAndGroup(
+    function _prepareFeedRulesBasedOnGroup(
         RuleChange[] memory feedRules,
         IRoleBasedAccessControl feedAccessControl,
         address group

@@ -51,7 +51,7 @@ contract MigrationLensFactory is LensFactory, EventEmitter {
         return rules;
     }
 
-    function _injectRulesForFeedAndGroup(
+    function _prepareFeedRulesBasedOnGroup(
         RuleChange[] memory feedRules,
         IRoleBasedAccessControl, /* feedAccessControl */
         address /* group */
