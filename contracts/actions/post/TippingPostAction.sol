@@ -8,8 +8,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TippingPostAction is OwnableMetadataBasedPostAction {
+contract TippingPostAction is OwnableMetadataBasedPostAction, Initializable {
     using SafeERC20 for IERC20;
 
     /// @custom:keccak lens.param.amount
@@ -17,9 +18,13 @@ contract TippingPostAction is OwnableMetadataBasedPostAction {
     /// @custom:keccak lens.param.token
     bytes32 constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 
-    constructor(address actionHub, address owner, string memory metadataURI)
-        OwnableMetadataBasedPostAction(actionHub, owner, metadataURI)
-    {}
+    constructor(address actionHub) OwnableMetadataBasedPostAction(actionHub, address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedPostAction._initialize(owner, metadataURI);
+    }
 
     function _execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         internal

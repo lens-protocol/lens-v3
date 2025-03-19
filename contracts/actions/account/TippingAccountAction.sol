@@ -7,8 +7,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TippingAccountAction is OwnableMetadataBasedAccountAction {
+contract TippingAccountAction is OwnableMetadataBasedAccountAction, Initializable {
     using SafeERC20 for IERC20;
 
     /// @custom:keccak lens.param.amount
@@ -16,9 +17,13 @@ contract TippingAccountAction is OwnableMetadataBasedAccountAction {
     /// @custom:keccak lens.param.token
     bytes32 public constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 
-    constructor(address actionHub, address owner, string memory metadataURI)
-        OwnableMetadataBasedAccountAction(actionHub, owner, metadataURI)
-    {}
+    constructor(address actionHub) OwnableMetadataBasedAccountAction(actionHub, address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedAccountAction._initialize(owner, metadataURI);
+    }
 
     function _execute(address originalMsgSender, address account, KeyValue[] calldata params)
         internal
