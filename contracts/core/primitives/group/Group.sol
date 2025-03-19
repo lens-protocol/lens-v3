@@ -120,11 +120,7 @@ contract Group is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external override {
-        uint256 membershipId = Core._revokeMembership(account);
-        _processMemberRemoval(msg.sender, account, customParams, ruleProcessingParams);
-        address source = _processSourceStamp(customParams);
-        _clearSource(membershipId);
-        emit Lens_Group_MemberRemoved(account, membershipId, customParams, ruleProcessingParams, source);
+        _removeMember(account, customParams, ruleProcessingParams, _processSourceStamp(customParams));
     }
 
     function joinGroup(
