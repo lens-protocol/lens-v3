@@ -30,7 +30,9 @@ import {FeedFactory} from "contracts/extensions/factories/FeedFactory.sol";
 import {GraphFactory} from "contracts/extensions/factories/GraphFactory.sol";
 import {GroupFactory} from "contracts/extensions/factories/GroupFactory.sol";
 import {NamespaceFactory} from "contracts/extensions/factories/NamespaceFactory.sol";
-import {LensFactory} from "contracts/extensions/factories/LensFactory.sol";
+import {
+    LensFactory, FactoryConstructorParams, RuleConstructorParams
+} from "contracts/extensions/factories/LensFactory.sol";
 import {WhitelistedAddresses} from "contracts/migration/WhitelistedAddresses.sol";
 
 struct PostData {
@@ -476,20 +478,24 @@ contract MigrationFlowTest is BaseDeployments {
         address lensAddRemovePidGroupRule = abi.decode(rules[4].value, (address));
 
         address lensFactoryImpl = address(
-            new LensFactory(
-                AccessControlFactory(lensAccessControlFactory),
-                AccountFactory(lensAccountFactory),
-                AppFactory(lensAppFactory),
-                GroupFactory(lensGroupFactory),
-                FeedFactory(lensFeedFactory),
-                GraphFactory(lensGraphFactory),
-                NamespaceFactory(lensNamespaceFactory),
-                lensAccountBlockingRule,
-                lensGroupGatedFeedRule,
-                lensUsernameSimpleCharsetRule,
-                lensBanMemberGroupRule,
-                lensAddRemovePidGroupRule
-            )
+            new LensFactory({
+                factories: FactoryConstructorParams({
+                    accessControlFactory: AccessControlFactory(lensAccessControlFactory),
+                    accountFactory: AccountFactory(lensAccountFactory),
+                    appFactory: AppFactory(lensAppFactory),
+                    groupFactory: GroupFactory(lensGroupFactory),
+                    feedFactory: FeedFactory(lensFeedFactory),
+                    graphFactory: GraphFactory(lensGraphFactory),
+                    namespaceFactory: NamespaceFactory(lensNamespaceFactory)
+                }),
+                rules: RuleConstructorParams({
+                    accountBlockingRule: lensAccountBlockingRule,
+                    groupGatedFeedRule: lensGroupGatedFeedRule,
+                    usernameSimpleCharsetRule: lensUsernameSimpleCharsetRule,
+                    banMemberGroupRule: lensBanMemberGroupRule,
+                    addRemovePidGroupRule: lensAddRemovePidGroupRule
+                })
+            })
         );
 
         vm.prank(newOwner);

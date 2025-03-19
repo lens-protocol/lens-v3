@@ -26,7 +26,7 @@ import {FeedFactory} from "@extensions/factories/FeedFactory.sol";
 import {GraphFactory} from "@extensions/factories/GraphFactory.sol";
 import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
 import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
-import {LensFactory} from "@extensions/factories/LensFactory.sol";
+import {LensFactory, FactoryConstructorParams, RuleConstructorParams} from "@extensions/factories/LensFactory.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
@@ -110,18 +110,22 @@ contract MyScript is Script {
             address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://any"}));
 
         lensFactory = new LensFactory({
-            accessControlFactory: accessControlFactory,
-            accountFactory: accountFactory,
-            appFactory: appFactory,
-            groupFactory: groupFactory,
-            feedFactory: feedFactory,
-            graphFactory: graphFactory,
-            namespaceFactory: namespaceFactory,
-            accountBlockingRule: accountBlockingRule,
-            groupGatedFeedRule: groupGatedFeedRule,
-            usernameSimpleCharsetRule: usernameSimpleCharsetRule,
-            banMemberGroupRule: banMemberGroupRule,
-            addRemovePidGroupRule: addRemovePidGroupRule
+            factories: FactoryConstructorParams({
+                accessControlFactory: accessControlFactory,
+                accountFactory: accountFactory,
+                appFactory: appFactory,
+                groupFactory: groupFactory,
+                feedFactory: feedFactory,
+                graphFactory: graphFactory,
+                namespaceFactory: namespaceFactory
+            }),
+            rules: RuleConstructorParams({
+                accountBlockingRule: accountBlockingRule,
+                groupGatedFeedRule: groupGatedFeedRule,
+                usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+                banMemberGroupRule: banMemberGroupRule,
+                addRemovePidGroupRule: addRemovePidGroupRule
+            })
         });
 
         _deployFactoryImplementations();

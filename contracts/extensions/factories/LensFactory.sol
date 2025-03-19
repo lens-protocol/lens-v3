@@ -66,6 +66,24 @@ struct CreateUsernameParams {
     KeyValue[] usernameExtraData;
 }
 
+struct FactoryConstructorParams {
+    AccessControlFactory accessControlFactory;
+    AccountFactory accountFactory;
+    AppFactory appFactory;
+    GroupFactory groupFactory;
+    FeedFactory feedFactory;
+    GraphFactory graphFactory;
+    NamespaceFactory namespaceFactory;
+}
+
+struct RuleConstructorParams {
+    address accountBlockingRule;
+    address groupGatedFeedRule;
+    address usernameSimpleCharsetRule;
+    address banMemberGroupRule;
+    address addRemovePidGroupRule;
+}
+
 contract LensFactory {
     using LibString for string;
 
@@ -85,33 +103,20 @@ contract LensFactory {
 
     uint128 internal immutable namespaceAllowedCharsLookup;
 
-    constructor(
-        AccessControlFactory accessControlFactory,
-        AccountFactory accountFactory,
-        AppFactory appFactory,
-        GroupFactory groupFactory,
-        FeedFactory feedFactory,
-        GraphFactory graphFactory,
-        NamespaceFactory namespaceFactory,
-        address accountBlockingRule,
-        address groupGatedFeedRule,
-        address usernameSimpleCharsetRule,
-        address banMemberGroupRule,
-        address addRemovePidGroupRule
-    ) {
-        ACCESS_CONTROL_FACTORY = accessControlFactory;
-        ACCOUNT_FACTORY = accountFactory;
-        APP_FACTORY = appFactory;
-        GROUP_FACTORY = groupFactory;
-        FEED_FACTORY = feedFactory;
-        GRAPH_FACTORY = graphFactory;
-        NAMESPACE_FACTORY = namespaceFactory;
+    constructor(FactoryConstructorParams memory factories, RuleConstructorParams memory rules) {
+        ACCESS_CONTROL_FACTORY = factories.accessControlFactory;
+        ACCOUNT_FACTORY = factories.accountFactory;
+        APP_FACTORY = factories.appFactory;
+        GROUP_FACTORY = factories.groupFactory;
+        FEED_FACTORY = factories.feedFactory;
+        GRAPH_FACTORY = factories.graphFactory;
+        NAMESPACE_FACTORY = factories.namespaceFactory;
         TEMPORARY_ACCESS_CONTROL = new PermissionlessAccessControl();
-        ACCOUNT_BLOCKING_RULE = accountBlockingRule;
-        GROUP_GATED_FEED_RULE = groupGatedFeedRule;
-        USERNAME_SIMPLE_CHARSET_RULE = usernameSimpleCharsetRule;
-        BAN_MEMBER_GROUP_RULE = banMemberGroupRule;
-        ADD_REMOVE_PID_GROUP_RULE = addRemovePidGroupRule;
+        ACCOUNT_BLOCKING_RULE = rules.accountBlockingRule;
+        GROUP_GATED_FEED_RULE = rules.groupGatedFeedRule;
+        USERNAME_SIMPLE_CHARSET_RULE = rules.usernameSimpleCharsetRule;
+        BAN_MEMBER_GROUP_RULE = rules.banMemberGroupRule;
+        ADD_REMOVE_PID_GROUP_RULE = rules.addRemovePidGroupRule;
         namespaceAllowedCharsLookup = string("abcdefghijklmnopqrstuvwxyz0123456789_").to7BitASCIIAllowedLookup();
     }
 

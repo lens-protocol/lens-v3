@@ -39,7 +39,7 @@ import {FeedFactory} from "@extensions/factories/FeedFactory.sol";
 import {GraphFactory} from "@extensions/factories/GraphFactory.sol";
 import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
 import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
-import {LensFactory} from "@extensions/factories/LensFactory.sol";
+import {LensFactory, FactoryConstructorParams, RuleConstructorParams} from "@extensions/factories/LensFactory.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
@@ -136,34 +136,42 @@ contract BaseDeployments is Test {
         address lensFactoryImpl = migrationMode
             ? address(
                 new MigrationLensFactory({
-                    accessControlFactory: accessControlFactory,
-                    accountFactory: accountFactory,
-                    appFactory: appFactory,
-                    groupFactory: groupFactory,
-                    feedFactory: feedFactory,
-                    graphFactory: graphFactory,
-                    namespaceFactory: namespaceFactory,
-                    accountBlockingRule: address(0),
-                    groupGatedFeedRule: address(0),
-                    usernameSimpleCharsetRule: address(0),
-                    banMemberGroupRule: address(0),
-                    addRemovePidGroupRule: address(0)
+                    factories: FactoryConstructorParams({
+                        accessControlFactory: accessControlFactory,
+                        accountFactory: accountFactory,
+                        appFactory: appFactory,
+                        groupFactory: groupFactory,
+                        feedFactory: feedFactory,
+                        graphFactory: graphFactory,
+                        namespaceFactory: namespaceFactory
+                    }),
+                    rules: RuleConstructorParams({
+                        accountBlockingRule: address(0),
+                        groupGatedFeedRule: address(0),
+                        usernameSimpleCharsetRule: address(0),
+                        banMemberGroupRule: address(0),
+                        addRemovePidGroupRule: address(0)
+                    })
                 })
             )
             : address(
                 new LensFactory({
-                    accessControlFactory: accessControlFactory,
-                    accountFactory: accountFactory,
-                    appFactory: appFactory,
-                    groupFactory: groupFactory,
-                    feedFactory: feedFactory,
-                    graphFactory: graphFactory,
-                    namespaceFactory: namespaceFactory,
-                    accountBlockingRule: accountBlockingRule,
-                    groupGatedFeedRule: groupGatedFeedRule,
-                    usernameSimpleCharsetRule: usernameSimpleCharsetRule,
-                    banMemberGroupRule: banMemberGroupRule,
-                    addRemovePidGroupRule: addRemovePidGroupRule
+                    factories: FactoryConstructorParams({
+                        accessControlFactory: accessControlFactory,
+                        accountFactory: accountFactory,
+                        appFactory: appFactory,
+                        groupFactory: groupFactory,
+                        feedFactory: feedFactory,
+                        graphFactory: graphFactory,
+                        namespaceFactory: namespaceFactory
+                    }),
+                    rules: RuleConstructorParams({
+                        accountBlockingRule: accountBlockingRule,
+                        groupGatedFeedRule: groupGatedFeedRule,
+                        usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+                        banMemberGroupRule: banMemberGroupRule,
+                        addRemovePidGroupRule: addRemovePidGroupRule
+                    })
                 })
             );
         TransparentUpgradeableProxy lensFactoryProxy =
