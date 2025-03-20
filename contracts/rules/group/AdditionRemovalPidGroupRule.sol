@@ -9,8 +9,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
+contract AdditionRemovalPidGroupRule is OwnableMetadataBasedRule, Initializable, IGroupRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -22,11 +23,28 @@ contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
     /// @custom:keccak lens.permission.RemoveMember
     uint256 constant PID__REMOVE_MEMBER = uint256(0x8c204b72f1086f607fac077224053e94d5f8a69311195889c42430ffa8646e23);
 
-    mapping(address group => mapping(bytes32 configSalt => address accessControl)) internal _accessControl;
+    /// @custom:keccak lens.storage.AdditionRemovalPidGroupRule
+    bytes32 constant STORAGE__ADDITION_REMOVAL_PID_GROUP_RULE =
+        0x875e2cb3a840696bfd4b902a7075335bfafa204e802c28025d62922181ad12b2;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
+    struct Storage {
+        mapping(address group => mapping(bytes32 configSalt => address accessControl)) accessControl;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__ADDITION_REMOVAL_PID_GROUP_RULE
+        }
+    }
+
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__ADD_MEMBER, "lens.permission.AddMember");
         emit Events.Lens_PermissionId_Available(PID__REMOVE_MEMBER, "lens.permission.RemoveMember");
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
@@ -38,7 +56,7 @@ contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
             }
         }
         accessControl.verifyHasAccessFunction();
-        _accessControl[msg.sender][configSalt] = accessControl;
+        $storage().accessControl[msg.sender][configSalt] = accessControl;
     }
 
     function processAddition(
@@ -48,7 +66,7 @@ contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__ADD_MEMBER);
+        $storage().accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__ADD_MEMBER);
     }
 
     function processRemoval(
@@ -58,7 +76,7 @@ contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__REMOVE_MEMBER);
+        $storage().accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__REMOVE_MEMBER);
     }
 
     function processJoining(

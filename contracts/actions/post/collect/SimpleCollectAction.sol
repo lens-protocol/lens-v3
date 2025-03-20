@@ -14,11 +14,12 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {PARAM__TREASURY} from "contracts/extensions/actions/ActionHub.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 error InvalidSplits();
 error InvalidRecipient();
 
-contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAction {
+contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAction, Initializable {
     using SafeERC20 for IERC20;
 
     struct CollectActionStorage {
@@ -98,9 +99,13 @@ contract SimpleCollectAction is ISimpleCollectAction, OwnableMetadataBasedPostAc
         RecipientData[] referrals;
     }
 
-    constructor(address actionHub, address owner, string memory metadataURI)
-        OwnableMetadataBasedPostAction(actionHub, owner, metadataURI)
-    {}
+    constructor(address actionHub) OwnableMetadataBasedPostAction(actionHub, address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedPostAction._initialize(owner, metadataURI);
+    }
 
     function _configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         internal

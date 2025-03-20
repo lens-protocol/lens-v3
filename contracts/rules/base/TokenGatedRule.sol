@@ -30,6 +30,10 @@ abstract contract TokenGatedRule is OwnableMetadataBasedRule {
 
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
+    function _initialize(address owner, string memory metadataURI) internal override {
+        super._initialize(owner, metadataURI);
+    }
+
     function _validateTokenGateConfiguration(TokenGateConfiguration memory configuration) internal view {
         require(configuration.amount > 0, Errors.InvalidParameter());
         if (configuration.tokenStandard == ERC20 || configuration.tokenStandard == ERC721) {

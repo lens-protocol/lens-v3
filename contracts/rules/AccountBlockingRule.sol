@@ -9,14 +9,32 @@ import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule {
+contract AccountBlockingRule is OwnableMetadataBasedRule, Initializable, IFeedRule, IGraphRule {
     event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target);
     event Lens_AccountBlocking_AccountUnblocked(address indexed source, address indexed target);
 
-    mapping(address source => mapping(address target => bool isBlocked)) internal _isBlocked;
+    struct Storage {
+        mapping(address source => mapping(address target => bool isBlocked)) isBlocked;
+    }
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+    /// @custom:keccak lens.storage.AccountBlockingRule
+    bytes32 constant STORAGE__ACCOUNT_BLOCKING_RULE = 0xe12472e4fa1ab16991a1a948dff8ec39ff46bdd19194555f802f78a18b5506a0;
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__ACCOUNT_BLOCKING_RULE
+        }
+    }
+
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32, /* salt */ KeyValue[] calldata /* ruleConfigurationParams */ )
         external
@@ -27,15 +45,15 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
     function blockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
         require(source != target, Errors.ActionOnSelf());
-        require(!_isBlocked[source][target], Errors.RedundantStateChange());
-        _isBlocked[source][target] = true;
+        require(!$storage().isBlocked[source][target], Errors.RedundantStateChange());
+        $storage().isBlocked[source][target] = true;
         emit Lens_AccountBlocking_AccountBlocked(source, target);
     }
 
     function unblockUser(address source, address target) external {
         require(msg.sender == source, Errors.InvalidMsgSender());
-        require(_isBlocked[source][target], Errors.RedundantStateChange());
-        _isBlocked[source][target] = false;
+        require($storage().isBlocked[source][target], Errors.RedundantStateChange());
+        $storage().isBlocked[source][target] = false;
         emit Lens_AccountBlocking_AccountUnblocked(source, target);
     }
 
@@ -51,10 +69,10 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
             address repliedToAuthor = IFeed(msg.sender).getPostAuthor(postParams.repliedPostId);
             uint256 rootPostId = IFeed(msg.sender).getPost(postId).rootPostId;
             address rootAuthor = IFeed(msg.sender).getPostAuthor(rootPostId);
-            if (_isBlocked[repliedToAuthor][author]) {
+            if ($storage().isBlocked[repliedToAuthor][author]) {
                 revert Errors.Blocked();
             }
-            if (_isBlocked[rootAuthor][author]) {
+            if ($storage().isBlocked[rootAuthor][author]) {
                 revert Errors.Blocked();
             }
         }
@@ -68,13 +86,13 @@ contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule 
         KeyValue[] calldata, /* primitiveCustomParams */
         KeyValue[] calldata /* ruleExecutionParams */
     ) external view {
-        if (_isBlocked[accountToFollow][followerAccount]) {
+        if ($storage().isBlocked[accountToFollow][followerAccount]) {
             revert Errors.Blocked();
         }
     }
 
     function isBlocked(address source, address blockTarget) external view returns (bool) {
-        return _isBlocked[source][blockTarget];
+        return $storage().isBlocked[source][blockTarget];
     }
 
     // Unimplemented functions

@@ -6,16 +6,36 @@ import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {SimplePaymentRule} from "contracts/rules/base/SimplePaymentRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
-    mapping(address => mapping(address => mapping(bytes32 => PaymentConfiguration))) internal _paymentConfiguration;
+contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRule {
+    /// @custom:keccak lens.storage.SimplePaymentFollowRule
+    bytes32 constant STORAGE__SIMPLE_PAYMENT_FOLLOW_RULE =
+        0x40d861d20f0413c082c732a37b8aa34f7a2abf2d3b8a62e3868805a8505f8fd5;
 
-    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {}
+    struct Storage {
+        mapping(address graph => mapping(address account => mapping(bytes32 configSalt => PaymentConfiguration config)))
+            paymentConfiguration;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__SIMPLE_PAYMENT_FOLLOW_RULE
+        }
+    }
+
+    constructor() SimplePaymentRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        SimplePaymentRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external override {
         PaymentConfiguration memory paymentConfiguration = _extractPaymentConfigurationFromParams(ruleParams);
         _validatePaymentConfiguration(paymentConfiguration);
-        _paymentConfiguration[msg.sender][account][configSalt] = paymentConfiguration;
+        $storage().paymentConfiguration[msg.sender][account][configSalt] = paymentConfiguration;
     }
 
     function processFollow(
@@ -27,7 +47,7 @@ contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
         KeyValue[] calldata ruleParams
     ) external override {
         _processPayment({
-            configuration: _paymentConfiguration[msg.sender][accountToFollow][configSalt],
+            configuration: $storage().paymentConfiguration[msg.sender][accountToFollow][configSalt],
             expectedConfiguration: _extractPaymentConfigurationFromParams(ruleParams),
             payer: followerAccount
         });

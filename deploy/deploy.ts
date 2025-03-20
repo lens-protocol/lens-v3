@@ -13,11 +13,11 @@ async function deploy() {
   const deployerAddress = getWallet().address;
 
   if (DEPLOYING_MIGRATION) {
-    console.log('\x1b[33m=============================================')
+    console.log('\x1b[33m=============================================');
     console.log('|                                           |');
     console.log('|       Deploying migration version         |');
     console.log('|                                           |');
-    console.log('=============================================\x1b[0m')
+    console.log('=============================================\x1b[0m');
   }
 
   const proxyAdminLockOwner = process.env.PROXY_ADMIN_LOCK_OWNER;
@@ -60,9 +60,10 @@ async function deploy() {
     throw new Error('TREASURY_ADDRESS not found in environment variables');
   }
 
-  const treasuryFeeBps = process.env.TREASURY_FEE_BPS;
-  if (!treasuryFeeBps && DEPLOYING_FR) {
-    throw new Error('TREASURY_FEE_BPS not found in environment variables');
+  const treasuryFeeBps = Number(process.env.TREASURY_FEE_BPS);
+  if (isNaN(treasuryFeeBps) && DEPLOYING_FR) {
+    console.error(`treasuryFeeBps: ${treasuryFeeBps}`);
+    throw new Error('TREASURY_FEE_BPS not found in environment variables or is not a valid number');
   }
 
   if (DEPLOYING_FR) {
@@ -86,20 +87,28 @@ async function deploy() {
   }
   console.log('\n-------------------------------------------------------------------\n\n');
 
-  await deployLock("AppLock", proxyAdminLockOwner ?? deployerAddress);
-  await deployLock("AccountLock", proxyAdminLockOwner ?? deployerAddress);
-  await deployLock("FeedLock", proxyAdminLockOwner ?? deployerAddress);
-  await deployLock("GraphLock", proxyAdminLockOwner ?? deployerAddress);
-  await deployLock("GroupLock", proxyAdminLockOwner ?? deployerAddress);
-  await deployLock("NamespaceLock", proxyAdminLockOwner ?? deployerAddress);
-  await deployLock("AccessControlLock", accessControlLockOwner ?? deployerAddress);
+  await deployLock('AppLock', proxyAdminLockOwner ?? deployerAddress);
+  await deployLock('AccountLock', proxyAdminLockOwner ?? deployerAddress);
+  await deployLock('FeedLock', proxyAdminLockOwner ?? deployerAddress);
+  await deployLock('GraphLock', proxyAdminLockOwner ?? deployerAddress);
+  await deployLock('GroupLock', proxyAdminLockOwner ?? deployerAddress);
+  await deployLock('NamespaceLock', proxyAdminLockOwner ?? deployerAddress);
+  await deployLock('AccessControlLock', accessControlLockOwner ?? deployerAddress);
 
   await deployImplementations(DEPLOYING_MIGRATION);
   await deployBeacons(beaconOwner ?? deployerAddress);
-  await deployFactories(rulesOwner ?? deployerAddress, factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address, DEPLOYING_MIGRATION);
+  await deployFactories(
+    rulesOwner ?? deployerAddress,
+    factoriesProxyOwner ?? LOCAL_RICH_WALLETS[1].address,
+    DEPLOYING_MIGRATION
+  );
   await deployLensPrimitives(primitivesOwner ?? deployerAddress, DEPLOYING_MIGRATION);
   if (!DEPLOYING_MIGRATION) {
-    const actionHub = await deployLensActionHub(factoriesProxyOwner ?? deployerAddress, treasuryAddress ?? deployerAddress, treasuryFeeBps ?? 0);
+    const actionHub = await deployLensActionHub(
+      factoriesProxyOwner ?? deployerAddress,
+      treasuryAddress ?? deployerAddress,
+      treasuryFeeBps ?? 0
+    );
     await deployLensAccessControl(primitivesOwner ?? deployerAddress);
     await deployRules(rulesOwner ?? deployerAddress);
     await deployActions(actionHub, actionsOwner ?? deployerAddress);

@@ -9,15 +9,9 @@ import {KeyValue} from "contracts/core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
-    struct Configuration {
-        address graph;
-        bool repliesRestricted;
-        bool repostsRestricted;
-        bool quotesRestricted;
-    }
-
+contract FollowersOnlyPostRule is OwnableMetadataBasedRule, Initializable, IPostRule {
     /// @custom:keccak lens.param.graph
     bytes32 constant PARAM__GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
     /// @custom:keccak lens.param.repliesRestricted
@@ -27,9 +21,35 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
     /// @custom:keccak lens.param.quotesRestricted
     bytes32 constant PARAM__QUOTES_RESTRICTED = 0x323cbd3bdd5537df3af23e8d4c6c6bb31c9fa33346759abf247f998a32cda0a2;
 
-    mapping(address => mapping(bytes32 => mapping(uint256 => Configuration))) internal _configuration;
+    /// @custom:keccak lens.storage.FollowersOnlyPostRule
+    bytes32 constant STORAGE__FOLLOWERS_ONLY_POST_RULE =
+        0x72122f9a33a0e5d62090bb94e554ef20898123fa69fd6696be30406d0bbc2d36;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+    struct Configuration {
+        address graph;
+        bool repliesRestricted;
+        bool repostsRestricted;
+        bool quotesRestricted;
+    }
+
+    struct Storage {
+        mapping(address feed => mapping(bytes32 configSalt => mapping(uint256 postId => Configuration config)))
+            configuration;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__FOLLOWERS_ONLY_POST_RULE
+        }
+    }
+
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration;
@@ -49,7 +69,7 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
             configuration.repliesRestricted || configuration.repostsRestricted || configuration.quotesRestricted,
             Errors.InvalidParameter()
         );
-        _configuration[msg.sender][configSalt][postId] = configuration;
+        $storage().configuration[msg.sender][configSalt][postId] = configuration;
     }
 
     function processCreatePost(
@@ -60,7 +80,7 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        Configuration memory configuration = _configuration[msg.sender][configSalt][rootPostId];
+        Configuration memory configuration = $storage().configuration[msg.sender][configSalt][rootPostId];
         if (_shouldRestrictionBeApplied(configuration, rootPostId, postParams)) {
             IFeed feed = IFeed(msg.sender);
             IGraph graph = IGraph(configuration.graph);

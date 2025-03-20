@@ -10,8 +10,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract GroupGatedGraphRule is IGraphRule, OwnableMetadataBasedRule {
+contract GroupGatedGraphRule is OwnableMetadataBasedRule, Initializable, IGraphRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -23,22 +24,38 @@ contract GroupGatedGraphRule is IGraphRule, OwnableMetadataBasedRule {
     /// @custom:keccak lens.param.group
     bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;
 
+    /// @custom:keccak lens.storage.GroupGatedGraphRule
+    bytes32 constant STORAGE__GROUP_GATED_GRAPH_RULE = 0x0cd40a3a3781a5f1ef9fef9277b4fdc1082fe349c1d9788798b746bdd9228091;
+
     struct Configuration {
         address accessControl;
         address groupGate;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
-
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+    struct Storage {
+        mapping(address graph => mapping(bytes32 configSalt => Configuration config)) configuration;
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__GROUP_GATED_GRAPH_RULE
+        }
+    }
+
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         IGroup(configuration.groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group
-        _configuration[msg.sender][configSalt] = configuration;
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processFollow(
@@ -54,13 +71,13 @@ contract GroupGatedGraphRule is IGraphRule, OwnableMetadataBasedRule {
          * conformed by group members.
          */
         _validateGroupMembership(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].groupGate,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].groupGate,
             followerAccount
         );
         _validateGroupMembership(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].groupGate,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].groupGate,
             accountToFollow
         );
     }

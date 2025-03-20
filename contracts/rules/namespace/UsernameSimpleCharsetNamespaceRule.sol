@@ -6,9 +6,16 @@ import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract UsernameSimpleCharsetNamespaceRule is INamespaceRule, OwnableMetadataBasedRule {
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+contract UsernameSimpleCharsetNamespaceRule is OwnableMetadataBasedRule, Initializable, INamespaceRule {
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32, /* configSalt */ KeyValue[] calldata /* ruleParams */ ) external override {}
 

@@ -22,6 +22,10 @@ abstract contract SimplePaymentRule is TrustBasedRule, OwnableMetadataBasedRule 
 
     constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
 
+    function _initialize(address owner, string memory metadataURI) internal override {
+        super._initialize(owner, metadataURI);
+    }
+
     function _validatePaymentConfiguration(PaymentConfiguration memory configuration) internal view virtual {
         require(configuration.amount > 0, Errors.InvalidParameter());
         // Expects token to support ERC-20 interface, we call balanceOf and expect it to not revert

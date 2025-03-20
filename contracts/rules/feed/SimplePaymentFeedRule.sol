@@ -10,8 +10,9 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
+contract SimplePaymentFeedRule is SimplePaymentRule, Initializable, IFeedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -21,22 +22,39 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
+    /// @custom:keccak lens.storage.SimplePaymentFeedRule
+    bytes32 constant STORAGE__SIMPLE_PAYMENT_FEED_RULE =
+        0x5e6777f4876eb423f2ce5c53ce0620e54ccba4e91fb0b6f712f26df7261b66ca;
+
     struct Configuration {
         address accessControl;
         PaymentConfiguration paymentConfiguration;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    struct Storage {
+        mapping(address feed => mapping(bytes32 configSalt => Configuration config)) configuration;
+    }
 
-    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__SIMPLE_PAYMENT_FEED_RULE
+        }
+    }
+
+    constructor() SimplePaymentRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
+        SimplePaymentRule._initialize(owner, metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
-        _configuration[msg.sender][configSalt] = configuration;
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreatePost(
@@ -47,8 +65,8 @@ contract SimplePaymentFeedRule is SimplePaymentRule, IFeedRule {
         KeyValue[] calldata ruleParams
     ) external override {
         _processPayment(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].paymentConfiguration,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleParams),
             postParams.author
         );

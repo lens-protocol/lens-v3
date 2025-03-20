@@ -8,14 +8,32 @@ import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 /// @custom:keccak lens.param.group
 bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;
 
-contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule {
-    mapping(address => mapping(bytes32 => address)) internal _groupGate;
+contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule, Initializable {
+    struct Storage {
+        mapping(address feed => mapping(bytes32 configSalt => address group)) groupGate;
+    }
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+    /// @custom:keccak lens.storage.GroupGatedFeedRule
+    bytes32 constant STORAGE__GROUP_GATED_FEED_RULE = 0xf4ecd2b7d1de7a29eac43757726b4a4fdd06e8b20a6cf006b5e3a936579b66d3;
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__GROUP_GATED_FEED_RULE
+        }
+    }
+
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address groupGate;
@@ -25,7 +43,7 @@ contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule {
                 break;
             }
         }
-        _groupGate[msg.sender][configSalt] = groupGate;
+        $storage().groupGate[msg.sender][configSalt] = groupGate;
         IGroup(groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group
     }
 
@@ -36,7 +54,7 @@ contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule {
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        require(IGroup(_groupGate[msg.sender][configSalt]).isMember(postParams.author), Errors.NotAMember());
+        require(IGroup($storage().groupGate[msg.sender][configSalt]).isMember(postParams.author), Errors.NotAMember());
     }
 
     function processEditPost(

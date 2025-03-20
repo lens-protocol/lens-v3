@@ -1,4 +1,5 @@
-import { deployLensContract, deployLensContractAsProxy, ContractType, ContractInfo, loadContractFromAddressBook } from './lensUtils';
+import { ethers } from 'ethers';
+import { deployLensContractAsProxy, ContractType, ContractInfo } from './lensUtils';
 
 export async function deployActions(actionHub: string, actionsOwner: string): Promise<void> {
   const metadataURI = '';
@@ -7,22 +8,28 @@ export async function deployActions(actionHub: string, actionsOwner: string): Pr
     {
       contractName: 'TippingAccountAction',
       contractType: ContractType.Action,
-      constructorArguments: [actionHub, actionsOwner, metadataURI],
+      constructorArguments: [actionHub],
     },
     {
       contractName: 'TippingPostAction',
       contractType: ContractType.Action,
-      constructorArguments: [actionHub, actionsOwner, metadataURI],
-    }
+      constructorArguments: [actionHub],
+    },
+    {
+      contractName: 'SimpleCollectAction',
+      contractType: ContractType.Action,
+      constructorArguments: [actionHub],
+    },
   ];
 
-  for (const contract of contracts) {
-    await deployLensContract(contract);
-  }
+  const initializerABI = ['function initialize(address owner, string memory metadataURI) external'];
+  const initializerInterface = new ethers.Interface(initializerABI);
+  const initializeEncodedCall = initializerInterface.encodeFunctionData('initialize', [
+    actionsOwner,
+    metadataURI,
+  ]);
 
-  await deployLensContractAsProxy({
-    contractName: 'SimpleCollectAction',
-    contractType: ContractType.Action,
-    constructorArguments: [actionHub, actionsOwner, metadataURI],
-  }, actionsOwner);
+  for (const contract of contracts) {
+    await deployLensContractAsProxy(contract, actionsOwner, initializeEncodedCall);
+  }
 }
