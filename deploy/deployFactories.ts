@@ -4,7 +4,7 @@ import {
   ContractInfo,
   loadContractAddressFromAddressBook,
 } from './lensUtils';
-import { assert, Contract, ZeroAddress } from 'ethers';
+import { assert, Contract, ethers, ZeroAddress } from 'ethers';
 import { utils } from 'zksync-ethers';
 import { getWallet } from './utils';
 
@@ -115,27 +115,27 @@ export default async function deployFactories(
     {
       contractName: 'AccountBlockingRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'GroupGatedFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'UsernameSimpleCharsetNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'BanMemberGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'AdditionRemovalPidGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
   ];
 
@@ -149,8 +149,20 @@ export default async function deployFactories(
   }
 
   if (!DEPLOYING_MIGRATION) {
+    const initializerABI = [
+      'function initialize(address owner, string memory metadataURI) external',
+    ];
+    const initializerInterface = new ethers.Interface(initializerABI);
+    const initializeEncodedCall = initializerInterface.encodeFunctionData('initialize', [
+      rulesOwner,
+      metadataURI,
+    ]);
     for (const rule of rules) {
-      deployedContracts[rule.contractName] = await deployLensContractAsProxy(rule, rulesOwner);
+      deployedContracts[rule.contractName] = await deployLensContractAsProxy(
+        rule,
+        rulesOwner,
+        initializeEncodedCall
+      );
     }
   }
 

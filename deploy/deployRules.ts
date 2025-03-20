@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { ContractType, ContractInfo, deployLensContractAsProxy } from './lensUtils';
 
 export async function deployRules(rulesOwner: string): Promise<void> {
@@ -7,96 +8,103 @@ export async function deployRules(rulesOwner: string): Promise<void> {
     {
       contractName: 'SimplePaymentFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'TokenGatedFeedRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     // Post Rules
     {
       contractName: 'FollowersOnlyPostRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     // Graph Rules
     {
       contractName: 'GroupGatedGraphRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'TokenGatedGraphRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     // Follow Rules
     {
       contractName: 'SimplePaymentFollowRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'TokenGatedFollowRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     // Group Rules
     {
       contractName: 'MembershipApprovalGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'SimplePaymentGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'TokenGatedGroupRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     // {
     //   contractName: 'BanMemberGroupRule',
     //   contractType: ContractType.Rule,
-    //   constructorArguments: [rulesOwner, metadataURI],
+    //   constructorArguments: [],
     // },
     // Namespace Rules
     // {
     //   contractName: 'UsernameCharsetNamespaceRule',
     //   contractType: ContractType.Rule,
-    //   constructorArguments: [metadataURI],
+    //   constructorArguments: [],
     // },
     {
       contractName: 'UsernameLengthNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'UsernameReservedNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     // {
     //   contractName: 'SimplePaymentNamespaceRule',
     //   contractType: ContractType.Rule,
-    //   constructorArguments: [metadataURI],
+    //   constructorArguments: [],
     // },
     {
       contractName: 'TokenGatedNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
     {
       contractName: 'UsernamePricePerLengthNamespaceRule',
       contractType: ContractType.Rule,
-      constructorArguments: [rulesOwner, metadataURI],
+      constructorArguments: [],
     },
   ];
 
+  const initializerABI = ['function initialize(address owner, string memory metadataURI) external'];
+  const initializerInterface = new ethers.Interface(initializerABI);
+  const initializeEncodedCall = initializerInterface.encodeFunctionData('initialize', [
+    rulesOwner,
+    metadataURI,
+  ]);
+
   for (const contract of contracts) {
-    await deployLensContractAsProxy(contract, rulesOwner);
+    await deployLensContractAsProxy(contract, rulesOwner, initializeEncodedCall);
   }
 }

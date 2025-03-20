@@ -104,7 +104,8 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
 
 export async function deployLensContractAsProxy(
   contractToDeploy: ContractInfo,
-  proxyOwner: string
+  proxyOwner: string,
+  initializerCalldata?: string
 ): Promise<ContractInfo> {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
@@ -142,7 +143,11 @@ export async function deployLensContractAsProxy(
   addressBook[contractToDeploy.name ?? contractToDeploy.contractName + 'Impl'] = contractInfo;
   saveAddressBook(addressBook);
 
-  const constructorArguments = [await deployedImplementation.getAddress(), proxyOwner, '0x'];
+  const constructorArguments = [
+    await deployedImplementation.getAddress(),
+    proxyOwner,
+    initializerCalldata ?? '0x',
+  ];
   const deployedProxy = await deployContract('TransparentUpgradeableProxy', constructorArguments);
 
   const proxyInfo: ContractInfo = {
