@@ -21,12 +21,24 @@ contract SimplePaymentGroupRule is SimplePaymentRule, Initializable, IGroupRule 
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
+    /// @custom:keccak lens.storage.SimplePaymentGroupRule
+    bytes32 constant STORAGE__SIMPLE_PAYMENT_GROUP_RULE =
+        0xa1f8937a9a0076d81dc4c0f091b4adf2e824c757934c2223f69429efd53acf20;
+
     struct Configuration {
         address accessControl;
         PaymentConfiguration paymentConfiguration;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    struct Storage {
+        mapping(address group => mapping(bytes32 configSalt => Configuration config)) configuration;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__SIMPLE_PAYMENT_GROUP_RULE
+        }
+    }
 
     constructor() SimplePaymentRule(address(0), "") {
         _disableInitializers();
@@ -41,7 +53,7 @@ contract SimplePaymentGroupRule is SimplePaymentRule, Initializable, IGroupRule 
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);
-        _configuration[msg.sender][configSalt] = configuration;
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processAddition(
@@ -52,8 +64,8 @@ contract SimplePaymentGroupRule is SimplePaymentRule, Initializable, IGroupRule 
         KeyValue[] calldata ruleParams
     ) external override {
         _processPayment(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].paymentConfiguration,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleParams),
             originalMsgSender
         );
@@ -76,8 +88,8 @@ contract SimplePaymentGroupRule is SimplePaymentRule, Initializable, IGroupRule 
         KeyValue[] calldata ruleParams
     ) external override {
         _processPayment(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].paymentConfiguration,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].paymentConfiguration,
             _extractPaymentConfigurationFromParams(ruleParams),
             account
         );

@@ -22,12 +22,23 @@ contract TokenGatedFeedRule is TokenGatedRule, Initializable, IFeedRule {
     /// @custom:keccak lens.param.accessControl
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
 
+    /// @custom:keccak lens.storage.TokenGatedFeedRule
+    bytes32 constant STORAGE__TOKEN_GATED_FEED_RULE = 0xd05368ec51bd7f193185c9db5c15fb8de0f631a954507a483fb9bb1f567a00c9;
+
     struct Configuration {
         address accessControl;
         TokenGateConfiguration tokenGate;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    struct Storage {
+        mapping(address feed => mapping(bytes32 configSalt => Configuration config)) configuration;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__TOKEN_GATED_FEED_RULE
+        }
+    }
 
     constructor() TokenGatedRule(address(0), "") {
         _disableInitializers();
@@ -42,7 +53,7 @@ contract TokenGatedFeedRule is TokenGatedRule, Initializable, IFeedRule {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
-        _configuration[msg.sender][configSalt] = configuration;
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreatePost(
@@ -53,8 +64,8 @@ contract TokenGatedFeedRule is TokenGatedRule, Initializable, IFeedRule {
         KeyValue[] calldata /* ruleParams */
     ) external view override {
         _validateTokenBalance(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].tokenGate,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].tokenGate,
             postParams.author
         );
     }

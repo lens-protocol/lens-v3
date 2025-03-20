@@ -41,8 +41,21 @@ contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializabl
     /// @custom:keccak lens.param.usernamesToRelease
     bytes32 constant PARAM__USERNAMES_TO_RELEASE = 0x81011f9338fa0fd1bac6372a385bfd0c2763bf18ec154f09ad5b6688b943b6dc;
 
-    mapping(address => mapping(bytes32 => address)) internal _accessControl;
-    mapping(address => mapping(bytes32 => mapping(string => bool))) internal _isUsernameReserved;
+    /// @custom:keccak lens.storage.UsernameReservedNamespaceRule
+    bytes32 constant STORAGE__USERNAME_RESERVED_NAMESPACE_RULE =
+        0xa08559feca4ccbf88f5987d492116b3568a32a24d348dca81dc1af9040c43847;
+
+    struct Storage {
+        mapping(address group => mapping(bytes32 configSalt => address accessControl)) accessControl;
+        mapping(address group => mapping(bytes32 configSalt => mapping(string username => bool reserved)))
+            isUsernameReserved;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__USERNAME_RESERVED_NAMESPACE_RULE
+        }
+    }
 
     constructor() OwnableMetadataBasedRule(address(0), "") {
         _disableInitializers();
@@ -62,10 +75,10 @@ contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializabl
                 string[] memory usernamesToReserve = abi.decode(ruleParams[i].value, (string[]));
                 for (uint256 j = 0; j < usernamesToReserve.length; j++) {
                     require(
-                        !_isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]],
+                        !$storage().isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]],
                         Errors.RedundantStateChange()
                     );
-                    _isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]] = true;
+                    $storage().isUsernameReserved[msg.sender][configSalt][usernamesToReserve[j]] = true;
                     emit Lens_UsernameReservedNamespaceRule_UsernameReserved(
                         msg.sender, configSalt, usernamesToReserve[j], usernamesToReserve[j]
                     );
@@ -74,9 +87,10 @@ contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializabl
                 string[] memory usernamesToRelease = abi.decode(ruleParams[i].value, (string[]));
                 for (uint256 j = 0; j < usernamesToRelease.length; j++) {
                     require(
-                        _isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]], Errors.RedundantStateChange()
+                        $storage().isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]],
+                        Errors.RedundantStateChange()
                     );
-                    _isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]] = false;
+                    $storage().isUsernameReserved[msg.sender][configSalt][usernamesToRelease[j]] = false;
                     emit Lens_UsernameReservedNamespaceRule_UsernameReleased(
                         msg.sender, configSalt, usernamesToRelease[j], usernamesToRelease[j]
                     );
@@ -84,7 +98,7 @@ contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializabl
             }
         }
         accessControl.verifyHasAccessFunction();
-        _accessControl[msg.sender][configSalt] = accessControl;
+        $storage().accessControl[msg.sender][configSalt] = accessControl;
     }
 
     function processCreation(
@@ -95,8 +109,10 @@ contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializabl
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external override {
-        if (_isUsernameReserved[msg.sender][configSalt][username]) {
-            _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, PID__CREATE_RESERVED_USERNAME);
+        if ($storage().isUsernameReserved[msg.sender][configSalt][username]) {
+            $storage().accessControl[msg.sender][configSalt].requireAccess(
+                originalMsgSender, PID__CREATE_RESERVED_USERNAME
+            );
             emit Lens_UsernameReservedNamespaceRule_ReservedUsernameCreated(
                 msg.sender, configSalt, username, username, account, originalMsgSender
             );

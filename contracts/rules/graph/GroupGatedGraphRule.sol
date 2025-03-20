@@ -24,12 +24,23 @@ contract GroupGatedGraphRule is OwnableMetadataBasedRule, Initializable, IGraphR
     /// @custom:keccak lens.param.group
     bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;
 
+    /// @custom:keccak lens.storage.GroupGatedGraphRule
+    bytes32 constant STORAGE__GROUP_GATED_GRAPH_RULE = 0x0cd40a3a3781a5f1ef9fef9277b4fdc1082fe349c1d9788798b746bdd9228091;
+
     struct Configuration {
         address accessControl;
         address groupGate;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    struct Storage {
+        mapping(address graph => mapping(bytes32 configSalt => Configuration config)) configuration;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__GROUP_GATED_GRAPH_RULE
+        }
+    }
 
     constructor() OwnableMetadataBasedRule(address(0), "") {
         _disableInitializers();
@@ -44,7 +55,7 @@ contract GroupGatedGraphRule is OwnableMetadataBasedRule, Initializable, IGraphR
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         IGroup(configuration.groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group
-        _configuration[msg.sender][configSalt] = configuration;
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processFollow(
@@ -60,13 +71,13 @@ contract GroupGatedGraphRule is OwnableMetadataBasedRule, Initializable, IGraphR
          * conformed by group members.
          */
         _validateGroupMembership(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].groupGate,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].groupGate,
             followerAccount
         );
         _validateGroupMembership(
-            _configuration[msg.sender][configSalt].accessControl,
-            _configuration[msg.sender][configSalt].groupGate,
+            $storage().configuration[msg.sender][configSalt].accessControl,
+            $storage().configuration[msg.sender][configSalt].groupGate,
             accountToFollow
         );
     }

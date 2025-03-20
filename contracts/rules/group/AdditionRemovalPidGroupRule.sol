@@ -23,7 +23,19 @@ contract AdditionRemovalPidGroupRule is OwnableMetadataBasedRule, Initializable,
     /// @custom:keccak lens.permission.RemoveMember
     uint256 constant PID__REMOVE_MEMBER = uint256(0x8c204b72f1086f607fac077224053e94d5f8a69311195889c42430ffa8646e23);
 
-    mapping(address group => mapping(bytes32 configSalt => address accessControl)) internal _accessControl;
+    /// @custom:keccak lens.storage.AdditionRemovalPidGroupRule
+    bytes32 constant STORAGE__ADDITION_REMOVAL_PID_GROUP_RULE =
+        0x875e2cb3a840696bfd4b902a7075335bfafa204e802c28025d62922181ad12b2;
+
+    struct Storage {
+        mapping(address group => mapping(bytes32 configSalt => address accessControl)) accessControl;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__ADDITION_REMOVAL_PID_GROUP_RULE
+        }
+    }
 
     constructor() OwnableMetadataBasedRule(address(0), "") {
         _disableInitializers();
@@ -44,7 +56,7 @@ contract AdditionRemovalPidGroupRule is OwnableMetadataBasedRule, Initializable,
             }
         }
         accessControl.verifyHasAccessFunction();
-        _accessControl[msg.sender][configSalt] = accessControl;
+        $storage().accessControl[msg.sender][configSalt] = accessControl;
     }
 
     function processAddition(
@@ -54,7 +66,7 @@ contract AdditionRemovalPidGroupRule is OwnableMetadataBasedRule, Initializable,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__ADD_MEMBER);
+        $storage().accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__ADD_MEMBER);
     }
 
     function processRemoval(
@@ -64,7 +76,7 @@ contract AdditionRemovalPidGroupRule is OwnableMetadataBasedRule, Initializable,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        _accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__REMOVE_MEMBER);
+        $storage().accessControl[msg.sender][configSalt].requireAccess(originalMsgSender, msg.sender, PID__REMOVE_MEMBER);
     }
 
     function processJoining(

@@ -29,6 +29,10 @@ contract UsernameLengthNamespaceRule is OwnableMetadataBasedRule, Initializable,
     /// @custom:keccak lens.param.maxLength
     bytes32 constant PARAM__MAX_LENGTH = 0x1ca8667b94b405cf7da43e835d971ef185da6461852b8b81579a58637515aa69;
 
+    /// @custom:keccak lens.storage.UsernameLengthNamespaceRule
+    bytes32 constant STORAGE__USERNAME_LENGTH_NAMESPACE_RULE =
+        0x08a7202baa9f254e5fee08987a4c8a3a9177d81af0c772b263c686bccb0f6ac8;
+
     struct LengthRestrictions {
         uint8 min;
         uint8 max;
@@ -39,7 +43,15 @@ contract UsernameLengthNamespaceRule is OwnableMetadataBasedRule, Initializable,
         LengthRestrictions lengthRestrictions;
     }
 
-    mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
+    struct Storage {
+        mapping(address namespace => mapping(bytes32 configSalt => Configuration config)) configuration;
+    }
+
+    function $storage() private pure returns (Storage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__USERNAME_LENGTH_NAMESPACE_RULE
+        }
+    }
 
     constructor() OwnableMetadataBasedRule(address(0), "") {
         _disableInitializers();
@@ -63,7 +75,7 @@ contract UsernameLengthNamespaceRule is OwnableMetadataBasedRule, Initializable,
                 || configuration.lengthRestrictions.min <= configuration.lengthRestrictions.max,
             Errors.InvalidParameter()
         ); // Min length cannot be greater than max length
-        _configuration[msg.sender][configSalt] = configuration;
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreation(
@@ -74,7 +86,7 @@ contract UsernameLengthNamespaceRule is OwnableMetadataBasedRule, Initializable,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        Configuration memory configuration = _configuration[msg.sender][configSalt];
+        Configuration memory configuration = $storage().configuration[msg.sender][configSalt];
         uint256 usernameLength = bytes(username).length;
         if (
             configuration.lengthRestrictions.min != 0
