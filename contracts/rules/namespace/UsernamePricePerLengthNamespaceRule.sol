@@ -9,8 +9,9 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {SimplePaymentRule} from "contracts/rules/base/SimplePaymentRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRule {
+contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, Initializable, INamespaceRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -41,11 +42,16 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
+    constructor() SimplePaymentRule(address(0), "") {
+        _disableInitializers();
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external {
+    function initialize(address owner, string memory metadataURI) external initializer {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
+        SimplePaymentRule._initialize(owner, metadataURI);
+    }
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleConfigurationParams) external override {
         _extractAndSaveConfigurationFromParams(configSalt, ruleConfigurationParams);
         _configuration[msg.sender][configSalt].accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(_configuration[msg.sender][configSalt].defaultConfig);
@@ -58,7 +64,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external override {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 
@@ -68,7 +74,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external override {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 
@@ -79,7 +85,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external override {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 
@@ -90,7 +96,7 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, INamespaceRul
         string calldata username,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata ruleParams
-    ) external {
+    ) external override {
         _processPayment(configSalt, originalMsgSender, username, _extractPaymentConfigurationFromParams(ruleParams));
     }
 

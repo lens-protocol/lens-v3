@@ -9,8 +9,9 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
+contract TokenGatedGraphRule is TokenGatedRule, Initializable, IGraphRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -27,11 +28,16 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) TokenGatedRule(owner, metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+    constructor() TokenGatedRule(address(0), "") {
+        _disableInitializers();
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function initialize(address owner, string memory metadataURI) external initializer {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+        TokenGatedRule._initialize(owner, metadataURI);
+    }
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);
@@ -45,7 +51,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address accountToFollow,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external view override {
         /**
          * Both ends of the follow connection must comply with the token-gate restriction, then the graph is purely
          * conformed by token holders.
@@ -69,7 +75,7 @@ contract TokenGatedGraphRule is TokenGatedRule, IGraphRule {
         address, /* accountToUnfollow */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 

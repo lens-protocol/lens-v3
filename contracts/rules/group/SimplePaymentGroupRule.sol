@@ -9,8 +9,9 @@ import {IAccessControl} from "contracts/core/interfaces/IAccessControl.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
+contract SimplePaymentGroupRule is SimplePaymentRule, Initializable, IGroupRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -27,11 +28,16 @@ contract SimplePaymentGroupRule is SimplePaymentRule, IGroupRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
+    constructor() SimplePaymentRule(address(0), "") {
+        _disableInitializers();
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function initialize(address owner, string memory metadataURI) external initializer {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_PAYMENT, "lens.permission.SkipPayment");
+        SimplePaymentRule._initialize(owner, metadataURI);
+    }
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validatePaymentConfiguration(configuration.paymentConfiguration);

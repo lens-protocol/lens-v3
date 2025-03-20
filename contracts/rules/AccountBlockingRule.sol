@@ -9,14 +9,21 @@ import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract AccountBlockingRule is IFeedRule, IGraphRule, OwnableMetadataBasedRule {
+contract AccountBlockingRule is OwnableMetadataBasedRule, Initializable, IFeedRule, IGraphRule {
     event Lens_AccountBlocking_AccountBlocked(address indexed source, address indexed target);
     event Lens_AccountBlocking_AccountUnblocked(address indexed source, address indexed target);
 
     mapping(address source => mapping(address target => bool isBlocked)) internal _isBlocked;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32, /* salt */ KeyValue[] calldata /* ruleConfigurationParams */ )
         external

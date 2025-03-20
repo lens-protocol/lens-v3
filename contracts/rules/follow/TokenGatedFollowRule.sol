@@ -6,11 +6,18 @@ import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {TokenGatedRule} from "contracts/rules/base/TokenGatedRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TokenGatedFollowRule is TokenGatedRule, IFollowRule {
+contract TokenGatedFollowRule is TokenGatedRule, Initializable, IFollowRule {
     mapping(address => mapping(address => mapping(bytes32 => TokenGateConfiguration))) internal _tokenGateConfig;
 
-    constructor(address owner, string memory metadataURI) TokenGatedRule(owner, metadataURI) {}
+    constructor() TokenGatedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        TokenGatedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external override {
         TokenGateConfiguration memory tokenGateConfig = _extractConfigurationFromParams(ruleParams);

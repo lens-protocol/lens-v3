@@ -8,8 +8,9 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {TokenGatedRule} from "contracts/rules/base/TokenGatedRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
+contract TokenGatedNamespaceRule is TokenGatedRule, Initializable, INamespaceRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -26,11 +27,16 @@ contract TokenGatedNamespaceRule is TokenGatedRule, INamespaceRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) TokenGatedRule(owner, metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+    constructor() TokenGatedRule(address(0), "") {
+        _disableInitializers();
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function initialize(address owner, string memory metadataURI) external initializer {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+        TokenGatedRule._initialize(owner, metadataURI);
+    }
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         _validateTokenGateConfiguration(configuration.tokenGate);

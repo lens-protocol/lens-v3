@@ -9,8 +9,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRule {
+contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializable, INamespaceRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -43,8 +44,13 @@ contract UsernameReservedNamespaceRule is INamespaceRule, OwnableMetadataBasedRu
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(bytes32 => mapping(string => bool))) internal _isUsernameReserved;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__CREATE_RESERVED_USERNAME, "lens.permission.CreateReservedUsername");
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {

@@ -9,8 +9,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract MembershipApprovalGroupRule is IRequestBasedGroupRule, OwnableMetadataBasedRule {
+contract MembershipApprovalGroupRule is OwnableMetadataBasedRule, Initializable, IRequestBasedGroupRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -36,8 +37,14 @@ contract MembershipApprovalGroupRule is IRequestBasedGroupRule, OwnableMetadataB
     mapping(address => mapping(bytes32 => address)) internal _accessControl;
     mapping(address => mapping(address => mapping(bytes32 => bool))) internal _isMembershipRequested;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__APPROVE_MEMBER, "lens.permission.ApproveMember");
+
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
     }
 
     function sendMembershipRequest(bytes32 configSalt, address group, KeyValue[] calldata /* params */ )

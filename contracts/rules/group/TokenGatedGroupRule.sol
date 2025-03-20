@@ -9,8 +9,9 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
+contract TokenGatedGroupRule is TokenGatedRule, Initializable, IGroupRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -27,8 +28,13 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) TokenGatedRule(owner, metadataURI) {
+    constructor() TokenGatedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+        TokenGatedRule._initialize(owner, metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
@@ -44,7 +50,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external view override {
         if (_configuration[msg.sender][configSalt].accessControl.hasAccess(originalMsgSender, PID__SKIP_GATE) == false) {
             _validateTokenBalance(
                 _configuration[msg.sender][configSalt].accessControl,
@@ -60,7 +66,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 
@@ -69,7 +75,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address account,
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view {
+    ) external view override {
         _validateTokenBalance(
             _configuration[msg.sender][configSalt].accessControl,
             _configuration[msg.sender][configSalt].tokenGate,
@@ -82,7 +88,7 @@ contract TokenGatedGroupRule is TokenGatedRule, IGroupRule {
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external pure {
+    ) external pure override {
         revert Errors.NotImplemented();
     }
 

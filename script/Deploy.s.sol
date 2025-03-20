@@ -101,13 +101,43 @@ contract MyScript is Script {
         _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
         _deployFactoryProxies();
 
-        accountBlockingRule = address(new AccountBlockingRule({owner: address(this), metadataURI: "uri://any"}));
-        groupGatedFeedRule = address(new GroupGatedFeedRule({owner: address(this), metadataURI: "uri://any"}));
-        usernameSimpleCharsetRule =
-            address(new UsernameSimpleCharsetNamespaceRule({owner: address(this), metadataURI: "uri://any"}));
-        banMemberGroupRule = address(new BanMemberGroupRule({owner: address(this), metadataURI: "uri://any"}));
-        addRemovePidGroupRule =
-            address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://any"}));
+        accountBlockingRule = address(
+            new TransparentUpgradeableProxy(
+                address(new AccountBlockingRule()),
+                proxyAdmin,
+                abi.encodeWithSelector(AccountBlockingRule.initialize.selector, address(this), "uri://any")
+            )
+        );
+        groupGatedFeedRule = address(
+            new TransparentUpgradeableProxy(
+                address(new GroupGatedFeedRule()),
+                proxyAdmin,
+                abi.encodeWithSelector(GroupGatedFeedRule.initialize.selector, address(this), "uri://any")
+            )
+        );
+        usernameSimpleCharsetRule = address(
+            new TransparentUpgradeableProxy(
+                address(new UsernameSimpleCharsetNamespaceRule()),
+                proxyAdmin,
+                abi.encodeWithSelector(
+                    UsernameSimpleCharsetNamespaceRule.initialize.selector, address(this), "uri://any"
+                )
+            )
+        );
+        banMemberGroupRule = address(
+            new TransparentUpgradeableProxy(
+                address(new BanMemberGroupRule()),
+                proxyAdmin,
+                abi.encodeWithSelector(BanMemberGroupRule.initialize.selector, address(this), "uri://any")
+            )
+        );
+        addRemovePidGroupRule = address(
+            new TransparentUpgradeableProxy(
+                address(new AdditionRemovalPidGroupRule()),
+                proxyAdmin,
+                abi.encodeWithSelector(AdditionRemovalPidGroupRule.initialize.selector, address(this), "uri://any")
+            )
+        );
 
         lensFactory = new LensFactory({
             factories: FactoryConstructorParams({

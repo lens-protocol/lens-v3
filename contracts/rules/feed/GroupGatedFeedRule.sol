@@ -8,14 +8,21 @@ import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 /// @custom:keccak lens.param.group
 bytes32 constant PARAM__GROUP = 0xa92ea569d1a9f915f96759ba7cea5f135d011c442b0508dbef76a309e55f4458;
 
-contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule {
+contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule, Initializable {
     mapping(address => mapping(bytes32 => address)) internal _groupGate;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         address groupGate;

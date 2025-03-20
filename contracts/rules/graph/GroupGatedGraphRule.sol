@@ -10,8 +10,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract GroupGatedGraphRule is IGraphRule, OwnableMetadataBasedRule {
+contract GroupGatedGraphRule is OwnableMetadataBasedRule, Initializable, IGraphRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -30,11 +31,16 @@ contract GroupGatedGraphRule is IGraphRule, OwnableMetadataBasedRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
-        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
     }
 
-    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external {
+    function initialize(address owner, string memory metadataURI) external initializer {
+        emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
+
+    function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         IGroup(configuration.groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group

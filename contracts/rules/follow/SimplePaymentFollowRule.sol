@@ -6,11 +6,18 @@ import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {SimplePaymentRule} from "contracts/rules/base/SimplePaymentRule.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract SimplePaymentFollowRule is SimplePaymentRule, IFollowRule {
+contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRule {
     mapping(address => mapping(address => mapping(bytes32 => PaymentConfiguration))) internal _paymentConfiguration;
 
-    constructor(address owner, string memory metadataURI) SimplePaymentRule(owner, metadataURI) {}
+    constructor() SimplePaymentRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        SimplePaymentRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external override {
         PaymentConfiguration memory paymentConfiguration = _extractPaymentConfigurationFromParams(ruleParams);

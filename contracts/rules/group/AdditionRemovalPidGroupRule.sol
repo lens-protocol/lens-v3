@@ -9,8 +9,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
+contract AdditionRemovalPidGroupRule is OwnableMetadataBasedRule, Initializable, IGroupRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -24,9 +25,14 @@ contract AdditionRemovalPidGroupRule is IGroupRule, OwnableMetadataBasedRule {
 
     mapping(address group => mapping(bytes32 configSalt => address accessControl)) internal _accessControl;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__ADD_MEMBER, "lens.permission.AddMember");
         emit Events.Lens_PermissionId_Available(PID__REMOVE_MEMBER, "lens.permission.RemoveMember");
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {

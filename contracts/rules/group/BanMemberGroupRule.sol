@@ -10,8 +10,9 @@ import {Events} from "contracts/core/types/Events.sol";
 import {KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
+contract BanMemberGroupRule is OwnableMetadataBasedRule, Initializable, IGroupRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -35,9 +36,14 @@ contract BanMemberGroupRule is IGroupRule, OwnableMetadataBasedRule {
     mapping(address group => address accessControl) internal _groupAccessControl;
     mapping(address group => mapping(address account => bool isBanned)) internal _isMemberBanned;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__BAN_MEMBER, "lens.permission.BanMember");
         emit Events.Lens_PermissionId_Available(PID__UNBAN_MEMBER, "lens.permission.UnbanMember");
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
     }
 
     function ban(

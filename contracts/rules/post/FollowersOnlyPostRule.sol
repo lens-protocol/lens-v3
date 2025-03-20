@@ -9,8 +9,9 @@ import {KeyValue} from "contracts/core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "contracts/core/interfaces/IFeed.sol";
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
+contract FollowersOnlyPostRule is OwnableMetadataBasedRule, Initializable, IPostRule {
     struct Configuration {
         address graph;
         bool repliesRestricted;
@@ -29,7 +30,13 @@ contract FollowersOnlyPostRule is IPostRule, OwnableMetadataBasedRule {
 
     mapping(address => mapping(bytes32 => mapping(uint256 => Configuration))) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) OwnableMetadataBasedRule(owner, metadataURI) {}
+    constructor() OwnableMetadataBasedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
+        OwnableMetadataBasedRule._initialize(owner, metadataURI);
+    }
 
     function configure(bytes32 configSalt, uint256 postId, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration;

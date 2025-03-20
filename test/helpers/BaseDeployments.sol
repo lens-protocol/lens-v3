@@ -71,6 +71,7 @@ contract BaseDeployments is Test {
     address actionsOwner = vm.envOr("ACTIONS_OWNER", makeAddr("ACTIONS_OWNER"));
     address beaconOwner = vm.envOr("BEACON_OWNER", makeAddr("BEACON_OWNER"));
     address factoriesProxyOwner = vm.envOr("FACTORIES_PROXY_OWNER", makeAddr("FACTORIES_PROXY_OWNER"));
+    address rulesProxyOwner = vm.envOr("RULES_PROXY_OWNER", makeAddr("RULES_PROXY_OWNER"));
     address primitivesOwner = vm.envOr("PRIMITIVES_OWNER", makeAddr("PRIMITIVES_OWNER"));
 
     address appImpl;
@@ -125,17 +126,47 @@ contract BaseDeployments is Test {
         _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
         _deployFactoryProxies();
 
-        accountBlockingRule =
-            address(new AccountBlockingRule({owner: rulesOwner, metadataURI: "uri://accountBlockingRule"}));
-        groupGatedFeedRule =
-            address(new GroupGatedFeedRule({owner: rulesOwner, metadataURI: "uri://groupGatedFeedRule"}));
-        usernameSimpleCharsetRule = address(
-            new UsernameSimpleCharsetNamespaceRule({owner: rulesOwner, metadataURI: "uri://usernameSimpleCharsetRule"})
+        accountBlockingRule = address(
+            new TransparentUpgradeableProxy(
+                address(new AccountBlockingRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(AccountBlockingRule.initialize.selector, rulesOwner, "uri://AccountBlockingRule")
+            )
         );
-        banMemberGroupRule =
-            address(new BanMemberGroupRule({owner: rulesOwner, metadataURI: "uri://banMemberGroupRule"}));
-        addRemovePidGroupRule =
-            address(new AdditionRemovalPidGroupRule({owner: address(this), metadataURI: "uri://addRemovePidGroupRule"}));
+        groupGatedFeedRule = address(
+            new TransparentUpgradeableProxy(
+                address(new GroupGatedFeedRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(GroupGatedFeedRule.initialize.selector, rulesOwner, "uri://GroupGatedFeedRule")
+            )
+        );
+        usernameSimpleCharsetRule = address(
+            new TransparentUpgradeableProxy(
+                address(new UsernameSimpleCharsetNamespaceRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(
+                    UsernameSimpleCharsetNamespaceRule.initialize.selector,
+                    rulesOwner,
+                    "uri://UsernameSimpleCharsetNamespaceRule"
+                )
+            )
+        );
+        banMemberGroupRule = address(
+            new TransparentUpgradeableProxy(
+                address(new BanMemberGroupRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(BanMemberGroupRule.initialize.selector, rulesOwner, "uri://BanMemberGroupRule")
+            )
+        );
+        addRemovePidGroupRule = address(
+            new TransparentUpgradeableProxy(
+                address(new AdditionRemovalPidGroupRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(
+                    AdditionRemovalPidGroupRule.initialize.selector, rulesOwner, "uri://AdditionRemovalPidGroupRule"
+                )
+            )
+        );
 
         address lensFactoryImpl = migrationMode
             ? address(

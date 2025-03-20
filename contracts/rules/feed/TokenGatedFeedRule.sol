@@ -10,8 +10,9 @@ import {AccessControlLib} from "contracts/core/libraries/AccessControlLib.sol";
 import {KeyValue, RuleChange} from "contracts/core/types/Types.sol";
 import {Events} from "contracts/core/types/Events.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
+contract TokenGatedFeedRule is TokenGatedRule, Initializable, IFeedRule {
     using AccessControlLib for IAccessControl;
     using AccessControlLib for address;
 
@@ -28,8 +29,13 @@ contract TokenGatedFeedRule is TokenGatedRule, IFeedRule {
 
     mapping(address => mapping(bytes32 => Configuration)) internal _configuration;
 
-    constructor(address owner, string memory metadataURI) TokenGatedRule(owner, metadataURI) {
+    constructor() TokenGatedRule(address(0), "") {
+        _disableInitializers();
+    }
+
+    function initialize(address owner, string memory metadataURI) external initializer {
         emit Events.Lens_PermissionId_Available(PID__SKIP_GATE, "lens.permission.SkipGate");
+        TokenGatedRule._initialize(owner, metadataURI);
     }
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
