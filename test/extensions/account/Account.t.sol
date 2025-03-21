@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import "./helpers/TypeHelpers.sol";
+import "./../../helpers/TypeHelpers.sol";
 import {IAccount, AccountManagerPermissions} from "@extensions/account/IAccount.sol";
 import {Account} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/feed/Feed.sol";
