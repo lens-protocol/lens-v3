@@ -161,7 +161,7 @@ contract LensFactoryTest is Test, BaseDeployments {
         _assertGroupSetup(group);
     }
 
-    function _assertFeedSetup_createGroupWithFeed(address feed, address group) internal view {
+    function _assertFeedSetup_createGroupWithFeed(address feed, address /* group */ ) internal view {
         assertEq(IFeed(feed).getFeedRules(IFeedRule.processEditPost.selector, true).length, 0);
         assertEq(IFeed(feed).getFeedRules(IFeedRule.processEditPost.selector, false).length, 0);
 
