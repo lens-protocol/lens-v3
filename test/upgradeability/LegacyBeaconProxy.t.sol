@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {BeaconProxy} from "@core/upgradeability/LegacyBeaconProxy.sol";
 import {MockVersionedBeacon} from "test/mocks/MockVersionedBeacon.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {ZkTest} from "test/helpers/ZkTest.sol";
 
 contract Impl {
     function testImpl() public {
@@ -54,7 +55,7 @@ contract Impl {
     }
 }
 
-contract LegacyBeaconProxyTest is Test {
+contract LegacyBeaconProxyTest is ZkTest {
     MockVersionedBeacon beacon;
     BeaconProxy proxy;
 
@@ -328,9 +329,7 @@ contract LegacyBeaconProxyTest is Test {
      * expecting no state changes. However, the proxy is doing a state change by executing the auto-upgrade logic and
      * storing the implementation address in its storage.
      */
-    function test_DelegateCall_AutoUpgradeDuringGetter_Fails() public {
-        vm.skip(true); // For now, skip this test.
-
+    function test_DelegateCall_AutoUpgradeDuringGetter_Fails() public onlyEvm {
         address someImpl = address(new Impl());
         beacon.mockImplementation(someImpl);
 
