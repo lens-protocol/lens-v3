@@ -3,7 +3,13 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {LensFactory, CreateAccountParams, CreateUsernameParams} from "@extensions/factories/LensFactory.sol";
+import {
+    LensFactory,
+    CreateAccountParams,
+    CreateUsernameParams,
+    GroupWithFeed_GroupParams,
+    GroupWithFeed_FeedParams
+} from "@extensions/factories/LensFactory.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {RuleChange, KeyValue} from "@core/types/Types.sol";
 import {AccountManagerPermissions} from "@extensions/account/Account.sol";
@@ -125,18 +131,25 @@ contract LensFactoryTest is Test, BaseDeployments {
             IAccount(payable(ownerAccount)).executeTransaction(
                 address(lensFactory),
                 0,
-                abi.encodeWithSelector(
-                    LensFactory.createGroupWithFeed.selector,
-                    ownerAccount,
-                    _emptyAddressArray(),
-                    "uri://group",
-                    _emptyRuleChangeArray(),
-                    _emptyKeyValueArray(),
-                    address(0), // founding member...
-                    _emptyKeyValueArray(),
-                    "uri://feed",
-                    _emptyRuleChangeArray(),
-                    _emptyKeyValueArray()
+                abi.encodeCall(
+                    LensFactory.createGroupWithFeed,
+                    (
+                        ownerAccount,
+                        _emptyAddressArray(),
+                        GroupWithFeed_GroupParams({
+                            groupMetadataURI: "uri://group",
+                            groupRules: _emptyRuleChangeArray(),
+                            groupExtraData: _emptyKeyValueArray(),
+                            groupFoundingMember: address(0), // founding member...
+                            groupAddFoundingMemberCustomParams: _emptyKeyValueArray()
+                        }),
+                        GroupWithFeed_FeedParams({
+                            feedMetadataURI: "uri://feed",
+                            feedRules: _emptyRuleChangeArray(),
+                            feedExtraData: _emptyKeyValueArray(),
+                            allowNonMembersToReply: false
+                        })
+                    )
                 )
             ),
             (address, address)

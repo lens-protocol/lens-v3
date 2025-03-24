@@ -84,6 +84,21 @@ struct RuleConstructorParams {
     address addRemovePidGroupRule;
 }
 
+struct GroupWithFeed_GroupParams {
+    string groupMetadataURI;
+    RuleChange[] groupRules;
+    KeyValue[] groupExtraData;
+    address groupFoundingMember;
+    KeyValue[] groupAddFoundingMemberCustomParams;
+}
+
+struct GroupWithFeed_FeedParams {
+    string feedMetadataURI;
+    RuleChange[] feedRules;
+    KeyValue[] feedExtraData;
+    bool allowNonMembersToReply;
+}
+
 contract LensFactory {
     using LibString for string;
 
@@ -171,21 +186,6 @@ contract LensFactory {
         string feedMetadataURI;
         RuleChange[] feedRules;
         KeyValue[] feedExtraData;
-    }
-
-    struct GroupWithFeed_GroupParams {
-        string groupMetadataURI;
-        RuleChange[] groupRules;
-        KeyValue[] groupExtraData;
-        address groupFoundingMember;
-        KeyValue[] groupAddFoundingMemberCustomParams;
-    }
-
-    struct GroupWithFeed_FeedParams {
-        string feedMetadataURI;
-        RuleChange[] feedRules;
-        KeyValue[] feedExtraData;
-        bool allowNonMembersToReply;
     }
 
     function createGroupWithFeed(
