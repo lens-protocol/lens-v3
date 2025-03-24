@@ -12,15 +12,14 @@ import {
 } from "@extensions/factories/LensFactory.sol";
 import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {RuleChange, KeyValue} from "@core/types/Types.sol";
-import {AccountManagerPermissions} from "@extensions/account/Account.sol";
-import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
 import {IGraph} from "@core/interfaces/IGraph.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {IGroup} from "@core/interfaces/IGroup.sol";
 import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
 import {IAccount} from "@extensions/account/Account.sol";
-import {IOwnable} from "@core/interfaces/IOwnable.sol";
+import {IFeed} from "@core/interfaces/IFeed.sol";
+import {IFeedRule} from "@core/interfaces/IFeedRule.sol";
 
 contract LensFactoryTest is Test, BaseDeployments {
     Namespace namespace;
@@ -127,7 +126,7 @@ contract LensFactoryTest is Test, BaseDeployments {
     }
 
     function testCreateGroupWithFeed() public {
-        (address group, /* address feed */ ) = abi.decode(
+        (address group, address feed) = abi.decode(
             IAccount(payable(ownerAccount)).executeTransaction(
                 address(lensFactory),
                 0,
@@ -154,7 +153,44 @@ contract LensFactoryTest is Test, BaseDeployments {
             ),
             (address, address)
         );
+        _assertGroupSetup_createGroupWithFeed(group);
+        _assertFeedSetup_createGroupWithFeed(feed, group);
+    }
+
+    function _assertGroupSetup_createGroupWithFeed(address group) internal view {
         _assertGroupSetup(group);
+    }
+
+    function _assertFeedSetup_createGroupWithFeed(address feed, address group) internal view {
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processEditPost.selector, true).length, 0);
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processEditPost.selector, false).length, 0);
+
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processDeletePost.selector, true).length, 0);
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processDeletePost.selector, false).length, 0);
+
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processPostRuleChanges.selector, true).length, 0);
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processPostRuleChanges.selector, false).length, 0);
+
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processCreatePost.selector, true).length, 2);
+        assertEq(IFeed(feed).getFeedRules(IFeedRule.processCreatePost.selector, false).length, 0);
+
+        address accountBlockingRuleAddress;
+        address groupGatedRuleAddress;
+        KeyValue[] memory factoryRules = lensFactory.getRules();
+        for (uint256 i = 0; i < factoryRules.length; i++) {
+            if (factoryRules[i].key == keccak256("lens.address.AccountBlockingRule")) {
+                accountBlockingRuleAddress = abi.decode(factoryRules[i].value, (address));
+            } else if (factoryRules[i].key == keccak256("lens.address.GroupGatedFeedRule")) {
+                groupGatedRuleAddress = abi.decode(factoryRules[i].value, (address));
+            }
+        }
+        assertEq(
+            IFeed(feed).getFeedRules(IFeedRule.processCreatePost.selector, true)[0].ruleAddress,
+            accountBlockingRuleAddress
+        );
+        assertEq(
+            IFeed(feed).getFeedRules(IFeedRule.processCreatePost.selector, true)[1].ruleAddress, groupGatedRuleAddress
+        );
     }
 
     function _assertGroupSetup(address group) internal view {
