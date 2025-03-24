@@ -20,12 +20,12 @@ bytes32 constant STORAGE__GROUP_GATED_FEED_RULE = 0xf4ecd2b7d1de7a29eac43757726b
 
 contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule, Initializable {
     struct Configuration {
-        address group;
+        address groupGate;
         bool repliesRestricted;
     }
 
     struct Storage {
-        mapping(address feed => mapping(bytes32 configSalt => Configuration config)) configurations;
+        mapping(address feed => mapping(bytes32 configSalt => Configuration config)) configuration;
     }
 
     function $storage() private pure returns (Storage storage _storage) {
@@ -44,18 +44,17 @@ contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule, Initializabl
 
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external override {
         Configuration memory configuration;
+        // Restrict replies by default
+        configuration.repliesRestricted = true;
         for (uint256 i = 0; i < ruleParams.length; i++) {
             if (ruleParams[i].key == PARAM__GROUP) {
-                configuration.group = abi.decode(ruleParams[i].value, (address));
+                configuration.groupGate = abi.decode(ruleParams[i].value, (address));
             } else if (ruleParams[i].key == PARAM__REPLIES_RESTRICTED) {
                 configuration.repliesRestricted = abi.decode(ruleParams[i].value, (bool));
             }
         }
-
-        require(configuration.group != address(0), Errors.InvalidParameter());
-        IGroup(configuration.group).isMember(address(this)); // Aims to verify the provided address is a valid group
-
-        $storage().configurations[msg.sender][configSalt] = configuration;
+        IGroup(configuration.groupGate).isMember(address(this)); // Aims to verify the provided address is a valid group
+        $storage().configuration[msg.sender][configSalt] = configuration;
     }
 
     function processCreatePost(
@@ -65,10 +64,9 @@ contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule, Initializabl
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
     ) external view override {
-        Configuration memory configuration = $storage().configurations[msg.sender][configSalt];
-
+        Configuration memory configuration = $storage().configuration[msg.sender][configSalt];
         if (_shouldRestrictionBeApplied(configuration, postParams)) {
-            require(IGroup(configuration.group).isMember(postParams.author), Errors.NotAMember());
+            require(IGroup(configuration.groupGate).isMember(postParams.author), Errors.NotAMember());
         }
     }
 
@@ -77,11 +75,11 @@ contract GroupGatedFeedRule is IFeedRule, OwnableMetadataBasedRule, Initializabl
         pure
         returns (bool)
     {
-        if (!configuration.repliesRestricted && postParams.repliedPostId != 0) {
-            return false;
+        if (postParams.repliedPostId != 0) {
+            return configuration.repliesRestricted;
+        } else {
+            return true;
         }
-
-        return true;
     }
 
     function processEditPost(
