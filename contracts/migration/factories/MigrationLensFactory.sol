@@ -54,7 +54,8 @@ contract MigrationLensFactory is LensFactory, EventEmitter {
     function _prepareFeedRulesBasedOnGroup(
         RuleChange[] memory feedRules,
         IRoleBasedAccessControl, /* feedAccessControl */
-        address /* group */
+        address, /* group */
+        bool /* allowNonMembersToReply */
     ) internal pure override returns (RuleChange[] memory) {
         return feedRules;
     }
