@@ -50,12 +50,11 @@ contract SimpleCollectAction is
     /// @custom:keccak lens.param.recipients
     bytes32 constant PARAM__RECIPIENTS = 0x7f7e01c87d5278dd08505253491cf5d6b30930036f6afa2ae22a980882f2cac1;
     /// @custom:keccak lens.param.referralFeeBps
-    bytes32 constant PARAM__REFERRAL_FEE_BPS = 0x6dff2c1710f2154b19d8cf5d6f7d8f5b3909222c3cdd8801486403e4d423b1b6;
+    bytes32 constant PARAM__REFERRAL_FEE_BPS = 0x0528211c8ce09d8b4bbf47978d7c2b7901461b28da5f4da81efb3058169ea470;
     /// @custom:keccak lens.param.graph
     bytes32 constant PARAM__FOLLOWER_ONLY_GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
     /// @custom:keccak lens.param.isImmutable
     bytes32 constant PARAM__IS_IMMUTABLE = 0x4d1cad3e438026974130ac84979964dd6019eace55216c3de16bc79e36a4c44b;
-
     /// @custom:keccak lens.param.referrals
     bytes32 constant PARAM__REFERRALS = 0x183a1b7fdb9626f5ae4e8cac88ee13cc03b29800d2690f61e2a2566f76d8773f;
 
