@@ -4,11 +4,16 @@ pragma solidity ^0.8.26;
 
 import {IFollowRule} from "contracts/core/interfaces/IFollowRule.sol";
 import {SimplePaymentRule} from "contracts/rules/base/SimplePaymentRule.sol";
-import {KeyValue} from "contracts/core/types/Types.sol";
+import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRule {
+    /// @custom:keccak lens.param.referrals
+    bytes32 constant PARAM__REFERRALS = 0x183a1b7fdb9626f5ae4e8cac88ee13cc03b29800d2690f61e2a2566f76d8773f;
+    /// @custom:keccak lens.param.referralFeeBps
+    bytes32 constant PARAM__REFERRAL_FEE_BPS = 0x0528211c8ce09d8b4bbf47978d7c2b7901461b28da5f4da81efb3058169ea470;
+
     /// @custom:keccak lens.storage.SimplePaymentFollowRule
     bytes32 constant STORAGE__SIMPLE_PAYMENT_FOLLOW_RULE =
         0x40d861d20f0413c082c732a37b8aa34f7a2abf2d3b8a62e3868805a8505f8fd5;
@@ -49,7 +54,9 @@ contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRul
         _processPayment({
             configuration: $storage().paymentConfiguration[msg.sender][accountToFollow][configSalt],
             expectedConfiguration: _extractPaymentConfigurationFromParams(ruleParams),
-            payer: followerAccount
+            payer: followerAccount,
+            referrals: new RecipientData[](0), // TODO: Implement!
+            referralFeeBps: 0 // TODO: Implement!
         });
     }
 
