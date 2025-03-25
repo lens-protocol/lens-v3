@@ -89,7 +89,6 @@ struct GroupWithFeed_GroupParams {
     RuleChange[] groupRules;
     KeyValue[] groupExtraData;
     address groupFoundingMember;
-    KeyValue[] groupAddFoundingMemberCustomParams;
 }
 
 struct GroupWithFeed_FeedParams {
@@ -214,8 +213,7 @@ contract LensFactory {
                 s.owner,
                 _prepareGroupRules(groupParams.groupRules, address(s.groupAccessControl)),
                 groupParams.groupExtraData,
-                groupParams.groupFoundingMember,
-                groupParams.groupAddFoundingMemberCustomParams
+                groupParams.groupFoundingMember
             );
         }
 
@@ -270,8 +268,7 @@ contract LensFactory {
         address[] calldata admins,
         RuleChange[] calldata rules,
         KeyValue[] calldata extraData,
-        address foundingMember,
-        KeyValue[] memory addFoundingMemberCustomParams
+        address foundingMember
     ) external returns (address) {
         if (foundingMember != address(0)) {
             require(foundingMember == msg.sender, Errors.InvalidParameter());
@@ -283,8 +280,7 @@ contract LensFactory {
             owner,
             _prepareGroupRules(rules, address(accessControl)),
             extraData,
-            foundingMember,
-            addFoundingMemberCustomParams
+            foundingMember
         );
     }
 

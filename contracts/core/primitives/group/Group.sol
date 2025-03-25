@@ -54,15 +54,28 @@ contract Group is
         _disableInitializers();
     }
 
-    function initialize(string memory metadataURI, IAccessControl accessControl) external override initializer {
-        _initialize(metadataURI);
+    function initialize(string memory metadataURI, IAccessControl accessControl, address foundingMember)
+        external
+        override
+        initializer
+    {
+        _initialize(metadataURI, foundingMember);
         AccessControlled._initialize(accessControl);
     }
 
-    function _initialize(string memory metadataURI) internal {
+    function _initialize(string memory metadataURI, address foundingMember) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Group", flavour: "lens.contract.Group"});
+        if (foundingMember != address(0)) {
+            emit Lens_Group_MemberAdded(
+                foundingMember,
+                Core._grantMembership(foundingMember),
+                new KeyValue[](0),
+                new RuleProcessingParams[](0),
+                address(0)
+            );
+        }
     }
 
     function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {
@@ -159,20 +172,17 @@ contract Group is
         RuleProcessingParams[] calldata ruleProcessingParams,
         address source
     ) internal {
-        bool isAddingFoundingMember = Core.$storage().lastMemberIdAssigned == 0;
         uint256 membershipId = Core._grantMembership(account);
         _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
-        if (isAddingFoundingMember == false) {
-            // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
-            require(
-                IAccountGroupAdditionSettings(account).canBeAddedToGroup({
-                    group: address(this),
-                    addedBy: msg.sender,
-                    params: _extractAccountAdditionSettingsParamsFromParams(customParams)
-                }),
-                Errors.NotAllowed()
-            );
-        }
+        // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
+        require(
+            IAccountGroupAdditionSettings(account).canBeAddedToGroup({
+                group: address(this),
+                addedBy: msg.sender,
+                params: _extractAccountAdditionSettingsParamsFromParams(customParams)
+            }),
+            Errors.NotAllowed()
+        );
         _storeSource(membershipId, source);
         emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
     }

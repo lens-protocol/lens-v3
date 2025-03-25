@@ -64,7 +64,7 @@ interface IGroup is IMetadataBased {
 
     event Lens_Group_MetadataURISet(string metadataURI);
 
-    function initialize(string memory metadataURI, IAccessControl accessControl) external;
+    function initialize(string memory metadataURI, IAccessControl accessControl, address foundingMember) external;
 
     function addMember(
         address account,

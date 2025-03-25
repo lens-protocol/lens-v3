@@ -36,8 +36,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
                 admins: _emptyAddressArray(),
                 rules: _emptyRuleChangeArray(),
                 extraData: _emptyKeyValueArray(),
-                foundingMember: address(0),
-                addFoundingMemberCustomParams: _emptyKeyValueArray()
+                foundingMember: address(0)
             })
         );
 
@@ -48,8 +47,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
                 admins: _emptyAddressArray(),
                 rules: _emptyRuleChangeArray(),
                 extraData: _emptyKeyValueArray(),
-                foundingMember: address(0),
-                addFoundingMemberCustomParams: _emptyKeyValueArray()
+                foundingMember: address(0)
             })
         );
 
@@ -62,8 +60,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
             proxyAdminOwner: address(this),
             ruleChanges: _emptyRuleChangeArray(),
             extraData: _emptyKeyValueArray(),
-            foundingMember: address(0),
-            addFoundingMemberCustomParams: _emptyKeyValueArray()
+            foundingMember: address(0)
         });
 
         address groupAccessControl = address(AccessControlled(address(groupFactoryDeployed)).getAccessControl());

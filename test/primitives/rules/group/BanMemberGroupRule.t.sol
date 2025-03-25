@@ -25,8 +25,7 @@ contract BanMemberGroupRuleTest is BaseDeployments {
                 admins: _emptyAddressArray(),
                 rules: _emptyRuleChangeArray(),
                 extraData: _emptyKeyValueArray(),
-                foundingMember: address(0),
-                addFoundingMemberCustomParams: _emptyKeyValueArray()
+                foundingMember: address(0)
             })
         );
         vm.label(address(group), "OUR_GROUP");

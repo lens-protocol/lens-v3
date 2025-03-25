@@ -140,8 +140,7 @@ contract LensFactoryTest is Test, BaseDeployments {
                             groupMetadataURI: "uri://group",
                             groupRules: _emptyRuleChangeArray(),
                             groupExtraData: _emptyKeyValueArray(),
-                            groupFoundingMember: address(ownerAccount),
-                            groupAddFoundingMemberCustomParams: _emptyKeyValueArray()
+                            groupFoundingMember: address(ownerAccount)
                         }),
                         GroupWithFeed_FeedParams({
                             feedMetadataURI: "uri://feed",
@@ -173,8 +172,7 @@ contract LensFactoryTest is Test, BaseDeployments {
                         groupMetadataURI: "uri://group",
                         groupRules: _emptyRuleChangeArray(),
                         groupExtraData: _emptyKeyValueArray(),
-                        groupFoundingMember: address(randomFoundingMember),
-                        groupAddFoundingMemberCustomParams: _emptyKeyValueArray()
+                        groupFoundingMember: address(randomFoundingMember)
                     }),
                     GroupWithFeed_FeedParams({
                         feedMetadataURI: "uri://feed",
