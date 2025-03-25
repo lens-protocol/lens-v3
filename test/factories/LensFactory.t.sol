@@ -20,6 +20,7 @@ import {IGroupRule} from "@core/interfaces/IGroupRule.sol";
 import {IAccount} from "@extensions/account/Account.sol";
 import {IFeed} from "@core/interfaces/IFeed.sol";
 import {IFeedRule} from "@core/interfaces/IFeedRule.sol";
+import {Errors} from "@core/types/Errors.sol";
 
 contract LensFactoryTest is Test, BaseDeployments {
     Namespace namespace;
@@ -139,7 +140,7 @@ contract LensFactoryTest is Test, BaseDeployments {
                             groupMetadataURI: "uri://group",
                             groupRules: _emptyRuleChangeArray(),
                             groupExtraData: _emptyKeyValueArray(),
-                            groupFoundingMember: address(0), // founding member...
+                            groupFoundingMember: address(ownerAccount),
                             groupAddFoundingMemberCustomParams: _emptyKeyValueArray()
                         }),
                         GroupWithFeed_FeedParams({
@@ -155,6 +156,35 @@ contract LensFactoryTest is Test, BaseDeployments {
         );
         _assertGroupSetup_createGroupWithFeed(group);
         _assertFeedSetup_createGroupWithFeed(feed, group);
+    }
+
+    function testCreateGroupWithFeed_FailsToAddFoundingMemberThatIsNotMsgSender(address randomFoundingMember) public {
+        vm.assume(randomFoundingMember != ownerAccount);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        IAccount(payable(ownerAccount)).executeTransaction(
+            address(lensFactory),
+            0,
+            abi.encodeCall(
+                LensFactory.createGroupWithFeed,
+                (
+                    ownerAccount,
+                    _emptyAddressArray(),
+                    GroupWithFeed_GroupParams({
+                        groupMetadataURI: "uri://group",
+                        groupRules: _emptyRuleChangeArray(),
+                        groupExtraData: _emptyKeyValueArray(),
+                        groupFoundingMember: address(randomFoundingMember),
+                        groupAddFoundingMemberCustomParams: _emptyKeyValueArray()
+                    }),
+                    GroupWithFeed_FeedParams({
+                        feedMetadataURI: "uri://feed",
+                        feedRules: _emptyRuleChangeArray(),
+                        feedExtraData: _emptyKeyValueArray(),
+                        allowNonMembersToReply: false
+                    })
+                )
+            )
+        );
     }
 
     function _assertGroupSetup_createGroupWithFeed(address group) internal view {

@@ -159,17 +159,20 @@ contract Group is
         RuleProcessingParams[] calldata ruleProcessingParams,
         address source
     ) internal {
+        bool isAddingFoundingMember = Core.$storage().lastMemberIdAssigned == 0;
         uint256 membershipId = Core._grantMembership(account);
         _processMemberAddition(msg.sender, account, customParams, ruleProcessingParams);
-        // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
-        require(
-            IAccountGroupAdditionSettings(account).canBeAddedToGroup({
-                group: address(this),
-                addedBy: msg.sender,
-                params: _extractAccountAdditionSettingsParamsFromParams(customParams)
-            }),
-            Errors.NotAllowed()
-        );
+        if (isAddingFoundingMember == false) {
+            // We require accounts to allow being added to the group; EOAs are expected to fail under this condition.
+            require(
+                IAccountGroupAdditionSettings(account).canBeAddedToGroup({
+                    group: address(this),
+                    addedBy: msg.sender,
+                    params: _extractAccountAdditionSettingsParamsFromParams(customParams)
+                }),
+                Errors.NotAllowed()
+            );
+        }
         _storeSource(membershipId, source);
         emit Lens_Group_MemberAdded(account, membershipId, customParams, ruleProcessingParams, source);
     }
