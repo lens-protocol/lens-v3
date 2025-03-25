@@ -10,7 +10,19 @@ import {Errors} from "contracts/core/types/Errors.sol";
 
 contract FixedImplementationContract {}
 
-contract LensCreate2 {
+interface ILensCreate2 {
+    function getAddress(bytes32 salt) external view returns (address);
+
+    function createTransparentUpgradeableProxy(
+        bytes32 salt,
+        address implementation,
+        address proxyAdmin,
+        bytes calldata initializerCall,
+        address expectedAddress
+    ) external returns (address);
+}
+
+contract LensCreate2 is ILensCreate2 {
     address public immutable FIXED_IMPLEMENTATION;
     bytes32 public immutable PROXY_BYTECODE_HASH;
     bytes32 public immutable SENDER_BYTES;
@@ -30,7 +42,7 @@ contract LensCreate2 {
         CONSTRUCTOR_ARGS_HASH = keccak256(abi.encode(FIXED_IMPLEMENTATION, address(this), ""));
     }
 
-    function getAddress(bytes32 salt) external view returns (address) {
+    function getAddress(bytes32 salt) external view override returns (address) {
         return address(
             uint160(
                 uint256(
@@ -48,7 +60,7 @@ contract LensCreate2 {
         address proxyAdmin,
         bytes calldata initializerCall,
         address expectedAddress
-    ) external returns (address) {
+    ) external override returns (address) {
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
             address(new TransparentUpgradeableProxy{salt: salt}(FIXED_IMPLEMENTATION, address(this), ""))
         );
