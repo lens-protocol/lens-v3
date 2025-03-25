@@ -9,7 +9,7 @@ import {BaseAccountAction} from "contracts/actions/account/base/BaseAccountActio
 abstract contract OwnableMetadataBasedAccountAction is BaseAccountAction, Ownable, MetadataBased {
     event Lens_AccountAction_MetadataURISet(string metadataURI);
 
-    constructor(address actionHub, address owner, string memory metadataURI) BaseAccountAction(actionHub) {
+    constructor(address owner, string memory metadataURI) BaseAccountAction() {
         _transferOwnership(owner);
         _setMetadataURI(metadataURI);
     }

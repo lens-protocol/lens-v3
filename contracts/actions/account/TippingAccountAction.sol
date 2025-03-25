@@ -17,7 +17,7 @@ contract TippingAccountAction is OwnableMetadataBasedAccountAction, Initializabl
     /// @custom:keccak lens.param.token
     bytes32 public constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 
-    constructor(address actionHub) OwnableMetadataBasedAccountAction(actionHub, address(0), "") {
+    constructor() OwnableMetadataBasedAccountAction(address(0), "") {
         _disableInitializers();
     }
 
