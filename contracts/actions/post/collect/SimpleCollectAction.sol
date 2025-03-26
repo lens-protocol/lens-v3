@@ -49,8 +49,8 @@ contract SimpleCollectAction is
     bytes32 constant PARAM__END_TIMESTAMP = 0xe2a4a768f409ba480a321a7d36ec9da16e9eae60a25bb0aeccf334822cc859a8;
     /// @custom:keccak lens.param.recipients
     bytes32 constant PARAM__RECIPIENTS = 0x7f7e01c87d5278dd08505253491cf5d6b30930036f6afa2ae22a980882f2cac1;
-    /// @custom:keccak lens.param.referralFeeBps
-    bytes32 constant PARAM__REFERRAL_FEE_BPS = 0x0528211c8ce09d8b4bbf47978d7c2b7901461b28da5f4da81efb3058169ea470;
+    /// @custom:keccak lens.param.referralFee
+    bytes32 constant PARAM__REFERRAL_FEE = 0x6dff2c1710f2154b19d8cf5d6f7d8f5b3909222c3cdd8801486403e4d423b1b6;
     /// @custom:keccak lens.param.graph
     bytes32 constant PARAM__FOLLOWER_ONLY_GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
     /// @custom:keccak lens.param.isImmutable
@@ -367,7 +367,7 @@ contract SimpleCollectAction is
                 configData.collectLimit = abi.decode(params[i].value, (uint96));
             } else if (params[i].key == PARAM__END_TIMESTAMP) {
                 configData.endTimestamp = abi.decode(params[i].value, (uint72));
-            } else if (params[i].key == PARAM__REFERRAL_FEE_BPS) {
+            } else if (params[i].key == PARAM__REFERRAL_FEE) {
                 configData.referralFeeBps = abi.decode(params[i].value, (uint16));
             } else if (params[i].key == PARAM__RECIPIENTS) {
                 configData.recipients = abi.decode(params[i].value, (RecipientData[]));

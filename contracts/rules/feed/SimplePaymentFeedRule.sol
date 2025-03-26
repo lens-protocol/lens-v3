@@ -24,8 +24,8 @@ contract SimplePaymentFeedRule is SimplePaymentRule, Initializable, IFeedRule {
     bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
     /// @custom:keccak lens.param.referrals
     bytes32 constant PARAM__REFERRALS = 0x183a1b7fdb9626f5ae4e8cac88ee13cc03b29800d2690f61e2a2566f76d8773f;
-    /// @custom:keccak lens.param.referralFeeBps
-    bytes32 constant PARAM__REFERRAL_FEE_BPS = 0x0528211c8ce09d8b4bbf47978d7c2b7901461b28da5f4da81efb3058169ea470;
+    /// @custom:keccak lens.param.referralFee
+    bytes32 constant PARAM__REFERRAL_FEE = 0x6dff2c1710f2154b19d8cf5d6f7d8f5b3909222c3cdd8801486403e4d423b1b6;
 
     /// @custom:keccak lens.storage.SimplePaymentFeedRule
     bytes32 constant STORAGE__SIMPLE_PAYMENT_FEED_RULE =
@@ -127,7 +127,7 @@ contract SimplePaymentFeedRule is SimplePaymentRule, Initializable, IFeedRule {
         for (uint256 i = 0; i < params.length; i++) {
             if (params[i].key == PARAM__ACCESS_CONTROL) {
                 configuration.accessControl = abi.decode(params[i].value, (address));
-            } else if (params[i].key == PARAM__REFERRAL_FEE_BPS) {
+            } else if (params[i].key == PARAM__REFERRAL_FEE) {
                 configuration.referralFeeBps = abi.decode(params[i].value, (uint16));
             } else if (params[i].key == PARAM__PAYMENT_CONFIG) {
                 configuration.paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
