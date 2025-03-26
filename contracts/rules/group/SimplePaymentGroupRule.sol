@@ -59,7 +59,6 @@ contract SimplePaymentGroupRule is SimplePaymentRule, Initializable, IGroupRule 
         Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
         configuration.accessControl.verifyHasAccessFunction();
         require(configuration.referralFeeBps <= BPS_MAX, Errors.InvalidParameter());
-
         _validatePaymentConfiguration(configuration.paymentConfiguration);
         $storage().configuration[msg.sender][configSalt] = configuration;
     }
