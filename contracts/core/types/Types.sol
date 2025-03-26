@@ -47,5 +47,5 @@ struct SourceStamp {
 
 struct RecipientData {
     address recipient;
-    uint16 split; // fraction of BPS_MAX (10 000)
+    uint16 splitBps; // In Basis Points, each Basis Point represents 0.01%
 }
