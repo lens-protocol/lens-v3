@@ -192,24 +192,26 @@ contract Account is
     }
 
     function _beforeExecuteTransaction(address target, uint256, /* value */ bytes calldata data) internal virtual {
-        bytes4 selector = bytes4(data[:4]);
-        if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
-            try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
-                $storage().didSendRequestToGroup[group] = true;
-            } catch {
-                return;
-            }
-        } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
-            try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
-                $storage().didSendRequestToGroup[group] = false;
-            } catch {
-                return;
-            }
-        } else if (selector == IGraph.follow.selector) {
-            try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address) {
-                $storage().didFollowOnGraph[target] = true;
-            } catch {
-                return;
+        if (data.length >= 4) {
+            bytes4 selector = bytes4(data[:4]);
+            if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
+                try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
+                    $storage().didSendRequestToGroup[group] = true;
+                } catch {
+                    return;
+                }
+            } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
+                try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
+                    $storage().didSendRequestToGroup[group] = false;
+                } catch {
+                    return;
+                }
+            } else if (selector == IGraph.follow.selector) {
+                try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address) {
+                    $storage().didFollowOnGraph[target] = true;
+                } catch {
+                    return;
+                }
             }
         }
     }
