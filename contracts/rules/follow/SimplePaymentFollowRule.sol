@@ -7,6 +7,7 @@ import {SimplePaymentRule} from "contracts/rules/base/SimplePaymentRule.sol";
 import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {BPS_MAX} from "contracts/core/types/Constants.sol";
 
 contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRule {
     /// @custom:keccak lens.param.referrals
@@ -18,9 +19,14 @@ contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRul
     bytes32 constant STORAGE__SIMPLE_PAYMENT_FOLLOW_RULE =
         0x40d861d20f0413c082c732a37b8aa34f7a2abf2d3b8a62e3868805a8505f8fd5;
 
+    struct Configuration {
+        PaymentConfiguration paymentConfiguration;
+        uint16 referralFeeBps;
+    }
+
     struct Storage {
-        mapping(address graph => mapping(address account => mapping(bytes32 configSalt => PaymentConfiguration config)))
-            paymentConfiguration;
+        mapping(address graph => mapping(address account => mapping(bytes32 configSalt => Configuration config)))
+            configuration;
     }
 
     function $storage() private pure returns (Storage storage _storage) {
@@ -38,9 +44,12 @@ contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRul
     }
 
     function configure(bytes32 configSalt, address account, KeyValue[] calldata ruleParams) external override {
-        PaymentConfiguration memory paymentConfiguration = _extractPaymentConfigurationFromParams(ruleParams);
-        _validatePaymentConfiguration(paymentConfiguration);
-        $storage().paymentConfiguration[msg.sender][account][configSalt] = paymentConfiguration;
+        Configuration memory configuration = _extractConfigurationFromParams(ruleParams);
+        require(configuration.referralFeeBps <= BPS_MAX, Errors.InvalidParameter());
+        _validatePaymentConfiguration(configuration.paymentConfiguration);
+        $storage().configuration[msg.sender][account][configSalt].paymentConfiguration =
+            configuration.paymentConfiguration;
+        $storage().configuration[msg.sender][account][configSalt].referralFeeBps = configuration.referralFeeBps;
     }
 
     function processFollow(
@@ -52,12 +61,24 @@ contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRul
         KeyValue[] calldata ruleParams
     ) external override {
         _processPayment({
-            configuration: $storage().paymentConfiguration[msg.sender][accountToFollow][configSalt],
+            configuration: $storage().configuration[msg.sender][accountToFollow][configSalt].paymentConfiguration,
             expectedConfiguration: _extractPaymentConfigurationFromParams(ruleParams),
             payer: followerAccount,
-            referrals: new RecipientData[](0), // TODO: Implement!
-            referralFeeBps: 0 // TODO: Implement!
+            referrals: _extractReferralsFromParams(ruleParams),
+            referralFeeBps: $storage().configuration[msg.sender][accountToFollow][configSalt].referralFeeBps
         });
+    }
+
+    function _extractConfigurationFromParams(KeyValue[] calldata params) internal pure returns (Configuration memory) {
+        Configuration memory configuration;
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == PARAM__REFERRAL_FEE) {
+                configuration.referralFeeBps = abi.decode(params[i].value, (uint16));
+            } else if (params[i].key == PARAM__PAYMENT_CONFIG) {
+                configuration.paymentConfiguration = abi.decode(params[i].value, (PaymentConfiguration));
+            }
+        }
+        return configuration;
     }
 
     function _extractPaymentConfigurationFromParams(KeyValue[] calldata params)
@@ -71,5 +92,16 @@ contract SimplePaymentFollowRule is SimplePaymentRule, Initializable, IFollowRul
             }
         }
         revert Errors.NotFound();
+    }
+
+    function _extractReferralsFromParams(KeyValue[] calldata params) internal pure returns (RecipientData[] memory) {
+        RecipientData[] memory referrals = new RecipientData[](0);
+        for (uint256 i = 0; i < params.length; i++) {
+            if (params[i].key == PARAM__REFERRALS) {
+                referrals = abi.decode(params[i].value, (RecipientData[]));
+                break;
+            }
+        }
+        return referrals;
     }
 }
