@@ -5,6 +5,8 @@ pragma solidity ^0.8.26;
 // 100.00% represented as Basis Points, each Basis Point is 0.01%
 uint256 constant BPS_MAX = 10_000;
 
+uint256 constant SELECTOR_BYTE_LENGTH = 4;
+
 address constant LENS_CREATE2_ADDRESS = address(0xC8EA7E2);
 
 /// @custom:keccak lens.contract.ActionHub
