@@ -19,6 +19,7 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {IAccountGroupAdditionSettings} from "contracts/core/interfaces/IAccountGroupAdditionSettings.sol";
 import {IRequestBasedGroupRule} from "contracts/core/interfaces/IRequestBasedGroupRule.sol";
+import {SELECTOR_BYTE_LENGTH} from "contracts/core/types/Constants.sol";
 
 library PermissionsHelper {
     function equals(AccountManagerPermissions memory permissions, AccountManagerPermissions memory otherPermissions)
@@ -192,22 +193,22 @@ contract Account is
     }
 
     function _beforeExecuteTransaction(address target, uint256, /* value */ bytes calldata data) internal virtual {
-        if (data.length >= 4) {
-            bytes4 selector = bytes4(data[:4]);
+        if (data.length >= SELECTOR_BYTE_LENGTH) {
+            bytes4 selector = bytes4(data[:SELECTOR_BYTE_LENGTH]);
             if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
-                try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
+                try this.abiDecodeForKnownSelectorHelper(selector, data[SELECTOR_BYTE_LENGTH:]) returns (address group) {
                     $storage().didSendRequestToGroup[group] = true;
                 } catch {
                     return;
                 }
             } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
-                try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address group) {
+                try this.abiDecodeForKnownSelectorHelper(selector, data[SELECTOR_BYTE_LENGTH:]) returns (address group) {
                     $storage().didSendRequestToGroup[group] = false;
                 } catch {
                     return;
                 }
             } else if (selector == IGraph.follow.selector) {
-                try this.abiDecodeForKnownSelectorHelper(selector, data[4:]) returns (address) {
+                try this.abiDecodeForKnownSelectorHelper(selector, data[SELECTOR_BYTE_LENGTH:]) returns (address) {
                     $storage().didFollowOnGraph[target] = true;
                 } catch {
                     return;
@@ -336,7 +337,7 @@ contract Account is
             if (value > msg.value) {
                 require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
             }
-            if (data.length >= 4 && _isTransferRelatedSelector(bytes4(data[:4]))) {
+            if (data.length >= SELECTOR_BYTE_LENGTH && _isTransferRelatedSelector(bytes4(data[:SELECTOR_BYTE_LENGTH]))) {
                 require(
                     $storage().allowNonOwnerSpendingTimestamp > 0
                         && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
