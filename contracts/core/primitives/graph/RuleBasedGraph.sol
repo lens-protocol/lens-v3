@@ -151,11 +151,6 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         }
     }
 
-    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
-        return $graphRulesStorage()._getRulesArray(ruleSelector, false).length
-            + $graphRulesStorage()._getRulesArray(ruleSelector, true).length;
-    }
-
     function getGraphRules(bytes4 ruleSelector, bool isRequired)
         external
         view
