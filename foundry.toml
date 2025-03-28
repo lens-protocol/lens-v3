@@ -10,6 +10,7 @@ optimizer = false
 # optimizer_runs = 10
 fs_permissions = [{ access = "read", path = "./test/token-uri/expected-svgs/"}]
 allow_internal_expect_revert = true
+evm_version = 'paris'
 
 [profile.default.fuzz]
 runs = 1024
@@ -21,10 +22,10 @@ no_zksync_reserved_addresses = true
 # Enable zkVM at startup, needs `compile = true` to have effect
 # startup = true
 # # By default the latest version is used
-# zksolc = "1.5.0"
+zksolc = "1.5.12"
 # # By default the corresponding solc patched version from matter-labs is used
 # solc_path = "./solc-0.8.23-1.0.1"
-# bytecode_hash = "none"
+bytecode_hash = "none"
 # # Allow compiler to use mode 'z' if contracts won't fit in the EraVM bytecode
 # # size limitations
 # fallback_oz = false
@@ -38,6 +39,7 @@ optimizer = true
 optimizer_mode = '1'
 # # zksolc optimizer details
 # optimizer_details = { ... }
+codegen = 'yul'
 
 [fmt]
 line_length = 121
