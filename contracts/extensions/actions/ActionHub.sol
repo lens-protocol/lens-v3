@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {KeyValue, RecipientData} from "contracts/core/types/Types.sol";
+import {KeyValue} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
@@ -41,10 +41,6 @@ interface IAccountAction {
 
 /// @custom:keccak lens.constant.UniversalAction
 bytes32 constant UNIVERSAL_ACTION_MAGIC_VALUE = 0xa12c06eea999f2a08fb2bd50e396b2a286921eebbda81fb45a0adcf13afb18ef;
-
-// TODO: Move this to some common place
-/// @custom:keccak lens.constant.treasury
-bytes32 constant PARAM__TREASURY = 0xbb11f745546ed845ede751a92f918c8aaa9f3452fe531827e1098a36ed92ac50;
 
 contract ActionHub is SourceStampBased {
     event Lens_ActionHub_PostAction_Universal(address indexed action);
@@ -181,14 +177,6 @@ contract ActionHub is SourceStampBased {
         }
     }
 
-    address immutable LENS_TREASURY_ADDRESS;
-    uint16 immutable LENS_TREASURY_FEE;
-
-    constructor(address treasury, uint16 treasuryFee) {
-        LENS_TREASURY_ADDRESS = treasury;
-        LENS_TREASURY_FEE = treasuryFee;
-    }
-
     function signalUniversalPostAction(address action) external {
         bytes memory returnData = IPostAction(action).configure(address(0), address(0), 0, new KeyValue[](0));
         require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE, Errors.UnexpectedContractImpl());
@@ -222,13 +210,10 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.Disabled());
-        KeyValue[] memory paramsWithTreasury = _embedTreasury(params);
-        bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, paramsWithTreasury);
+        bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, params);
         address postAuthor = IFeed(feed).getPostAuthor(postId);
         address source = _processSourceStamp(params);
-        emit Lens_ActionHub_PostAction_Executed(
-            action, msg.sender, feed, postId, postAuthor, source, paramsWithTreasury, returnData
-        );
+        emit Lens_ActionHub_PostAction_Executed(action, msg.sender, feed, postId, postAuthor, source, params, returnData);
         return returnData;
     }
 
@@ -289,10 +274,9 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
-        KeyValue[] memory paramsWithTreasury = _embedTreasury(params);
-        bytes memory returnData = IAccountAction(action).execute(msg.sender, account, paramsWithTreasury);
+        bytes memory returnData = IAccountAction(action).execute(msg.sender, account, params);
         address source = _processSourceStamp(params);
-        emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, source, paramsWithTreasury, returnData);
+        emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, source, params, returnData);
         return returnData;
     }
 
@@ -320,26 +304,5 @@ contract ActionHub is SourceStampBased {
         address source = _processSourceStamp(params);
         emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, source, params, returnData);
         return returnData;
-    }
-
-    function _embedTreasury(KeyValue[] memory params) internal view returns (KeyValue[] memory) {
-        KeyValue[] memory paramsWithTreasury = new KeyValue[](params.length + 1);
-        for (uint256 i = 0; i < params.length; i++) {
-            require(params[i].key != PARAM__TREASURY, Errors.InvalidParameter());
-            paramsWithTreasury[i] = params[i];
-        }
-        paramsWithTreasury[params.length] = KeyValue({
-            key: PARAM__TREASURY,
-            value: abi.encode(RecipientData({recipient: LENS_TREASURY_ADDRESS, split: LENS_TREASURY_FEE}))
-        });
-        return paramsWithTreasury;
-    }
-
-    function getTreasury() external view returns (address) {
-        return LENS_TREASURY_ADDRESS;
-    }
-
-    function getTreasuryFee() external view returns (uint16) {
-        return LENS_TREASURY_FEE;
     }
 }

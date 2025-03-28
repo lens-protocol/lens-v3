@@ -17,7 +17,7 @@ contract LensCreate2Test is ZkTest {
 
     function setUp() public virtual onlyZkEvm {
         create2 = new LensCreate2();
-        IMPLEMENTATION = address(new ActionHub(address(0x01), 1));
+        IMPLEMENTATION = address(new ActionHub());
         PROXY_ADMIN = makeAddr("PROXY_ADMIN_1");
         INITIALIZER_CALL = "";
         SALT = keccak256("lens.contract.ActionHub");
@@ -70,7 +70,7 @@ contract LensCreate2Test is ZkTest {
     function test_diffImpl_sameAddress() public {
         address deployedContract = create2.createTransparentUpgradeableProxy({
             salt: SALT,
-            implementation: address(new ActionHub(address(0x02), 1)),
+            implementation: address(new ActionHub()),
             proxyAdmin: PROXY_ADMIN,
             initializerCall: INITIALIZER_CALL,
             expectedAddress: EXPECTED_ADDRESS

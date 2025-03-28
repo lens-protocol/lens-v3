@@ -54,15 +54,28 @@ contract Group is
         _disableInitializers();
     }
 
-    function initialize(string memory metadataURI, IAccessControl accessControl) external override initializer {
-        _initialize(metadataURI);
+    function initialize(string memory metadataURI, IAccessControl accessControl, address foundingMember)
+        external
+        override
+        initializer
+    {
+        _initialize(metadataURI, foundingMember);
         AccessControlled._initialize(accessControl);
     }
 
-    function _initialize(string memory metadataURI) internal {
+    function _initialize(string memory metadataURI, address foundingMember) internal {
         _setMetadataURI(metadataURI);
         _emitPIDs();
         emit Events.Lens_Contract_Deployed({contractType: "lens.contract.Group", flavour: "lens.contract.Group"});
+        if (foundingMember != address(0)) {
+            emit Lens_Group_MemberAdded(
+                foundingMember,
+                Core._grantMembership(foundingMember),
+                new KeyValue[](0),
+                new RuleProcessingParams[](0),
+                address(0)
+            );
+        }
     }
 
     function _emitMetadataURISet(string memory metadataURI, address /* source */ ) internal override {

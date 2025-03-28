@@ -154,11 +154,6 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         }
     }
 
-    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
-        return $feedRulesStorage()._getRulesArray(ruleSelector, false).length
-            + $feedRulesStorage()._getRulesArray(ruleSelector, true).length;
-    }
-
     function getFeedRules(bytes4 ruleSelector, bool isRequired) external view virtual override returns (Rule[] memory) {
         return $feedRulesStorage()._getRulesArray(ruleSelector, isRequired);
     }

@@ -33,7 +33,7 @@ import {IGraphRule} from "contracts/core/interfaces/IGraphRule.sol";
 import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {INamespaceRule} from "contracts/core/interfaces/INamespaceRule.sol";
 
-import {PARAM__GROUP} from "contracts/rules/feed/GroupGatedFeedRule.sol";
+import {PARAM__GROUP, PARAM__REPLIES_RESTRICTED} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {IGroup} from "contracts/core/interfaces/IGroup.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
@@ -82,6 +82,20 @@ struct RuleConstructorParams {
     address usernameSimpleCharsetRule;
     address banMemberGroupRule;
     address addRemovePidGroupRule;
+}
+
+struct GroupWithFeed_GroupParams {
+    string groupMetadataURI;
+    RuleChange[] groupRules;
+    KeyValue[] groupExtraData;
+    address groupFoundingMember;
+}
+
+struct GroupWithFeed_FeedParams {
+    string feedMetadataURI;
+    RuleChange[] feedRules;
+    KeyValue[] feedExtraData;
+    bool allowNonMembersToReply;
 }
 
 contract LensFactory {
@@ -176,19 +190,13 @@ contract LensFactory {
     function createGroupWithFeed(
         address owner,
         address[] memory admins,
-        string memory groupMetadataURI,
-        RuleChange[] memory groupRules,
-        KeyValue[] memory groupExtraData,
-        address groupFoundingMember,
-        KeyValue[] memory groupAddFoundingMemberCustomParams,
-        string memory feedMetadataURI,
-        RuleChange[] memory feedRules,
-        KeyValue[] memory feedExtraData
+        GroupWithFeed_GroupParams memory groupParams,
+        GroupWithFeed_FeedParams memory feedParams
     ) external returns (address, address) {
         CreateGroupWithFeedParams memory s;
-        s.feedExtraData = feedExtraData;
-        s.feedRules = feedRules;
-        s.feedMetadataURI = feedMetadataURI;
+        s.feedExtraData = feedParams.feedExtraData;
+        s.feedRules = feedParams.feedRules;
+        s.feedMetadataURI = feedParams.feedMetadataURI;
         s.feedAccessControl = _deployAccessControl(owner, admins);
         {
             s.groupAccessControl = _deployAccessControl(owner, _addBanRuleToGroupAdmins(admins));
@@ -196,21 +204,21 @@ contract LensFactory {
         s.owner = owner;
 
         {
-            if (groupFoundingMember != address(0)) {
-                require(groupFoundingMember == msg.sender, Errors.InvalidParameter());
+            if (groupParams.groupFoundingMember != address(0)) {
+                require(groupParams.groupFoundingMember == msg.sender, Errors.InvalidParameter());
             }
             s.group = GROUP_FACTORY.deployGroup(
-                groupMetadataURI,
+                groupParams.groupMetadataURI,
                 TEMPORARY_ACCESS_CONTROL,
                 s.owner,
-                _prepareGroupRules(groupRules, address(s.groupAccessControl)),
-                groupExtraData,
-                groupFoundingMember,
-                groupAddFoundingMemberCustomParams
+                _prepareGroupRules(groupParams.groupRules, address(s.groupAccessControl)),
+                groupParams.groupExtraData,
+                groupParams.groupFoundingMember
             );
         }
 
-        s.modifiedFeedRules = _prepareFeedRulesBasedOnGroup(s.feedRules, s.feedAccessControl, s.group);
+        s.modifiedFeedRules =
+            _prepareFeedRulesBasedOnGroup(s.feedRules, s.feedAccessControl, s.group, feedParams.allowNonMembersToReply);
 
         address feed = FEED_FACTORY.deployFeed(
             s.feedMetadataURI, s.feedAccessControl, s.owner, s.modifiedFeedRules, s.feedExtraData
@@ -260,8 +268,7 @@ contract LensFactory {
         address[] calldata admins,
         RuleChange[] calldata rules,
         KeyValue[] calldata extraData,
-        address foundingMember,
-        KeyValue[] memory addFoundingMemberCustomParams
+        address foundingMember
     ) external returns (address) {
         if (foundingMember != address(0)) {
             require(foundingMember == msg.sender, Errors.InvalidParameter());
@@ -273,8 +280,7 @@ contract LensFactory {
             owner,
             _prepareGroupRules(rules, address(accessControl)),
             extraData,
-            foundingMember,
-            addFoundingMemberCustomParams
+            foundingMember
         );
     }
 
@@ -481,7 +487,8 @@ contract LensFactory {
     function _prepareFeedRulesBasedOnGroup(
         RuleChange[] memory feedRules,
         IRoleBasedAccessControl feedAccessControl,
-        address group
+        address group,
+        bool allowNonMembersToReply
     ) internal view virtual returns (RuleChange[] memory) {
         RuleChange[] memory modifiedFeedRules = new RuleChange[](feedRules.length + 2);
 
@@ -497,8 +504,9 @@ contract LensFactory {
             selectorChanges: selectorChanges
         });
 
-        KeyValue[] memory groupGatedRuleParams = new KeyValue[](1);
+        KeyValue[] memory groupGatedRuleParams = new KeyValue[](2);
         groupGatedRuleParams[0] = KeyValue({key: PARAM__GROUP, value: abi.encode(group)});
+        groupGatedRuleParams[1] = KeyValue({key: PARAM__REPLIES_RESTRICTED, value: abi.encode(!allowNonMembersToReply)});
 
         modifiedFeedRules[1] = RuleChange({
             ruleAddress: GROUP_GATED_FEED_RULE,

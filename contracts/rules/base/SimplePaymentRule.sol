@@ -7,8 +7,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {TrustBasedRule} from "contracts/rules/base/TrustBasedRule.sol";
+import {LensPaymentHandler} from "contracts/extensions/fees/LensPaymentHandler.sol";
+import {RecipientData} from "contracts/core/types/Types.sol";
 
-abstract contract SimplePaymentRule is TrustBasedRule, OwnableMetadataBasedRule {
+abstract contract SimplePaymentRule is LensPaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
     using SafeERC20 for IERC20;
 
     /// @custom:keccak lens.param.paymentConfiguration
@@ -35,7 +37,9 @@ abstract contract SimplePaymentRule is TrustBasedRule, OwnableMetadataBasedRule 
     function _beforePayment(
         PaymentConfiguration memory configuration,
         PaymentConfiguration memory expectedConfiguration,
-        address payer
+        address payer,
+        RecipientData[] memory, /* referrals */
+        uint16 /* referralFeeBps */
     ) internal view virtual {
         require(configuration.token == expectedConfiguration.token, Errors.InvalidParameter());
         require(configuration.amount == expectedConfiguration.amount, Errors.InvalidParameter());
@@ -47,9 +51,18 @@ abstract contract SimplePaymentRule is TrustBasedRule, OwnableMetadataBasedRule 
     function _processPayment(
         PaymentConfiguration memory configuration,
         PaymentConfiguration memory expectedConfiguration,
-        address payer
+        address payer,
+        RecipientData[] memory referrals,
+        uint16 referralFeeBps
     ) internal virtual {
-        _beforePayment(configuration, expectedConfiguration, payer);
-        IERC20(configuration.token).safeTransferFrom(payer, configuration.recipient, configuration.amount);
+        _beforePayment(configuration, expectedConfiguration, payer, referrals, referralFeeBps);
+        _handlePayment({
+            payer: payer,
+            token: configuration.token,
+            amount: configuration.amount,
+            recipient: configuration.recipient,
+            referrals: referrals,
+            referralFeeBps: referralFeeBps
+        });
     }
 }

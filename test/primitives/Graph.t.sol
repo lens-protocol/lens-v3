@@ -4,20 +4,19 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
-import {IGraph} from "@core/interfaces/IGraph.sol";
-import {Follow} from "@core/interfaces/IGraph.sol";
-import {Graph} from "@core/primitives/graph/Graph.sol";
-import {Errors} from "@core/types/Errors.sol";
-import {KeyValue} from "@core/types/Types.sol";
 import "test/helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
-import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
-import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {Rule, RuleConfigurationChange} from "@core/types/Types.sol";
+import {Errors} from "@core/types/Errors.sol";
+import {Follow} from "@core/interfaces/IGraph.sol";
+import {Graph} from "@core/primitives/graph/Graph.sol";
+import {IGraph} from "@core/interfaces/IGraph.sol";
 import {IGraphRule} from "@core/interfaces/IGraphRule.sol";
+import {IMetadataBased} from "@core/interfaces/IMetadataBased.sol";
+import {KeyValue} from "@core/types/Types.sol";
+import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {Rule, RuleConfigurationChange} from "@core/types/Types.sol";
 import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 
 contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IGraph graph;
@@ -1122,6 +1121,30 @@ contract GraphTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
             initialFollowersCount,
             "Followers count should be back to initial after all operations"
         );
+    }
+
+    function test_SetMetadataURI_HasPID(address addressWithPID) public {
+        string memory newMetadataURI = "uri://new-metadata-uri";
+        assertNotEq(IMetadataBased(address(graphForRules)).getMetadataURI(), newMetadataURI);
+        mockAccessControl.mockAccess(
+            addressWithPID, address(graphForRules), uint256(keccak256("lens.permission.SetMetadata")), true
+        );
+        vm.prank(addressWithPID);
+        IMetadataBased(address(graphForRules)).setMetadataURI(newMetadataURI);
+        assertEq(IMetadataBased(address(graphForRules)).getMetadataURI(), newMetadataURI);
+    }
+
+    function test_Cannot_SetMetadataURI_IfDoesNotHavePID(address addressWithoutPID) public {
+        string memory oldMetadataURI = IMetadataBased(address(graphForRules)).getMetadataURI();
+        string memory newMetadataURI = "uri://new-metadata-uri";
+        assertNotEq(oldMetadataURI, newMetadataURI);
+        mockAccessControl.mockAccess(
+            addressWithoutPID, address(graphForRules), uint256(keccak256("lens.permission.SetMetadata")), false
+        );
+        vm.prank(addressWithoutPID);
+        vm.expectRevert(Errors.AccessDenied.selector);
+        IMetadataBased(address(graphForRules)).setMetadataURI(newMetadataURI);
+        assertEq(IMetadataBased(address(graphForRules)).getMetadataURI(), oldMetadataURI);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

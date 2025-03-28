@@ -8,8 +8,6 @@ import {IAccountAction} from "contracts/extensions/actions/ActionHub.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract BaseAccountAction is BaseAction, IAccountAction {
-    constructor(address actionHub) BaseAction(actionHub) {}
-
     function configure(address originalMsgSender, address account, KeyValue[] calldata params)
         external
         override

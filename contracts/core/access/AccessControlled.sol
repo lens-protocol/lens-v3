@@ -31,11 +31,6 @@ abstract contract AccessControlled is IAccessControlled {
         _setAccessControl(accessControl);
     }
 
-    modifier requireAccess(uint256 permissionId) {
-        _requireAccess(msg.sender, permissionId);
-        _;
-    }
-
     function _emitPIDs() internal virtual {}
 
     function _requireAccess(address account, uint256 permissionId) internal view {

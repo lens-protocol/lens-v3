@@ -106,11 +106,6 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
         bytes4 selector
     ) internal override {}
 
-    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
-        return $namespaceRulesStorage()._getRulesArray(ruleSelector, false).length
-            + $namespaceRulesStorage()._getRulesArray(ruleSelector, true).length;
-    }
-
     function getNamespaceRules(bytes4 ruleSelector, bool isRequired)
         external
         view

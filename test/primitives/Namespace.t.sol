@@ -3,22 +3,23 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {INamespace} from "@core/interfaces/INamespace.sol";
-import {IERC721Namespace} from "@core/interfaces/IERC721Namespace.sol";
-import {Namespace} from "@core/primitives/namespace/Namespace.sol";
-import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";
-import {LensERC721} from "@core/base/LensERC721.sol";
-import {Errors} from "@core/types/Errors.sol";
 import "../helpers/TypeHelpers.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
-import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
-import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {Rule} from "@core/types/Types.sol";
-import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
-import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
-import {IOwnable} from "@core/interfaces/IOwnable.sol";
-import {IAccessControlled} from "@core/interfaces/IAccessControlled.sol";
+import {Errors} from "@core/types/Errors.sol";
 import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
+import {IAccessControlled} from "@core/interfaces/IAccessControlled.sol";
+import {IERC721Namespace} from "@core/interfaces/IERC721Namespace.sol";
+import {IMetadataBased} from "@core/interfaces/IMetadataBased.sol";
+import {INamespace} from "@core/interfaces/INamespace.sol";
+import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
+import {IOwnable} from "@core/interfaces/IOwnable.sol";
+import {LensERC721} from "@core/base/LensERC721.sol";
+import {LensUsernameTokenURIProvider} from "@core/primitives/namespace/LensUsernameTokenURIProvider.sol";
+import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {Namespace} from "@core/primitives/namespace/Namespace.sol";
+import {Rule} from "@core/types/Types.sol";
+import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 
 contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     /// @custom:keccak lens.permission.AssignUsername
@@ -579,6 +580,30 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
     function test_CannotGetAccountOfEmptyUsername() public {
         vm.expectRevert(Errors.DoesNotExist.selector);
         namespace.accountOf("");
+    }
+
+    function test_SetMetadataURI_HasPID(address addressWithPID) public {
+        string memory newMetadataURI = "uri://new-metadata-uri";
+        assertNotEq(IMetadataBased(address(namespaceForRules)).getMetadataURI(), newMetadataURI);
+        mockAccessControl.mockAccess(
+            addressWithPID, address(namespaceForRules), uint256(keccak256("lens.permission.SetMetadata")), true
+        );
+        vm.prank(addressWithPID);
+        IMetadataBased(address(namespaceForRules)).setMetadataURI(newMetadataURI);
+        assertEq(IMetadataBased(address(namespaceForRules)).getMetadataURI(), newMetadataURI);
+    }
+
+    function test_Cannot_SetMetadataURI_IfDoesNotHavePID(address addressWithoutPID) public {
+        string memory oldMetadataURI = IMetadataBased(address(namespaceForRules)).getMetadataURI();
+        string memory newMetadataURI = "uri://new-metadata-uri";
+        assertNotEq(oldMetadataURI, newMetadataURI);
+        mockAccessControl.mockAccess(
+            addressWithoutPID, address(namespaceForRules), uint256(keccak256("lens.permission.SetMetadata")), false
+        );
+        vm.prank(addressWithoutPID);
+        vm.expectRevert(Errors.AccessDenied.selector);
+        IMetadataBased(address(namespaceForRules)).setMetadataURI(newMetadataURI);
+        assertEq(IMetadataBased(address(namespaceForRules)).getMetadataURI(), oldMetadataURI);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

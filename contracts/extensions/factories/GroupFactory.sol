@@ -22,15 +22,11 @@ contract GroupFactory is PrimitiveFactory {
         address proxyAdminOwner,
         RuleChange[] calldata ruleChanges,
         KeyValue[] calldata extraData,
-        address foundingMember,
-        KeyValue[] calldata addFoundingMemberCustomParams
+        address foundingMember
     ) external onlyLensFactory returns (address) {
         address proxyAdmin = address(new ProxyAdmin(proxyAdminOwner, PROXY_ADMIN_LOCK));
         Group group = Group(address(new BeaconProxy(proxyAdmin, PRIMITIVE_BEACON)));
-        group.initialize(metadataURI, TEMPORARY_ACCESS_CONTROL);
-        if (foundingMember != address(0)) {
-            group.addMember(foundingMember, addFoundingMemberCustomParams, new RuleProcessingParams[](0));
-        }
+        group.initialize(metadataURI, TEMPORARY_ACCESS_CONTROL, foundingMember);
         group.changeGroupRules(ruleChanges);
         group.setExtraData(extraData);
         group.setAccessControl(accessControl);

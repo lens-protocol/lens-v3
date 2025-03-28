@@ -3,15 +3,16 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
-import {IAccessControl} from "@core/interfaces/IAccessControl.sol";
-import {OwnerAdminOnlyAccessControl} from "@extensions/access/OwnerAdminOnlyAccessControl.sol";
 import "../helpers/TypeHelpers.sol";
+import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
+import {Errors} from "@core/types/Errors.sol";
 import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, CreatePostParams, EditPostParams, Post} from "@core/interfaces/IFeed.sol";
-import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
-import {RulesTest} from "test/primitives/rules/Rules.t.sol";
-import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {IFeedRule} from "@core/interfaces/IFeedRule.sol";
+import {IMetadataBased} from "@core/interfaces/IMetadataBased.sol";
+import {IPostRule} from "@core/interfaces/IPostRule.sol";
+import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
+import {MockRule} from "test/mocks/MockRule.sol";
 import {
     Rule,
     RuleChange,
@@ -20,10 +21,8 @@ import {
     KeyValue,
     RuleProcessingParams
 } from "@core/types/Types.sol";
-import {Errors} from "@core/types/Errors.sol";
-import {IPostRule} from "@core/interfaces/IPostRule.sol";
-import {MockRule} from "test/mocks/MockRule.sol";
 import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
+import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 
 contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
     IFeed feed;
@@ -3471,5 +3470,29 @@ contract FeedTest3 is RulesTest, BaseDeployments, RuleExecutionTest {
         // Verify a random post ID does not exist
         uint256 randomPostId = uint256(keccak256(abi.encodePacked("nonexistent")));
         assertFalse(feed.postExists(randomPostId), "Random post ID should not exist");
+    }
+
+    function test_SetMetadataURI_HasPID(address addressWithPID) public {
+        string memory newMetadataURI = "uri://new-metadata-uri";
+        assertNotEq(IMetadataBased(address(feed)).getMetadataURI(), newMetadataURI);
+        mockAccessControl.mockAccess(
+            addressWithPID, address(feed), uint256(keccak256("lens.permission.SetMetadata")), true
+        );
+        vm.prank(addressWithPID);
+        IMetadataBased(address(feed)).setMetadataURI(newMetadataURI);
+        assertEq(IMetadataBased(address(feed)).getMetadataURI(), newMetadataURI);
+    }
+
+    function test_Cannot_SetMetadataURI_IfDoesNotHavePID(address addressWithoutPID) public {
+        string memory oldMetadataURI = IMetadataBased(address(feed)).getMetadataURI();
+        string memory newMetadataURI = "uri://new-metadata-uri";
+        assertNotEq(oldMetadataURI, newMetadataURI);
+        mockAccessControl.mockAccess(
+            addressWithoutPID, address(feed), uint256(keccak256("lens.permission.SetMetadata")), false
+        );
+        vm.prank(addressWithoutPID);
+        vm.expectRevert(Errors.AccessDenied.selector);
+        IMetadataBased(address(feed)).setMetadataURI(newMetadataURI);
+        assertEq(IMetadataBased(address(feed)).getMetadataURI(), oldMetadataURI);
     }
 }

@@ -106,11 +106,6 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
         bytes4 selector
     ) internal override {}
 
-    function _amountOfRules(bytes4 ruleSelector) internal view returns (uint256) {
-        return $groupRulesStorage()._getRulesArray(ruleSelector, false).length
-            + $groupRulesStorage()._getRulesArray(ruleSelector, true).length;
-    }
-
     function getGroupRules(bytes4 ruleSelector, bool isRequired)
         external
         view
