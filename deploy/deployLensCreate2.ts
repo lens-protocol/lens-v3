@@ -75,7 +75,7 @@ async function deploy() {
   }
 
   const emptyContractDeployed = await deployContract(
-    'FixedImplementationContract',
+    'EmptyImplementation',
     [],
     {
       wallet: regularDeployerWallet,
