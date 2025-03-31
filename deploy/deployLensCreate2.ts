@@ -7,14 +7,19 @@ import * as hre from 'hardhat';
 async function deploy() {
   const DEPLOYING_FR = Boolean(process.env.DEPLOY_FR);
 
-  const regularDeployerPrivateKey = process.env.WALLET_PRIVATE_KEY;
-  if (!regularDeployerPrivateKey) {
+  const regularDeployerPk = process.env.WALLET_PRIVATE_KEY;
+  if (!regularDeployerPk) {
     throw new Error('WALLET_PRIVATE_KEY not found in environment variables');
   }
 
-  const lensCreate2DeployerPrivateKey = process.env.LENS_CREATE2_DEPLOYER_PRIVATE_KEY;
-  if (!lensCreate2DeployerPrivateKey) {
+  const __create2DeployerPk__ = process.env.LENS_CREATE2_DEPLOYER_PRIVATE_KEY;
+  if (!__create2DeployerPk__) {
     throw new Error('LENS_CREATE2_DEPLOYER_PRIVATE_KEY not found in environment variables');
+  }
+
+  const create2ProxyAdminPk = process.env.PROXY_ADMIN_PRIVATE_KEY;
+  if (!create2ProxyAdminPk) {
+    throw new Error('PROXY_ADMIN_PRIVATE_KEY not found in environment variables');
   }
 
   const lensCreate2OwnerAddress = process.env.LENS_CREATE2_OWNER_ADDRESS;
@@ -22,20 +27,26 @@ async function deploy() {
     throw new Error('LENS_CREATE2_OWNER_ADDRESS not found in environment variables');
   }
 
-  const regularDeployerWallet = getWallet(regularDeployerPrivateKey);
-  const lensCreate2DeployerWallet = getWallet(lensCreate2DeployerPrivateKey);
-  console.log(`LensCreate2 deployer address: ${lensCreate2DeployerWallet.address}`);
-  console.log(`LensCreate2 owner address: ${lensCreate2OwnerAddress}`);
+  const regularDeployerWallet = getWallet(regularDeployerPk);
+  const __create2DeployerWallet__ = getWallet(__create2DeployerPk__);
+  const create2ProxyAdminWallet = getWallet(create2ProxyAdminPk);
+
+  console.log(`Address of Regular deployer: ${await regularDeployerWallet.getAddress()}`);
+  console.log(
+    `Address of LensCreate2 deployer (!): ${await __create2DeployerWallet__.getAddress()}`
+  );
+  console.log(`Address of LensCreate2 owner: ${lensCreate2OwnerAddress}`);
+  console.log(`Address of LensCreate2 proxy admin: ${await create2ProxyAdminWallet.getAddress()}`);
 
   if (!DEPLOYING_FR) {
     const richWallet = getWallet(LOCAL_RICH_WALLETS[0].privateKey);
     await richWallet.sendTransaction({
-      to: lensCreate2DeployerWallet.address,
+      to: __create2DeployerWallet__.address,
       value: ethers.parseEther('1.0'),
     });
   }
 
-  const nonce = await lensCreate2DeployerWallet.getNonce();
+  const nonce = await __create2DeployerWallet__.getNonce();
 
   const lensCreate2Info: ContractInfo = {
     name: 'LensCreate2Impl',
@@ -44,8 +55,8 @@ async function deploy() {
     constructorArguments: [],
   };
 
-  const deployer = new Deployer(hre, lensCreate2DeployerWallet);
-  const proxyArtifact = await deployer
+  const __create2Deployer__ = new Deployer(hre, __create2DeployerWallet__);
+  const proxyArtifact = await __create2Deployer__
     .loadArtifact('TransparentUpgradeableProxy')
     .catch((error) => {
       if (
@@ -85,9 +96,9 @@ async function deploy() {
 
   const lensCreate2ProxyDeployed = await deployContract(
     'TransparentUpgradeableProxy',
-    [await emptyContractDeployed.getAddress(), lensCreate2OwnerAddress, '0x'],
+    [await emptyContractDeployed.getAddress(), await create2ProxyAdminWallet.getAddress(), '0x'],
     {
-      wallet: lensCreate2DeployerWallet,
+      wallet: __create2DeployerWallet__,
     }
   );
 
@@ -101,19 +112,55 @@ async function deploy() {
 
   lensCreate2Info.address = await lensCreate2ProxyDeployed.getAddress();
 
-  const lensCreate2Artifact = await deployer.loadArtifact('LensCreate2').catch((error) => {
-    if (error?.message?.includes(`Artifact for contract "LensCreate2" not found.`)) {
-      console.error(error.message);
-      throw `⛔️ Please make sure you have compiled your contracts or specified the correct contract name!`;
-    } else {
-      throw error;
-    }
-  });
+  const lensCreate2Owner = await regularDeployerWallet.getAddress();
+
+  console.log(`LensCreate2 Owner = ${lensCreate2Owner}`);
+
+  const initializerABI = ['function initialize(address owner) external'];
+  const initializerInterface = new ethers.Interface(initializerABI);
+  const initializeEncodedCall = initializerInterface.encodeFunctionData('initialize', [
+    lensCreate2Owner,
+  ]);
+
+  console.log('Initialize encoded call = ', initializeEncodedCall);
+
+  const transparentUpgradeableProxyArtifact = await hre.artifacts.readArtifact(
+    'ITransparentUpgradeableProxy'
+  );
+  const transparentUpgradeableProxy = new ethers.Contract(
+    lensCreate2Info.address,
+    transparentUpgradeableProxyArtifact.abi,
+    create2ProxyAdminWallet
+  );
+
+  console.log('About to upgradeAndCall...');
+
+  const upgradeTx = await transparentUpgradeableProxy.upgradeToAndCall(
+    await lensCreate2ImplementationDeployed.getAddress(),
+    initializeEncodedCall
+  );
+
+  console.log('Upgrade tx sent:', upgradeTx.hash);
+
+  await upgradeTx.wait();
+
+  console.log('Upgrade tx mined');
+
+  const lensCreate2Artifact = await new Deployer(hre, regularDeployerWallet)
+    .loadArtifact('LensCreate2')
+    .catch((error) => {
+      if (error?.message?.includes(`Artifact for contract "LensCreate2" not found.`)) {
+        console.error(error.message);
+        throw `⛔️ Please make sure you have compiled your contracts or specified the correct contract name!`;
+      } else {
+        throw error;
+      }
+    });
 
   const lensCreate2 = new hre.ethers.Contract(
     lensCreate2Info.address,
     lensCreate2Artifact.abi,
-    lensCreate2DeployerWallet
+    regularDeployerWallet
   );
   const actualProxyBytecodeHash = await lensCreate2.PROXY_BYTECODE_HASH();
 
@@ -138,9 +185,17 @@ async function deploy() {
     throw 'Predicted addresses mismatch';
   }
 
-  saveContractToAddressBook(lensCreate2Info);
-
+  const expectedCreate2Address = '0x52AF9CF29976C310E3DE03C509E108edB6edb8c0';
+  console.log(`LensCreate2 is expected to be deloyed at ${expectedCreate2Address}`);
   console.log(`${lensCreate2Info.contractName} deployed at ${lensCreate2Info.address}`);
+
+  if (lensCreate2Info.address != expectedCreate2Address) {
+    console.error(`Predicted address for LensCreate2 doesn't match the expected address`);
+    console.error(`Please check what changed since this commit was posted`);
+    throw 'Predicted addresses mismatch';
+  }
+
+  saveContractToAddressBook(lensCreate2Info);
 }
 
 if (require.main === module) {
@@ -178,7 +233,7 @@ function bytecodeHash(bytecode: string): string {
 }
 
 // Assumed address at salt 0:
-const assumedAddress = '0x2753363A2422f6C41501720c65D990d9c0E032D9';
+const assumedAddress = '0xff82e744035Bb7C86044F67314772Cbf87A8bBf2';
 
 // Assumed bytecode to compare with:
 const transparentUpgradeableProxyBytecode =
