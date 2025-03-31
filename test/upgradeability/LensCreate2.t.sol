@@ -132,4 +132,13 @@ contract LensCreate2Test is ZkTest {
         address deployedContract = create2.getAddress(bytes32(0));
         assertEq(deployedContract, EXPECTED_ZERO_SALT_ADDRESS);
     }
+
+    function test_calculateAddress() public view {
+        string memory contractName = "ActionHub";
+        string memory preSaltString = string.concat("lens.contract.", contractName);
+        bytes32 salt = keccak256(bytes(preSaltString));
+        address predictedAddress = create2.getAddress(salt);
+        console.log(string.concat("`", preSaltString, "`'s address: "), predictedAddress);
+        // This test is just a helper to log the address, no assertions.
+    }
 }
