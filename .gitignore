@@ -4,6 +4,9 @@ cache_forge/
 out/
 zkout/
 
+# Local deployments
+deployments-zk/inMemoryNode/
+
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
