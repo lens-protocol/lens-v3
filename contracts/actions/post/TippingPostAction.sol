@@ -23,7 +23,7 @@ contract TippingPostAction is LensPaymentHandler, OwnableMetadataBasedPostAction
 
     uint16 constant REFERRALS_FEE_MAX_BPS = 2000; // 20.00%
 
-    constructor() OwnableMetadataBasedPostAction(address(0), "") {
+    constructor(address actionHub) OwnableMetadataBasedPostAction(actionHub, address(0), "") {
         _disableInitializers();
     }
 

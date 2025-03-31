@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 
 import {UNIVERSAL_ACTION_MAGIC_VALUE} from "contracts/extensions/actions/ActionHub.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {LENS_CREATE2_ADDRESS, CONTRACT__ACTION_HUB} from "contracts/core/types/Constants.sol";
+import {LENS_CREATE2_ADDRESS} from "contracts/core/types/Constants.sol";
 import {ILensCreate2} from "contracts/core/upgradeability/LensCreate2.sol";
 
 abstract contract BaseAction {
@@ -18,8 +18,8 @@ abstract contract BaseAction {
         _;
     }
 
-    constructor() {
-        ACTION_HUB = ILensCreate2(LENS_CREATE2_ADDRESS).getAddress(CONTRACT__ACTION_HUB);
+    constructor(address actionHub) {
+        ACTION_HUB = actionHub;
     }
 
     function _configureUniversalAction(address originalMsgSender) internal onlyActionHub returns (bytes memory) {

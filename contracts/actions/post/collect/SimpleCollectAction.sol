@@ -101,7 +101,7 @@ contract SimpleCollectAction is
         RecipientData[] referrals;
     }
 
-    constructor() OwnableMetadataBasedPostAction(address(0), "") {
+    constructor(address actionHub) OwnableMetadataBasedPostAction(actionHub, address(0), "") {
         _disableInitializers();
     }
 

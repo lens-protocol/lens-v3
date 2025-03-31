@@ -8,6 +8,8 @@ import {IPostAction} from "contracts/extensions/actions/ActionHub.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract BasePostAction is BaseAction, IPostAction {
+    constructor(address actionHub) BaseAction(actionHub) {}
+
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
         override

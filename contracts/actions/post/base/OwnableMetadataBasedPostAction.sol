@@ -9,7 +9,7 @@ import {BasePostAction} from "contracts/actions/post/base/BasePostAction.sol";
 abstract contract OwnableMetadataBasedPostAction is BasePostAction, Ownable, MetadataBased {
     event Lens_PostAction_MetadataURISet(string metadataURI);
 
-    constructor(address owner, string memory metadataURI) {
+    constructor(address actionHub, address owner, string memory metadataURI) BasePostAction(actionHub) {
         _transferOwnership(owner);
         _setMetadataURI(metadataURI);
     }
