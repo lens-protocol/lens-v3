@@ -22,7 +22,7 @@ contract TippingAccountAction is LensPaymentHandler, OwnableMetadataBasedAccount
 
     uint16 constant REFERRALS_FEE_MAX_BPS = 2000; // 20.00%
 
-    constructor() OwnableMetadataBasedAccountAction(address(0), "") {
+    constructor(address actionHub) OwnableMetadataBasedAccountAction(actionHub, address(0), "") {
         _disableInitializers();
     }
 
