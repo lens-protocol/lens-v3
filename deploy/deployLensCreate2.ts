@@ -7,6 +7,11 @@ import * as hre from 'hardhat';
 async function deploy() {
   const DEPLOYING_FR = Boolean(process.env.DEPLOY_FR);
 
+  const regularDeployerPrivateKey = process.env.WALLET_PRIVATE_KEY;
+  if (!regularDeployerPrivateKey) {
+    throw new Error('WALLET_PRIVATE_KEY not found in environment variables');
+  }
+
   const lensCreate2DeployerPrivateKey = process.env.LENS_CREATE2_DEPLOYER_PRIVATE_KEY;
   if (!lensCreate2DeployerPrivateKey) {
     throw new Error('LENS_CREATE2_DEPLOYER_PRIVATE_KEY not found in environment variables');
@@ -17,7 +22,7 @@ async function deploy() {
     throw new Error('LENS_CREATE2_OWNER_ADDRESS not found in environment variables');
   }
 
-
+  const regularDeployerWallet = getWallet(regularDeployerPrivateKey);
   const lensCreate2DeployerWallet = getWallet(lensCreate2DeployerPrivateKey);
   console.log(`LensCreate2 deployer address: ${lensCreate2DeployerWallet.address}`);
   console.log(`LensCreate2 owner address: ${lensCreate2OwnerAddress}`);
@@ -34,7 +39,7 @@ async function deploy() {
 
 
   const lensCreate2Info: ContractInfo = {
-    name: 'LensCreate2',
+    name: 'LensCreate2Impl',
     contractName: 'LensCreate2',
     contractType: ContractType.Aux,
     constructorArguments: [lensCreate2OwnerAddress],
@@ -69,15 +74,33 @@ async function deploy() {
     throw new Error('LensCreate2 deployer nonce is not 0 - ABORTING');
   }
 
-  const lensCreate2Deployed = await deployContract(
-    lensCreate2Info.contractName,
-    lensCreate2Info.constructorArguments,
+  const emptyContractDeployed = await deployContract(
+    'FixedImplementationContract',
+    [],
+    {
+      wallet: regularDeployerWallet,
+    }
+  );
+
+  console.log(`Empty contract deployed at ${emptyContractDeployed.address}`);
+
+  const lensCreate2ProxyDeployed = await deployContract(
+    'TransparentUpgradeableProxy',
+    [emptyContractDeployed.address, lensCreate2OwnerAddress, ''],
     {
       wallet: lensCreate2DeployerWallet,
     }
   );
 
-  lensCreate2Info.address = await lensCreate2Deployed.getAddress();
+  const lensCreate2ImplementationDeployed = await deployContract(
+    lensCreate2Info.contractName,
+    lensCreate2Info.constructorArguments,
+    {
+      wallet: regularDeployerWallet,
+    }
+  );
+
+  lensCreate2Info.address = await lensCreate2ProxyDeployed.getAddress();
 
   const lensCreate2Artifact = await deployer.loadArtifact('LensCreate2').catch((error) => {
     if (
