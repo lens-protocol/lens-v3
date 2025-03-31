@@ -32,6 +32,14 @@ const config: HardhatUserConfig = {
       zksync: true,
       ethNetwork: 'sepolia',
     },
+    lensMainnet: {
+      chainId: 232,
+      url: "https://api.lens.matterhosted.dev/",
+      ethNetwork: `https://eth-sepolia.g.alchemy.com/v2/${process.env.SEPOLIA_ALCHEMY_API_KEY}`, // dont think you need this
+      zksync: true,
+      verifyURL:
+        "https://api-explorer-verify.lens.matterhosted.dev/contract_verification",
+    },
     hardhat: {
       zksync: true,
     },
