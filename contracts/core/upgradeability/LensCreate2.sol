@@ -8,11 +8,10 @@ import {
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
 // If using the [0] nonce of 0xfe4Ad59637Cab6A5AbAEe896D3d01dA67f418e76 deployer:
 address constant LENS_CREATE_2_ADDRESS = 0x52AF9CF29976C310E3DE03C509E108edB6edb8c0;
-
-contract FixedImplementationContract {}
 
 interface ILensCreate2 {
     function getAddress(bytes32 salt) external view returns (address);
@@ -26,24 +25,26 @@ interface ILensCreate2 {
     ) external returns (address);
 }
 
-contract LensCreate2 is ILensCreate2, Ownable {
-    address private immutable _FIXED_IMPLEMENTATION;
-    bytes32 private immutable _PROXY_BYTECODE_HASH;
-    bytes32 private immutable _SENDER_BYTES;
-    bytes32 private immutable _CREATE2_PREFIX;
-    bytes32 private immutable _CONSTRUCTOR_ARGS_HASH;
+contract LensCreate2 is ILensCreate2, Initializable, Ownable {
+    bytes32 public immutable PROXY_BYTECODE_HASH;
+    bytes32 public immutable SENDER_BYTES;
+    bytes32 public immutable CREATE2_PREFIX;
+    bytes32 public immutable CONSTRUCTOR_ARGS_HASH;
 
-    constructor(address owner) {
-        _FIXED_IMPLEMENTATION = address(new FixedImplementationContract());
-        address proxy = address(new TransparentUpgradeableProxy(FIXED_IMPLEMENTATION(), address(this), ""));
+    constructor() {
+        address proxy = address(new TransparentUpgradeableProxy(LENS_CREATE_2_ADDRESS, LENS_CREATE_2_ADDRESS, ""));
         bytes32 bytecodeHash;
         assembly {
             bytecodeHash := extcodehash(proxy)
         }
-        _PROXY_BYTECODE_HASH = bytecodeHash;
-        _CREATE2_PREFIX = keccak256("zksyncCreate2");
-        _SENDER_BYTES = bytes32(uint256(uint160(address(this))));
-        _CONSTRUCTOR_ARGS_HASH = keccak256(abi.encode(FIXED_IMPLEMENTATION(), address(this), ""));
+        PROXY_BYTECODE_HASH = bytecodeHash;
+        CREATE2_PREFIX = keccak256("zksyncCreate2");
+        SENDER_BYTES = bytes32(uint256(uint160(LENS_CREATE_2_ADDRESS)));
+        CONSTRUCTOR_ARGS_HASH = keccak256(abi.encode(LENS_CREATE_2_ADDRESS, LENS_CREATE_2_ADDRESS, ""));
+        _disableInitializers();
+    }
+
+    function initialize(address owner) external initializer {
         _transferOwnership(owner);
     }
 
@@ -52,9 +53,7 @@ contract LensCreate2 is ILensCreate2, Ownable {
             uint160(
                 uint256(
                     keccak256(
-                        bytes.concat(
-                            CREATE2_PREFIX(), SENDER_BYTES(), salt, PROXY_BYTECODE_HASH(), CONSTRUCTOR_ARGS_HASH()
-                        )
+                        bytes.concat(CREATE2_PREFIX, SENDER_BYTES, salt, PROXY_BYTECODE_HASH, CONSTRUCTOR_ARGS_HASH)
                     )
                 )
             )
@@ -69,7 +68,7 @@ contract LensCreate2 is ILensCreate2, Ownable {
         address expectedAddress
     ) external override onlyOwner returns (address) {
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(
-            address(new TransparentUpgradeableProxy{salt: salt}(FIXED_IMPLEMENTATION(), address(this), ""))
+            address(new TransparentUpgradeableProxy{salt: salt}(LENS_CREATE_2_ADDRESS, LENS_CREATE_2_ADDRESS, ""))
         );
         require(expectedAddress == address(0) || expectedAddress == address(proxy), Errors.UnexpectedValue());
         if (initializerCall.length > 0) {
@@ -79,27 +78,5 @@ contract LensCreate2 is ILensCreate2, Ownable {
         }
         proxy.changeAdmin(proxyAdmin);
         return address(proxy);
-    }
-
-    // TODO: These are only really needed for etch to work...
-
-    function FIXED_IMPLEMENTATION() public view virtual returns (address) {
-        return _FIXED_IMPLEMENTATION;
-    }
-
-    function PROXY_BYTECODE_HASH() public view virtual returns (bytes32) {
-        return _PROXY_BYTECODE_HASH;
-    }
-
-    function SENDER_BYTES() public view virtual returns (bytes32) {
-        return _SENDER_BYTES;
-    }
-
-    function CREATE2_PREFIX() public view virtual returns (bytes32) {
-        return _CREATE2_PREFIX;
-    }
-
-    function CONSTRUCTOR_ARGS_HASH() public view virtual returns (bytes32) {
-        return _CONSTRUCTOR_ARGS_HASH;
     }
 }
