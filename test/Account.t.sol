@@ -81,6 +81,42 @@ contract AccountTest is Test, BaseDeployments {
         console.log("Post Author:", post.author);
     }
 
+    function testCanReceiveAndSendNative(uint256 msgValue) public {
+        address anotherAccount = makeAddr("ANOTHER_ACCOUNT");
+        vm.assume(msgValue > 0);
+        msgValue = msgValue % 1 << 95;
+        anotherAccount.call{value: msgValue}("");
+        assertEq(anotherAccount.balance, msgValue);
+
+        vm.prank(anotherAccount);
+        address(account).call{value: msgValue}("");
+        assertEq(address(account).balance, msgValue, "Account didn't receive native token");
+        assertEq(anotherAccount.balance, 0, "AnotherAccount didn't send native token");
+
+        vm.prank(owner);
+        bytes memory returnData = account.executeTransaction({target: anotherAccount, value: 0, data: ""});
+        assertEq(anotherAccount.balance, msgValue, "AnotherAccount didn't receive native token");
+        assertEq(address(account).balance, 0, "Account didn't send native token");
+    }
+
+    function testSendNativeViaManager(uint256 msgValue) public {
+        address anotherAccount = makeAddr("ANOTHER_ACCOUNT");
+        vm.assume(msgValue > 0);
+        msgValue = msgValue % 1 << 95;
+        anotherAccount.call{value: msgValue}("");
+        assertEq(anotherAccount.balance, msgValue);
+
+        vm.prank(anotherAccount);
+        address(account).call{value: msgValue}("");
+        assertEq(address(account).balance, msgValue, "Account didn't receive native token");
+        assertEq(anotherAccount.balance, 0, "AnotherAccount didn't send native token");
+
+        vm.prank(manager);
+        bytes memory returnData = account.executeTransaction({target: anotherAccount, value: 0, data: ""});
+        assertEq(anotherAccount.balance, msgValue, "AnotherAccount didn't receive native token");
+        assertEq(address(account).balance, 0, "Account didn't send native token");
+    }
+
     function testCanExecuteTxViaManager() public {
         bytes memory txData = abi.encodeCall(
             Feed.createPost,

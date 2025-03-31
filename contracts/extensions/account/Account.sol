@@ -180,7 +180,7 @@ contract Account is IAccount, Initializable, Ownable, ExtraStorageBased, Metadat
         if (value > 0) {
             require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
         }
-        if (_isTransferRelatedSelector(bytes4(data[:4]))) {
+        if (data.length >= 4 && _isTransferRelatedSelector(bytes4(data[:4]))) {
             require(
                 $storage().allowNonOwnerSpendingTimestamp > 0
                     && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
