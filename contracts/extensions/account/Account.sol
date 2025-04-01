@@ -59,12 +59,9 @@ contract Account is
     using CallLib for address;
     using PermissionsHelper for AccountManagerPermissions;
 
-    // In a future Account version/upgrade this could be configurable by the owner.
-    uint256 constant SPENDING_TIMELOCK = 1 hours;
-
     struct Storage {
         mapping(address account => AccountManagerPermissions permissions) accountManagerPermissions;
-        uint256 allowNonOwnerSpendingTimestamp;
+        uint256 __gap__; // Deprecated field. It was `uint256 allowNonOwnerSpendingTimestamp`.
         WhoCanAddMeToGroups whoCanAddMeToGroups;
         mapping(address group => bool wasRequestSent) didSendRequestToGroup;
         mapping(address graph => bool usedGraph) didFollowOnGraph; // Written in current impl for future use.
@@ -234,17 +231,6 @@ contract Account is
 
     // Owner Only functions
 
-    function allowNonOwnerSpending(bool allow) external onlyOwner {
-        if (allow) {
-            require($storage().allowNonOwnerSpendingTimestamp == 0, Errors.RedundantStateChange());
-            $storage().allowNonOwnerSpendingTimestamp = block.timestamp;
-        } else {
-            require($storage().allowNonOwnerSpendingTimestamp > 0, Errors.RedundantStateChange());
-            delete $storage().allowNonOwnerSpendingTimestamp;
-        }
-        emit Lens_Account_AllowNonOwnerSpending(allow, allow ? block.timestamp : 0);
-    }
-
     function _isAccountManager(address accountManager) internal view returns (bool) {
         return $storage().accountManagerPermissions[accountManager].isAccountManager();
     }
@@ -338,11 +324,6 @@ contract Account is
                 require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
             }
             if (data.length >= SELECTOR_BYTE_LENGTH && _isTransferRelatedSelector(bytes4(data[:SELECTOR_BYTE_LENGTH]))) {
-                require(
-                    $storage().allowNonOwnerSpendingTimestamp > 0
-                        && block.timestamp - $storage().allowNonOwnerSpendingTimestamp > SPENDING_TIMELOCK,
-                    Errors.NotAllowed()
-                );
                 require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
             }
         }

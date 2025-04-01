@@ -28,7 +28,6 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_AccountManagerAdded(address accountManager, AccountManagerPermissions permissions);
     event Lens_Account_AccountManagerRemoved(address accountManager);
     event Lens_Account_AccountManagerUpdated(address accountManager, AccountManagerPermissions permissions);
-    event Lens_Account_AllowNonOwnerSpending(bool allow, uint256 timestamp);
     event Lens_Account_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Account_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Account_ExtraDataRemoved(bytes32 indexed key);
