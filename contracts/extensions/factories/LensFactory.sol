@@ -616,15 +616,22 @@ contract LensFactory {
     /// @custom:keccak lens.address.AdditionRemovalPidGroupRule
     bytes32 constant ADDRESS__ADD_REMOVE_PID_GROUP_RULE =
         0xb703736cdaa9dfb1a69dc6436a4e7c7dda22b4c8f06ac4346b70a192cb194251;
+    /// @custom:keccak lens.address.UsernameReservedNamespaceRule
+    bytes32 constant ADDRESS__USERNAME_RESERVED_NAMESPACE_RULE =
+        0x7f1f782eb10e7b4d5436bfb01a1e5040ac14912786d36d316ad4f498f2766440;
 
     function getRules() external view returns (KeyValue[] memory) {
-        KeyValue[] memory rules = new KeyValue[](5);
+        KeyValue[] memory rules = new KeyValue[](6);
         rules[0] = KeyValue({key: ADDRESS__ACCOUNT_BLOCKING_RULE, value: abi.encode(ACCOUNT_BLOCKING_RULE)});
         rules[1] = KeyValue({key: ADDRESS__GROUP_GATED_FEED_RULE, value: abi.encode(GROUP_GATED_FEED_RULE)});
         rules[2] =
             KeyValue({key: ADDRESS__USERNAME_SIMPLE_CHARSET_RULE, value: abi.encode(USERNAME_SIMPLE_CHARSET_RULE)});
         rules[3] = KeyValue({key: ADDRESS__BAN_MEMBER_GROUP_RULE, value: abi.encode(BAN_MEMBER_GROUP_RULE)});
         rules[4] = KeyValue({key: ADDRESS__ADD_REMOVE_PID_GROUP_RULE, value: abi.encode(ADD_REMOVE_PID_GROUP_RULE)});
+        rules[5] = KeyValue({
+            key: ADDRESS__USERNAME_RESERVED_NAMESPACE_RULE,
+            value: abi.encode(USERNAME_RESERVED_NAMESPACE_RULE)
+        });
         return rules;
     }
 }
