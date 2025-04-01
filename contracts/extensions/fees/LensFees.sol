@@ -19,6 +19,11 @@ contract LensFees is ILensFees {
     address internal immutable LENS_TREASURY_ADDRESS;
     uint16 internal immutable LENS_TREASURY_FEE_BPS;
 
+    constructor(address treasuryAddress, uint16 treasuryFeeBps) {
+        LENS_TREASURY_ADDRESS = treasuryAddress;
+        LENS_TREASURY_FEE_BPS = treasuryFeeBps;
+    }
+
     function getTreasuryAddress() external view override returns (address) {
         return LENS_TREASURY_ADDRESS;
     }
