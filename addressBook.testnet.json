@@ -96,8 +96,8 @@
   "GroupImpl": {
     "contractName": "Group",
     "contractType": 0,
-    "address": "0xb530A71C8011d2b92b711e265F62C5565fc8630e",
-    "bytecodeHash": "0x4a6f5852ac4d67503ed72bace29a6ae80345b255f3a6924c9e486fdd0fbed4ce"
+    "address": "0x9CEB814FE36C7613F0fB4841D8d2a0e4Ad59f817",
+    "bytecodeHash": "0x6d7d50a71da43d3b3d977ed5fa6e517bfbc513536f64e8fba474bb76e6392aa2"
   },
   "NamespaceImpl": {
     "contractName": "Namespace",
