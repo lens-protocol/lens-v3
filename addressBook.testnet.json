@@ -699,5 +699,20 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0x17d5B3917Eab14Ab4923DEc597B39EF64863C830"
+  },
+  "LensCreate2": {
+    "contractName": "TransparentUpgradeableProxy",
+    "contractType": 4,
+    "address": "0x52AF9CF29976C310E3DE03C509E108edB6edb8c0",
+    "constructorArguments": [
+      "0x284af6d56a5aa030813cfb44663e0792783c1ca5",
+      "0xaafa8246de0ae0e7b81125db325e9b39bed43b49",
+      ""]
+  },
+  "LensCreate2Impl": {
+    "contractName": "LensCreate2",
+    "contractType": 4,
+    "address": "0xdd7Aa96DE3CccCb5dF635227869a6E7c5a301D6F",
+    "constructorArguments": []
   }
 }
