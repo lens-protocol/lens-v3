@@ -82,6 +82,7 @@ struct RuleConstructorParams {
     address usernameSimpleCharsetRule;
     address banMemberGroupRule;
     address addRemovePidGroupRule;
+    address usernameReservedNamespaceRule;
 }
 
 struct GroupWithFeed_GroupParams {
@@ -114,6 +115,7 @@ contract LensFactory {
     address internal immutable USERNAME_SIMPLE_CHARSET_RULE;
     address internal immutable BAN_MEMBER_GROUP_RULE;
     address internal immutable ADD_REMOVE_PID_GROUP_RULE;
+    address internal immutable USERNAME_RESERVED_NAMESPACE_RULE;
 
     uint128 internal immutable namespaceAllowedCharsLookup;
 
@@ -131,6 +133,7 @@ contract LensFactory {
         USERNAME_SIMPLE_CHARSET_RULE = rules.usernameSimpleCharsetRule;
         BAN_MEMBER_GROUP_RULE = rules.banMemberGroupRule;
         ADD_REMOVE_PID_GROUP_RULE = rules.addRemovePidGroupRule;
+        USERNAME_RESERVED_NAMESPACE_RULE = rules.usernameReservedNamespaceRule;
         namespaceAllowedCharsLookup = string("abcdefghijklmnopqrstuvwxyz0123456789_").to7BitASCIIAllowedLookup();
     }
 
@@ -530,7 +533,7 @@ contract LensFactory {
         virtual
         returns (RuleChange[] memory)
     {
-        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 1);
+        RuleChange[] memory modifiedRules = new RuleChange[](rules.length + 2);
 
         {
             RuleSelectorChange[] memory selectorChanges = new RuleSelectorChange[](1);
@@ -545,9 +548,25 @@ contract LensFactory {
                 configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
                 selectorChanges: selectorChanges
             });
+
+            KeyValue[] memory usernameReservedNamespaceRuleConfigParams = new KeyValue[](1);
+            // Set the Access Control configuration parameter
+            usernameReservedNamespaceRuleConfigParams[0] =
+                KeyValue({key: PARAM__ACCESS_CONTROL, value: abi.encode(accessControl)});
+
+            modifiedRules[1] = RuleChange({
+                ruleAddress: USERNAME_RESERVED_NAMESPACE_RULE,
+                configSalt: bytes32(0),
+                configurationChanges: RuleConfigurationChange({
+                    configure: true,
+                    ruleParams: usernameReservedNamespaceRuleConfigParams
+                }),
+                selectorChanges: selectorChanges
+            });
             for (uint256 i = 0; i < rules.length; i++) {
                 require(rules[i].ruleAddress != USERNAME_SIMPLE_CHARSET_RULE, Errors.DuplicatedValue());
-                modifiedRules[i + 1] = _injectRuleAccessControl(rules[i], address(accessControl));
+                require(rules[i].ruleAddress != USERNAME_RESERVED_NAMESPACE_RULE, Errors.DuplicatedValue());
+                modifiedRules[i + 2] = _injectRuleAccessControl(rules[i], address(accessControl));
             }
         }
 

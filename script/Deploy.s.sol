@@ -36,6 +36,7 @@ import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
+import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
 
 import {
     TransparentUpgradeableProxy,
@@ -92,6 +93,7 @@ contract MyScript is Script {
     address usernameSimpleCharsetRule;
     address banMemberGroupRule;
     address addRemovePidGroupRule;
+    address usernameReservedNamespaceRule;
 
     function run() external {
         proxyAdminLock = address(new Lock(lockOwner, true));
@@ -138,6 +140,13 @@ contract MyScript is Script {
                 abi.encodeWithSelector(AdditionRemovalPidGroupRule.initialize.selector, address(this), "uri://any")
             )
         );
+        usernameReservedNamespaceRule = address(
+            new TransparentUpgradeableProxy(
+                address(new UsernameReservedNamespaceRule()),
+                proxyAdmin,
+                abi.encodeWithSelector(UsernameReservedNamespaceRule.initialize.selector, address(this), "uri://any")
+            )
+        );
 
         lensFactory = new LensFactory({
             factories: FactoryConstructorParams({
@@ -154,7 +163,8 @@ contract MyScript is Script {
                 groupGatedFeedRule: groupGatedFeedRule,
                 usernameSimpleCharsetRule: usernameSimpleCharsetRule,
                 banMemberGroupRule: banMemberGroupRule,
-                addRemovePidGroupRule: addRemovePidGroupRule
+                addRemovePidGroupRule: addRemovePidGroupRule,
+                usernameReservedNamespaceRule: usernameReservedNamespaceRule
             })
         });
 

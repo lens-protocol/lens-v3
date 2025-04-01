@@ -470,13 +470,6 @@ contract MigrationFlowTest is BaseDeployments {
         address lensGroupFactory = abi.decode(factories[5].value, (address));
         address lensNamespaceFactory = abi.decode(factories[6].value, (address));
 
-        KeyValue[] memory rules = lensFactory.getRules();
-        address lensAccountBlockingRule = abi.decode(rules[0].value, (address));
-        address lensGroupGatedFeedRule = abi.decode(rules[1].value, (address));
-        address lensUsernameSimpleCharsetRule = abi.decode(rules[2].value, (address));
-        address lensBanMemberGroupRule = abi.decode(rules[3].value, (address));
-        address lensAddRemovePidGroupRule = abi.decode(rules[4].value, (address));
-
         address lensFactoryImpl = address(
             new LensFactory({
                 factories: FactoryConstructorParams({
@@ -488,17 +481,22 @@ contract MigrationFlowTest is BaseDeployments {
                     graphFactory: GraphFactory(lensGraphFactory),
                     namespaceFactory: NamespaceFactory(lensNamespaceFactory)
                 }),
-                rules: RuleConstructorParams({
-                    accountBlockingRule: lensAccountBlockingRule,
-                    groupGatedFeedRule: lensGroupGatedFeedRule,
-                    usernameSimpleCharsetRule: lensUsernameSimpleCharsetRule,
-                    banMemberGroupRule: lensBanMemberGroupRule,
-                    addRemovePidGroupRule: lensAddRemovePidGroupRule
-                })
+                rules: _gatherRules()
             })
         );
 
         vm.prank(newOwner);
         ITransparentUpgradeableProxy(address(lensFactory)).upgradeTo(lensFactoryImpl);
+    }
+
+    function _gatherRules() internal returns (RuleConstructorParams memory ruleConstructorParams) {
+        KeyValue[] memory rules = lensFactory.getRules();
+
+        ruleConstructorParams.accountBlockingRule = abi.decode(rules[0].value, (address));
+        ruleConstructorParams.groupGatedFeedRule = abi.decode(rules[1].value, (address));
+        ruleConstructorParams.usernameSimpleCharsetRule = abi.decode(rules[2].value, (address));
+        ruleConstructorParams.banMemberGroupRule = abi.decode(rules[3].value, (address));
+        ruleConstructorParams.addRemovePidGroupRule = abi.decode(rules[4].value, (address));
+        ruleConstructorParams.usernameReservedNamespaceRule = abi.decode(rules[5].value, (address));
     }
 }

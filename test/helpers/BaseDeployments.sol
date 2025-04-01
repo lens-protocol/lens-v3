@@ -49,6 +49,7 @@ import {GroupGatedFeedRule} from "contracts/rules/feed/GroupGatedFeedRule.sol";
 import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/UsernameSimpleCharsetNamespaceRule.sol";
 import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
+import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
 
 import {
     TransparentUpgradeableProxy,
@@ -111,6 +112,7 @@ contract BaseDeployments is Test {
     address usernameSimpleCharsetRule;
     address banMemberGroupRule;
     address addRemovePidGroupRule;
+    address usernameReservedNamespaceRule;
 
     bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
 
@@ -167,6 +169,15 @@ contract BaseDeployments is Test {
                 )
             )
         );
+        usernameReservedNamespaceRule = address(
+            new TransparentUpgradeableProxy(
+                address(new UsernameReservedNamespaceRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(
+                    UsernameReservedNamespaceRule.initialize.selector, rulesOwner, "uri://UsernameReservedNamespaceRule"
+                )
+            )
+        );
 
         address lensFactoryImpl = migrationMode
             ? address(
@@ -185,7 +196,8 @@ contract BaseDeployments is Test {
                         groupGatedFeedRule: address(0),
                         usernameSimpleCharsetRule: address(0),
                         banMemberGroupRule: address(0),
-                        addRemovePidGroupRule: address(0)
+                        addRemovePidGroupRule: address(0),
+                        usernameReservedNamespaceRule: address(0)
                     })
                 })
             )
@@ -205,7 +217,8 @@ contract BaseDeployments is Test {
                         groupGatedFeedRule: groupGatedFeedRule,
                         usernameSimpleCharsetRule: usernameSimpleCharsetRule,
                         banMemberGroupRule: banMemberGroupRule,
-                        addRemovePidGroupRule: addRemovePidGroupRule
+                        addRemovePidGroupRule: addRemovePidGroupRule,
+                        usernameReservedNamespaceRule: usernameReservedNamespaceRule
                     })
                 })
             );
