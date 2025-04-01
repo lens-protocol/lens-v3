@@ -344,6 +344,25 @@
     ],
     "address": "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D"
   },
+  "LensFees": {
+    "name": "LensFactory",
+    "contractName": "TransparentUpgradeableProxy",
+    "contractType": 2,
+    "constructorArguments": [
+      "0xc66f5B177DD54b86b154717f533C1B8Ac7a0773e",
+      "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
+      "0x"
+    ],
+    "address": "0xFd577b6317F4ab53D5675E85b8DEB7A814165C3C"
+  },
+  "LensFeesImpl": {
+    "name": "LensFeesImpl",
+    "contractName": "LensFees",
+    "contractType": 0,
+    "address": "0xc66f5B177DD54b86b154717f533C1B8Ac7a0773e",
+    "constructorArguments": ["0xcB6C7b2E340D50701d45d55507f19A5cE5d72330", 150],
+    "bytecodeHash": "0xd2bb42243d11a207aacd2493d96122a9a60735ae90e39623c52593d3b901940c"
+  },
   "LensExampleAccount": {
     "name": "LensExampleAccount",
     "contractName": "Account",
