@@ -9,6 +9,8 @@ import {KeyValueStorageLib} from "contracts/core/libraries/KeyValueStorageLib.so
 import {RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {WHITELISTED_MULTICALL_ADDRESS} from "contracts/migration/WhitelistedMulticall.sol";
+import {LensERC721} from "contracts/core/base/LensERC721.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract MigrationNamespace is Namespace {
     using KeyValueStorageLib for mapping(bytes32 => bytes);
@@ -181,6 +183,18 @@ contract MigrationNamespace is Namespace {
         address source = _processSourceStamp(id, customParams);
         _decodeAndSetUsernameExtraData(id, extraData);
         emit Lens_Username_Created(username, account, customParams, ruleProcessingParams, source, extraData);
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) public override(LensERC721, IERC721) {
+        // !!! MIGRATION ONLY
+        // require(_isApprovedOrOwner(msg.sender, tokenId), Errors.InvalidMsgSender());
+        require(
+            _isApprovedOrOwner(msg.sender, tokenId) || msg.sender == $lensFactory().value
+                || msg.sender == WHITELISTED_MULTICALL_ADDRESS,
+            Errors.InvalidMsgSender()
+        );
+
+        _transfer(from, to, tokenId);
     }
 
     function _unassignIfAssigned(
