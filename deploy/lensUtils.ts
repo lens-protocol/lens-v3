@@ -22,11 +22,12 @@ export interface ContractInfo {
   address?: string;
   constructorArguments?: any[];
   bytecodeHash?: string;
+  implementation?: string;
 }
 
 export type AddressBook = Record<string, Omit<ContractInfo, 'name'>>;
 
-export function loadAddressBook() {
+export function loadAddressBook(): AddressBook {
   try {
     const addressBook = require('../addressBook.json');
     return addressBook;
@@ -55,17 +56,17 @@ export function loadContractAddressFromAddressBook(name: string): string | undef
   return addressBook[name]?.address;
 }
 
-export async function deployLensContract(contractToDeploy: ContractInfo): Promise<ContractInfo> {
+export async function deployLensContract(contractToDeploy: ContractInfo, override: Boolean = false): Promise<ContractInfo> {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
   const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
-  const bytecodeHash = keccak256(artifact.bytecode);
+  const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
 
   // Check address book for existing contract
   const addressBook = loadAddressBook();
   const existingContract = addressBook[name];
 
-  if (existingContract && existingContract.bytecodeHash === bytecodeHash) {
+  if (existingContract && existingContract.bytecodeHash === bytecodeHash && override == false) {
     console.log(`${name} already deployed at ${existingContract.address}. Skipping...`);
     return {
       name: contractToDeploy.name,
@@ -104,13 +105,12 @@ export async function deployLensContract(contractToDeploy: ContractInfo): Promis
 
 export async function deployLensContractAsProxy(
   contractToDeploy: ContractInfo,
-  proxyOwner: string,
-  initializerCalldata?: string
+  proxyOwner: string
 ): Promise<ContractInfo> {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
   const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
-  // const bytecodeHash = keccak256(artifact.bytecode);
+  const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
 
   // Check address book for existing contract
   const addressBook = loadAddressBook();
@@ -136,26 +136,26 @@ export async function deployLensContractAsProxy(
     contractName: contractToDeploy.contractName,
     contractType: ContractType.Implementation,
     address: await deployedImplementation.getAddress(),
-    // bytecodeHash,
+    bytecodeHash,
     constructorArguments: contractToDeploy.constructorArguments,
   };
 
   addressBook[contractToDeploy.name ?? contractToDeploy.contractName + 'Impl'] = contractInfo;
   saveAddressBook(addressBook);
 
-  const constructorArguments = [
-    await deployedImplementation.getAddress(),
-    proxyOwner,
-    initializerCalldata ?? '0x',
-  ];
+  const constructorArguments = [await deployedImplementation.getAddress(), proxyOwner, '0x'];
   const deployedProxy = await deployContract('TransparentUpgradeableProxy', constructorArguments);
+  const proxyArtifact = await hre.artifacts.readArtifact('TransparentUpgradeableProxy');
+  const proxyBytecodeHash = calculateBytecodeHash(proxyArtifact.bytecode);
 
   const proxyInfo: ContractInfo = {
     name: contractToDeploy.name,
     contractName: 'TransparentUpgradeableProxy',
     contractType: contractToDeploy.contractType,
-    constructorArguments,
     address: await deployedProxy.getAddress(),
+    bytecodeHash: proxyBytecodeHash,
+    constructorArguments,
+    implementation: await deployedImplementation.getAddress(),
   };
 
   addressBook[name] = proxyInfo;
@@ -287,4 +287,27 @@ export function generateEnvFile() {
   }
 
   fs.writeFileSync('contracts.env', output);
+}
+
+function calculateBytecodeHash(bytecode: string): string {
+  // Remove '0x' prefix if present
+  const cleanBytecode = bytecode.startsWith('0x') ? bytecode.slice(2) : bytecode;
+
+  // Convert hex string to byte array
+  const byteArray = Buffer.from(cleanBytecode, 'hex');
+
+  // Calculate SHA256 hash
+  const hash = Buffer.from(require('crypto').createHash('sha256').update(byteArray).digest());
+
+  // Modify first 4 bytes according to spec
+  hash[0] = 1;
+  hash[1] = 0;
+
+  // Set bytes 2-3 to length/32 as uint16
+  const lenBytes = Buffer.alloc(2);
+  lenBytes.writeUInt16BE(byteArray.length / 32);
+  hash[2] = lenBytes[0];
+  hash[3] = lenBytes[1];
+
+  return hash.toString('hex');
 }
