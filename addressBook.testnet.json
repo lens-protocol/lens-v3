@@ -252,7 +252,8 @@
     "name": "AccountBlockingRuleImpl",
     "contractName": "AccountBlockingRule",
     "contractType": 0,
-    "address": "0x5AE6981242e1Aa7a4d45DF6f81172a721283EFED",
+    "address": "0x64CB53670D3938Fe919818470E909241a3FAB706",
+    "bytecodeHash": "0100022d3fbba6dd203f95e4584213cebe9581bcf5679f9bfa28eb4135f559f9",
     "constructorArguments": []
   },
   "AccountBlockingRule": {
@@ -263,13 +264,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0xf3de16e99679243E36BB449CADEA247Cf61450e1"
+    "address": "0xf3de16e99679243E36BB449CADEA247Cf61450e1",
+    "implementation": "0x64CB53670D3938Fe919818470E909241a3FAB706",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "GroupGatedFeedRuleImpl": {
     "name": "GroupGatedFeedRuleImpl",
     "contractName": "GroupGatedFeedRule",
     "contractType": 0,
-    "address": "0x415F2D6Fc968603001C0f2b9E3D581cB7F5c39C1",
+    "address": "0x565b641724308948E383cbC396AaF12c0B3e5B7B",
+    "bytecodeHash": "010001a5dd18b3bfbd985b04ad6ab06a52d3a49b3e3e4288cf8f3933445a517d",
     "constructorArguments": []
   },
   "GroupGatedFeedRule": {
@@ -280,7 +284,9 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0xbDE71d01eC6d6c49b2bcc9067EcA352a17D25A91"
+    "address": "0xbDE71d01eC6d6c49b2bcc9067EcA352a17D25A91",
+    "implementation": "0x565b641724308948E383cbC396AaF12c0B3e5B7B",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "UsernameSimpleCharsetNamespaceRuleImpl": {
     "name": "UsernameSimpleCharsetNamespaceRuleImpl",
@@ -303,7 +309,8 @@
     "name": "BanMemberGroupRuleImpl",
     "contractName": "BanMemberGroupRule",
     "contractType": 0,
-    "address": "0xfE2468f1A969C1dd866A0bC70e73e8bEC37cdd7F",
+    "address": "0x99f398Bfc70339D2244a7e999357386CC0902528",
+    "bytecodeHash": "010003b3e06083dd2f2f1f00463117dfa37a1c87b5e30365f24d6d25e47fd6a4",
     "constructorArguments": []
   },
   "BanMemberGroupRule": {
@@ -314,13 +321,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0xd12E1aD028d550F85F2a8d9130C46dB77A6A0a41"
+    "address": "0xd12E1aD028d550F85F2a8d9130C46dB77A6A0a41",
+    "implementation": "0x99f398Bfc70339D2244a7e999357386CC0902528",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "AdditionRemovalPidGroupRuleImpl": {
     "name": "AdditionRemovalPidGroupRuleImpl",
     "contractName": "AdditionRemovalPidGroupRule",
     "contractType": 0,
-    "address": "0xEA1AEaa88f5e42935ee69e18d95BDA4CEaf530b6",
+    "address": "0x6edf951cADdd5450EfFfA09413195d454D74D53B",
+    "bytecodeHash": "010001cfe7d947face04740d52d4275cde020e090bc8602d3a2fce361709a3fd",
     "constructorArguments": []
   },
   "AdditionRemovalPidGroupRule": {
@@ -331,7 +341,9 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x90d39577A9a6C76ED8a5b2B908a7053ef5430194"
+    "address": "0x90d39577A9a6C76ED8a5b2B908a7053ef5430194",
+    "implementation": "0x6edf951cADdd5450EfFfA09413195d454D74D53B",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "LensFactory": {
     "name": "LensFactory",
@@ -360,7 +372,10 @@
     "contractName": "LensFees",
     "contractType": 0,
     "address": "0xc66f5B177DD54b86b154717f533C1B8Ac7a0773e",
-    "constructorArguments": ["0xcB6C7b2E340D50701d45d55507f19A5cE5d72330", 150],
+    "constructorArguments": [
+      "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
+      150
+    ],
     "bytecodeHash": "0xd2bb42243d11a207aacd2493d96122a9a60735ae90e39623c52593d3b901940c"
   },
   "LensExampleAccount": {
@@ -426,7 +441,8 @@
     "name": "SimplePaymentFeedRuleImpl",
     "contractName": "SimplePaymentFeedRule",
     "contractType": 0,
-    "address": "0xe872903A263D6EAe626183fbA6E39aBCFf16bD0a",
+    "address": "0x62581dd11c755ED5237b355b7dD2305eF38C0f03",
+    "bytecodeHash": "010002fb5c828f27f0a98c4dc1bebe2d4f7c2e3e811cd9efd9d1e9f6d6a731da",
     "constructorArguments": []
   },
   "SimplePaymentFeedRule": {
@@ -437,13 +453,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x55efA60BE4fd711C114B853A5d251b95bdCC4F66"
+    "address": "0x55efA60BE4fd711C114B853A5d251b95bdCC4F66",
+    "implementation": "0x62581dd11c755ED5237b355b7dD2305eF38C0f03",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedFeedRuleImpl": {
     "name": "TokenGatedFeedRuleImpl",
     "contractName": "TokenGatedFeedRule",
     "contractType": 0,
-    "address": "0x38BaF904F46949603A21CAed0fd38F4957B21F94",
+    "address": "0x50f2049e507Db26c6EA47E9c08ed140da3C31f19",
+    "bytecodeHash": "010002256bc9d9acc49b146c2f668b85302755e1c3773b58e50fda55713f5a8d",
     "constructorArguments": []
   },
   "TokenGatedFeedRule": {
@@ -454,13 +473,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x54649BfA8Ea33eDD90f93592Fe87627be6C76013"
+    "address": "0x54649BfA8Ea33eDD90f93592Fe87627be6C76013",
+    "implementation": "0x50f2049e507Db26c6EA47E9c08ed140da3C31f19",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "FollowersOnlyPostRuleImpl": {
     "name": "FollowersOnlyPostRuleImpl",
     "contractName": "FollowersOnlyPostRule",
     "contractType": 0,
-    "address": "0xaA218C6461A9a25eBDA2E3E9433058144C56EEa2",
+    "address": "0x58d264095F45B597Fd17ABF46bC837061E3D844b",
+    "bytecodeHash": "010002b547bbdf274ea30edc7a2ad6e06964625d657e14e4f5450285b197d69a",
     "constructorArguments": []
   },
   "FollowersOnlyPostRule": {
@@ -471,13 +493,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x8956af058dF5Cb3609Fc10B2ea293764f55F5B0c"
+    "address": "0x8956af058dF5Cb3609Fc10B2ea293764f55F5B0c",
+    "implementation": "0x58d264095F45B597Fd17ABF46bC837061E3D844b",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "GroupGatedGraphRuleImpl": {
     "name": "GroupGatedGraphRuleImpl",
     "contractName": "GroupGatedGraphRule",
     "contractType": 0,
-    "address": "0x656372d94D7224e08fF6cE9C3A2B954cCcC6a516",
+    "address": "0x2A2E15533320F25E170362905a3DFF039865aCde",
+    "bytecodeHash": "010001d5d19bbfd1e792b80bb6506d59e513029ffa576e16f801d5f842f4d464",
     "constructorArguments": []
   },
   "GroupGatedGraphRule": {
@@ -488,13 +513,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x2Cb90d67d4396385060F4f18B036176005B21d56"
+    "address": "0x2Cb90d67d4396385060F4f18B036176005B21d56",
+    "implementation": "0x2A2E15533320F25E170362905a3DFF039865aCde",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedGraphRuleImpl": {
     "name": "TokenGatedGraphRuleImpl",
     "contractName": "TokenGatedGraphRule",
     "contractType": 0,
-    "address": "0x36798d63746B4b7a380E4D8936E7f8E55C1B8Dee",
+    "address": "0x8FAaC49C588d19f5F723590fFd8d094bA396230e",
+    "bytecodeHash": "0100021f8e7da4dfe40a92f267180296095caee7eebedb90ffd19f23c5666d0c",
     "constructorArguments": []
   },
   "TokenGatedGraphRule": {
@@ -505,13 +533,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x2662F99dC985d3dC710D3c13142e2D156874878d"
+    "address": "0x2662F99dC985d3dC710D3c13142e2D156874878d",
+    "implementation": "0x8FAaC49C588d19f5F723590fFd8d094bA396230e",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "SimplePaymentFollowRuleImpl": {
     "name": "SimplePaymentFollowRuleImpl",
     "contractName": "SimplePaymentFollowRule",
     "contractType": 0,
-    "address": "0x249Bdeac1fa026812D4d2197d2331d7A7a0CDd0D",
+    "address": "0x29c609125De355f6DAaDD509Ea39064f59a1AEC1",
+    "bytecodeHash": "0100028bcc58776d32f2d37a03f038858866b2c53d53dc634b61ff431551eb72",
     "constructorArguments": []
   },
   "SimplePaymentFollowRule": {
@@ -522,13 +553,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x7EA84D750E8C2b7D0EB5e8114f54111d78Eeb992"
+    "address": "0x7EA84D750E8C2b7D0EB5e8114f54111d78Eeb992",
+    "implementation": "0x29c609125De355f6DAaDD509Ea39064f59a1AEC1",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedFollowRuleImpl": {
     "name": "TokenGatedFollowRuleImpl",
     "contractName": "TokenGatedFollowRule",
     "contractType": 0,
-    "address": "0x6c2E6EcC41ed96CAD53e7c3AfA2920FbF320B522",
+    "address": "0xb4e6d4F6a753e88eb108b304b35d1D8DeC7D7A12",
+    "bytecodeHash": "0100019d1cb95e3f008697097c6a9dc1a55925c8876522aaef20b604dc02aff6",
     "constructorArguments": []
   },
   "TokenGatedFollowRule": {
@@ -539,13 +573,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x51BB76bae8eb8f1B69B8F4c3e310d49423a9aF33"
+    "address": "0x51BB76bae8eb8f1B69B8F4c3e310d49423a9aF33",
+    "implementation": "0xb4e6d4F6a753e88eb108b304b35d1D8DeC7D7A12",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "MembershipApprovalGroupRuleImpl": {
     "name": "MembershipApprovalGroupRuleImpl",
     "contractName": "MembershipApprovalGroupRule",
     "contractType": 0,
-    "address": "0x7656D95eA89331180FE8B4f50C8055270b38cC16",
+    "address": "0xC76fDa79062F63083c65c5Ce639e1C02F1EdEd00",
+    "bytecodeHash": "010002a32b8ca7bbc92be9a6530d14546a6f1996942d167e06fa28e27a8436dd",
     "constructorArguments": []
   },
   "MembershipApprovalGroupRule": {
@@ -556,13 +593,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x6d467E7f34e87C0D7185FAf692B43eD5792B86f5"
+    "address": "0x6d467E7f34e87C0D7185FAf692B43eD5792B86f5",
+    "implementation": "0xC76fDa79062F63083c65c5Ce639e1C02F1EdEd00",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "SimplePaymentGroupRuleImpl": {
     "name": "SimplePaymentGroupRuleImpl",
     "contractName": "SimplePaymentGroupRule",
     "contractType": 0,
-    "address": "0xFB7f6D79cc8C389199c1EC21af5A31d4436a1b58",
+    "address": "0x930f1DEF688EeF2Fe3567390F99e5F9501176F5A",
+    "bytecodeHash": "010002f7be89a7ad2dba3ea1168de2638ad5f1beb790f0e5539373e56ec262ba",
     "constructorArguments": []
   },
   "SimplePaymentGroupRule": {
@@ -573,13 +613,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0xC99b11687d91EC4f6e65EcFa205795101BbaB5B2"
+    "address": "0xC99b11687d91EC4f6e65EcFa205795101BbaB5B2",
+    "implementation": "0x930f1DEF688EeF2Fe3567390F99e5F9501176F5A",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedGroupRuleImpl": {
     "name": "TokenGatedGroupRuleImpl",
     "contractName": "TokenGatedGroupRule",
     "contractType": 0,
-    "address": "0x7b1123c2b371a0DA104e3b0DfcCFd9b225198595",
+    "address": "0x6E44365C406c1B0e9a257d03Af8001182192925D",
+    "bytecodeHash": "0100025de19d0db556b0c64e7dfec465cf0ea1b3b9ded0302bd845455ca6626e",
     "constructorArguments": []
   },
   "TokenGatedGroupRule": {
@@ -590,13 +633,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x3e3a35d2A67583975569c4a19761268AFB958cEF"
+    "address": "0x3e3a35d2A67583975569c4a19761268AFB958cEF",
+    "implementation": "0x6E44365C406c1B0e9a257d03Af8001182192925D",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "UsernameLengthNamespaceRuleImpl": {
     "name": "UsernameLengthNamespaceRuleImpl",
     "contractName": "UsernameLengthNamespaceRule",
     "contractType": 0,
-    "address": "0x32A44c7A6Ff0C7C9A40e2D502Db5F24DbfA33D92",
+    "address": "0xE097df1c30F0fff2475C4A2aE81f3F97649ee81e",
+    "bytecodeHash": "0100020b2e44c64e5badde1714869539df5bab6bc570e66dc11b9bf58e02ee0e",
     "constructorArguments": []
   },
   "UsernameLengthNamespaceRule": {
@@ -607,13 +653,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x0F0Fe596bAfddbd2Eb4037Fc111b9C4aE5192C5C"
+    "address": "0x0F0Fe596bAfddbd2Eb4037Fc111b9C4aE5192C5C",
+    "implementation": "0xE097df1c30F0fff2475C4A2aE81f3F97649ee81e",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "UsernameReservedNamespaceRuleImpl": {
     "name": "UsernameReservedNamespaceRuleImpl",
     "contractName": "UsernameReservedNamespaceRule",
     "contractType": 0,
-    "address": "0xD73612a24C1336066EFf38E30F13B027Ee6F9387",
+    "address": "0x05006b08Bd61869cAe36D2e85cEB5062e8BE3F6a",
+    "bytecodeHash": "010002a9f9cd83b054ec0688b20e3aa29961b036af6ddc1ec73391c7198adf12",
     "constructorArguments": []
   },
   "UsernameReservedNamespaceRule": {
@@ -624,13 +673,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x9a8b0e3344f5ca5f6fc9FcEb8fF543FDeF5eb2b9"
+    "address": "0x9a8b0e3344f5ca5f6fc9FcEb8fF543FDeF5eb2b9",
+    "implementation": "0x05006b08Bd61869cAe36D2e85cEB5062e8BE3F6a",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedNamespaceRuleImpl": {
     "name": "TokenGatedNamespaceRuleImpl",
     "contractName": "TokenGatedNamespaceRule",
     "contractType": 0,
-    "address": "0x0B16478fa74Ec7018dfdb9dBE0290ab493C1C535",
+    "address": "0xF879a56cBc43f0d79dA839d75bbE80a162f01340",
+    "bytecodeHash": "01000245e1021cc33b60fe869738ce5f4c1ad913bed5224c1bfaf559c8b4fe90",
     "constructorArguments": []
   },
   "TokenGatedNamespaceRule": {
@@ -641,13 +693,16 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x87A69174530aA735768096c5F24a0F559553Dd84"
+    "address": "0x87A69174530aA735768096c5F24a0F559553Dd84",
+    "implementation": "0xF879a56cBc43f0d79dA839d75bbE80a162f01340",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "UsernamePricePerLengthNamespaceRuleImpl": {
     "name": "UsernamePricePerLengthNamespaceRuleImpl",
     "contractName": "UsernamePricePerLengthNamespaceRule",
     "contractType": 0,
-    "address": "0x6cD751ecb11F835Db3AEDDc81CAb3aE18A43e31c",
+    "address": "0x0CaD734EA95DB34cbfE0af868A5e1b97471ee8d8",
+    "bytecodeHash": "01000367191bd42dacd4624fe732d287e490a2d7547edc492cbf090052490d1f",
     "constructorArguments": []
   },
   "UsernamePricePerLengthNamespaceRule": {
@@ -658,7 +713,9 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
-    "address": "0x4aBdf719Bc6659e91233c62D4d08D6F4229989e8"
+    "address": "0x4aBdf719Bc6659e91233c62D4d08D6F4229989e8",
+    "implementation": "0x0CaD734EA95DB34cbfE0af868A5e1b97471ee8d8",
+    "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TippingAccountActionImpl": {
     "name": "TippingAccountActionImpl",
@@ -724,7 +781,8 @@
     "constructorArguments": [
       "0x284af6d56a5aa030813cfb44663e0792783c1ca5",
       "0xaafa8246de0ae0e7b81125db325e9b39bed43b49",
-      ""]
+      ""
+    ]
   },
   "LensCreate2Impl": {
     "contractName": "LensCreate2",
