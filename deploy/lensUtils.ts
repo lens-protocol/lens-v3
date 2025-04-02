@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { deployContract } from './utils';
-import { ContractRunner, keccak256 } from 'ethers';
+import { deployContract, getWallet } from './utils';
+import { ContractRunner, keccak256, toUtf8Bytes } from 'ethers';
 import * as hre from 'hardhat';
 import { ethers } from 'hardhat';
 
@@ -24,6 +24,11 @@ export interface ContractInfo {
   constructorArguments?: any[];
   bytecodeHash?: string;
   implementation?: string;
+  proxyAdmin?: string;
+  initializerCalldata?: string;
+  owner?: string;
+  metadataURI?: string;
+  lensCreate2PreSalt?: string;
 }
 
 export type AddressBook = Record<string, Omit<ContractInfo, 'name'>>;
@@ -167,6 +172,10 @@ export async function deployLensContractAsProxy(
     implementation: await deployedImplementation.getAddress(),
   };
 
+  if (initializerCalldata) {
+    proxyInfo.initializerCalldata = initializerCalldata;
+  }
+
   addressBook[name] = proxyInfo;
   saveAddressBook(addressBook);
 
@@ -260,6 +269,183 @@ export async function deployImplAndUpgradeTransparentProxy(
   console.log('\n\n');
   console.log('Proxy entry in address book:');
   console.log(proxyOnAddressBook);
+}
+
+export async function deployLensContractWithCreate2(
+  contractToDeploy: ContractInfo,
+  proxyAdminAddress: string,
+  initializerCalldata?: string
+): Promise<ContractInfo> {
+  const lensCreate2OwnerPk = process.env.LENS_CREATE2_OWNER_PRIVATE_KEY;
+  if (!lensCreate2OwnerPk) {
+    throw new Error('LENS_CREATE2_OWNER_PRIVATE_KEY not found in environment variables');
+  }
+
+  const lensCreate2OwnerBalance = await getWallet(lensCreate2OwnerPk).getBalance();
+  if (lensCreate2OwnerBalance < ethers.parseEther('0.01')) {
+    throw new Error('LensCreate2 Owner balance is less than 0.01 ETH');
+  }
+
+  console.log(
+    `Using lensCreate2 owner private key with address: ${await getWallet(
+      lensCreate2OwnerPk
+    ).getAddress()}`
+  );
+  console.log(`LensCreate2 owner balance: ${ethers.formatEther(lensCreate2OwnerBalance)}`);
+
+  const lensCreate2OwnerWallet = getWallet(lensCreate2OwnerPk);
+
+  const lensCreate2Address = '0x52AF9CF29976C310E3DE03C509E108edB6edb8c0';
+  const lensCreate2ContractName = 'LensCreate2';
+  const lensCreate2Artifact = await hre.artifacts.readArtifact(lensCreate2ContractName);
+
+  const lensCreate2 = new hre.ethers.Contract(
+    lensCreate2Address,
+    lensCreate2Artifact.abi,
+    lensCreate2OwnerWallet
+  );
+
+  const onchainOwner = await lensCreate2.owner();
+  if (lensCreate2OwnerWallet.address !== onchainOwner) {
+    throw new Error(`LensCreate2 owner mismatch: Assume ${lensCreate2OwnerWallet.address} !== Onchain ${onchainOwner}`);
+  }
+
+  const nameWithImplSuffix = contractToDeploy.name ?? contractToDeploy.contractName + 'Impl';
+
+  const addressBook = loadAddressBook();
+  const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
+  const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
+
+  ////////// Deploying implementation
+
+  if (!addressBook[nameWithImplSuffix]) {
+    console.log(`Deploying ${nameWithImplSuffix}...`);
+    const deployedImplementation = await deployContract(
+      contractToDeploy.contractName,
+      contractToDeploy.constructorArguments
+    );
+
+    const deployedAddress = await deployedImplementation.getAddress();
+
+    console.log(`\x1b[36m${nameWithImplSuffix} deployed at ${deployedAddress}\x1b[0m`);
+    console.log(`Constructor arguments for implementation:`);
+    console.table(contractToDeploy.constructorArguments);
+
+    addressBook[nameWithImplSuffix] = {
+      contractName: contractToDeploy.contractName,
+      contractType: ContractType.Implementation,
+      address: deployedAddress,
+      bytecodeHash,
+      constructorArguments: contractToDeploy.constructorArguments,
+    };
+    saveAddressBook(addressBook);
+  } else {
+    console.log(`\x1b[95m${nameWithImplSuffix} already deployed at ${addressBook[nameWithImplSuffix].address}. Skipping...\x1b[0m`);
+  }
+
+  const deployedImpl: ContractInfo = addressBook[nameWithImplSuffix];
+  const implementationAddress = deployedImpl.address!;
+
+  ////////// Deploying with LensCreate2
+
+  const proxyArtifact = await hre.artifacts.readArtifact("TransparentUpgradeableProxy");
+  const proxyBytecodeHash = calculateBytecodeHash(proxyArtifact.bytecode);
+
+  if (!addressBook[contractToDeploy.contractName]) {
+    const preSalt = 'lens.contract.' + contractToDeploy.contractName;
+    const salt = keccak256(toUtf8Bytes(preSalt));
+    const predictedAddress = await lensCreate2['getAddress(bytes32)'].staticCall(salt);
+    console.log(`About to deploy contract for '${preSalt}'`);
+    console.log(`Computed salt for '${preSalt}' is ${salt}`);
+    console.log(`Predicted address for '${preSalt}' contract is ${predictedAddress}`);
+
+    const implBytecodeHash = calculateBytecodeHash(
+      (await hre.artifacts.readArtifact(contractToDeploy.contractName)).bytecode
+    );
+    const implBytecodeHashOnchain = calculateBytecodeHash(await hre.ethers.provider.getCode(implementationAddress));
+
+    if (implBytecodeHash !== implBytecodeHashOnchain) {
+      throw new Error(`${nameWithImplSuffix} bytecode hash mismatch: ${implBytecodeHash} !== ${implBytecodeHashOnchain}`);
+    }
+
+    console.log(`${nameWithImplSuffix} bytecode hash: ${implBytecodeHash}`);
+
+    console.log(`Deploying ${contractToDeploy.contractName} proxy through LensCreate2`);
+
+    const deployWithCreate2Tx = await lensCreate2.createTransparentUpgradeableProxy(
+      salt,
+      implementationAddress,
+      proxyAdminAddress,
+      initializerCalldata ?? '0x',
+      predictedAddress
+    );
+
+    if (initializerCalldata !== undefined) {
+      console.log(`Initializer was called with the following Calldata:\n${initializerCalldata}`);
+    }
+
+    await deployWithCreate2Tx.wait();
+
+    console.log(`\x1b[32m${contractToDeploy.contractName} deployed at ${predictedAddress}\x1b[0m`);
+
+    const proxyInfo: ContractInfo = {
+      name: contractToDeploy.contractName,
+      contractName: contractToDeploy.contractName,
+      contractType: contractToDeploy.contractType,
+      address: predictedAddress,
+      bytecodeHash: proxyBytecodeHash,
+      implementation: implementationAddress,
+      proxyAdmin: proxyAdminAddress,
+      lensCreate2PreSalt: preSalt,
+    };
+
+    if (initializerCalldata) {
+      proxyInfo.initializerCalldata = initializerCalldata;
+    }
+
+    addressBook[contractToDeploy.contractName] = proxyInfo;
+    saveAddressBook(addressBook);
+  } else {
+    console.log(`\x1b[95m${contractToDeploy.contractName} already deployed at ${addressBook[contractToDeploy.contractName].address}. Skipping...\x1b[0m`);
+  }
+
+  const proxyAddress = addressBook[contractToDeploy.contractName].address!;
+
+  const proxyBytecodeHashOnchain = calculateBytecodeHash(await hre.ethers.provider.getCode(proxyAddress));
+  if (proxyBytecodeHash !== proxyBytecodeHashOnchain) {
+    throw new Error(`${contractToDeploy.contractName} proxy bytecode hash mismatch: ${proxyBytecodeHash} !== ${proxyBytecodeHashOnchain}`);
+  }
+
+  const proxyImplementationOnchain = await hre.upgrades.erc1967.getImplementationAddress(proxyAddress);
+  if (proxyImplementationOnchain !== implementationAddress) {
+    throw new Error(`${contractToDeploy.contractName} proxy implementation mismatch: ${proxyImplementationOnchain} !== ${implementationAddress}`);
+  }
+
+  const proxyAdminOnchain = await hre.upgrades.erc1967.getAdminAddress(proxyAddress);
+  if (proxyAdminOnchain !== proxyAdminAddress) {
+    throw new Error(`${contractToDeploy.contractName} proxy admin mismatch: ${proxyAdminOnchain} !== ${proxyAdminAddress}`);
+  }
+
+  return addressBook[contractToDeploy.contractName];
+}
+
+export function getInitializeEncodedCall(owner: string, metadataURI?: string) {
+  if (metadataURI !== undefined) {
+    const initializerABI = ['function initialize(address owner, string memory metadataURI) external'];
+    const initializerInterface = new ethers.Interface(initializerABI);
+    const initializeEncodedCall = initializerInterface.encodeFunctionData('initialize', [
+      owner,
+      metadataURI,
+    ]);
+    return initializeEncodedCall;
+  } else {
+    const initializerABI = ['function initialize(address owner) external'];
+    const initializerInterface = new ethers.Interface(initializerABI);
+    const initializeEncodedCall = initializerInterface.encodeFunctionData('initialize', [
+      owner,
+    ]);
+    return initializeEncodedCall;
+  }
 }
 
 export function mapContractNameToEnvVarName(contractName: string): string {
