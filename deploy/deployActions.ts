@@ -1,10 +1,13 @@
-import { ethers } from 'ethers';
-import { deployLensContractAsProxy, ContractType, ContractInfo } from './lensUtils';
+import { ContractRunner, ethers } from 'ethers';
+import {
+  deployLensContractAsProxy,
+  ContractType,
+  ContractInfo,
+  deployImplAndUpgradeTransparentProxy,
+} from './lensUtils';
 
-export async function deployActions(actionHub: string, actionsOwner: string): Promise<void> {
-  const metadataURI = '';
-  const contracts: ContractInfo[] = [
-    // Actions
+function getContracts(actionHub: string): ContractInfo[] {
+  return [
     {
       contractName: 'TippingAccountAction',
       contractType: ContractType.Action,
@@ -21,6 +24,11 @@ export async function deployActions(actionHub: string, actionsOwner: string): Pr
       constructorArguments: [actionHub],
     },
   ];
+}
+
+export async function deployActions(actionHub: string, actionsOwner: string): Promise<void> {
+  const metadataURI = '';
+  const contracts = getContracts(actionHub);
 
   const initializerABI = ['function initialize(address owner, string memory metadataURI) external'];
   const initializerInterface = new ethers.Interface(initializerABI);
@@ -31,5 +39,16 @@ export async function deployActions(actionHub: string, actionsOwner: string): Pr
 
   for (const contract of contracts) {
     await deployLensContractAsProxy(contract, actionsOwner, initializeEncodedCall);
+  }
+}
+
+export async function deployActionImplsAndUpgrade(
+  actionHub: string,
+  proxyAdminWallet: ContractRunner
+): Promise<void> {
+  const contracts = getContracts(actionHub);
+
+  for (const contract of contracts) {
+    await deployImplAndUpgradeTransparentProxy(proxyAdminWallet, contract);
   }
 }
