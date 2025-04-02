@@ -337,5 +337,495 @@
     "contractType": 4,
     "constructorArguments": [],
     "address": "0x52AF9CF29976C310E3DE03C509E108edB6edb8c0"
+  },
+  "ActionHubImpl": {
+    "name": "ActionHubImpl",
+    "contractName": "ActionHub",
+    "contractType": 0,
+    "address": "0xea21E3E70248e483c2F1ed2617E9d939eA8904bd",
+    "bytecodeHash": "010006c717619898f32961e5517ebda8cbad5ea8ad83b031c26e48c52d22f392",
+    "constructorArguments": []
+  },
+  "ActionHub": {
+    "name": "ActionHub",
+    "contractName": "ActionHub",
+    "contractType": 4,
+    "address": "0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xea21E3E70248e483c2F1ed2617E9d939eA8904bd",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.ActionHub"
+  },
+  "LensFeesImpl": {
+    "name": "LensFeesImpl",
+    "contractName": "LensFees",
+    "contractType": 0,
+    "address": "0xE23292bEA6bb5874A839a7E1FfB7301657353187",
+    "bytecodeHash": "0100003f061fd7d7ae8d5f11c374ec6a6db99871ca367c4e876f604f622ba768",
+    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", "150"]
+  },
+  "LensFees": {
+    "name": "LensFees",
+    "contractName": "LensFees",
+    "contractType": 4,
+    "address": "0xFd577b6317F4ab53D5675E85b8DEB7A814165C3C",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xE23292bEA6bb5874A839a7E1FfB7301657353187",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.LensFees"
+  },
+  "TippingAccountActionImpl": {
+    "name": "TippingAccountActionImpl",
+    "contractName": "TippingAccountAction",
+    "contractType": 0,
+    "address": "0x9aE07367ae1f9697a0B217678B68E446DC188A8e",
+    "bytecodeHash": "0100022fe500682f33f5b55d74e89e484d141588bf0dc424186642d90d22d604",
+    "constructorArguments": ["0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"]
+  },
+  "TippingAccountAction": {
+    "name": "TippingAccountAction",
+    "contractName": "TippingAccountAction",
+    "contractType": 5,
+    "address": "0x20170F1e53851dF4d9ea236a28399493C5B152c0",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x9aE07367ae1f9697a0B217678B68E446DC188A8e",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TippingAccountAction",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "TippingPostActionImpl": {
+    "name": "TippingPostActionImpl",
+    "contractName": "TippingPostAction",
+    "contractType": 0,
+    "address": "0xEF57280D1846ACCf55c056aC7F0902F5608FB790",
+    "bytecodeHash": "0100023d8e36bcdc8b61f16bdf163ba024ebf33e2b87ee31d43518f658d7ff95",
+    "constructorArguments": ["0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"]
+  },
+  "TippingPostAction": {
+    "name": "TippingPostAction",
+    "contractName": "TippingPostAction",
+    "contractType": 5,
+    "address": "0x4984Ec4FfD17E64c8F91691D829BD5aeA287E47b",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xEF57280D1846ACCf55c056aC7F0902F5608FB790",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TippingPostAction",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "SimpleCollectActionImpl": {
+    "name": "SimpleCollectActionImpl",
+    "contractName": "SimpleCollectAction",
+    "contractType": 0,
+    "address": "0x6f05AEffA4EE9Ba091EFe2D1751675f00B4FC174",
+    "bytecodeHash": "0100054301a605e8b9e1c26a676b9266c56d7027112e9b5ad6ef2cfbe8c5a430",
+    "constructorArguments": ["0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"]
+  },
+  "SimpleCollectAction": {
+    "name": "SimpleCollectAction",
+    "contractName": "SimpleCollectAction",
+    "contractType": 5,
+    "address": "0x1cEE1cd464C4E44e80aCDB0B0e33f88849070F6E",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x6f05AEffA4EE9Ba091EFe2D1751675f00B4FC174",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.SimpleCollectAction",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "AccountBlockingRuleImpl": {
+    "name": "AccountBlockingRuleImpl",
+    "contractName": "AccountBlockingRule",
+    "contractType": 0,
+    "address": "0xb6607e2678FD4b28858Ee7ee447C236d23b71c28",
+    "bytecodeHash": "0100022d3fbba6dd203f95e4584213cebe9581bcf5679f9bfa28eb4135f559f9",
+    "constructorArguments": []
+  },
+  "AccountBlockingRule": {
+    "name": "AccountBlockingRule",
+    "contractName": "AccountBlockingRule",
+    "contractType": 6,
+    "address": "0x3B766408f14141F4B567681A1c29CFB58D1C1574",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xb6607e2678FD4b28858Ee7ee447C236d23b71c28",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.AccountBlockingRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "AdditionRemovalPidGroupRuleImpl": {
+    "name": "AdditionRemovalPidGroupRuleImpl",
+    "contractName": "AdditionRemovalPidGroupRule",
+    "contractType": 0,
+    "address": "0xf0d5B29A3F1Ad9CCfb26c9E58D11Bb3DFD382727",
+    "bytecodeHash": "010001cfe7d947face04740d52d4275cde020e090bc8602d3a2fce361709a3fd",
+    "constructorArguments": []
+  },
+  "AdditionRemovalPidGroupRule": {
+    "name": "AdditionRemovalPidGroupRule",
+    "contractName": "AdditionRemovalPidGroupRule",
+    "contractType": 6,
+    "address": "0x5C990114129dAb27F015F2d5ba756bD102807b86",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xf0d5B29A3F1Ad9CCfb26c9E58D11Bb3DFD382727",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.AdditionRemovalPidGroupRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "BanMemberGroupRuleImpl": {
+    "name": "BanMemberGroupRuleImpl",
+    "contractName": "BanMemberGroupRule",
+    "contractType": 0,
+    "address": "0x10A5b2f7430b85B117E7DE77b9343e024193c7Ac",
+    "bytecodeHash": "010003b3e06083dd2f2f1f00463117dfa37a1c87b5e30365f24d6d25e47fd6a4",
+    "constructorArguments": []
+  },
+  "BanMemberGroupRule": {
+    "name": "BanMemberGroupRule",
+    "contractName": "BanMemberGroupRule",
+    "contractType": 6,
+    "address": "0xe12543e5f917adA5aeF92B26Bc08E1925ec9F53F",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x10A5b2f7430b85B117E7DE77b9343e024193c7Ac",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.BanMemberGroupRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "GroupGatedFeedRuleImpl": {
+    "name": "GroupGatedFeedRuleImpl",
+    "contractName": "GroupGatedFeedRule",
+    "contractType": 0,
+    "address": "0x3Ccda5a574B75afbFc235E6fC25c940df181d956",
+    "bytecodeHash": "010001a5dd18b3bfbd985b04ad6ab06a52d3a49b3e3e4288cf8f3933445a517d",
+    "constructorArguments": []
+  },
+  "GroupGatedFeedRule": {
+    "name": "GroupGatedFeedRule",
+    "contractName": "GroupGatedFeedRule",
+    "contractType": 6,
+    "address": "0x40a2A352583B266097234f1260B5AAfB7B129047",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x3Ccda5a574B75afbFc235E6fC25c940df181d956",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.GroupGatedFeedRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "UsernameLengthNamespaceRuleImpl": {
+    "name": "UsernameLengthNamespaceRuleImpl",
+    "contractName": "UsernameLengthNamespaceRule",
+    "contractType": 0,
+    "address": "0xbe2d90D7b7b7c237f16c16424A6FAe9400A4767B",
+    "bytecodeHash": "0100020b2e44c64e5badde1714869539df5bab6bc570e66dc11b9bf58e02ee0e",
+    "constructorArguments": []
+  },
+  "UsernameLengthNamespaceRule": {
+    "name": "UsernameLengthNamespaceRule",
+    "contractName": "UsernameLengthNamespaceRule",
+    "contractType": 6,
+    "address": "0xb541055222C87EE86A72558e8B582a9C0158A0d8",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xbe2d90D7b7b7c237f16c16424A6FAe9400A4767B",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.UsernameLengthNamespaceRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "UsernameReservedNamespaceRuleImpl": {
+    "name": "UsernameReservedNamespaceRuleImpl",
+    "contractName": "UsernameReservedNamespaceRule",
+    "contractType": 0,
+    "address": "0x5B00ec39877EdD2711480A713712f6e02be9e214",
+    "bytecodeHash": "010002a9f9cd83b054ec0688b20e3aa29961b036af6ddc1ec73391c7198adf12",
+    "constructorArguments": []
+  },
+  "UsernameReservedNamespaceRule": {
+    "name": "UsernameReservedNamespaceRule",
+    "contractName": "UsernameReservedNamespaceRule",
+    "contractType": 6,
+    "address": "0x0E8B9960f2a891A561f2d52F0Cd98cCA19CDF8c9",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x5B00ec39877EdD2711480A713712f6e02be9e214",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.UsernameReservedNamespaceRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "UsernameSimpleCharsetNamespaceRuleImpl": {
+    "name": "UsernameSimpleCharsetNamespaceRuleImpl",
+    "contractName": "UsernameSimpleCharsetNamespaceRule",
+    "contractType": 0,
+    "address": "0x1F8D82763f04e544278522b923eA924258dF9c2C",
+    "bytecodeHash": "010001599f9b7baa17ff00d9e593dcb798099a536250e67dca35bf528c28d7ed",
+    "constructorArguments": []
+  },
+  "UsernameSimpleCharsetNamespaceRule": {
+    "name": "UsernameSimpleCharsetNamespaceRule",
+    "contractName": "UsernameSimpleCharsetNamespaceRule",
+    "contractType": 6,
+    "address": "0x5DBE2054903512ff26E336C0cBdEd6E0DDBEAc4F",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x1F8D82763f04e544278522b923eA924258dF9c2C",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.UsernameSimpleCharsetNamespaceRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "SimplePaymentFeedRuleImpl": {
+    "name": "SimplePaymentFeedRuleImpl",
+    "contractName": "SimplePaymentFeedRule",
+    "contractType": 0,
+    "address": "0xEbD685886F22857735CF90bB6C1F092006251f04",
+    "bytecodeHash": "010002fb5c828f27f0a98c4dc1bebe2d4f7c2e3e811cd9efd9d1e9f6d6a731da",
+    "constructorArguments": []
+  },
+  "SimplePaymentFeedRule": {
+    "name": "SimplePaymentFeedRule",
+    "contractName": "SimplePaymentFeedRule",
+    "contractType": 6,
+    "address": "0xD79dfb3f8290c0Da1899B91C3BbFE9aB56198004",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xEbD685886F22857735CF90bB6C1F092006251f04",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.SimplePaymentFeedRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "TokenGatedFeedRuleImpl": {
+    "name": "TokenGatedFeedRuleImpl",
+    "contractName": "TokenGatedFeedRule",
+    "contractType": 0,
+    "address": "0xEfE523C811220ce8929491a6e9620Fc58b197fC8",
+    "bytecodeHash": "010002256bc9d9acc49b146c2f668b85302755e1c3773b58e50fda55713f5a8d",
+    "constructorArguments": []
+  },
+  "TokenGatedFeedRule": {
+    "name": "TokenGatedFeedRule",
+    "contractName": "TokenGatedFeedRule",
+    "contractType": 6,
+    "address": "0xe320D45b21243771dC5a47909DB2389Abab81d5B",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xEfE523C811220ce8929491a6e9620Fc58b197fC8",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TokenGatedFeedRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "TokenGatedGraphRuleImpl": {
+    "name": "TokenGatedGraphRuleImpl",
+    "contractName": "TokenGatedGraphRule",
+    "contractType": 0,
+    "address": "0x84204cfeA1306f3Ca7dde38dc1a387E68F55A08E",
+    "bytecodeHash": "0100021f8e7da4dfe40a92f267180296095caee7eebedb90ffd19f23c5666d0c",
+    "constructorArguments": []
+  },
+  "TokenGatedGraphRule": {
+    "name": "TokenGatedGraphRule",
+    "contractName": "TokenGatedGraphRule",
+    "contractType": 6,
+    "address": "0x24779f9c251Cc5C2Ac0aE5C9f274666224e78035",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x84204cfeA1306f3Ca7dde38dc1a387E68F55A08E",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TokenGatedGraphRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "FollowersOnlyPostRuleImpl": {
+    "name": "FollowersOnlyPostRuleImpl",
+    "contractName": "FollowersOnlyPostRule",
+    "contractType": 0,
+    "address": "0x71ee189620688D9199d92145E8f58fC516673F47",
+    "bytecodeHash": "010002b547bbdf274ea30edc7a2ad6e06964625d657e14e4f5450285b197d69a",
+    "constructorArguments": []
+  },
+  "FollowersOnlyPostRule": {
+    "name": "FollowersOnlyPostRule",
+    "contractName": "FollowersOnlyPostRule",
+    "contractType": 6,
+    "address": "0x4f573ed906Cf23cb43f86ad461d10e43E29802ce",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x71ee189620688D9199d92145E8f58fC516673F47",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.FollowersOnlyPostRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "GroupGatedGraphRuleImpl": {
+    "contractName": "GroupGatedGraphRule",
+    "contractType": 0,
+    "address": "0xea1Bb2580F3Ef742B1c3f0247CfBEAA35572db66",
+    "bytecodeHash": "010001d5d19bbfd1e792b80bb6506d59e513029ffa576e16f801d5f842f4d464",
+    "constructorArguments": []
+  },
+  "GroupGatedGraphRule": {
+    "name": "GroupGatedGraphRule",
+    "contractName": "GroupGatedGraphRule",
+    "contractType": 6,
+    "address": "0x754839C5917a063EB923e83f1194E6737BbB451C",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xea1Bb2580F3Ef742B1c3f0247CfBEAA35572db66",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.GroupGatedGraphRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "SimplePaymentFollowRuleImpl": {
+    "contractName": "SimplePaymentFollowRule",
+    "contractType": 0,
+    "address": "0xc4A46F8707d9fD60f25021a11E5f76D6F7A5302e",
+    "bytecodeHash": "0100028bcc58776d32f2d37a03f038858866b2c53d53dc634b61ff431551eb72",
+    "constructorArguments": []
+  },
+  "SimplePaymentFollowRule": {
+    "name": "SimplePaymentFollowRule",
+    "contractName": "SimplePaymentFollowRule",
+    "contractType": 6,
+    "address": "0x10E044f026bD51f855a10F2277e35Ed4c896db7e",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xc4A46F8707d9fD60f25021a11E5f76D6F7A5302e",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.SimplePaymentFollowRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "TokenGatedFollowRuleImpl": {
+    "contractName": "TokenGatedFollowRule",
+    "contractType": 0,
+    "address": "0xFB18116CC5fbDF492ecaa353F9BF915940A16E89",
+    "bytecodeHash": "0100019d1cb95e3f008697097c6a9dc1a55925c8876522aaef20b604dc02aff6",
+    "constructorArguments": []
+  },
+  "TokenGatedFollowRule": {
+    "name": "TokenGatedFollowRule",
+    "contractName": "TokenGatedFollowRule",
+    "contractType": 6,
+    "address": "0x8b39e5E2B7a4Ce8FcD8F4601Ca1a43486A9d7Ca4",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xFB18116CC5fbDF492ecaa353F9BF915940A16E89",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TokenGatedFollowRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "MembershipApprovalGroupRuleImpl": {
+    "contractName": "MembershipApprovalGroupRule",
+    "contractType": 0,
+    "address": "0xB07A14a7D743E054666AB72720562F6b8ba0235c",
+    "bytecodeHash": "010002a32b8ca7bbc92be9a6530d14546a6f1996942d167e06fa28e27a8436dd",
+    "constructorArguments": []
+  },
+  "MembershipApprovalGroupRule": {
+    "name": "MembershipApprovalGroupRule",
+    "contractName": "MembershipApprovalGroupRule",
+    "contractType": 6,
+    "address": "0x353064B2EE992483398dAb32267E1aD597e502B9",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0xB07A14a7D743E054666AB72720562F6b8ba0235c",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.MembershipApprovalGroupRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "SimplePaymentGroupRuleImpl": {
+    "contractName": "SimplePaymentGroupRule",
+    "contractType": 0,
+    "address": "0x40E3f3F611b9201EF6a31030CD347B72B2cc99E5",
+    "bytecodeHash": "010002f7be89a7ad2dba3ea1168de2638ad5f1beb790f0e5539373e56ec262ba",
+    "constructorArguments": []
+  },
+  "SimplePaymentGroupRule": {
+    "name": "SimplePaymentGroupRule",
+    "contractName": "SimplePaymentGroupRule",
+    "contractType": 6,
+    "address": "0x6d2251D69fba6D7e761c72d55Cf478d741cB4Ac1",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x40E3f3F611b9201EF6a31030CD347B72B2cc99E5",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.SimplePaymentGroupRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "TokenGatedGroupRuleImpl": {
+    "contractName": "TokenGatedGroupRule",
+    "contractType": 0,
+    "address": "0x352E52D5Ba3d1141159490Ed2da9D09048Fcd09e",
+    "bytecodeHash": "0100025de19d0db556b0c64e7dfec465cf0ea1b3b9ded0302bd845455ca6626e",
+    "constructorArguments": []
+  },
+  "TokenGatedGroupRule": {
+    "name": "TokenGatedGroupRule",
+    "contractName": "TokenGatedGroupRule",
+    "contractType": 6,
+    "address": "0x0740653858863E8f4f0c734553c2bEf0Dc54Bfa9",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x352E52D5Ba3d1141159490Ed2da9D09048Fcd09e",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TokenGatedGroupRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "TokenGatedNamespaceRuleImpl": {
+    "contractName": "TokenGatedNamespaceRule",
+    "contractType": 0,
+    "address": "0x676f6A3ebED48a0E21118B0D98C5F20067983Eab",
+    "bytecodeHash": "01000245e1021cc33b60fe869738ce5f4c1ad913bed5224c1bfaf559c8b4fe90",
+    "constructorArguments": []
+  },
+  "TokenGatedNamespaceRule": {
+    "name": "TokenGatedNamespaceRule",
+    "contractName": "TokenGatedNamespaceRule",
+    "contractType": 6,
+    "address": "0xd108e4215963f9CB13f47A4B08110D0fF51D52D8",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x676f6A3ebED48a0E21118B0D98C5F20067983Eab",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.TokenGatedNamespaceRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
+  },
+  "UsernamePricePerLengthNamespaceRuleImpl": {
+    "contractName": "UsernamePricePerLengthNamespaceRule",
+    "contractType": 0,
+    "address": "0x515b14c04E0D97AD83CCc8de58448790E0fDDb1d",
+    "bytecodeHash": "01000367191bd42dacd4624fe732d287e490a2d7547edc492cbf090052490d1f",
+    "constructorArguments": []
+  },
+  "UsernamePricePerLengthNamespaceRule": {
+    "name": "UsernamePricePerLengthNamespaceRule",
+    "contractName": "UsernamePricePerLengthNamespaceRule",
+    "contractType": 6,
+    "address": "0xad917a20bca258020FF81590f62Ff05366eBb180",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "implementation": "0x515b14c04E0D97AD83CCc8de58448790E0fDDb1d",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.UsernamePricePerLengthNamespaceRule",
+    "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
+    "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
+    "metadataURI": ""
   }
 }
