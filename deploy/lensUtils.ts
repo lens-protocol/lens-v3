@@ -1,7 +1,8 @@
 import fs from 'fs';
 import { deployContract } from './utils';
-import { keccak256 } from 'ethers';
+import { ContractRunner, keccak256 } from 'ethers';
 import * as hre from 'hardhat';
+import { ethers } from 'hardhat';
 
 export enum ContractType {
   Implementation,
@@ -56,7 +57,10 @@ export function loadContractAddressFromAddressBook(name: string): string | undef
   return addressBook[name]?.address;
 }
 
-export async function deployLensContract(contractToDeploy: ContractInfo, override: Boolean = false): Promise<ContractInfo> {
+export async function deployLensContract(
+  contractToDeploy: ContractInfo,
+  override: Boolean = false
+) {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
   const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
@@ -105,7 +109,8 @@ export async function deployLensContract(contractToDeploy: ContractInfo, overrid
 
 export async function deployLensContractAsProxy(
   contractToDeploy: ContractInfo,
-  proxyOwner: string
+  proxyOwner: string,
+  initializerCalldata?: string
 ): Promise<ContractInfo> {
   const name = contractToDeploy.name ?? contractToDeploy.contractName;
 
@@ -143,7 +148,11 @@ export async function deployLensContractAsProxy(
   addressBook[contractToDeploy.name ?? contractToDeploy.contractName + 'Impl'] = contractInfo;
   saveAddressBook(addressBook);
 
-  const constructorArguments = [await deployedImplementation.getAddress(), proxyOwner, '0x'];
+  const constructorArguments = [
+    await deployedImplementation.getAddress(),
+    proxyOwner,
+    initializerCalldata ?? '0x',
+  ];
   const deployedProxy = await deployContract('TransparentUpgradeableProxy', constructorArguments);
   const proxyArtifact = await hre.artifacts.readArtifact('TransparentUpgradeableProxy');
   const proxyBytecodeHash = calculateBytecodeHash(proxyArtifact.bytecode);
@@ -165,6 +174,92 @@ export async function deployLensContractAsProxy(
     name: contractToDeploy.name,
     ...proxyInfo,
   };
+}
+
+export async function deployImplAndUpgradeTransparentProxy(
+  proxyOwnerWallet: ContractRunner,
+  contractToDeploy: ContractInfo,
+  initializerCalldata?: string
+) {
+  const nameWithImplSuffix = contractToDeploy.name ?? contractToDeploy.contractName + 'Impl';
+
+  const addressBook = loadAddressBook();
+  const proxyOnAddressBook = addressBook[contractToDeploy.contractName];
+  const proxyAddress = proxyOnAddressBook.address;
+
+  if (!proxyAddress) {
+    throw new Error(`Proxy for ${contractToDeploy.contractName} not found in address book`);
+  } else {
+    console.log(
+      `We will upgrade the ${contractToDeploy.contractName}'s proxy located at ${proxyAddress}`
+    );
+  }
+  console.log('\n\n');
+
+  const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
+  const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
+
+  console.log(`Deploying ${nameWithImplSuffix}...`);
+
+  const deployedImplementation = await deployContract(
+    contractToDeploy.contractName,
+    contractToDeploy.constructorArguments
+  );
+
+  console.log(`${nameWithImplSuffix} deployed at ${await deployedImplementation.getAddress()}`);
+
+  const deployedImpl: ContractInfo = {
+    name: nameWithImplSuffix,
+    contractName: contractToDeploy.contractName,
+    contractType: ContractType.Implementation,
+    address: await deployedImplementation.getAddress(),
+    bytecodeHash,
+    constructorArguments: contractToDeploy.constructorArguments,
+  };
+
+  addressBook[nameWithImplSuffix] = deployedImpl;
+  saveAddressBook(addressBook);
+
+  const transparentUpgradeableProxyArtifact = await hre.artifacts.readArtifact(
+    'ITransparentUpgradeableProxy'
+  );
+  const proxyBytecodeHash = calculateBytecodeHash(transparentUpgradeableProxyArtifact.bytecode);
+
+  const transparentUpgradeableProxy = new ethers.Contract(
+    proxyAddress,
+    transparentUpgradeableProxyArtifact.abi,
+    proxyOwnerWallet
+  );
+
+  console.log('\n\n');
+
+  console.log(`Upgrading ${contractToDeploy.contractName}'s proxy to new implementation...`);
+  let upgradeTx;
+  if (!initializerCalldata) {
+    upgradeTx = await transparentUpgradeableProxy.upgradeTo(deployedImpl.address);
+  } else {
+    console.log(`...and initializing it with ${initializerCalldata}`);
+    upgradeTx = await transparentUpgradeableProxy.upgradeToAndCall(
+      deployedImpl.address,
+      initializerCalldata
+    );
+  }
+  await upgradeTx.wait();
+  console.log(`Upgrade complete!`);
+
+  proxyOnAddressBook.implementation = deployedImpl.address;
+  proxyOnAddressBook.bytecodeHash = proxyBytecodeHash;
+
+  addressBook[contractToDeploy.contractName] = proxyOnAddressBook;
+  saveAddressBook(addressBook);
+
+  console.log(`Proxy for ${contractToDeploy.contractName} upgraded to ${deployedImpl.address}`);
+  console.log('\n\n');
+  console.log('Impl entry in address book:');
+  console.log(deployedImpl);
+  console.log('\n\n');
+  console.log('Proxy entry in address book:');
+  console.log(proxyOnAddressBook);
 }
 
 export function mapContractNameToEnvVarName(contractName: string): string {
