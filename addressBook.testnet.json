@@ -78,8 +78,8 @@
   "AccountImpl": {
     "contractName": "Account",
     "contractType": 0,
-    "address": "0x8370C7140dF58ef7f4f7cA7a2b192626A342D4D5",
-    "bytecodeHash": "0xf52337a6f53907c51326658f792440874e30aeaf303837cf23d4ada66516f8f3"
+    "address": "0x30135da9dAB10c5a6377f23566c7b6084193866a",
+    "bytecodeHash": "0x4c17423c01c82c036994fc0eaccd6cd688d9a61fa18b8b6f2cc05834b2257a40"
   },
   "FeedImpl": {
     "contractName": "Feed",
