@@ -7,8 +7,6 @@ uint256 constant BPS_MAX = 10_000;
 
 uint256 constant SELECTOR_BYTE_LENGTH = 4;
 
-address constant LENS_CREATE2_ADDRESS = address(0xC8EA7E2);
-
 /// @custom:keccak lens.contract.ActionHub
 bytes32 constant CONTRACT__ACTION_HUB = 0x914706a68d66e273351f2cd4c1f0c739a3d2d211eb45a40f548eb964a6081fef;
 

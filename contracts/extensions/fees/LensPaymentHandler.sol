@@ -5,9 +5,9 @@ pragma solidity ^0.8.26;
 import {ILensFees, LensFeesData} from "contracts/extensions/fees/LensFees.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {LENS_CREATE2_ADDRESS, CONTRACT__LENS_FEES, BPS_MAX} from "contracts/core/types/Constants.sol";
+import {CONTRACT__LENS_FEES, BPS_MAX} from "contracts/core/types/Constants.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
-import {ILensCreate2} from "contracts/core/upgradeability/LensCreate2.sol";
+import {LENS_CREATE_2_ADDRESS, ILensCreate2} from "contracts/core/upgradeability/LensCreate2.sol";
 
 abstract contract LensPaymentHandler {
     using SafeERC20 for IERC20;
@@ -15,7 +15,7 @@ abstract contract LensPaymentHandler {
     address immutable LENS_FEES;
 
     constructor() {
-        LENS_FEES = ILensCreate2(LENS_CREATE2_ADDRESS).getAddress(CONTRACT__LENS_FEES);
+        LENS_FEES = ILensCreate2(LENS_CREATE_2_ADDRESS).getAddress(CONTRACT__LENS_FEES);
     }
 
     function _handlePayment(

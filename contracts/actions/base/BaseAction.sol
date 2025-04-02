@@ -4,8 +4,6 @@ pragma solidity ^0.8.26;
 
 import {UNIVERSAL_ACTION_MAGIC_VALUE} from "contracts/extensions/actions/ActionHub.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {LENS_CREATE2_ADDRESS} from "contracts/core/types/Constants.sol";
-import {ILensCreate2} from "contracts/core/upgradeability/LensCreate2.sol";
 
 abstract contract BaseAction {
     address immutable ACTION_HUB;
