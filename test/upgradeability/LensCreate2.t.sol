@@ -8,6 +8,7 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 import {ActionHub} from "@extensions/actions/ActionHub.sol";
 import {ZkTest} from "test/helpers/ZkTest.sol";
 import {EmptyImplementation} from "@core/upgradeability/EmptyImplementation.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract LensCreate2Test is ZkTest {
     LensCreate2 create2;
@@ -133,12 +134,44 @@ contract LensCreate2Test is ZkTest {
         assertEq(deployedContract, EXPECTED_ZERO_SALT_ADDRESS);
     }
 
-    function test_calculateAddress() public view {
-        string memory contractName = "ActionHub";
-        string memory preSaltString = string.concat("lens.contract.", contractName);
-        bytes32 salt = keccak256(bytes(preSaltString));
-        address predictedAddress = create2.getAddress(salt);
-        console.log(string.concat("`", preSaltString, "`'s address: "), predictedAddress);
+    function test_calculateAddresses() public {
+        vm.skip(true);
+        string[] memory contractNames = new string[](24);
+        contractNames[0] = "TippingAccountAction";
+        contractNames[1] = "TippingPostAction";
+        contractNames[2] = "SimpleCollectAction";
+        contractNames[3] = "AccountBlockingRule";
+        contractNames[4] = "GroupGatedFeedRule";
+        contractNames[5] = "SimplePaymentFeedRule";
+        contractNames[6] = "TokenGatedFeedRule";
+        contractNames[7] = "SimplePaymentFollowRule";
+        contractNames[8] = "TokenGatedFollowRule";
+        contractNames[9] = "GroupGatedGraphRule";
+        contractNames[10] = "TokenGatedGraphRule";
+        contractNames[11] = "AdditionRemovalPidGroupRule";
+        contractNames[12] = "BanMemberGroupRule";
+        contractNames[13] = "MembershipApprovalGroupRule";
+        contractNames[14] = "SimplePaymentGroupRule";
+        contractNames[15] = "TokenGatedGroupRule";
+        contractNames[16] = "TokenGatedNamespaceRule";
+        contractNames[17] = "UsernameLengthNamespaceRule";
+        contractNames[18] = "UsernamePricePerLengthNamespaceRule";
+        contractNames[19] = "UsernameReservedNamespaceRule";
+        contractNames[20] = "UsernameSimpleCharsetNamespaceRule";
+        contractNames[21] = "FollowersOnlyPostRule";
+        contractNames[22] = "ActionHub";
+        contractNames[23] = "LensFees";
+        for (uint256 i = 0; i < contractNames.length; i++) {
+            string memory preSalt = string.concat("lens.contract.", contractNames[i]);
+            bytes32 salt = keccak256(bytes(preSalt));
+            address predictedAddress = create2.getAddress(salt);
+            console.log("------------------------------");
+            console.log("Contract: ", contractNames[i]);
+            console.log("Pre-Salt: ", preSalt);
+            console.log("Salt: ", Strings.toHexString(uint256(salt), 32));
+            console.log("Address: ", Strings.toHexString(predictedAddress));
+        }
+        console.log("------------------------------");
         // This test is just a helper to log the address, no assertions.
     }
 }
