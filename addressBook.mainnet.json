@@ -330,5 +330,12 @@
       "0x0000000000000000000000000000000000000000",
       "0x0000000000000000000000000000000000000000"
     ]
+  },
+  "LensCreate2Impl": {
+    "name": "LensCreate2Impl",
+    "contractName": "LensCreate2",
+    "contractType": 4,
+    "constructorArguments": [],
+    "address": "0x52AF9CF29976C310E3DE03C509E108edB6edb8c0"
   }
 }
