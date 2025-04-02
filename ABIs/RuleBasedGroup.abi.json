@@ -246,6 +246,25 @@
   },
   {
     "type": "function",
+    "name": "getMembershipSource",
+    "inputs": [
+      {
+        "name": "membershipId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getMembershipTimestamp",
     "inputs": [
       {
@@ -302,6 +321,11 @@
         "name": "accessControl",
         "type": "address",
         "internalType": "contract IAccessControl"
+      },
+      {
+        "name": "foundingMember",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [],
@@ -1079,5 +1103,45 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "ConfigureCallReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidConfigSalt",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RuleNotConfigured",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SelectorEnabledForDifferentRuleType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedSelector",
+    "inputs": []
   }
 ]

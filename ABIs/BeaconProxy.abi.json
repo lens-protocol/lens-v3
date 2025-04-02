@@ -25,7 +25,7 @@
   },
   {
     "type": "function",
-    "name": "changeProxyAdmin",
+    "name": "proxy__changeProxyAdmin",
     "inputs": [
       {
         "name": "proxyAdmin",
@@ -38,21 +38,73 @@
   },
   {
     "type": "function",
-    "name": "optInToAutoUpgrade",
+    "name": "proxy__getAutoUpgrade",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proxy__getBeacon",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proxy__getImplementation",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proxy__getProxyAdmin",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proxy__optInToAutoUpgrade",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "optOutFromAutoUpgrade",
+    "name": "proxy__optOutFromAutoUpgrade",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "setBeacon",
+    "name": "proxy__setBeacon",
     "inputs": [
       {
         "name": "beacon",
@@ -65,7 +117,7 @@
   },
   {
     "type": "function",
-    "name": "setImplementation",
+    "name": "proxy__setImplementation",
     "inputs": [
       {
         "name": "implementation",
@@ -78,14 +130,14 @@
   },
   {
     "type": "function",
-    "name": "triggerUpgrade",
+    "name": "proxy__triggerUpgrade",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "triggerUpgradeToVersion",
+    "name": "proxy__triggerUpgradeToVersion",
     "inputs": [
       {
         "name": "implementationVersion",
@@ -153,5 +205,15 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AutoUpgradeEnabled",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
   }
 ]

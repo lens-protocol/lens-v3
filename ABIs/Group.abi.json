@@ -70,6 +70,94 @@
   },
   {
     "type": "function",
+    "name": "addMembers",
+    "inputs": [
+      {
+        "name": "membersToAdd",
+        "type": "tuple[]",
+        "internalType": "struct Group.MemberBatchParams[]",
+        "components": [
+          {
+            "name": "account",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "customParams",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          },
+          {
+            "name": "ruleProcessingParams",
+            "type": "tuple[]",
+            "internalType": "struct RuleProcessingParams[]",
+            "components": [
+              {
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "customParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "changeGroupRules",
     "inputs": [
       {
@@ -264,6 +352,25 @@
   },
   {
     "type": "function",
+    "name": "getMembershipSource",
+    "inputs": [
+      {
+        "name": "membershipId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getMembershipTimestamp",
     "inputs": [
       {
@@ -339,6 +446,11 @@
         "name": "accessControl",
         "type": "address",
         "internalType": "contract IAccessControl"
+      },
+      {
+        "name": "foundingMember",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [],
@@ -557,6 +669,94 @@
   },
   {
     "type": "function",
+    "name": "removeMembers",
+    "inputs": [
+      {
+        "name": "membersToRemove",
+        "type": "tuple[]",
+        "internalType": "struct Group.MemberBatchParams[]",
+        "components": [
+          {
+            "name": "account",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "customParams",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          },
+          {
+            "name": "ruleProcessingParams",
+            "type": "tuple[]",
+            "internalType": "struct RuleProcessingParams[]",
+            "components": [
+              {
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "customParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setAccessControl",
     "inputs": [
       {
@@ -646,13 +846,38 @@
   },
   {
     "type": "event",
-    "name": "Lens_ExtraDataSet",
+    "name": "Lens_Contract_Deployed",
     "inputs": [
       {
-        "name": "addr",
+        "name": "contractType",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "flavour",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ExtraStorageSet",
+    "inputs": [
+      {
+        "name": "addressScope",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
+      },
+      {
+        "name": "entityType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
       },
       {
         "name": "entityId",
@@ -1198,5 +1423,104 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_PermissionId_Available",
+    "inputs": [
+      {
+        "name": "permissionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AllAnyOfRulesReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ConfigureCallReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidConfigSalt",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RequiredRuleReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RuleNotConfigured",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SelectorEnabledForDifferentRuleType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedSelector",
+    "inputs": []
   }
 ]

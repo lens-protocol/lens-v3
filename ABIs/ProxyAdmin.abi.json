@@ -42,7 +42,7 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -72,7 +72,7 @@
   },
   {
     "type": "event",
-    "name": "OwnershipTransferred",
+    "name": "Lens_Ownable_OwnershipTransferred",
     "inputs": [
       {
         "name": "previousOwner",
@@ -88,5 +88,20 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Locked",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAContract",
+    "inputs": []
   }
 ]

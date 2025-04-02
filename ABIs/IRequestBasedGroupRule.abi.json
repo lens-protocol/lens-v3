@@ -1,18 +1,7 @@
 [
   {
-    "type": "constructor",
-    "inputs": [
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
     "type": "function",
-    "name": "configure",
+    "name": "cancelMembershipRequest",
     "inputs": [
       {
         "name": "configSalt",
@@ -20,7 +9,12 @@
         "internalType": "bytes32"
       },
       {
-        "name": "ruleConfigurationParams",
+        "name": "group",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "params",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -42,39 +36,37 @@
   },
   {
     "type": "function",
-    "name": "getMetadataURI",
+    "name": "configure",
     "inputs": [
       {
-        "name": "source",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
+        "name": "configSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
       {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
+        "name": "ruleParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
       }
     ],
-    "stateMutability": "view"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "getMetadataURI",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "processAssigning",
+    "name": "processAddition",
     "inputs": [
       {
         "name": "configSalt",
@@ -87,17 +79,12 @@
         "internalType": "address"
       },
       {
-        "name": "",
+        "name": "account",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "",
+        "name": "primitiveParams",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -136,7 +123,7 @@
   },
   {
     "type": "function",
-    "name": "processCreation",
+    "name": "processJoining",
     "inputs": [
       {
         "name": "configSalt",
@@ -144,22 +131,64 @@
         "internalType": "bytes32"
       },
       {
-        "name": "originalMsgSender",
+        "name": "account",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "",
+        "name": "primitiveParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "ruleParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "processLeaving",
+    "inputs": [
+      {
+        "name": "configSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "account",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "",
+        "name": "primitiveParams",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -211,12 +240,12 @@
         "internalType": "address"
       },
       {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        "name": "",
+        "name": "primitiveParams",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -255,7 +284,7 @@
   },
   {
     "type": "function",
-    "name": "processUnassigning",
+    "name": "sendMembershipRequest",
     "inputs": [
       {
         "name": "configSalt",
@@ -263,39 +292,12 @@
         "internalType": "bytes32"
       },
       {
-        "name": "originalMsgSender",
+        "name": "group",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "ruleParams",
+        "name": "params",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -314,87 +316,5 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setMetadataURI",
-    "inputs": [
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setTrust",
-    "inputs": [
-      {
-        "name": "primitive",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "isTrusted",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "event",
-    "name": "Lens_Rule_MetadataURISet",
-    "inputs": [
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Lens_SimplePaymentRule_Trusted",
-    "inputs": [
-      {
-        "name": "payer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "trusted",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Lens_SimplePaymentRule_Untrusted",
-    "inputs": [
-      {
-        "name": "payer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "untrusted",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
   }
 ]

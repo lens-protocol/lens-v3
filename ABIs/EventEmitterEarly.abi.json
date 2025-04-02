@@ -1,0 +1,132 @@
+[
+  {
+    "type": "function",
+    "name": "emitEventsLog1",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log1EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog2",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log2EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog3",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log3EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog4",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log4EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic4",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]

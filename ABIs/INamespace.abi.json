@@ -319,6 +319,25 @@
   },
   {
     "type": "function",
+    "name": "exists",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getExtraData",
     "inputs": [
       {
@@ -400,6 +419,44 @@
   },
   {
     "type": "function",
+    "name": "getUsernameAssignmentSource",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUsernameCreationSource",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getUsernameExtraData",
     "inputs": [
       {
@@ -459,6 +516,25 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1100,6 +1176,12 @@
     "name": "Lens_Username_ExtraDataAdded",
     "inputs": [
       {
+        "name": "usernameId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
         "name": "key",
         "type": "bytes32",
         "indexed": true,
@@ -1125,6 +1207,12 @@
     "name": "Lens_Username_ExtraDataRemoved",
     "inputs": [
       {
+        "name": "usernameId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
         "name": "key",
         "type": "bytes32",
         "indexed": true,
@@ -1137,6 +1225,12 @@
     "type": "event",
     "name": "Lens_Username_ExtraDataUpdated",
     "inputs": [
+      {
+        "name": "usernameId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
       {
         "name": "key",
         "type": "bytes32",

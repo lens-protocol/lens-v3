@@ -1,0 +1,283 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "beacon",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "lock",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployApp",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "sourceStampVerificationEnabled",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "accessControl",
+        "type": "address",
+        "internalType": "contract IAccessControl"
+      },
+      {
+        "name": "proxyAdminOwner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "initialProperties",
+        "type": "tuple",
+        "internalType": "struct AppInitialProperties",
+        "components": [
+          {
+            "name": "graph",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "feeds",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "namespace",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "groups",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "defaultFeed",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "signers",
+            "type": "address[]",
+            "internalType": "address[]"
+          },
+          {
+            "name": "paymaster",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "treasury",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog1",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log1EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog2",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log2EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog3",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log3EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog4",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log4EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic4",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_AppFactory_Deployment",
+    "inputs": [
+      {
+        "name": "app",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "indexed": false,
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  }
+]

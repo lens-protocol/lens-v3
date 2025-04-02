@@ -515,6 +515,44 @@
   },
   {
     "type": "function",
+    "name": "exists",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "exists",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getAccessControl",
     "inputs": [],
     "outputs": [
@@ -647,6 +685,82 @@
   },
   {
     "type": "function",
+    "name": "getTokenIdByUsername",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "getUsernameAssignmentSource",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUsernameByTokenId",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getUsernameCreationSource",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getUsernameExtraData",
     "inputs": [
       {
@@ -752,6 +866,25 @@
         "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "inputs": [
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [
@@ -1026,6 +1159,25 @@
   },
   {
     "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "symbol",
     "inputs": [],
     "outputs": [
@@ -1214,6 +1366,25 @@
   },
   {
     "type": "event",
+    "name": "BatchMetadataUpdate",
+    "inputs": [
+      {
+        "name": "_fromTokenId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "_toTokenId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Lens_AccessControlAdded",
     "inputs": [
       {
@@ -1252,6 +1423,25 @@
   },
   {
     "type": "event",
+    "name": "Lens_Contract_Deployed",
+    "inputs": [
+      {
+        "name": "contractType",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "flavour",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Lens_ERC721_TokenURIProviderSet",
     "inputs": [
       {
@@ -1265,13 +1455,19 @@
   },
   {
     "type": "event",
-    "name": "Lens_ExtraDataSet",
+    "name": "Lens_ExtraStorageSet",
     "inputs": [
       {
-        "name": "addr",
+        "name": "addressScope",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
+      },
+      {
+        "name": "entityType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
       },
       {
         "name": "entityId",
@@ -1508,6 +1704,25 @@
   },
   {
     "type": "event",
+    "name": "Lens_PermissionId_Available",
+    "inputs": [
+      {
+        "name": "permissionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Lens_Username_Assigned",
     "inputs": [
       {
@@ -1685,6 +1900,12 @@
     "name": "Lens_Username_ExtraDataAdded",
     "inputs": [
       {
+        "name": "usernameId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
         "name": "key",
         "type": "bytes32",
         "indexed": true,
@@ -1710,6 +1931,12 @@
     "name": "Lens_Username_ExtraDataRemoved",
     "inputs": [
       {
+        "name": "usernameId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
         "name": "key",
         "type": "bytes32",
         "indexed": true,
@@ -1722,6 +1949,12 @@
     "type": "event",
     "name": "Lens_Username_ExtraDataUpdated",
     "inputs": [
+      {
+        "name": "usernameId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
       {
         "name": "key",
         "type": "bytes32",
@@ -1948,5 +2181,95 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AllAnyOfRulesReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyExists",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ConfigureCallReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidConfigSalt",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RequiredRuleReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RuleNotConfigured",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SelectorEnabledForDifferentRuleType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedContractImpl",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedSelector",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UsernameAssigned",
+    "inputs": []
   }
 ]

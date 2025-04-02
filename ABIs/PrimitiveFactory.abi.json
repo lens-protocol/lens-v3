@@ -1,0 +1,23 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "primitiveBeacon",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "proxyAdminLock",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "lensFactory",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

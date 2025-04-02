@@ -64,10 +64,29 @@
   },
   {
     "type": "function",
+    "name": "canSetMetadataURI",
+    "inputs": [
+      {
+        "name": "accountManager",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "executeTransaction",
     "inputs": [
       {
-        "name": "to",
+        "name": "target",
         "type": "address",
         "internalType": "address"
       },
@@ -87,6 +106,42 @@
         "name": "",
         "type": "bytes",
         "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "executeTransactions",
+    "inputs": [
+      {
+        "name": "transactions",
+        "type": "tuple[]",
+        "internalType": "struct Transaction[]",
+        "components": [
+          {
+            "name": "target",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "value",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes[]",
+        "internalType": "bytes[]"
       }
     ],
     "stateMutability": "payable"
@@ -166,6 +221,137 @@
   },
   {
     "type": "function",
+    "name": "isAccountManager",
+    "inputs": [
+      {
+        "name": "accountManager",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "onERC1155BatchReceived",
+    "inputs": [
+      {
+        "name": "operator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "from",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "ids",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "values",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "onERC1155Received",
+    "inputs": [
+      {
+        "name": "operator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "from",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "id",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "onERC721Received",
+    "inputs": [
+      {
+        "name": "operator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "from",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "removeAccountManager",
     "inputs": [
       {
@@ -207,6 +393,19 @@
     "name": "setMetadataURI",
     "inputs": [
       {
+        "name": "metadata",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMetadataURI",
+    "inputs": [
+      {
         "name": "_metadataURI",
         "type": "string",
         "internalType": "string"
@@ -218,6 +417,16 @@
         "components": [
           {
             "name": "source",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "originalMsgSender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "validator",
             "type": "address",
             "internalType": "address"
           },
@@ -244,16 +453,22 @@
   },
   {
     "type": "function",
-    "name": "setMetadataURI",
+    "name": "supportsInterface",
     "inputs": [
       {
-        "name": "metadata",
-        "type": "string",
-        "internalType": "string"
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -392,25 +607,6 @@
   },
   {
     "type": "event",
-    "name": "Lens_Account_AllowNonOwnerSpending",
-    "inputs": [
-      {
-        "name": "allow",
-        "type": "bool",
-        "indexed": false,
-        "internalType": "bool"
-      },
-      {
-        "name": "timestamp",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Lens_Account_ExtraDataAdded",
     "inputs": [
       {
@@ -506,8 +702,14 @@
   },
   {
     "type": "event",
-    "name": "Lens_Account_OwnerTransferred",
+    "name": "Lens_Account_OwnershipTransferred",
     "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
       {
         "name": "newOwner",
         "type": "address",
@@ -522,7 +724,7 @@
     "name": "Lens_Account_TransactionExecuted",
     "inputs": [
       {
-        "name": "to",
+        "name": "target",
         "type": "address",
         "indexed": true,
         "internalType": "address"

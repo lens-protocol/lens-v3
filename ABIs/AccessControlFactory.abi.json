@@ -1,5 +1,16 @@
 [
   {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "lock",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "function",
     "name": "deployOwnerAdminOnlyAccessControl",
     "inputs": [

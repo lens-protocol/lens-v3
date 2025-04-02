@@ -43,5 +43,10 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "error",
+    "name": "NotImplemented",
+    "inputs": []
   }
 ]

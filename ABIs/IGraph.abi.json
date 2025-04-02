@@ -200,7 +200,7 @@
         "internalType": "address"
       },
       {
-        "name": "targetAccount",
+        "name": "accountToFollow",
         "type": "address",
         "internalType": "address"
       },
@@ -414,6 +414,30 @@
   },
   {
     "type": "function",
+    "name": "getFollowSource",
+    "inputs": [
+      {
+        "name": "followedAccount",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "followId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getFollowerById",
     "inputs": [
       {
@@ -613,7 +637,7 @@
         "internalType": "address"
       },
       {
-        "name": "targetAccount",
+        "name": "accountToUnfollow",
         "type": "address",
         "internalType": "address"
       },

@@ -1,13 +1,7 @@
 [
   {
     "type": "constructor",
-    "inputs": [
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -15,12 +9,12 @@
     "name": "configure",
     "inputs": [
       {
-        "name": "configSalt",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "ruleParams",
+        "name": "",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -74,61 +68,17 @@
   },
   {
     "type": "function",
-    "name": "processFollow",
+    "name": "initialize",
     "inputs": [
       {
-        "name": "configSalt",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "originalMsgSender",
+        "name": "owner",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "followerAccount",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "accountToFollow",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "primitiveParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "ruleParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -136,133 +86,43 @@
   },
   {
     "type": "function",
-    "name": "processFollowRuleChanges",
-    "inputs": [
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "configSalt",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
+        "name": "",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "ruleChanges",
-        "type": "tuple[]",
-        "internalType": "struct RuleChange[]",
-        "components": [
-          {
-            "name": "ruleAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "configSalt",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "configurationChanges",
-            "type": "tuple",
-            "internalType": "struct RuleConfigurationChange",
-            "components": [
-              {
-                "name": "configure",
-                "type": "bool",
-                "internalType": "bool"
-              },
-              {
-                "name": "ruleParams",
-                "type": "tuple[]",
-                "internalType": "struct KeyValue[]",
-                "components": [
-                  {
-                    "name": "key",
-                    "type": "bytes32",
-                    "internalType": "bytes32"
-                  },
-                  {
-                    "name": "value",
-                    "type": "bytes",
-                    "internalType": "bytes"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "name": "selectorChanges",
-            "type": "tuple[]",
-            "internalType": "struct RuleSelectorChange[]",
-            "components": [
-              {
-                "name": "ruleSelector",
-                "type": "bytes4",
-                "internalType": "bytes4"
-              },
-              {
-                "name": "isRequired",
-                "type": "bool",
-                "internalType": "bool"
-              },
-              {
-                "name": "enabled",
-                "type": "bool",
-                "internalType": "bool"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "ruleParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "processUnfollow",
+    "name": "processAssigning",
     "inputs": [
       {
-        "name": "configSalt",
+        "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
       },
       {
-        "name": "originalMsgSender",
+        "name": "",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "followerAccount",
+        "name": "",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "accountToUnfollow",
-        "type": "address",
-        "internalType": "address"
+        "name": "",
+        "type": "string",
+        "internalType": "string"
       },
       {
-        "name": "primitiveParams",
+        "name": "",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -279,7 +139,7 @@
         ]
       },
       {
-        "name": "ruleParams",
+        "name": "",
         "type": "tuple[]",
         "internalType": "struct KeyValue[]",
         "components": [
@@ -297,7 +157,188 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "processCreation",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "processRemoval",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "processUnassigning",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -313,49 +354,30 @@
     "stateMutability": "nonpayable"
   },
   {
-    "type": "event",
-    "name": "Lens_RestrictedSignersRule_SignerAdded",
+    "type": "function",
+    "name": "transferOwnership",
     "inputs": [
       {
-        "name": "signer",
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_Ownable_OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "label",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Lens_RestrictedSignersRule_SignerNonceUsed",
-    "inputs": [
-      {
-        "name": "signer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "nonce",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Lens_RestrictedSignersRule_SignerRemoved",
-    "inputs": [
-      {
-        "name": "signer",
+        "name": "newOwner",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -375,5 +397,30 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotStartWithThat",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotImplemented",
+    "inputs": []
   }
 ]

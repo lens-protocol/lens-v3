@@ -1,0 +1,212 @@
+[
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ActionOnSelf",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AllAnyOfRulesReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyExists",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AutoUpgradeEnabled",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Banned",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Blocked",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotFollowAgain",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotHaveRules",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotStartWithThat",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ConfigureCallReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Disabled",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DuplicatedValue",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Expired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Immutable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidConfigSalt",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Locked",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NonceUsed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAMember",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotEnough",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotFollowing",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotImplemented",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RequiredRuleReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RuleNotConfigured",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SelectorEnabledForDifferentRuleType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SingleAnyOfRule",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedContractImpl",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedValue",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedSelector",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Untrusted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UsernameAssigned",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "WrongSigner",
+    "inputs": []
+  }
+]

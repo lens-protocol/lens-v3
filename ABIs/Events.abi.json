@@ -4,18 +4,6 @@
     "name": "Lens_Contract_Deployed",
     "inputs": [
       {
-        "name": "indexedContractType",
-        "type": "string",
-        "indexed": true,
-        "internalType": "string"
-      },
-      {
-        "name": "indexedFlavour",
-        "type": "string",
-        "indexed": true,
-        "internalType": "string"
-      },
-      {
         "name": "contractType",
         "type": "string",
         "indexed": false,
