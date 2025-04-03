@@ -58,30 +58,38 @@ contract ConfigurePrimitiveRules is Script {
     }
 
     function _logRules() internal view {
+        console.log("- - - - - - - -");
+
         Rule[] memory namespaceRules =
             INamespace(LENS_GLOBAL_NAMESPACE).getNamespaceRules(INamespaceRule.processCreation.selector, true);
         if (namespaceRules.length == 0) {
             console.log("No namespace rules found");
         }
         for (uint256 i = 0; i < namespaceRules.length; i++) {
-            console.log("Namespace rule address: ", namespaceRules[i].ruleAddress);
+            console.log("Namespace rule address < %s >: %s", i, namespaceRules[i].ruleAddress);
         }
+
+        console.log("- - - - - - - -");
 
         Rule[] memory feedRules = IFeed(LENS_GLOBAL_FEED).getFeedRules(IFeedRule.processCreatePost.selector, true);
         if (namespaceRules.length == 0) {
             console.log("No feed rules found");
         }
         for (uint256 i = 0; i < feedRules.length; i++) {
-            console.log("Feed rule address: ", feedRules[i].ruleAddress);
+            console.log("Feed rule address < %s >: %s", i, feedRules[i].ruleAddress);
         }
+
+        console.log("- - - - - - - -");
 
         Rule[] memory graphRules = IGraph(LENS_GLOBAL_GRAPH).getGraphRules(IGraphRule.processFollow.selector, true);
         if (namespaceRules.length == 0) {
             console.log("No graph rules found");
         }
         for (uint256 i = 0; i < graphRules.length; i++) {
-            console.log("Graph rule address: ", graphRules[i].ruleAddress);
+            console.log("Graph rule address < %s >: %s", i, graphRules[i].ruleAddress);
         }
+
+        console.log("- - - - - - - -");
     }
 
     function _changeNamespaceRules() internal {
