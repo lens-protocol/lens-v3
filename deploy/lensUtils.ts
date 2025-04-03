@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { deployContract, getWallet } from './utils';
-import { ContractRunner, keccak256, toUtf8Bytes } from 'ethers';
+import { deployContract, getProvider, getWallet } from './utils';
+import { keccak256, toUtf8Bytes, Wallet } from 'ethers';
 import * as hre from 'hardhat';
 import { ethers } from 'hardhat';
 
@@ -186,89 +186,229 @@ export async function deployLensContractAsProxy(
 }
 
 export async function deployImplAndUpgradeTransparentProxy(
-  proxyOwnerWallet: ContractRunner,
-  contractToDeploy: ContractInfo,
-  initializerCalldata?: string
+  proxyAdminWallet: Wallet,
+  contractToUpgrade: ContractInfo
 ) {
-  const nameWithImplSuffix = contractToDeploy.name ?? contractToDeploy.contractName + 'Impl';
-
   const addressBook = loadAddressBook();
-  const proxyOnAddressBook = addressBook[contractToDeploy.contractName];
+  const nameWithImplSuffix = contractToUpgrade.name ?? contractToUpgrade.contractName + 'Impl';
+
+  // Checking the bytecode of current implementation in the proxy
+  const proxyOnAddressBook = addressBook[contractToUpgrade.contractName];
   const proxyAddress = proxyOnAddressBook.address;
 
   if (!proxyAddress) {
-    throw new Error(`Proxy for ${contractToDeploy.contractName} not found in address book`);
+    throw new Error(`Proxy for ${contractToUpgrade.contractName} not found in address book`);
   } else {
     console.log(
-      `We will upgrade the ${contractToDeploy.contractName}'s proxy located at ${proxyAddress}`
+      `We will upgrade the ${contractToUpgrade.contractName}'s proxy located at ${proxyAddress}`
     );
   }
   console.log('\n\n');
 
-  const artifact = await hre.artifacts.readArtifact(contractToDeploy.contractName);
+  const proxyAdminOnchain = await hre.upgrades.erc1967.getAdminAddress(proxyAddress);
+
+  if (proxyAdminOnchain !== (await proxyAdminWallet.getAddress())) {
+    throw new Error(
+      `Proxy admin (${proxyAdminOnchain}) in the contract on-chain is not the proxy owner derived from private key: ${await proxyAdminWallet.getAddress()}`
+    );
+  }
+
+  const artifact = await hre.artifacts.readArtifact(contractToUpgrade.contractName);
   const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
 
-  console.log(`Deploying ${nameWithImplSuffix}...`);
+  const implOnAddressBook = addressBook[nameWithImplSuffix];
+  const bytecodeHashOnAddressBook = implOnAddressBook?.bytecodeHash ?? undefined;
 
-  const deployedImplementation = await deployContract(
-    contractToDeploy.contractName,
-    contractToDeploy.constructorArguments
-  );
+  if (!implOnAddressBook || bytecodeHashOnAddressBook !== bytecodeHash) {
+    console.log(`Deploying ${nameWithImplSuffix}...`);
 
-  console.log(`${nameWithImplSuffix} deployed at ${await deployedImplementation.getAddress()}`);
+    const deployedImplementation = await deployContract(
+      contractToUpgrade.contractName,
+      contractToUpgrade.constructorArguments
+    );
 
-  const deployedImpl: ContractInfo = {
-    name: nameWithImplSuffix,
-    contractName: contractToDeploy.contractName,
-    contractType: ContractType.Implementation,
-    address: await deployedImplementation.getAddress(),
-    bytecodeHash,
-    constructorArguments: contractToDeploy.constructorArguments,
-  };
 
-  addressBook[nameWithImplSuffix] = deployedImpl;
-  saveAddressBook(addressBook);
+    addressBook[nameWithImplSuffix] = {
+      contractName: contractToUpgrade.contractName,
+      contractType: ContractType.Implementation,
+      address: await deployedImplementation.getAddress(),
+      bytecodeHash,
+      constructorArguments: contractToUpgrade.constructorArguments,
+    };
+    saveAddressBook(addressBook);
+    console.log(`\x1b[32m${nameWithImplSuffix} deployed at ${await deployedImplementation.getAddress()}\x1b[0m`);
+  } else {
+    console.log(`\x1b[36m${nameWithImplSuffix} already deployed at ${implOnAddressBook.address} with matching bytecode hash ${implOnAddressBook.bytecodeHash}. Skipping...\x1b[0m`);
+  }
+
+  const deployedImpl: ContractInfo = addressBook[nameWithImplSuffix];
+  const implementationAddress = deployedImpl.address!;
+
+  const beforeImplementation = await hre.upgrades.erc1967.getImplementationAddress(proxyAddress);
+  const implBytecodeHashOnchain = calculateBytecodeHash(await hre.ethers.provider.getCode(beforeImplementation));
 
   const transparentUpgradeableProxyArtifact = await hre.artifacts.readArtifact(
     'ITransparentUpgradeableProxy'
   );
-  const proxyBytecodeHash = calculateBytecodeHash(transparentUpgradeableProxyArtifact.bytecode);
-
   const transparentUpgradeableProxy = new ethers.Contract(
     proxyAddress,
     transparentUpgradeableProxyArtifact.abi,
-    proxyOwnerWallet
+    proxyAdminWallet
   );
 
   console.log('\n\n');
 
-  console.log(`Upgrading ${contractToDeploy.contractName}'s proxy to new implementation...`);
-  let upgradeTx;
-  if (!initializerCalldata) {
-    upgradeTx = await transparentUpgradeableProxy.upgradeTo(deployedImpl.address);
+  if (implBytecodeHashOnchain !== bytecodeHash) {
+    console.log(`Old implementation in the Proxy: ${beforeImplementation}`);
+    console.log(`Upgrading ${contractToUpgrade.contractName}'s proxy to new implementation...`);
+    const upgradeTx = await transparentUpgradeableProxy.upgradeTo(implementationAddress);
+    await upgradeTx.wait();
+    console.log(`Upgrade complete!`);
+
+    const upgradedImplementation = await hre.upgrades.erc1967.getImplementationAddress(
+      proxyAddress
+    );
+    if (upgradedImplementation !== implementationAddress) {
+      throw new Error(`${contractToUpgrade.contractName} upgrade failed. Implementation mismatch: ${upgradedImplementation} !== ${implementationAddress}`);
+    }
+
+    proxyOnAddressBook.implementation = deployedImpl.address;
+
+    const proxyBytecodeHashOnchain = calculateBytecodeHash(await hre.ethers.provider.getCode(proxyAddress));
+    proxyOnAddressBook.bytecodeHash = proxyBytecodeHashOnchain;
+
+    addressBook[contractToUpgrade.contractName] = proxyOnAddressBook;
+    saveAddressBook(addressBook);
+    console.log(`\x1b[32mProxy for ${contractToUpgrade.contractName} upgraded to ${deployedImpl.address}\x1b[0m`);
+    console.log('\n\n');
   } else {
-    console.log(`...and initializing it with ${initializerCalldata}`);
-    upgradeTx = await transparentUpgradeableProxy.upgradeToAndCall(
-      deployedImpl.address,
-      initializerCalldata
+    console.log(`\x1b[36m${contractToUpgrade.contractName} proxy already upgraded to new implementation with matching bytecode hash ${implBytecodeHashOnchain}\x1b[0m`);
+  }
+
+  return addressBook[contractToUpgrade.contractName];
+}
+
+export async function deployImplAndUpgradeBeacon(
+  beaconOwnerWallet: Wallet,
+  contractToUpgrade: ContractInfo,
+  versionToSet: number
+) {
+  const addressBook = loadAddressBook();
+  const nameWithImplSuffix = contractToUpgrade.contractName + 'Impl';
+  const beaconName = contractToUpgrade.contractName + 'Beacon';
+
+  // Checking the bytecode of current implementation in the beacon
+  const beaconOnAddressBook = addressBook[beaconName];
+  const beaconAddress = beaconOnAddressBook.address;
+
+  if (!beaconAddress) {
+    throw new Error(`${beaconName} not found in address book`);
+  }
+  console.log('\n\n');
+
+  const beaconArtifact = await hre.artifacts.readArtifact("Beacon");
+  const beaconAbi = beaconArtifact.abi;
+  const beaconContract = new ethers.Contract(beaconAddress, beaconAbi, beaconOwnerWallet);
+
+  const beaconOwnerOnchain = await beaconContract.owner();
+
+  if (beaconOwnerOnchain !== (await beaconOwnerWallet.getAddress())) {
+    throw new Error(
+      `${beaconName} owner (${beaconOwnerOnchain}) on-chain doesn't match the beacon owner derived from private key: ${await beaconOwnerWallet.getAddress()}`
     );
   }
-  await upgradeTx.wait();
-  console.log(`Upgrade complete!`);
 
-  proxyOnAddressBook.implementation = deployedImpl.address;
-  proxyOnAddressBook.bytecodeHash = proxyBytecodeHash;
+  const artifact = await hre.artifacts.readArtifact(contractToUpgrade.contractName);
+  const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
 
-  addressBook[contractToDeploy.contractName] = proxyOnAddressBook;
-  saveAddressBook(addressBook);
+  const implOnAddressBook = addressBook[nameWithImplSuffix];
+  const bytecodeHashOnAddressBook = implOnAddressBook?.bytecodeHash ?? undefined;
 
-  console.log(`Proxy for ${contractToDeploy.contractName} upgraded to ${deployedImpl.address}`);
+  if (!implOnAddressBook || bytecodeHashOnAddressBook !== bytecodeHash) {
+    console.log(`Deploying ${nameWithImplSuffix}...`);
+
+    const deployedImplementation = await deployContract(
+      contractToUpgrade.contractName,
+      contractToUpgrade.constructorArguments
+    );
+
+
+    addressBook[nameWithImplSuffix] = {
+      contractName: contractToUpgrade.contractName,
+      contractType: ContractType.Implementation,
+      address: await deployedImplementation.getAddress(),
+      bytecodeHash,
+      constructorArguments: contractToUpgrade.constructorArguments,
+    };
+    saveAddressBook(addressBook);
+    console.log(`\x1b[32m${nameWithImplSuffix} deployed at ${await deployedImplementation.getAddress()}\x1b[0m`);
+  } else {
+    console.log(`\x1b[36m${nameWithImplSuffix} already deployed at ${implOnAddressBook.address} with matching bytecode hash ${implOnAddressBook.bytecodeHash}. Skipping...\x1b[0m`);
+  }
+
+  const deployedImpl: ContractInfo = addressBook[nameWithImplSuffix];
+  const implementationAddress = deployedImpl.address!;
+
+  const beforeImplementation = await beaconContract.implementation();
+  const implBytecodeHashOnchain = await getContractBytecodeHashByAddress(beforeImplementation);
+
   console.log('\n\n');
-  console.log('Impl entry in address book:');
-  console.log(deployedImpl);
-  console.log('\n\n');
-  console.log('Proxy entry in address book:');
-  console.log(proxyOnAddressBook);
+
+  if (implBytecodeHashOnchain !== bytecodeHash) {
+    console.log(`Old implementation in the Beacon: ${beforeImplementation}`);
+
+    // As there is no getter, we read Default Version Storage Slot 1
+    const beaconDefaultVersionBytes = await getProvider().getStorage(beaconAddress, 1);
+    const beaconDefaultVersion = ethers.toNumber(beaconDefaultVersionBytes);
+    console.log(`Beacon contract current default version: ${beaconDefaultVersion}`);
+
+    console.log(`Setting new implementation ${implementationAddress} for version ${versionToSet}`);
+    if (beaconDefaultVersion == versionToSet) {
+      console.log('...overwriting implementation for the current default version');
+    }
+
+    const beaconUpgradeTx = await beaconContract.setImplementationForVersion(versionToSet, implementationAddress);
+    await beaconUpgradeTx.wait();
+
+    if (beaconDefaultVersion !== versionToSet) {
+      const beaconSetDefaultVersionTx = await beaconContract.setDefaultVersion(versionToSet);
+      await beaconSetDefaultVersionTx.wait();
+    }
+
+    const beaconDefaultVersionAfterBytes = await getProvider().getStorage(beaconAddress, 1);
+    const beaconDefaultVersionAfter = ethers.toNumber(beaconDefaultVersionAfterBytes);
+
+    const beaconContractImplementationAfter = await beaconContract.implementation();
+
+    if (beaconContractImplementationAfter !== implementationAddress) {
+      throw new Error(`Beacon contract implementation after upgrade ${beaconContractImplementationAfter} is not the new implementation ${implementationAddress}`  );
+    }
+    console.log(`Beacon contract upgraded to implementation ${implementationAddress}`);
+
+    if (beaconDefaultVersionAfter !== versionToSet) {
+      throw new Error(`Beacon contract default version after upgrade ${beaconDefaultVersionAfter} is not the new version ${versionToSet}`);
+    }
+
+    if (beaconDefaultVersion !== beaconDefaultVersionAfter) {
+      console.log(`Beacon contract DefaultVersion was set to ${beaconDefaultVersionAfter}`);
+    } else {
+      console.log(`Beacon contract DefaultVersion didn't change and is still set to ${beaconDefaultVersionAfter}`);
+    }
+
+    beaconOnAddressBook.implementation = deployedImpl.address;
+
+    const beaconBytecodeHashOnchain = calculateBytecodeHash(await hre.ethers.provider.getCode(beaconAddress));
+    beaconOnAddressBook.bytecodeHash = beaconBytecodeHashOnchain;
+
+    addressBook[beaconName] = beaconOnAddressBook;
+    saveAddressBook(addressBook);
+    console.log(`\x1b[32m${beaconName} upgraded to ${deployedImpl.address}\x1b[0m`);
+    console.log('\n\n');
+  } else {
+    console.log(`\x1b[36m${beaconName} already has the new implementation set with matching bytecodeHash ${implBytecodeHashOnchain}\x1b[0m`);
+  }
+
+  return {name: contractToUpgrade.contractName, beaconInfo: addressBook[beaconName]};
 }
 
 export async function deployLensContractWithCreate2(
@@ -427,6 +567,34 @@ export async function deployLensContractWithCreate2(
   }
 
   return addressBook[contractToDeploy.contractName];
+}
+
+export async function getTransparentUpgradeableProxyImplementationAddress(proxyAddress: string) {
+  const proxyImplementationOnchain = await hre.upgrades.erc1967.getImplementationAddress(proxyAddress);
+  return proxyImplementationOnchain;
+}
+
+export async function getTransparentUpgradeableProxyAdminAddress(proxyAddress: string) {
+  const proxyAdminOnchain = await hre.upgrades.erc1967.getAdminAddress(proxyAddress);
+  return proxyAdminOnchain;
+}
+
+export async function getBeaconImplementationAddress(beaconAddress: string) {
+  const beaconArtifact = await hre.artifacts.readArtifact("Beacon");
+  const beaconAbi = beaconArtifact.abi;
+  const beaconContract = new ethers.Contract(beaconAddress, beaconAbi, await getWallet());
+  const implementationAddress = await beaconContract.implementation();
+  return implementationAddress;
+}
+
+export async function getContractBytecodeHashByAddress(contractAddress: string) {
+  const bytecodeHash = calculateBytecodeHash(await hre.ethers.provider.getCode(contractAddress));
+  return bytecodeHash;
+}
+
+export async function getArtifactBytecodeHash(artifactName: string) {
+  const artifact = await hre.artifacts.readArtifact(artifactName);
+  return calculateBytecodeHash(artifact.bytecode);
 }
 
 export function getInitializeEncodedCall(owner: string, metadataURI?: string) {
