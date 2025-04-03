@@ -24,6 +24,8 @@ import {
 
     //////////// SETUP ////////////
 
+    const version = 10000; // 1.0.0
+
     const beaconsToUpgrade: ContractInfo[] = [
         {
             contractName: 'Account',
@@ -37,7 +39,7 @@ import {
     const upgradedBeacons: {name: string, beaconInfo: ContractInfo}[] = [];
 
     for (const beacon of beaconsToUpgrade) {
-      const upgradedBeacon = await deployImplAndUpgradeBeacon(proxyOwnerWallet, beacon, 1);
+      const upgradedBeacon = await deployImplAndUpgradeBeacon(proxyOwnerWallet, beacon, version);
       upgradedBeacons.push(upgradedBeacon);
     }
 
