@@ -36,23 +36,17 @@ contract ConfigurePrimitiveRules is Script {
     }
 
     function run() external {
-        // uint256 primitivesOwnerPk = vm.envUint("PRIMITIVES_OWNER_PK");
-        // address PRIMITIVES_OWNER_ADDRESS = address(0x5FCD072a0BD58B6fa413031582E450FE724dba6D);
-
-        // uint256 whitelistedCallerPK = vm.envUint("WHITELISTED_CALLER_PK");
-        // vm.startBroadcast(whitelistedCallerPK);
-        // PRIMITIVES_OWNER_ADDRESS.call{value: 10 ether}("");
-        // vm.stopBroadcast();
+        uint256 pk = vm.envUint("WALLET_PRIVATE_KEY");
 
         _logRules();
 
-        // vm.startBroadcast(primitivesOwnerPk);
+        vm.startBroadcast(pk);
 
         _changeNamespaceRules();
         _changeFeedRules();
         _changeGraphRules();
 
-        // vm.stopBroadcast();
+        vm.stopBroadcast();
 
         _logRules();
     }
