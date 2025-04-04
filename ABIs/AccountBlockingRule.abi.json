@@ -1,38 +1,8 @@
 [
   {
     "type": "constructor",
-    "inputs": [
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "accountBlocks",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -116,6 +86,24 @@
   },
   {
     "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "isBlocked",
     "inputs": [
       {
@@ -134,6 +122,19 @@
         "name": "",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -306,6 +307,58 @@
     ],
     "outputs": [],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "processDeletePost",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -658,58 +711,6 @@
   },
   {
     "type": "function",
-    "name": "processRemovePost",
-    "inputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
     "name": "processUnfollow",
     "inputs": [
       {
@@ -785,6 +786,19 @@
   },
   {
     "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "unblockUser",
     "inputs": [
       {
@@ -816,19 +830,13 @@
         "type": "address",
         "indexed": true,
         "internalType": "address"
-      },
-      {
-        "name": "timestamp",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "Lens_AccountBlocking_UserUnblocked",
+    "name": "Lens_AccountBlocking_AccountUnblocked",
     "inputs": [
       {
         "name": "source",
@@ -838,6 +846,25 @@
       },
       {
         "name": "target",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Ownable_OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -857,5 +884,35 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "ActionOnSelf",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Blocked",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotImplemented",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
   }
 ]

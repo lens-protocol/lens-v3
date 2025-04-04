@@ -85,6 +85,31 @@
   },
   {
     "type": "function",
+    "name": "grantRoles",
+    "inputs": [
+      {
+        "name": "roles",
+        "type": "tuple[]",
+        "internalType": "struct Role[]",
+        "components": [
+          {
+            "name": "account",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roleId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "hasAccess",
     "inputs": [
       {
@@ -149,6 +174,31 @@
         "name": "roleId",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "revokeRoles",
+    "inputs": [
+      {
+        "name": "roles",
+        "type": "tuple[]",
+        "internalType": "struct Role[]",
+        "components": [
+          {
+            "name": "account",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roleId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       }
     ],
     "outputs": [],

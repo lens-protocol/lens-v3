@@ -2655,6 +2655,13 @@
   },
   {
     "type": "function",
+    "name": "assumeNoRevert",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "breakpoint",
     "inputs": [
       {
@@ -2664,7 +2671,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -2682,7 +2689,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -2842,6 +2849,24 @@
         "internalType": "uint64"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "copyStorage",
+    "inputs": [
+      {
+        "name": "from",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -4036,6 +4061,44 @@
   },
   {
     "type": "function",
+    "name": "getArtifactPathByCode",
+    "inputs": [
+      {
+        "name": "code",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "path",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getArtifactPathByDeployedCode",
+    "inputs": [
+      {
+        "name": "deployedCode",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "path",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getBlobBaseFee",
     "inputs": [],
     "outputs": [
@@ -4075,6 +4138,169 @@
   },
   {
     "type": "function",
+    "name": "getBroadcast",
+    "inputs": [
+      {
+        "name": "contractName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "txType",
+        "type": "uint8",
+        "internalType": "enum VmSafe.BroadcastTxType"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct VmSafe.BroadcastTxSummary",
+        "components": [
+          {
+            "name": "txHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "txType",
+            "type": "uint8",
+            "internalType": "enum VmSafe.BroadcastTxType"
+          },
+          {
+            "name": "contractAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "success",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getBroadcasts",
+    "inputs": [
+      {
+        "name": "contractName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct VmSafe.BroadcastTxSummary[]",
+        "components": [
+          {
+            "name": "txHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "txType",
+            "type": "uint8",
+            "internalType": "enum VmSafe.BroadcastTxType"
+          },
+          {
+            "name": "contractAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "success",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getBroadcasts",
+    "inputs": [
+      {
+        "name": "contractName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "txType",
+        "type": "uint8",
+        "internalType": "enum VmSafe.BroadcastTxType"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct VmSafe.BroadcastTxSummary[]",
+        "components": [
+          {
+            "name": "txHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "txType",
+            "type": "uint8",
+            "internalType": "enum VmSafe.BroadcastTxType"
+          },
+          {
+            "name": "contractAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "blockNumber",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "success",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "getCode",
     "inputs": [
       {
@@ -4110,6 +4336,73 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getDeployment",
+    "inputs": [
+      {
+        "name": "contractName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "deployedAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getDeployment",
+    "inputs": [
+      {
+        "name": "contractName",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "deployedAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getDeployments",
+    "inputs": [
+      {
+        "name": "contractName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "deployedAddresses",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -4316,6 +4609,32 @@
             "internalType": "address"
           }
         ]
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getScriptWallets",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "wallets",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getWallets",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "wallets",
+        "type": "address[]",
+        "internalType": "address[]"
       }
     ],
     "stateMutability": "nonpayable"
@@ -5492,6 +5811,88 @@
   },
   {
     "type": "function",
+    "name": "parseTomlType",
+    "inputs": [
+      {
+        "name": "toml",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "typeDescription",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "parseTomlType",
+    "inputs": [
+      {
+        "name": "toml",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "key",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "typeDescription",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "parseTomlTypeArray",
+    "inputs": [
+      {
+        "name": "toml",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "key",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "typeDescription",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "parseTomlUint",
     "inputs": [
       {
@@ -5563,6 +5964,13 @@
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "pauseTracing",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -5674,6 +6082,30 @@
   },
   {
     "type": "function",
+    "name": "publicKeyP256",
+    "inputs": [
+      {
+        "name": "privateKey",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "publicKeyX",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "publicKeyY",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "randomAddress",
     "inputs": [],
     "outputs": [
@@ -5687,6 +6119,96 @@
   },
   {
     "type": "function",
+    "name": "randomBool",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "randomBytes",
+    "inputs": [
+      {
+        "name": "len",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "randomBytes4",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "randomBytes8",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes8",
+        "internalType": "bytes8"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "randomInt",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "randomInt",
+    "inputs": [
+      {
+        "name": "bits",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "int256",
+        "internalType": "int256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "randomUint",
     "inputs": [],
     "outputs": [
@@ -5697,6 +6219,25 @@
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "randomUint",
+    "inputs": [
+      {
+        "name": "bits",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -5986,6 +6527,69 @@
   },
   {
     "type": "function",
+    "name": "rememberKeys",
+    "inputs": [
+      {
+        "name": "mnemonic",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "derivationPath",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "count",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "keyAddrs",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "rememberKeys",
+    "inputs": [
+      {
+        "name": "mnemonic",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "derivationPath",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "language",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "count",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "keyAddrs",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "removeDir",
     "inputs": [
       {
@@ -6046,10 +6650,24 @@
   },
   {
     "type": "function",
+    "name": "resetGasMetering",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "resumeGasMetering",
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resumeTracing",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -6680,6 +7298,19 @@
   },
   {
     "type": "function",
+    "name": "setArbitraryStorage",
+    "inputs": [
+      {
+        "name": "target",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setEnv",
     "inputs": [
       {
@@ -7083,6 +7714,13 @@
   },
   {
     "type": "function",
+    "name": "startDebugTraceRecording",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "startMappingRecording",
     "inputs": [],
     "outputs": [],
@@ -7093,6 +7731,51 @@
     "name": "startStateDiffRecording",
     "inputs": [],
     "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "stopAndReturnDebugTraceRecording",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "step",
+        "type": "tuple[]",
+        "internalType": "struct VmSafe.DebugStep[]",
+        "components": [
+          {
+            "name": "stack",
+            "type": "uint256[]",
+            "internalType": "uint256[]"
+          },
+          {
+            "name": "memoryInput",
+            "type": "bytes",
+            "internalType": "bytes"
+          },
+          {
+            "name": "opcode",
+            "type": "uint8",
+            "internalType": "uint8"
+          },
+          {
+            "name": "depth",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
+            "name": "isOutOfGas",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "contractAddr",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {

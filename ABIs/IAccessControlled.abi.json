@@ -1,0 +1,15 @@
+[
+  {
+    "type": "function",
+    "name": "getAccessControl",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IAccessControl"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

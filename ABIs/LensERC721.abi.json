@@ -195,6 +195,25 @@
   },
   {
     "type": "function",
+    "name": "supportsInterface",
+    "inputs": [
+      {
+        "name": "interfaceId",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "symbol",
     "inputs": [],
     "outputs": [
@@ -300,6 +319,25 @@
   },
   {
     "type": "event",
+    "name": "BatchMetadataUpdate",
+    "inputs": [
+      {
+        "name": "_fromTokenId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "_toTokenId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Lens_ERC721_TokenURIProviderSet",
     "inputs": [
       {
@@ -335,5 +373,25 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "DoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedContractImpl",
+    "inputs": []
   }
 ]

@@ -396,6 +396,12 @@
         "internalType": "address"
       },
       {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
         "name": "params",
         "type": "tuple[]",
         "indexed": false,
@@ -442,6 +448,12 @@
         "name": "account",
         "type": "address",
         "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
         "internalType": "address"
       },
       {
@@ -494,6 +506,12 @@
         "internalType": "address"
       },
       {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
         "name": "params",
         "type": "tuple[]",
         "indexed": false,
@@ -540,6 +558,67 @@
         "name": "account",
         "type": "address",
         "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "indexed": false,
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "returnData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ActionHub_AccountAction_Reconfigured",
+    "inputs": [
+      {
+        "name": "action",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "msgSender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
         "internalType": "address"
       },
       {
@@ -611,6 +690,18 @@
         "internalType": "uint256"
       },
       {
+        "name": "postAuthor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
         "name": "params",
         "type": "tuple[]",
         "indexed": false,
@@ -664,6 +755,18 @@
         "type": "uint256",
         "indexed": true,
         "internalType": "uint256"
+      },
+      {
+        "name": "postAuthor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       },
       {
         "name": "params",
@@ -721,6 +824,18 @@
         "internalType": "uint256"
       },
       {
+        "name": "postAuthor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
         "name": "params",
         "type": "tuple[]",
         "indexed": false,
@@ -776,6 +891,85 @@
         "internalType": "uint256"
       },
       {
+        "name": "postAuthor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "indexed": false,
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "returnData",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ActionHub_PostAction_Reconfigured",
+    "inputs": [
+      {
+        "name": "action",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "msgSender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "feed",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "postId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "postAuthor",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
         "name": "params",
         "type": "tuple[]",
         "indexed": false,
@@ -814,5 +1008,57 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ExtraStorageSet",
+    "inputs": [
+      {
+        "name": "addressScope",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "entityType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "entityId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "value",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "Disabled",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedContractImpl",
+    "inputs": []
   }
 ]

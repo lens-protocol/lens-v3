@@ -33,6 +33,19 @@
   },
   {
     "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "setMetadataURI",
     "inputs": [
       {
@@ -49,7 +62,7 @@
     "name": "setTrust",
     "inputs": [
       {
-        "name": "primitive",
+        "name": "target",
         "type": "address",
         "internalType": "address"
       },
@@ -61,6 +74,38 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_Ownable_OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",
@@ -77,16 +122,16 @@
   },
   {
     "type": "event",
-    "name": "Lens_SimplePaymentRule_Trusted",
+    "name": "Lens_Rule_Trusted",
     "inputs": [
       {
-        "name": "payer",
+        "name": "account",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "trusted",
+        "name": "trustedAddress",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -96,21 +141,26 @@
   },
   {
     "type": "event",
-    "name": "Lens_SimplePaymentRule_Untrusted",
+    "name": "Lens_Rule_Untrusted",
     "inputs": [
       {
-        "name": "payer",
+        "name": "account",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "untrusted",
+        "name": "untrustedAddress",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
   }
 ]

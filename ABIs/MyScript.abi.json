@@ -18,5 +18,12 @@
     "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "testMyScript",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   }
 ]

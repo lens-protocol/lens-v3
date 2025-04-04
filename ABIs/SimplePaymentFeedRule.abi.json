@@ -1,13 +1,7 @@
 [
   {
     "type": "constructor",
-    "inputs": [
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
+    "inputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -68,6 +62,37 @@
         "name": "",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -240,6 +265,58 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "processDeletePost",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -427,58 +504,6 @@
   },
   {
     "type": "function",
-    "name": "processRemovePost",
-    "inputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "function",
     "name": "setMetadataURI",
     "inputs": [
       {
@@ -495,7 +520,7 @@
     "name": "setTrust",
     "inputs": [
       {
-        "name": "primitive",
+        "name": "target",
         "type": "address",
         "internalType": "address"
       },
@@ -507,6 +532,57 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_Ownable_OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_PermissionId_Available",
+    "inputs": [
+      {
+        "name": "permissionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",
@@ -523,16 +599,16 @@
   },
   {
     "type": "event",
-    "name": "Lens_SimplePaymentRule_Trusted",
+    "name": "Lens_Rule_Trusted",
     "inputs": [
       {
-        "name": "payer",
+        "name": "account",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "trusted",
+        "name": "trustedAddress",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -542,21 +618,46 @@
   },
   {
     "type": "event",
-    "name": "Lens_SimplePaymentRule_Untrusted",
+    "name": "Lens_Rule_Untrusted",
     "inputs": [
       {
-        "name": "payer",
+        "name": "account",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "untrusted",
+        "name": "untrustedAddress",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotImplemented",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Untrusted",
+    "inputs": []
   }
 ]

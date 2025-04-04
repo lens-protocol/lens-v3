@@ -1,0 +1,20 @@
+[
+  {
+    "type": "function",
+    "name": "migration_force__setNameAndSymbol",
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]

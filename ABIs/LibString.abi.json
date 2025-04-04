@@ -1,0 +1,17 @@
+[
+  {
+    "type": "error",
+    "name": "HexLengthInsufficient",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StringNot7BitASCII",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TooBigForSmallString",
+    "inputs": []
+  }
+]

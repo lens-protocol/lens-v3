@@ -3,49 +3,83 @@
     "type": "constructor",
     "inputs": [
       {
-        "name": "accessControlFactory",
-        "type": "address",
-        "internalType": "contract AccessControlFactory"
+        "name": "factories",
+        "type": "tuple",
+        "internalType": "struct FactoryConstructorParams",
+        "components": [
+          {
+            "name": "accessControlFactory",
+            "type": "address",
+            "internalType": "contract AccessControlFactory"
+          },
+          {
+            "name": "accountFactory",
+            "type": "address",
+            "internalType": "contract AccountFactory"
+          },
+          {
+            "name": "appFactory",
+            "type": "address",
+            "internalType": "contract AppFactory"
+          },
+          {
+            "name": "groupFactory",
+            "type": "address",
+            "internalType": "contract GroupFactory"
+          },
+          {
+            "name": "feedFactory",
+            "type": "address",
+            "internalType": "contract FeedFactory"
+          },
+          {
+            "name": "graphFactory",
+            "type": "address",
+            "internalType": "contract GraphFactory"
+          },
+          {
+            "name": "namespaceFactory",
+            "type": "address",
+            "internalType": "contract NamespaceFactory"
+          }
+        ]
       },
       {
-        "name": "accountFactory",
-        "type": "address",
-        "internalType": "contract AccountFactory"
-      },
-      {
-        "name": "appFactory",
-        "type": "address",
-        "internalType": "contract AppFactory"
-      },
-      {
-        "name": "groupFactory",
-        "type": "address",
-        "internalType": "contract GroupFactory"
-      },
-      {
-        "name": "feedFactory",
-        "type": "address",
-        "internalType": "contract FeedFactory"
-      },
-      {
-        "name": "graphFactory",
-        "type": "address",
-        "internalType": "contract GraphFactory"
-      },
-      {
-        "name": "namespaceFactory",
-        "type": "address",
-        "internalType": "contract NamespaceFactory"
-      },
-      {
-        "name": "accountBlockingRule",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "groupGatedFeedRule",
-        "type": "address",
-        "internalType": "address"
+        "name": "rules",
+        "type": "tuple",
+        "internalType": "struct RuleConstructorParams",
+        "components": [
+          {
+            "name": "accountBlockingRule",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "groupGatedFeedRule",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "usernameSimpleCharsetRule",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "banMemberGroupRule",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "addRemovePidGroupRule",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "usernameReservedNamespaceRule",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
       }
     ],
     "stateMutability": "nonpayable"
@@ -55,118 +89,96 @@
     "name": "createAccountWithUsernameFree",
     "inputs": [
       {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "accountManagers",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "accountManagersPermissions",
-        "type": "tuple[]",
-        "internalType": "struct AccountManagerPermissions[]",
-        "components": [
-          {
-            "name": "canExecuteTransactions",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "canTransferTokens",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "canTransferNative",
-            "type": "bool",
-            "internalType": "bool"
-          },
-          {
-            "name": "canSetMetadataURI",
-            "type": "bool",
-            "internalType": "bool"
-          }
-        ]
-      },
-      {
         "name": "namespacePrimitiveAddress",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "username",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "accountCreationSourceStamp",
+        "name": "accountParams",
         "type": "tuple",
-        "internalType": "struct SourceStamp",
+        "internalType": "struct CreateAccountParams",
         "components": [
           {
-            "name": "source",
+            "name": "metadataURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "owner",
             "type": "address",
             "internalType": "address"
           },
           {
-            "name": "nonce",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "accountManagers",
+            "type": "address[]",
+            "internalType": "address[]"
           },
           {
-            "name": "deadline",
-            "type": "uint256",
-            "internalType": "uint256"
+            "name": "accountManagersPermissions",
+            "type": "tuple[]",
+            "internalType": "struct AccountManagerPermissions[]",
+            "components": [
+              {
+                "name": "canExecuteTransactions",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "canTransferTokens",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "canTransferNative",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "canSetMetadataURI",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
           },
           {
-            "name": "signature",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "createUsernameCustomParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "accountCreationSourceStamp",
+            "type": "tuple",
+            "internalType": "struct SourceStamp",
+            "components": [
+              {
+                "name": "source",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "originalMsgSender",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "validator",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "nonce",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "deadline",
+                "type": "uint256",
+                "internalType": "uint256"
+              },
+              {
+                "name": "signature",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
           },
           {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "createUsernameRuleProcessingParams",
-        "type": "tuple[]",
-        "internalType": "struct RuleProcessingParams[]",
-        "components": [
-          {
-            "name": "ruleAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "configSalt",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "ruleParams",
+            "name": "accountExtraData",
             "type": "tuple[]",
             "internalType": "struct KeyValue[]",
             "components": [
@@ -185,39 +197,17 @@
         ]
       },
       {
-        "name": "assignUsernameCustomParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
+        "name": "usernameParams",
+        "type": "tuple",
+        "internalType": "struct CreateUsernameParams",
         "components": [
           {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "username",
+            "type": "string",
+            "internalType": "string"
           },
           {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "unassignAccountRuleProcessingParams",
-        "type": "tuple[]",
-        "internalType": "struct RuleProcessingParams[]",
-        "components": [
-          {
-            "name": "ruleAddress",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "configSalt",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "ruleParams",
+            "name": "createUsernameCustomParams",
             "type": "tuple[]",
             "internalType": "struct KeyValue[]",
             "components": [
@@ -232,26 +222,43 @@
                 "internalType": "bytes"
               }
             ]
-          }
-        ]
-      },
-      {
-        "name": "assignRuleProcessingParams",
-        "type": "tuple[]",
-        "internalType": "struct RuleProcessingParams[]",
-        "components": [
-          {
-            "name": "ruleAddress",
-            "type": "address",
-            "internalType": "address"
           },
           {
-            "name": "configSalt",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "createUsernameRuleProcessingParams",
+            "type": "tuple[]",
+            "internalType": "struct RuleProcessingParams[]",
+            "components": [
+              {
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
           },
           {
-            "name": "ruleParams",
+            "name": "assignUsernameCustomParams",
             "type": "tuple[]",
             "internalType": "struct KeyValue[]",
             "components": [
@@ -266,40 +273,57 @@
                 "internalType": "bytes"
               }
             ]
-          }
-        ]
-      },
-      {
-        "name": "accountExtraData",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
           },
           {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "usernameExtraData",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            "name": "assignRuleProcessingParams",
+            "type": "tuple[]",
+            "internalType": "struct RuleProcessingParams[]",
+            "components": [
+              {
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
           },
           {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
+            "name": "usernameExtraData",
+            "type": "tuple[]",
+            "internalType": "struct KeyValue[]",
+            "components": [
+              {
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
           }
         ]
       }
@@ -328,182 +352,206 @@
         "internalType": "address[]"
       },
       {
-        "name": "groupMetadataURI",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "groupRules",
-        "type": "tuple[]",
-        "internalType": "struct RuleChange[]",
+        "name": "groupParams",
+        "type": "tuple",
+        "internalType": "struct GroupWithFeed_GroupParams",
         "components": [
           {
-            "name": "ruleAddress",
-            "type": "address",
-            "internalType": "address"
+            "name": "groupMetadataURI",
+            "type": "string",
+            "internalType": "string"
           },
           {
-            "name": "configSalt",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "configurationChanges",
-            "type": "tuple",
-            "internalType": "struct RuleConfigurationChange",
+            "name": "groupRules",
+            "type": "tuple[]",
+            "internalType": "struct RuleChange[]",
             "components": [
               {
-                "name": "configure",
-                "type": "bool",
-                "internalType": "bool"
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
               },
               {
-                "name": "ruleParams",
-                "type": "tuple[]",
-                "internalType": "struct KeyValue[]",
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "configurationChanges",
+                "type": "tuple",
+                "internalType": "struct RuleConfigurationChange",
                 "components": [
                   {
-                    "name": "key",
-                    "type": "bytes32",
-                    "internalType": "bytes32"
+                    "name": "configure",
+                    "type": "bool",
+                    "internalType": "bool"
                   },
                   {
-                    "name": "value",
-                    "type": "bytes",
-                    "internalType": "bytes"
+                    "name": "ruleParams",
+                    "type": "tuple[]",
+                    "internalType": "struct KeyValue[]",
+                    "components": [
+                      {
+                        "name": "key",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                      },
+                      {
+                        "name": "value",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "selectorChanges",
+                "type": "tuple[]",
+                "internalType": "struct RuleSelectorChange[]",
+                "components": [
+                  {
+                    "name": "ruleSelector",
+                    "type": "bytes4",
+                    "internalType": "bytes4"
+                  },
+                  {
+                    "name": "isRequired",
+                    "type": "bool",
+                    "internalType": "bool"
+                  },
+                  {
+                    "name": "enabled",
+                    "type": "bool",
+                    "internalType": "bool"
                   }
                 ]
               }
             ]
           },
           {
-            "name": "selectorChanges",
+            "name": "groupExtraData",
             "type": "tuple[]",
-            "internalType": "struct RuleSelectorChange[]",
+            "internalType": "struct KeyValue[]",
             "components": [
               {
-                "name": "ruleSelector",
-                "type": "bytes4",
-                "internalType": "bytes4"
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
               },
               {
-                "name": "isRequired",
-                "type": "bool",
-                "internalType": "bool"
-              },
-              {
-                "name": "enabled",
-                "type": "bool",
-                "internalType": "bool"
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
               }
             ]
-          }
-        ]
-      },
-      {
-        "name": "groupExtraData",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
           },
           {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      },
-      {
-        "name": "feedMetadataURI",
-        "type": "string",
-        "internalType": "string"
-      },
-      {
-        "name": "feedRules",
-        "type": "tuple[]",
-        "internalType": "struct RuleChange[]",
-        "components": [
-          {
-            "name": "ruleAddress",
+            "name": "groupFoundingMember",
             "type": "address",
             "internalType": "address"
+          }
+        ]
+      },
+      {
+        "name": "feedParams",
+        "type": "tuple",
+        "internalType": "struct GroupWithFeed_FeedParams",
+        "components": [
+          {
+            "name": "feedMetadataURI",
+            "type": "string",
+            "internalType": "string"
           },
           {
-            "name": "configSalt",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "configurationChanges",
-            "type": "tuple",
-            "internalType": "struct RuleConfigurationChange",
+            "name": "feedRules",
+            "type": "tuple[]",
+            "internalType": "struct RuleChange[]",
             "components": [
               {
-                "name": "configure",
-                "type": "bool",
-                "internalType": "bool"
+                "name": "ruleAddress",
+                "type": "address",
+                "internalType": "address"
               },
               {
-                "name": "ruleParams",
-                "type": "tuple[]",
-                "internalType": "struct KeyValue[]",
+                "name": "configSalt",
+                "type": "bytes32",
+                "internalType": "bytes32"
+              },
+              {
+                "name": "configurationChanges",
+                "type": "tuple",
+                "internalType": "struct RuleConfigurationChange",
                 "components": [
                   {
-                    "name": "key",
-                    "type": "bytes32",
-                    "internalType": "bytes32"
+                    "name": "configure",
+                    "type": "bool",
+                    "internalType": "bool"
                   },
                   {
-                    "name": "value",
-                    "type": "bytes",
-                    "internalType": "bytes"
+                    "name": "ruleParams",
+                    "type": "tuple[]",
+                    "internalType": "struct KeyValue[]",
+                    "components": [
+                      {
+                        "name": "key",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                      },
+                      {
+                        "name": "value",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "selectorChanges",
+                "type": "tuple[]",
+                "internalType": "struct RuleSelectorChange[]",
+                "components": [
+                  {
+                    "name": "ruleSelector",
+                    "type": "bytes4",
+                    "internalType": "bytes4"
+                  },
+                  {
+                    "name": "isRequired",
+                    "type": "bool",
+                    "internalType": "bool"
+                  },
+                  {
+                    "name": "enabled",
+                    "type": "bool",
+                    "internalType": "bool"
                   }
                 ]
               }
             ]
           },
           {
-            "name": "selectorChanges",
+            "name": "feedExtraData",
             "type": "tuple[]",
-            "internalType": "struct RuleSelectorChange[]",
+            "internalType": "struct KeyValue[]",
             "components": [
               {
-                "name": "ruleSelector",
-                "type": "bytes4",
-                "internalType": "bytes4"
+                "name": "key",
+                "type": "bytes32",
+                "internalType": "bytes32"
               },
               {
-                "name": "isRequired",
-                "type": "bool",
-                "internalType": "bool"
-              },
-              {
-                "name": "enabled",
-                "type": "bool",
-                "internalType": "bool"
+                "name": "value",
+                "type": "bytes",
+                "internalType": "bytes"
               }
             ]
-          }
-        ]
-      },
-      {
-        "name": "feedExtraData",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
           },
           {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
+            "name": "allowNonMembersToReply",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -575,6 +623,16 @@
         "components": [
           {
             "name": "source",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "originalMsgSender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "validator",
             "type": "address",
             "internalType": "address"
           },
@@ -1051,6 +1109,11 @@
             "internalType": "bytes"
           }
         ]
+      },
+      {
+        "name": "foundingMember",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [
@@ -1190,5 +1253,78 @@
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getFactories",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRules",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTemporaryAccessControl",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "error",
+    "name": "DuplicatedValue",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
   }
 ]

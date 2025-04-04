@@ -6,11 +6,6 @@
         "name": "actionHub",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "metadataURI",
-        "type": "string",
-        "internalType": "string"
       }
     ],
     "stateMutability": "nonpayable"
@@ -149,14 +144,31 @@
             "internalType": "uint96"
           },
           {
-            "name": "recipient",
-            "type": "address",
-            "internalType": "address"
+            "name": "recipients",
+            "type": "tuple[]",
+            "internalType": "struct RecipientData[]",
+            "components": [
+              {
+                "name": "recipient",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "splitBps",
+                "type": "uint16",
+                "internalType": "uint16"
+              }
+            ]
           },
           {
             "name": "endTimestamp",
             "type": "uint72",
             "internalType": "uint72"
+          },
+          {
+            "name": "referralFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
           },
           {
             "name": "followerOnlyGraph",
@@ -211,6 +223,37 @@
         "name": "",
         "type": "string",
         "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -280,8 +323,40 @@
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
     "type": "event",
-    "name": "Lens_Action_MetadataURISet",
+    "name": "Lens_Ownable_OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_PostAction_MetadataURISet",
     "inputs": [
       {
         "name": "metadataURI",
@@ -291,5 +366,65 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Disabled",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Expired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Immutable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRecipient",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSplits",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotFollowing",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
   }
 ]

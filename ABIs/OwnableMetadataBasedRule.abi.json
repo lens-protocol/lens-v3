@@ -33,6 +33,19 @@
   },
   {
     "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "setMetadataURI",
     "inputs": [
       {
@@ -45,49 +58,30 @@
     "stateMutability": "nonpayable"
   },
   {
-    "type": "event",
-    "name": "Lens_RestrictedSignersRule_SignerAdded",
+    "type": "function",
+    "name": "transferOwnership",
     "inputs": [
       {
-        "name": "signer",
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_Ownable_OwnershipTransferred",
+    "inputs": [
+      {
+        "name": "previousOwner",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "label",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Lens_RestrictedSignersRule_SignerNonceUsed",
-    "inputs": [
-      {
-        "name": "signer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "nonce",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Lens_RestrictedSignersRule_SignerRemoved",
-    "inputs": [
-      {
-        "name": "signer",
+        "name": "newOwner",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -107,5 +101,10 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
   }
 ]

@@ -1,13 +1,19 @@
 [
   {
     "type": "event",
-    "name": "Lens_ExtraDataSet",
+    "name": "Lens_ExtraStorageSet",
     "inputs": [
       {
-        "name": "addr",
+        "name": "addressScope",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
+      },
+      {
+        "name": "entityType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
       },
       {
         "name": "entityId",

@@ -367,6 +367,19 @@
   },
   {
     "type": "function",
+    "name": "setDefaultGroup",
+    "inputs": [
+      {
+        "name": "group",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setExtraData",
     "inputs": [
       {
@@ -474,6 +487,19 @@
     "inputs": [
       {
         "name": "feed",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_App_DefaultGroupSet",
+    "inputs": [
+      {
+        "name": "group",
         "type": "address",
         "indexed": true,
         "internalType": "address"

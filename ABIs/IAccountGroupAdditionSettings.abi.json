@@ -1,0 +1,43 @@
+[
+  {
+    "type": "function",
+    "name": "canBeAddedToGroup",
+    "inputs": [
+      {
+        "name": "group",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "addedBy",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "params",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

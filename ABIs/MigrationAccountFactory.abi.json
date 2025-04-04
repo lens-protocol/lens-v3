@@ -1,0 +1,341 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "beacon",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "lock",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployAccount",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "accountManagers",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "accountManagersPermissions",
+        "type": "tuple[]",
+        "internalType": "struct AccountManagerPermissions[]",
+        "components": [
+          {
+            "name": "canExecuteTransactions",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferTokens",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferNative",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canSetMetadataURI",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "sourceStamp",
+        "type": "tuple",
+        "internalType": "struct SourceStamp",
+        "components": [
+          {
+            "name": "source",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "originalMsgSender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "validator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "nonce",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "signature",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog1",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log1EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog2",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log2EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog3",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log3EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog4",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log4EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic4",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_Account_Created",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "accountManagers",
+        "type": "address[]",
+        "indexed": false,
+        "internalType": "address[]"
+      },
+      {
+        "name": "accountManagersPermissions",
+        "type": "tuple[]",
+        "indexed": false,
+        "internalType": "struct AccountManagerPermissions[]",
+        "components": [
+          {
+            "name": "canExecuteTransactions",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferTokens",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canTransferNative",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "canSetMetadataURI",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      },
+      {
+        "name": "source",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "indexed": false,
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "anonymous": false
+  }
+]

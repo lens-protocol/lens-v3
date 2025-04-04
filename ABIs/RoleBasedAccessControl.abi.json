@@ -96,6 +96,31 @@
   },
   {
     "type": "function",
+    "name": "grantRoles",
+    "inputs": [
+      {
+        "name": "roles",
+        "type": "tuple[]",
+        "internalType": "struct Role[]",
+        "components": [
+          {
+            "name": "account",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roleId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "hasAccess",
     "inputs": [
       {
@@ -149,6 +174,19 @@
   },
   {
     "type": "function",
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "revokeRole",
     "inputs": [
       {
@@ -160,6 +198,31 @@
         "name": "roleId",
         "type": "uint256",
         "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "revokeRoles",
+    "inputs": [
+      {
+        "name": "roles",
+        "type": "tuple[]",
+        "internalType": "struct Role[]",
+        "components": [
+          {
+            "name": "account",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "roleId",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
       }
     ],
     "outputs": [],
@@ -333,7 +396,26 @@
   },
   {
     "type": "event",
-    "name": "Lens_OwnershipTransferred",
+    "name": "Lens_Contract_Deployed",
+    "inputs": [
+      {
+        "name": "contractType",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "flavour",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Ownable_OwnershipTransferred",
     "inputs": [
       {
         "name": "previousOwner",
@@ -349,5 +431,20 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
   }
 ]

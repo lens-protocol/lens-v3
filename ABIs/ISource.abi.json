@@ -27,6 +27,16 @@
             "internalType": "address"
           },
           {
+            "name": "originalMsgSender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "validator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
             "name": "nonce",
             "type": "uint256",
             "internalType": "uint256"

@@ -153,7 +153,7 @@
         ]
       },
       {
-        "name": "ruleChangesProcessingParams",
+        "name": "feedRulesParams",
         "type": "tuple[]",
         "internalType": "struct RuleProcessingParams[]",
         "components": [
@@ -878,6 +878,11 @@
             "name": "lastUpdateSource",
             "type": "address",
             "internalType": "address"
+          },
+          {
+            "name": "isDeleted",
+            "type": "bool",
+            "internalType": "bool"
           }
         ]
       }
@@ -1021,6 +1026,92 @@
   },
   {
     "type": "function",
+    "name": "getPostUnchecked",
+    "inputs": [
+      {
+        "name": "postId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Post",
+        "components": [
+          {
+            "name": "author",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "authorPostSequentialId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "postSequentialId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "contentURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "rootPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "repostedPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "quotedPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "repliedPostId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "creationTimestamp",
+            "type": "uint80",
+            "internalType": "uint80"
+          },
+          {
+            "name": "creationSource",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "lastUpdatedTimestamp",
+            "type": "uint80",
+            "internalType": "uint80"
+          },
+          {
+            "name": "lastUpdateSource",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "isDeleted",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "initialize",
     "inputs": [
       {
@@ -1032,6 +1123,24 @@
         "name": "accessControl",
         "type": "address",
         "internalType": "contract IAccessControl"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "migration_force__setAuthorPostCount",
+    "inputs": [
+      {
+        "name": "author",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "authorPostCount",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -1147,13 +1256,38 @@
   },
   {
     "type": "event",
-    "name": "Lens_ExtraDataSet",
+    "name": "Lens_Contract_Deployed",
     "inputs": [
       {
-        "name": "addr",
+        "name": "contractType",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "flavour",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ExtraStorageSet",
+    "inputs": [
+      {
+        "name": "addressScope",
         "type": "address",
-        "indexed": true,
+        "indexed": false,
         "internalType": "address"
+      },
+      {
+        "name": "entityType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
       },
       {
         "name": "entityId",
@@ -2151,5 +2285,109 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_PermissionId_Available",
+    "inputs": [
+      {
+        "name": "permissionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AllAnyOfRulesReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyExists",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotHaveRules",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ConfigureCallReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidConfigSalt",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RequiredRuleReverted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RuleNotConfigured",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SelectorEnabledForDifferentRuleType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedSelector",
+    "inputs": []
   }
 ]

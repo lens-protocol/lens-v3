@@ -133,14 +133,31 @@
             "internalType": "uint96"
           },
           {
-            "name": "recipient",
-            "type": "address",
-            "internalType": "address"
+            "name": "recipients",
+            "type": "tuple[]",
+            "internalType": "struct RecipientData[]",
+            "components": [
+              {
+                "name": "recipient",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "splitBps",
+                "type": "uint16",
+                "internalType": "uint16"
+              }
+            ]
           },
           {
             "name": "endTimestamp",
             "type": "uint72",
             "internalType": "uint72"
+          },
+          {
+            "name": "referralFeeBps",
+            "type": "uint16",
+            "internalType": "uint16"
           },
           {
             "name": "followerOnlyGraph",

@@ -200,6 +200,58 @@
   },
   {
     "type": "function",
+    "name": "processDeletePost",
+    "inputs": [
+      {
+        "name": "configSalt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "postId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "primitiveParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      },
+      {
+        "name": "ruleParams",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "processEditPost",
     "inputs": [
       {
@@ -358,58 +410,6 @@
                 "internalType": "bool"
               }
             ]
-          }
-        ]
-      },
-      {
-        "name": "ruleParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "processRemovePost",
-    "inputs": [
-      {
-        "name": "configSalt",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "postId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "primitiveParams",
-        "type": "tuple[]",
-        "internalType": "struct KeyValue[]",
-        "components": [
-          {
-            "name": "key",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "value",
-            "type": "bytes",
-            "internalType": "bytes"
           }
         ]
       },

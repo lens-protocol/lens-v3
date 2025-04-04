@@ -14,13 +14,6 @@
   },
   {
     "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "transferOwnership",
     "inputs": [
       {
@@ -34,7 +27,7 @@
   },
   {
     "type": "event",
-    "name": "OwnershipTransferred",
+    "name": "Lens_Ownable_OwnershipTransferred",
     "inputs": [
       {
         "name": "previousOwner",
@@ -50,5 +43,10 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
   }
 ]

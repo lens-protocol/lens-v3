@@ -45,6 +45,19 @@
   },
   {
     "type": "function",
+    "name": "cancelNonce",
+    "inputs": [
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "getAccessControl",
     "inputs": [],
     "outputs": [
@@ -175,6 +188,25 @@
         "name": "",
         "type": "address[]",
         "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMetadataURI",
+    "inputs": [
+      {
+        "name": "source",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "view"
@@ -398,6 +430,19 @@
   },
   {
     "type": "function",
+    "name": "setDefaultGroup",
+    "inputs": [
+      {
+        "name": "group",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setExtraData",
     "inputs": [
       {
@@ -514,6 +559,16 @@
             "internalType": "address"
           },
           {
+            "name": "originalMsgSender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "validator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
             "name": "nonce",
             "type": "uint256",
             "internalType": "uint256"
@@ -578,6 +633,19 @@
     "inputs": [
       {
         "name": "feed",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_App_DefaultGroupSet",
+    "inputs": [
+      {
+        "name": "group",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -842,5 +910,143 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Contract_Deployed",
+    "inputs": [
+      {
+        "name": "contractType",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "flavour",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ExtraStorageSet",
+    "inputs": [
+      {
+        "name": "addressScope",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "entityType",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "entityId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "key",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "value",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_PermissionId_Available",
+    "inputs": [
+      {
+        "name": "permissionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Source_NonceUsed",
+    "inputs": [
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Expired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LimitReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NonceUsed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RedundantStateChange",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "WrongSigner",
+    "inputs": []
   }
 ]

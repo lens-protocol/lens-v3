@@ -1,0 +1,291 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "primitiveBeacon",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "proxyAdminLock",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "lensFactory",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deployGraph",
+    "inputs": [
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "accessControl",
+        "type": "address",
+        "internalType": "contract IAccessControl"
+      },
+      {
+        "name": "proxyAdminOwner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "ruleChanges",
+        "type": "tuple[]",
+        "internalType": "struct RuleChange[]",
+        "components": [
+          {
+            "name": "ruleAddress",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "configSalt",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "configurationChanges",
+            "type": "tuple",
+            "internalType": "struct RuleConfigurationChange",
+            "components": [
+              {
+                "name": "configure",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "ruleParams",
+                "type": "tuple[]",
+                "internalType": "struct KeyValue[]",
+                "components": [
+                  {
+                    "name": "key",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "value",
+                    "type": "bytes",
+                    "internalType": "bytes"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "selectorChanges",
+            "type": "tuple[]",
+            "internalType": "struct RuleSelectorChange[]",
+            "components": [
+              {
+                "name": "ruleSelector",
+                "type": "bytes4",
+                "internalType": "bytes4"
+              },
+              {
+                "name": "isRequired",
+                "type": "bool",
+                "internalType": "bool"
+              },
+              {
+                "name": "enabled",
+                "type": "bool",
+                "internalType": "bool"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "extraData",
+        "type": "tuple[]",
+        "internalType": "struct KeyValue[]",
+        "components": [
+          {
+            "name": "key",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "value",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog1",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log1EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog2",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log2EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog3",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log3EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emitEventsLog4",
+    "inputs": [
+      {
+        "name": "events",
+        "type": "tuple[]",
+        "internalType": "struct Log4EventData[]",
+        "components": [
+          {
+            "name": "topic1",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic2",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic3",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "topic4",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "internalType": "bytes"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "Lens_GraphFactory_Deployment",
+    "inputs": [
+      {
+        "name": "graph",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
+  }
+]

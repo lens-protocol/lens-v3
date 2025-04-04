@@ -3,12 +3,17 @@
     "type": "constructor",
     "inputs": [
       {
-        "name": "beacon",
+        "name": "primitiveBeacon",
         "type": "address",
         "internalType": "address"
       },
       {
-        "name": "proxyBeaconLock",
+        "name": "proxyAdminLock",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "lensFactory",
         "type": "address",
         "internalType": "address"
       }
@@ -118,6 +123,11 @@
             "internalType": "bytes"
           }
         ]
+      },
+      {
+        "name": "foundingMember",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "outputs": [
@@ -147,5 +157,10 @@
       }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AccessDenied",
+    "inputs": []
   }
 ]
