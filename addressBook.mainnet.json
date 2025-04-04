@@ -4,154 +4,184 @@
     "contractType": 4,
     "address": "0xB19B9df023a9D372728cFc70847DBBB9AD59337f",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "AccountLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x793e4aeB8fd54f5Eb2B185f25F7767D417Ba5B94",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "FeedLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xA22DC11ED96Ce8f6c26a2361926910d5b8c56299",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "GraphLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x64ab11f8bAe0f75f071EfcE027E8AB3633252902",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "GroupLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xe6939785c7b36394B35e72E13B86F17b5223B75d",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "NamespaceLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x8d2eb35e3f4c10fEe90640C6051064426f368d16",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "AccessControlLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984",
     "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", true]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      true
+    ]
   },
   "AppImpl": {
     "contractName": "App",
     "contractType": 0,
-    "address": "0x3589395E89735B96424d0e2e19af4917f45EAACD",
-    "bytecodeHash": "0x6a4cb2cdbc4957eb58048cbccdd1688f2a458090e73dfe0bbbb050e6f5b45e8a",
+    "address": "0xBF3773B6a2B4ac8c1D3e38B6f362bD4B74398b6C",
+    "bytecodeHash": "010008316245ddac0e9789a6492ff8d599a5ee8d95bac82feba2b7fec271bb5d",
     "constructorArguments": []
   },
   "AccountImpl": {
-    "contractName": "MigrationAccount",
+    "contractName": "Account",
     "contractType": 0,
-    "address": "0x4058F63c5334CF157589d1EE0dfD8a2AE9c07211",
-    "bytecodeHash": "0x8dec3495861a67d0ece24cc54472a4fc571abcafdbf7707c82f5aa6e6bd2a84b",
+    "address": "0xbC871ea4B54cDd1371a5D1a9a62044D89448d450",
+    "bytecodeHash": "010005fb6095e36f98c859b16f7e6e8fbcbf88fb019b4d8286dd5003515ab417",
     "constructorArguments": []
   },
   "FeedImpl": {
-    "contractName": "MigrationFeed",
+    "contractName": "Feed",
     "contractType": 0,
-    "address": "0xAe7162822b6FCB9cF30Fd076a5935570E5E079B7",
-    "bytecodeHash": "0x1a08930126033c0c5f1b2cc8f250bcb0c452a1db12a8627836c486f046003869",
+    "address": "0x53DbB795cE5a922A86b0bBBb820f365F2151CE4B",
+    "bytecodeHash": "0100127fd673b97e5babc7333411c6748faa8b4ea8bc9304598bf867c51fb08a",
     "constructorArguments": []
   },
   "GraphImpl": {
-    "contractName": "MigrationGraph",
+    "contractName": "Graph",
     "contractType": 0,
-    "address": "0x65e456188dC07075897A9eaFbE7421D75B769f54",
+    "address": "0x24b55E16c90E1F6C441F0a25c2A64bB83b6e1A73",
+    "bytecodeHash": "01000b052e66f746f88d131b156ecf0c2c332d89514536df79623ba46957f9dc",
     "constructorArguments": []
   },
   "GroupImpl": {
     "contractName": "Group",
     "contractType": 0,
-    "address": "0x5975911600f6E9c8EAF284a5e8EB719fD3A9E5b1",
-    "bytecodeHash": "0x3f7de65b6f0914c66f005f08e2642ade6caa4c20066fcc8c50a6919efdf33b51"
+    "address": "0x01469AFC10D5F03cC3E73ae2B350893C2bd257Ef",
+    "bytecodeHash": "01000bc7e08c2268d04ac88072daacd5fd1e857c8e69a4dbd94048a861686cbc",
+    "constructorArguments": []
   },
   "NamespaceImpl": {
-    "contractName": "MigrationNamespace",
+    "contractName": "Namespace",
     "contractType": 0,
-    "address": "0x01832FD3a6e4b3ad4Db36D062A4a9119703047cA",
+    "address": "0x1Cfb6619bAEE3F5E47236E6B2e166B4B8ACf1e6f",
+    "bytecodeHash": "0100142b07b818f045f59ae419a1b1cafb262746d8e6d4bb3599db15d896b882",
     "constructorArguments": []
   },
   "AppBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0xF968b41ee7BF6f8bFFB71CD38905f9943Ff4ffbB",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       1,
       "0xE7e494707cDA8f3767d45EFB6187440d64a471B4"
-    ]
+    ],
+    "implementation": "0xBF3773B6a2B4ac8c1D3e38B6f362bD4B74398b6C"
   },
   "AccountBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0x677D8BEe894ae646Ceb1cfCe7dB16de2ef2792e5",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       1,
       "0xEE68eFA6E190d9660Ac9de06A46f4Fa2BE967a2B"
-    ]
+    ],
+    "implementation": "0xbC871ea4B54cDd1371a5D1a9a62044D89448d450"
   },
   "FeedBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0xe8Cb8DA8d2Ea4C5A40E6d8D4F3181AfdB9409D66",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       1,
       "0xD2545381D7C71365ce4ec2D23C0f93783F10D236"
-    ]
+    ],
+    "implementation": "0x53DbB795cE5a922A86b0bBBb820f365F2151CE4B"
   },
   "GraphBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0x3195c60A6869C3614949EE02eE21116891CF6c17",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       1,
       "0x5BB20A05c3632253D3a857e82f876EdA4F867D92"
-    ]
+    ],
+    "implementation": "0x24b55E16c90E1F6C441F0a25c2A64bB83b6e1A73"
   },
   "GroupBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0xE995ecD7310EA8c764d7Fa9c145Ac42538ce0338",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       1,
       "0x5975911600f6E9c8EAF284a5e8EB719fD3A9E5b1"
-    ]
+    ],
+    "implementation": "0x01469AFC10D5F03cC3E73ae2B350893C2bd257Ef"
   },
   "NamespaceBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0xD381e0d1500bA1bddc2593CB8044eff3a68AB486",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       1,
       "0x701E3f4553D11978dC36163FEcBB1a327C6a2CFE"
-    ]
+    ],
+    "implementation": "0x1Cfb6619bAEE3F5E47236E6B2e166B4B8ACf1e6f"
   },
   "AccessControlFactory": {
     "name": "AccessControlFactory",
@@ -162,7 +192,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x0d028419c270C2d366929f459418a4905D1B778F"
+    "address": "0x0d028419c270C2d366929f459418a4905D1B778F",
+    "implementation": "0x2c87697FACd319959BEA999dd2cC7d27342F3554",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "AccountFactory": {
     "name": "AccountFactory",
@@ -173,7 +205,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa"
+    "address": "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
+    "implementation": "0xE238cEFc68F9CD55061a8Ab7E339cF9178dFf55B",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "AppFactory": {
     "name": "AppFactory",
@@ -184,7 +218,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0xB3b7502C47E16a1E3c6d660b73006f45Ec327B0B"
+    "address": "0xB3b7502C47E16a1E3c6d660b73006f45Ec327B0B",
+    "implementation": "0x7599371450F2D8e0d47a9A1cceba263c07326500",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "FeedFactory": {
     "name": "FeedFactory",
@@ -195,7 +231,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x591c6e036a6bC92C6bF0d1dB991D06E74C2B9a6A"
+    "address": "0x591c6e036a6bC92C6bF0d1dB991D06E74C2B9a6A",
+    "implementation": "0xB86fD4e2e4B6497Be2124060E8876F6e2270D517",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "GraphFactory": {
     "name": "GraphFactory",
@@ -206,7 +244,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x837E95c3A69Cd6efa3eCDE87A3a07801AAB25Ba0"
+    "address": "0x837E95c3A69Cd6efa3eCDE87A3a07801AAB25Ba0",
+    "implementation": "0x6D47B89d2b42680091C71c2B518e497727D60a5A",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "GroupFactory": {
     "name": "GroupFactory",
@@ -217,7 +257,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x9810C41e805164f30b58395b2Af976B3229b0CE6"
+    "address": "0x9810C41e805164f30b58395b2Af976B3229b0CE6",
+    "implementation": "0xd789934b2200ac1fC54Ba89fa24E2aE7BCEf6Be5",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "NamespaceFactory": {
     "name": "NamespaceFactory",
@@ -228,7 +270,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x3155ccbeefbA266a4B6060fB1F9d4b8591d1De3F"
+    "address": "0x3155ccbeefbA266a4B6060fB1F9d4b8591d1De3F",
+    "implementation": "0x840C2394546C410AAe6D14D127CF8f14B5ed041C",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "LensFactory": {
     "name": "LensFactory",
@@ -239,7 +283,9 @@
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       "0x"
     ],
-    "address": "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0"
+    "address": "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0",
+    "implementation": "0xd28bBAd2Cd8047d09cEB72FDE7f372e89DC3525F",
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "LensGlobalFeed": {
     "name": "LensGlobalFeed",
@@ -261,16 +307,18 @@
   },
   "AccessControlFactoryImpl": {
     "contractName": "AccessControlFactory",
-    "contractType": 2,
-    "address": "0x59414586f8cb33BcCa119f84f3C89BA1A2461004",
-    "bytecodeHash": "0xca207b27709a63e20e4d32388394d52e572ec9838663f93874866180fffcfac8",
-    "constructorArguments": ["0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984"]
+    "contractType": 0,
+    "address": "0x2c87697FACd319959BEA999dd2cC7d27342F3554",
+    "bytecodeHash": "0100009bc5e03a9d6dbc17603b260f101a56edb4bf3813c234ec0902fc05871a",
+    "constructorArguments": [
+      "0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984"
+    ]
   },
   "AccountFactoryImpl": {
     "contractName": "AccountFactory",
-    "contractType": 2,
-    "address": "0x236bD30F6719458C0E0514C4e34e8dA826d18C8D",
-    "bytecodeHash": "0x8c1365c4cee03a6bb809f6240fada2df3280567ece46082174d723c5e60d35e1",
+    "contractType": 0,
+    "address": "0xE238cEFc68F9CD55061a8Ab7E339cF9178dFf55B",
+    "bytecodeHash": "0100013fecb801d0a470f042e48e5716171db31795d00ed6ce66549993279636",
     "constructorArguments": [
       "0x677D8BEe894ae646Ceb1cfCe7dB16de2ef2792e5",
       "0x793e4aeB8fd54f5Eb2B185f25F7767D417Ba5B94"
@@ -278,9 +326,9 @@
   },
   "AppFactoryImpl": {
     "contractName": "AppFactory",
-    "contractType": 2,
-    "address": "0xaABe72e39920B9Af3A27Df1c07652A07BA694424",
-    "bytecodeHash": "0x7a32870018bbec9b917230e854a0867a6e6b68f85f995db3f94858748295e047",
+    "contractType": 0,
+    "address": "0x7599371450F2D8e0d47a9A1cceba263c07326500",
+    "bytecodeHash": "0100012959d510e16f88f996e427e147a2076c10571d02c7fd38399161162e23",
     "constructorArguments": [
       "0xF968b41ee7BF6f8bFFB71CD38905f9943Ff4ffbB",
       "0xB19B9df023a9D372728cFc70847DBBB9AD59337f"
@@ -288,47 +336,60 @@
   },
   "FeedFactoryImpl": {
     "contractName": "FeedFactory",
-    "contractType": 2,
-    "address": "0x146ED5D7f9afB9C3DB64a956A300a8A393dfcb76",
+    "contractType": 0,
+    "address": "0xB86fD4e2e4B6497Be2124060E8876F6e2270D517",
+    "bytecodeHash": "0100018f9fb058b9904ed7a35e8ef8a06d4145e472e4da91176b41909e90987f",
     "constructorArguments": [
       "0xe8Cb8DA8d2Ea4C5A40E6d8D4F3181AfdB9409D66",
-      "0xA22DC11ED96Ce8f6c26a2361926910d5b8c56299"
+      "0xA22DC11ED96Ce8f6c26a2361926910d5b8c56299",
+      "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0"
     ]
   },
   "GraphFactoryImpl": {
     "contractName": "GraphFactory",
-    "contractType": 2,
-    "address": "0xC3cF01261050035Fe3cD8B16700C509Fe32ABC8A",
-    "bytecodeHash": "0xadf6d396960d41e54aca238014c5d8b834ba8b4d4e8705f9b0e24d3b51b935b4",
+    "contractType": 0,
+    "address": "0x6D47B89d2b42680091C71c2B518e497727D60a5A",
+    "bytecodeHash": "0100018f400567035955df35dae5f2c5a6f3cf39a8f933b5cc9a0f19d4b79e43",
     "constructorArguments": [
       "0x3195c60A6869C3614949EE02eE21116891CF6c17",
-      "0x64ab11f8bAe0f75f071EfcE027E8AB3633252902"
+      "0x64ab11f8bAe0f75f071EfcE027E8AB3633252902",
+      "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0"
     ]
   },
   "NamespaceFactoryImpl": {
     "contractName": "NamespaceFactory",
-    "contractType": 2,
-    "address": "0x498335d660e9f655e394114FF69DbCeb5ac9390A",
+    "contractType": 0,
+    "address": "0x840C2394546C410AAe6D14D127CF8f14B5ed041C",
+    "bytecodeHash": "010001e171d1591de05bb735d42ea8bae8cda712945ea8e69a6137afaae32690",
     "constructorArguments": [
       "0xD381e0d1500bA1bddc2593CB8044eff3a68AB486",
-      "0x8d2eb35e3f4c10fEe90640C6051064426f368d16"
+      "0x8d2eb35e3f4c10fEe90640C6051064426f368d16",
+      "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0"
     ]
   },
   "LensFactoryImpl": {
-    "contractName": "MigrationLensFactory",
-    "contractType": 2,
-    "address": "0xa3DE5362258F55a6937eD1DEA775917E8aC4F01a",
+    "contractName": "LensFactory",
+    "contractType": 0,
+    "address": "0xd28bBAd2Cd8047d09cEB72FDE7f372e89DC3525F",
+    "bytecodeHash": "01000adde0971c1be05ffeaa09a4e0cecb0daef50614fb6315f335a439423c2e",
     "constructorArguments": [
-      "0x0d028419c270C2d366929f459418a4905D1B778F",
-      "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
-      "0xB3b7502C47E16a1E3c6d660b73006f45Ec327B0B",
-      "0x9810C41e805164f30b58395b2Af976B3229b0CE6",
-      "0x591c6e036a6bC92C6bF0d1dB991D06E74C2B9a6A",
-      "0x837E95c3A69Cd6efa3eCDE87A3a07801AAB25Ba0",
-      "0x3155ccbeefbA266a4B6060fB1F9d4b8591d1De3F",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000"
+      {
+        "accessControlFactory": "0x0d028419c270C2d366929f459418a4905D1B778F",
+        "accountFactory": "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
+        "appFactory": "0xB3b7502C47E16a1E3c6d660b73006f45Ec327B0B",
+        "groupFactory": "0x9810C41e805164f30b58395b2Af976B3229b0CE6",
+        "feedFactory": "0x591c6e036a6bC92C6bF0d1dB991D06E74C2B9a6A",
+        "graphFactory": "0x837E95c3A69Cd6efa3eCDE87A3a07801AAB25Ba0",
+        "namespaceFactory": "0x3155ccbeefbA266a4B6060fB1F9d4b8591d1De3F"
+      },
+      {
+        "accountBlockingRule": "0x3B766408f14141F4B567681A1c29CFB58D1C1574",
+        "groupGatedFeedRule": "0x40a2A352583B266097234f1260B5AAfB7B129047",
+        "usernameSimpleCharsetRule": "0x5DBE2054903512ff26E336C0cBdEd6E0DDBEAc4F",
+        "banMemberGroupRule": "0xe12543e5f917adA5aeF92B26Bc08E1925ec9F53F",
+        "addRemovePidGroupRule": "0x5C990114129dAb27F015F2d5ba756bD102807b86",
+        "usernameReservedNamespaceRule": "0x0E8B9960f2a891A561f2d52F0Cd98cCA19CDF8c9"
+      }
     ]
   },
   "LensCreate2Impl": {
@@ -362,7 +423,10 @@
     "contractType": 0,
     "address": "0xE23292bEA6bb5874A839a7E1FfB7301657353187",
     "bytecodeHash": "0100003f061fd7d7ae8d5f11c374ec6a6db99871ca367c4e876f604f622ba768",
-    "constructorArguments": ["0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49", "150"]
+    "constructorArguments": [
+      "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+      "150"
+    ]
   },
   "LensFees": {
     "name": "LensFees",
@@ -380,7 +444,9 @@
     "contractType": 0,
     "address": "0x9aE07367ae1f9697a0B217678B68E446DC188A8e",
     "bytecodeHash": "0100022fe500682f33f5b55d74e89e484d141588bf0dc424186642d90d22d604",
-    "constructorArguments": ["0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"]
+    "constructorArguments": [
+      "0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"
+    ]
   },
   "TippingAccountAction": {
     "name": "TippingAccountAction",
@@ -401,7 +467,9 @@
     "contractType": 0,
     "address": "0xEF57280D1846ACCf55c056aC7F0902F5608FB790",
     "bytecodeHash": "0100023d8e36bcdc8b61f16bdf163ba024ebf33e2b87ee31d43518f658d7ff95",
-    "constructorArguments": ["0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"]
+    "constructorArguments": [
+      "0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"
+    ]
   },
   "TippingPostAction": {
     "name": "TippingPostAction",
@@ -422,7 +490,9 @@
     "contractType": 0,
     "address": "0x6f05AEffA4EE9Ba091EFe2D1751675f00B4FC174",
     "bytecodeHash": "0100054301a605e8b9e1c26a676b9266c56d7027112e9b5ad6ef2cfbe8c5a430",
-    "constructorArguments": ["0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"]
+    "constructorArguments": [
+      "0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"
+    ]
   },
   "SimpleCollectAction": {
     "name": "SimpleCollectAction",
@@ -827,5 +897,16 @@
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
     "metadataURI": ""
+  },
+  "GroupFactoryImpl": {
+    "contractName": "GroupFactory",
+    "contractType": 0,
+    "address": "0xd789934b2200ac1fC54Ba89fa24E2aE7BCEf6Be5",
+    "bytecodeHash": "010001910c4a1821d9e322fa4ecae90b94aef9ec31f2601a6b4006eaf686ccbb",
+    "constructorArguments": [
+      "0xE995ecD7310EA8c764d7Fa9c145Ac42538ce0338",
+      "0xe6939785c7b36394B35e72E13B86F17b5223B75d",
+      "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0"
+    ]
   }
 }

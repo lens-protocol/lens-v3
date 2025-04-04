@@ -5,6 +5,9 @@
   "author": "avara",
   "license": "UNLICENSED. Copyright (C) 2024 Lens Labs. All Rights Reserved.",
   "scripts": {
+    "upgrade:mainnet:upgradeAccountBeacon": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeAccountBeacon.ts --network lensMainnet",
+    "upgrade:mainnet:upgradePrimitivesBeacons": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradePrimitivesBeacons.ts --network lensMainnet",
+    "upgrade:mainnet:upgradeFactories": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeFactories.ts --network lensMainnet",
     "upgrade:1:mainnet:deployMulticall": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgrades/1/deployWhitelistedMulticall.ts --network lensMainnet",
     "upgrade:1:mainnet:deployImplementations": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgrades/1/deployImplementations.ts --network lensMainnet",
     "upgrade:1:mainnet:upgrade": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgrades/1/upgrade.ts --network lensMainnet",
