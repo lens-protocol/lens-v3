@@ -8,32 +8,12 @@ import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
-contract ProxyAdminForOwnable is IOwnable {
+contract ProxyAdminForOwnable {
     using CallLib for address;
-
-    event Lens_Ownable_OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    struct OwnableStorage {
-        address customOwner;
-    }
-
-    /// @custom:keccak lens.storage.Ownable
-    bytes32 constant STORAGE__OWNABLE = 0x29cf0539cdb8487ad7dbc33f1a5f82174ca0f44de05580c9bd8cfe649fa8c9fe;
-
-    function $ownableStorage() private pure returns (OwnableStorage storage _storage) {
-        assembly {
-            _storage.slot := STORAGE__OWNABLE
-        }
-    }
 
     ILock immutable LOCK;
 
     IOwnable immutable PROXY;
-
-    modifier onlyOwner() {
-        require(msg.sender == _owner(), Errors.InvalidMsgSender());
-        _;
-    }
 
     constructor(address proxy, address lock) {
         PROXY = IOwnable(proxy);
@@ -42,7 +22,7 @@ contract ProxyAdminForOwnable is IOwnable {
         LOCK.isLocked(); // Aims to verify the given address follows ILock interface
     }
 
-    function call(address to, uint256 value, bytes calldata data) external payable onlyOwner returns (bytes memory) {
+    function call(address to, uint256 value, bytes calldata data) external payable returns (bytes memory) {
         bytes4 selector = bytes4(data);
         if (LOCK.isLocked()) {
             // While the Proxy Admin is locked it:
@@ -60,33 +40,9 @@ contract ProxyAdminForOwnable is IOwnable {
             // - Cannot opt-in to auto-upgrade in the Proxy
             require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
+        require(msg.sender == PROXY.owner(), Errors.InvalidMsgSender());
         bytes memory returnData = to.handledsafecall(value, data);
-        // Aims to verify the contract will still hold an owner, either by having a custom one, or by checking that the
-        // proxy still follows IOwnable interface after a potential upgrade
-        _owner();
+        PROXY.owner(); // Aims to verify the proxy still follows IOwnable interface after a potential upgrade
         return returnData;
-    }
-
-    function _owner() internal view returns (address) {
-        return $ownableStorage().customOwner == address(0) ? PROXY.owner() : $ownableStorage().customOwner;
-    }
-
-    /**
-     * Note that renouncing ownership is not possible by transferring ownership to address(0), and it will inherit
-     * the owner from the proxy.
-     *
-     * However, it is still possible to renounce to ownership by transferring it to other addresses like address(0x01),
-     * address(0xdead), etc.
-     */
-    function transferOwnership(address newOwner) external override onlyOwner {
-        if (newOwner == address(0)) {
-            PROXY.owner(); // Aims to verify the Proxy follows IOwnable interface
-        }
-        $ownableStorage().customOwner = newOwner;
-        // TODO: Events and more safety
-    }
-
-    function owner() external view override returns (address) {
-        return _owner();
     }
 }

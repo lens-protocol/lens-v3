@@ -38,7 +38,7 @@ contract ProxyAdminForOwnable {
             // - Cannot opt-in to auto-upgrade in the Proxy
             require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
-        require(msg.sender == IOwnable(to).owner(), Errors.NotOwner());
+        require(msg.sender == IOwnable(to).owner(), Errors.InvalidMsgSender());
         bytes memory returnData = to.handledsafecall(value, data);
         IOwnable(to).owner(); // Aims to verify the proxy still follows IOwnable interface after a potential upgrade
         return returnData;
