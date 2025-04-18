@@ -206,7 +206,7 @@
       "0x"
     ],
     "address": "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
-    "implementation": "0xE238cEFc68F9CD55061a8Ab7E339cF9178dFf55B",
+    "implementation": "0x90aF11A79ACC09b7B2A871B4C77B41e4D06d2993",
     "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
   },
   "AppFactory": {
@@ -315,10 +315,10 @@
     ]
   },
   "AccountFactoryImpl": {
-    "contractName": "AccountFactory",
+    "contractName": "AccountFactory_ControlledOwner",
     "contractType": 0,
-    "address": "0xE238cEFc68F9CD55061a8Ab7E339cF9178dFf55B",
-    "bytecodeHash": "0100013fecb801d0a470f042e48e5716171db31795d00ed6ce66549993279636",
+    "address": "0x90aF11A79ACC09b7B2A871B4C77B41e4D06d2993",
+    "bytecodeHash": "0100011706d917e515b157d72a1552743bba053512b066dde25496ffc5931484",
     "constructorArguments": [
       "0x677D8BEe894ae646Ceb1cfCe7dB16de2ef2792e5",
       "0x793e4aeB8fd54f5Eb2B185f25F7767D417Ba5B94"
