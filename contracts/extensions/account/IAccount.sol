@@ -20,6 +20,17 @@ struct Transaction {
     bytes data;
 }
 
+struct Allowance {
+    address currency;
+    uint256 byAmount;
+}
+
+struct AllowanceChange {
+    address spender;
+    Allowance[] allowanceIncreases;
+    Allowance[] allowanceDecreases;
+}
+
 interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_MetadataURISet(string metadataURI);
     event Lens_Account_MetadataURISet(string metadataURI, address indexed source);
@@ -31,6 +42,8 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_ExtraDataAdded(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Account_ExtraDataUpdated(bytes32 indexed key, bytes value, bytes indexed valueIndexed);
     event Lens_Account_ExtraDataRemoved(bytes32 indexed key);
+    event Lens_Account_AllowanceIncreased(address indexed spender, address indexed currency, uint256 newAllowance);
+    event Lens_Account_AllowanceDecreased(address indexed spender, address indexed currency, uint256 newAllowance);
 
     function addAccountManager(address _accountManager, AccountManagerPermissions calldata accountManagerPermissions)
         external;

@@ -4,7 +4,9 @@ pragma solidity ^0.8.26;
 
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Events} from "contracts/core/types/Events.sol";
-import {IAccount, AccountManagerPermissions, Transaction} from "contracts/extensions/account/IAccount.sol";
+import {
+    IAccount, AccountManagerPermissions, Transaction, AllowanceChange
+} from "contracts/extensions/account/IAccount.sol";
 import {SourceStamp, KeyValue, RuleProcessingParams} from "contracts/core/types/Types.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
 import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
@@ -66,6 +68,7 @@ contract Account is
         mapping(address group => bool wasRequestSent) didSendRequestToGroup;
         mapping(address graph => bool usedGraph) didFollowOnGraph; // Written in current impl for future use.
         mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition; // Not written in current impl.
+        mapping(address manager => mapping(address currency => uint256 allowance)) allowance;
     }
 
     /// @custom:keccak lens.storage.Account
@@ -274,6 +277,40 @@ contract Account is
         );
         $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
+    }
+
+    function changeAllowance(AllowanceChange[] memory allowanceChanges) external onlyOwner {
+        for (uint256 i = 0; i < allowanceChanges.length; i++) {
+            for (uint256 j = 0; j < allowanceChanges[i].allowanceIncreases.length; j++) {
+                _increaseAllowance(
+                    allowanceChanges[i].spender,
+                    allowanceChanges[i].allowanceIncreases[j].currency,
+                    allowanceChanges[i].allowanceIncreases[j].byAmount
+                );
+            }
+            for (uint256 j = 0; j < allowanceChanges[i].allowanceDecreases.length; j++) {
+                _decreaseAllowance(
+                    allowanceChanges[i].spender,
+                    allowanceChanges[i].allowanceDecreases[j].currency,
+                    allowanceChanges[i].allowanceDecreases[j].byAmount
+                );
+            }
+        }
+    }
+
+    function _increaseAllowance(address spender, address currency, uint256 byAmount) internal {
+        require(_isAccountManager(spender), Errors.InvalidParameter());
+        $storage().allowance[spender][currency] += byAmount;
+        emit Lens_Account_AllowanceIncreased(spender, currency, $storage().allowance[spender][currency]);
+    }
+
+    function _decreaseAllowance(address spender, address currency, uint256 byAmount) internal {
+        if ($storage().allowance[spender][currency] < byAmount) {
+            $storage().allowance[spender][currency] = 0;
+        } else {
+            $storage().allowance[spender][currency] -= byAmount;
+        }
+        emit Lens_Account_AllowanceDecreased(spender, currency, $storage().allowance[spender][currency]);
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external onlyOwner {
