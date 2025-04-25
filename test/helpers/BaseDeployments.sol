@@ -236,7 +236,8 @@ contract BaseDeployments is Test {
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
         appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
-        accountImpl = migrationMode ? address(new MigrationAccount()) : address(new AccountContract());
+        accountImpl =
+            migrationMode ? address(new MigrationAccount()) : address(new AccountContract(address(0), address(0)));
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());
