@@ -77,13 +77,18 @@ contract Account is
     /// @custom:keccak lens.param.graph
     bytes32 constant PARAM__GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
 
+    address immutable GHO;
+    address immutable WGHO;
+
     function $storage() internal pure returns (Storage storage _storage) {
         assembly {
             _storage.slot := STORAGE__ACCOUNT
         }
     }
 
-    constructor() {
+    constructor(address nativeGHO, address wrappedGHO) {
+        GHO = nativeGHO;
+        WGHO = wrappedGHO;
         _disableInitializers();
     }
 
@@ -192,31 +197,6 @@ contract Account is
         return address(0);
     }
 
-    function _beforeExecuteTransaction(address target, uint256, /* value */ bytes calldata data) internal virtual {
-        if (data.length >= SELECTOR_BYTE_LENGTH) {
-            bytes4 selector = bytes4(data[:SELECTOR_BYTE_LENGTH]);
-            if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
-                try this.abiDecodeForKnownSelectorHelper(selector, data[SELECTOR_BYTE_LENGTH:]) returns (address group) {
-                    $storage().didSendRequestToGroup[group] = true;
-                } catch {
-                    return;
-                }
-            } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
-                try this.abiDecodeForKnownSelectorHelper(selector, data[SELECTOR_BYTE_LENGTH:]) returns (address group) {
-                    $storage().didSendRequestToGroup[group] = false;
-                } catch {
-                    return;
-                }
-            } else if (selector == IGraph.follow.selector) {
-                try this.abiDecodeForKnownSelectorHelper(selector, data[SELECTOR_BYTE_LENGTH:]) returns (address) {
-                    $storage().didFollowOnGraph[target] = true;
-                } catch {
-                    return;
-                }
-            }
-        }
-    }
-
     function abiDecodeForKnownSelectorHelper(bytes4 selector, bytes calldata data) external pure returns (address) {
         if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
             (, address group,) = abi.decode(data, (bytes32, address, KeyValue[]));
@@ -279,9 +259,10 @@ contract Account is
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
 
-    function changeAllowance(AllowanceChange[] memory allowanceChanges) external onlyOwner {
+    function changeAllowance(AllowanceChange[] calldata allowanceChanges) external onlyOwner {
         for (uint256 i = 0; i < allowanceChanges.length; i++) {
             for (uint256 j = 0; j < allowanceChanges[i].allowanceIncreases.length; j++) {
+                require(_isAccountManager(allowanceChanges[i].spender), Errors.InvalidParameter());
                 _increaseAllowance(
                     allowanceChanges[i].spender,
                     allowanceChanges[i].allowanceIncreases[j].currency,
@@ -298,8 +279,11 @@ contract Account is
         }
     }
 
+    function clearAllAllowances(address[] calldata managers) external onlyOwner {
+        // TODO: reset all the allowances for the given managers for all tokens
+    }
+
     function _increaseAllowance(address spender, address currency, uint256 byAmount) internal {
-        require(_isAccountManager(spender), Errors.InvalidParameter());
         $storage().allowance[spender][currency] += byAmount;
         emit Lens_Account_AllowanceIncreased(spender, currency, $storage().allowance[spender][currency]);
     }
@@ -323,11 +307,7 @@ contract Account is
         override
         returns (bytes memory)
     {
-        bool isMsgSenderOwner = msg.sender == owner();
-        require(
-            isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
-            Errors.NotAllowed()
-        );
+        bool isMsgSenderOwner = _beforeExecuteTransaction();
         return _executeTransaction(isMsgSenderOwner, target, value, data);
     }
 
@@ -337,11 +317,7 @@ contract Account is
         override
         returns (bytes[] memory)
     {
-        bool isMsgSenderOwner = msg.sender == owner();
-        require(
-            isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
-            Errors.NotAllowed()
-        );
+        bool isMsgSenderOwner = _beforeExecuteTransaction();
         bytes[] memory returnData = new bytes[](transactions.length);
         for (uint256 i = 0; i < transactions.length; i++) {
             returnData[i] = _executeTransaction(
@@ -351,23 +327,85 @@ contract Account is
         return returnData;
     }
 
+    function _beforeExecuteTransaction() internal returns (bool) {
+        bool isMsgSenderOwner = msg.sender == owner();
+        require(
+            isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
+            Errors.NotAllowed()
+        );
+        if (msg.value > 0 && !isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferNative) {
+            _increaseAllowance(msg.sender, GHO, msg.value);
+        }
+        return isMsgSenderOwner;
+    }
+
     function _executeTransaction(bool isMsgSenderOwner, address target, uint256 value, bytes calldata data)
         internal
         virtual
         returns (bytes memory)
     {
-        if (!isMsgSenderOwner) {
-            if (value > msg.value) {
-                require($storage().accountManagerPermissions[msg.sender].canTransferNative, Errors.NotAllowed());
-            }
-            if (data.length >= SELECTOR_BYTE_LENGTH && _isTransferRelatedSelector(bytes4(data[:SELECTOR_BYTE_LENGTH]))) {
-                require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
-            }
-        }
-        _beforeExecuteTransaction(target, value, data);
+        _handleSpecificSelectorLogicBeforeCall(
+            isMsgSenderOwner, target, value, bytes4(data[:SELECTOR_BYTE_LENGTH]), data[SELECTOR_BYTE_LENGTH:]
+        );
         bytes memory returnData = target.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(target, value, data, msg.sender);
         return returnData;
+    }
+
+    function _handleSpecificSelectorLogicBeforeCall(
+        bool isMsgSenderOwner,
+        address target,
+        uint256 value,
+        bytes4 selector,
+        bytes calldata encodedParams
+    ) internal {
+        if (target == address(WGHO) && selector == bytes4(keccak256("deposit()"))) {
+            // ...
+        } else if (target == address(WGHO) && selector == bytes4(keccak256("withdraw(uint256)"))) {
+            // ...
+        } else if (selector == bytes4(keccak256("transferFrom(address,address,uint256)"))) {
+            // Do STATICCALL to isApprovedForAll
+            // (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
+            // require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+        } else if (selector == bytes4(keccak256("transfer(address,uint256)"))) {
+            // dec
+        } else if (selector == bytes4(keccak256("transferFrom(address,address,uint256)"))) {
+            // inc
+        } else if (selector == bytes4(keccak256("approve(address,uint256)"))) {
+            // dec
+        } else if (selector == bytes4(keccak256("increaseAllowance(address,uint256)"))) {
+            // dec
+        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256)"))) {
+            // ...
+        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))) {
+            // ...
+        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))) {
+            // ...
+        } else if (selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))) {
+            // ...
+        } else if (selector == bytes4(keccak256("setApprovalForAll(address,bool)"))) {
+            // ...
+        } else if (selector == bytes4(keccak256("decreaseAllowance(address,uint256)"))) {
+            // ...
+        } else if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group) {
+                $storage().didSendRequestToGroup[group] = true;
+            } catch {
+                return;
+            }
+        } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group) {
+                $storage().didSendRequestToGroup[group] = false;
+            } catch {
+                return;
+            }
+        } else if (selector == IGraph.follow.selector) {
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address) {
+                $storage().didFollowOnGraph[target] = true;
+            } catch {
+                return;
+            }
+        }
     }
 
     // Receiver
@@ -399,20 +437,6 @@ contract Account is
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getExtraData(key);
-    }
-
-    function _isTransferRelatedSelector(bytes4 selector) internal pure returns (bool) {
-        // Checking only for ERC20, ERC721, ERC1155 selectors for now
-        return selector == bytes4(keccak256("transfer(address,uint256)"))
-            || selector == bytes4(keccak256("transferFrom(address,address,uint256)"))
-            || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256)"))
-            || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))
-            || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))
-            || selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))
-            || selector == bytes4(keccak256("approve(address,uint256)"))
-            || selector == bytes4(keccak256("setApprovalForAll(address,bool)"))
-            || selector == bytes4(keccak256("increaseAllowance(address,uint256)"))
-            || selector == bytes4(keccak256("decreaseAllowance(address,uint256)"));
     }
 
     function _transferOwnership(address newOwner) internal override {
