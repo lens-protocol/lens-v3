@@ -2,6 +2,7 @@
 cache/
 cache_forge/
 out/
+!scripts/out/
 zkout/
 
 # Local deployments
