@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { ethers } = require('ethers');
 const crypto = require('crypto');
+const { execSync } = require('child_process');
 
 // Constants for storage slots
 const EIP1967_ADMIN_SLOT = '0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103';
@@ -29,6 +30,14 @@ const proxyAdminABI = ['function proxy__getProxyAdmin() view returns (address)']
 const proxyImplABI = ['function proxy__getImplementation() view returns (address)'];
 const effectiveImplABI = ['function proxy__getEffectiveImplementation() view returns (address)'];
 const beaconABI = ['function proxy__getBeacon() view returns (address)'];
+
+// Common contract paths
+const CONTRACT_PATHS = {
+  'TransparentUpgradeableProxy': 'node_modules/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol:TransparentUpgradeableProxy',
+  'BeaconProxy': 'contracts/core/upgradeability/BeaconProxy.sol',
+  'Beacon': 'contracts/core/upgradeability/Beacon.sol:Beacon',
+  'Lock': 'contracts/core/access/Lock.sol:Lock'
+};
 
 // Function to calculate bytecodeHash, ported from lensUtils.ts
 function calculateBytecodeHash(bytecode) {
@@ -65,6 +74,27 @@ async function getContractBytecodeHash(provider, contractAddress) {
   }
 }
 
+// Get bytecode hash from local artifact using forge inspect
+function getLocalArtifactBytecodeHash(contractName) {
+  try {
+    // Check if we have a known path for this contract
+    const contractPath = CONTRACT_PATHS[contractName] || contractName;
+
+    // Run forge inspect command to get the deployed bytecode with --zksync flag
+    const bytecode = execSync(`forge inspect "${contractPath}" deployedBytecode --zksync`, { encoding: 'utf-8' }).trim();
+
+    if (!bytecode || bytecode === '0x') {
+      console.warn(`No bytecode found for ${contractName}`);
+      return '-';
+    }
+
+    return calculateBytecodeHash(bytecode);
+  } catch (error) {
+    console.warn(`Could not get local bytecode for ${contractName}: ${error.message}`);
+    return '-';
+  }
+}
+
 async function main() {
   // Read addressBook.json
   const addressBook = JSON.parse(fs.readFileSync('addressBook.json', 'utf8'));
@@ -77,7 +107,7 @@ async function main() {
     'ProxyType,ProxyAdmin,Implementation,Beacon,' +
     'AddressBook_Implementation,ImplementationMatches,' +
     'AccessControl,ACOwner,ACType,' +
-    'BytecodeHash,ImplementationBytecodeHash\n';
+    'BytecodeHash,ImplementationBytecodeHash,LocalBytecodeHash,LocalImplBytecodeHash,BytecodeMatches,ImplBytecodeMatches\n';
 
   // Process each contract
   for (const [name, info] of Object.entries(addressBook)) {
@@ -219,12 +249,79 @@ async function main() {
       implementationBytecodeHash = await getContractBytecodeHash(provider, implementation);
     }
 
+    // Get local bytecode hashes from forge inspect
+    // First, determine the actual contract name to use with forge inspect
+    const localContractName = info.contractName || name;
+
+    // Find the implementation contract name
+    let implContractName = null;
+    if (info.contractType === 0) {
+      // If it's an implementation itself
+      implContractName = localContractName;
+    } else if (name.endsWith('Impl')) {
+      // If it has an Impl suffix
+      implContractName = localContractName;
+    } else if (implementation !== '-' && addressBook[name + 'Impl']) {
+      // Try to find the implementation contract in addressBook
+      implContractName = addressBook[name + 'Impl']?.contractName;
+    }
+
+    let localBytecodeHash = '-';
+    let localImplBytecodeHash = '-';
+
+    if (proxyType === '-') {
+      // For non-proxy contracts, get the local bytecode hash directly
+      if (info.contractType === 4 && localContractName === 'Lock') {
+        // Special case for Lock contracts
+        localBytecodeHash = getLocalArtifactBytecodeHash('Lock');
+      } else if (info.contractType === 1) {
+        // For Beacon contracts
+        localBytecodeHash = getLocalArtifactBytecodeHash('Beacon');
+      } else {
+        // For regular contracts
+        try {
+          localBytecodeHash = getLocalArtifactBytecodeHash(localContractName);
+        } catch (error) {
+          console.warn(`Skipping local bytecode check for ${localContractName}: ${error.message}`);
+        }
+      }
+    } else {
+      // For proxies, check both the proxy and implementation bytecode
+      if (proxyType === 'EIP1967') {
+        localBytecodeHash = getLocalArtifactBytecodeHash('TransparentUpgradeableProxy');
+      } else if (proxyType === 'BeaconProxy') {
+        localBytecodeHash = getLocalArtifactBytecodeHash('BeaconProxy');
+      }
+
+      // Get implementation bytecode hash if we know the contract name
+      if (implContractName) {
+        try {
+          localImplBytecodeHash = getLocalArtifactBytecodeHash(implContractName);
+        } catch (error) {
+          console.warn(`Skipping impl bytecode check for ${implContractName}: ${error.message}`);
+        }
+      }
+    }
+
+    // Check if bytecode hashes match
+    let bytecodeMatches = '-';
+    let implBytecodeMatches = '-';
+
+    if (bytecodeHash !== '-' && localBytecodeHash !== '-') {
+      bytecodeMatches = (bytecodeHash === localBytecodeHash).toString();
+    }
+
+    if (implementationBytecodeHash !== '-' && localImplBytecodeHash !== '-') {
+      implBytecodeMatches = (implementationBytecodeHash === localImplBytecodeHash).toString();
+    }
+
     // Add to CSV with ContractType as first column
     csvOutput += `${contractTypeName},${name},${contractAddress},${owner},` +
       `${proxyType},${proxyAdmin},${implementation},${beacon},` +
       `${addressBookImplementation},${implementationMatches},` +
       `${accessControl},${acOwner},${acType},` +
-      `${bytecodeHash},${implementationBytecodeHash}\n`;
+      `${bytecodeHash},${implementationBytecodeHash},${localBytecodeHash},${localImplBytecodeHash},` +
+      `${bytecodeMatches},${implBytecodeMatches}\n`;
   }
 
   // Write CSV to file
