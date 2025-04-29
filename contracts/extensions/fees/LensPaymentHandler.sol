@@ -13,6 +13,7 @@ abstract contract LensPaymentHandler {
     using SafeERC20 for IERC20;
 
     address immutable LENS_FEES;
+    address internal constant NATIVE_TOKEN = address(0x800A);
 
     constructor() {
         LENS_FEES = ILensCreate2(LENS_CREATE_2_ADDRESS).getAddress(CONTRACT__LENS_FEES);
@@ -48,7 +49,7 @@ abstract contract LensPaymentHandler {
         LensFeesData memory lensFees = ILensFees(LENS_FEES).getLensFeesData();
         uint256 amountForTreasury = (amount * lensFees.treasuryFeeBps) / BPS_MAX;
         if (lensFees.treasuryAddress != address(0) && amountForTreasury > 0) {
-            IERC20(token).safeTransferFrom(payer, lensFees.treasuryAddress, amountForTreasury);
+            _sendToken(token, payer, lensFees.treasuryAddress, amountForTreasury);
         }
         return amount - amountForTreasury;
     }
@@ -69,7 +70,7 @@ abstract contract LensPaymentHandler {
             uint256 amountForReferral = (totalAmountForReferrals * referrals[i].splitBps) / BPS_MAX;
             accumulatedSplitBps += referrals[i].splitBps;
             if (amountForReferral > 0) {
-                IERC20(token).safeTransferFrom(payer, referrals[i].recipient, amountForReferral);
+                _sendToken(token, payer, referrals[i].recipient, amountForReferral);
             }
         }
         require(accumulatedSplitBps <= BPS_MAX);
@@ -78,7 +79,7 @@ abstract contract LensPaymentHandler {
 
     function _processRecipient(address payer, address token, uint256 amount, address recipient) internal virtual {
         if (amount > 0) {
-            IERC20(token).safeTransferFrom(payer, recipient, amount);
+            _sendToken(token, payer, recipient, amount);
         }
     }
 
@@ -89,8 +90,17 @@ abstract contract LensPaymentHandler {
         for (uint256 i = 0; i < recipients.length; i++) {
             uint256 amountForRecipient = (amount * recipients[i].splitBps) / BPS_MAX;
             if (amountForRecipient > 0) {
-                IERC20(token).safeTransferFrom(payer, recipients[i].recipient, amountForRecipient);
+                _sendToken(token, payer, recipients[i].recipient, amountForRecipient);
             }
+        }
+    }
+
+    function _sendToken(address token, address payer, address recipient, uint256 amount) internal virtual {
+        if (token == NATIVE_TOKEN) {
+            (bool success,) = payable(recipient).call{value: amount}("");
+            require(success, "Transfer failed");
+        } else {
+            IERC20(token).safeTransferFrom(payer, recipient, amount);
         }
     }
 }
