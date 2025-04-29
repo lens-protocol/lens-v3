@@ -423,17 +423,23 @@ contract Account is
                 _increaseAllowance(msg.sender, GHO, amount);
             }
         } else if (selector == bytes4(keccak256("transferFrom(address,address,uint256)"))) {
-            (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
-            if (_isERC20(target)) {
-                if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
-                    if (from == msg.sender && to == address(this)) {
-                        _increaseAllowance(msg.sender, target, amount);
-                    } else {
-                        _spendAllowance(msg.sender, target, amount);
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (
+                address from, uint256 amount, address to
+            ) {
+                (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
+                if (_isERC20(target)) {
+                    if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
+                        if (from == msg.sender && to == address(this)) {
+                            _increaseAllowance(msg.sender, target, amount);
+                        } else {
+                            _spendAllowance(msg.sender, target, amount);
+                        }
                     }
+                } else {
+                    require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
                 }
-            } else {
-                require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+            } catch {
+                return;
             }
         } else if (
             selector == bytes4(keccak256("transfer(address,uint256)"))
@@ -441,9 +447,13 @@ contract Account is
                 || selector == bytes4(keccak256("increaseAllowance(address,uint256)"))
         ) {
             // Intentionally skipped decreaseAllowance case, allowing it for any manager, as emergency/safety mechanism
-            (, uint256 amount) = abi.decode(encodedParams, (address, uint256));
-            if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
-                _spendAllowance(msg.sender, target, amount);
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address, uint256 amount, address)
+            {
+                if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
+                    _spendAllowance(msg.sender, target, amount);
+                }
+            } catch {
+                return;
             }
         } else if (
             selector == bytes4(keccak256("safeTransferFrom(address,address,uint256)"))
@@ -452,7 +462,11 @@ contract Account is
                 || selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))
                 || selector == bytes4(keccak256("setApprovalForAll(address,bool)"))
         ) {
-            require(isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canTransferTokens);
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address, uint256, address) {
+                require(isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canTransferTokens);
+            } catch {
+                return;
+            }
         } else if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
             try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group, uint256, address) {
                 $storage().didSendRequestToGroup[group] = true;
