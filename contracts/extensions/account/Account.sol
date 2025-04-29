@@ -22,6 +22,9 @@ import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {IAccountGroupAdditionSettings} from "contracts/core/interfaces/IAccountGroupAdditionSettings.sol";
 import {IRequestBasedGroupRule} from "contracts/core/interfaces/IRequestBasedGroupRule.sol";
 import {SELECTOR_BYTE_LENGTH} from "contracts/core/types/Constants.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/interfaces/IERC721.sol";
+import {IERC1155} from "@openzeppelin/contracts/interfaces/IERC1155.sol";
 
 library PermissionsHelper {
     function equals(AccountManagerPermissions memory permissions, AccountManagerPermissions memory otherPermissions)
@@ -289,7 +292,16 @@ contract Account is
     }
 
     function _decreaseAllowance(address spender, address currency, uint256 byAmount) internal {
+        _decreaseAllowance({spender: spender, currency: currency, byAmount: byAmount, failOnUnderflow: false});
+    }
+
+    function _spendAllowance(address spender, address currency, uint256 amount) internal {
+        _decreaseAllowance({spender: spender, currency: currency, byAmount: amount, failOnUnderflow: true});
+    }
+
+    function _decreaseAllowance(address spender, address currency, uint256 byAmount, bool failOnUnderflow) internal {
         if ($storage().allowance[spender][currency] < byAmount) {
+            require(failOnUnderflow == false, Errors.InsufficientAllowance());
             $storage().allowance[spender][currency] = 0;
         } else {
             $storage().allowance[spender][currency] -= byAmount;
@@ -352,6 +364,14 @@ contract Account is
         return returnData;
     }
 
+    function _isERC20(address target) internal view returns (bool) {
+        // We call isApprovedForAll to check if the method is present or not; we assume that if the call fails
+        // then it's not an standard ERC-721 or ERC-1155 implementation, and very likely it is an ERC-20 one.
+        bytes memory encodedCall = abi.encodeCall(IERC721.isApprovedForAll, (address(this), address(msg.sender)));
+        (bool callSucceeded,) = target.staticcall(encodedCall);
+        return callSucceeded == false;
+    }
+
     function _handleSpecificSelectorLogicBeforeCall(
         bool isMsgSenderOwner,
         address target,
@@ -360,33 +380,47 @@ contract Account is
         bytes calldata encodedParams
     ) internal {
         if (target == address(WGHO) && selector == bytes4(keccak256("deposit()"))) {
-            // ...
+            if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferNative) {
+                _spendAllowance(msg.sender, GHO, value);
+                _increaseAllowance(msg.sender, WGHO, value);
+            }
         } else if (target == address(WGHO) && selector == bytes4(keccak256("withdraw(uint256)"))) {
-            // ...
+            (uint256 amount) = abi.decode(encodedParams, (uint256));
+            if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferNative) {
+                _spendAllowance(msg.sender, WGHO, amount);
+                _increaseAllowance(msg.sender, GHO, amount);
+            }
         } else if (selector == bytes4(keccak256("transferFrom(address,address,uint256)"))) {
-            // Do STATICCALL to isApprovedForAll
-            // (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
-            // require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
-        } else if (selector == bytes4(keccak256("transfer(address,uint256)"))) {
-            // dec
-        } else if (selector == bytes4(keccak256("transferFrom(address,address,uint256)"))) {
-            // inc
-        } else if (selector == bytes4(keccak256("approve(address,uint256)"))) {
-            // dec
-        } else if (selector == bytes4(keccak256("increaseAllowance(address,uint256)"))) {
-            // dec
-        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256)"))) {
-            // ...
-        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))) {
-            // ...
-        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))) {
-            // ...
-        } else if (selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))) {
-            // ...
-        } else if (selector == bytes4(keccak256("setApprovalForAll(address,bool)"))) {
-            // ...
-        } else if (selector == bytes4(keccak256("decreaseAllowance(address,uint256)"))) {
-            // ...
+            (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
+            if (_isERC20(target)) {
+                if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
+                    if (from == msg.sender && to == address(this)) {
+                        _increaseAllowance(msg.sender, target, amount);
+                    } else {
+                        _spendAllowance(msg.sender, target, amount);
+                    }
+                }
+            } else {
+                require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+            }
+        } else if (
+            selector == bytes4(keccak256("transfer(address,uint256)"))
+                || selector == bytes4(keccak256("approve(address,uint256)"))
+                || selector == bytes4(keccak256("increaseAllowance(address,uint256)"))
+        ) {
+            // Intentionally skipped decreaseAllowance case, allowing it for any manager, as emergency/safety mechanism
+            (, uint256 amount) = abi.decode(encodedParams, (address, uint256));
+            if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
+                _spendAllowance(msg.sender, target, amount);
+            }
+        } else if (
+            selector == bytes4(keccak256("safeTransferFrom(address,address,uint256)"))
+                || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))
+                || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))
+                || selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))
+                || selector == bytes4(keccak256("setApprovalForAll(address,bool)"))
+        ) {
+            require(isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canTransferTokens);
         } else if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
             try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group) {
                 $storage().didSendRequestToGroup[group] = true;
