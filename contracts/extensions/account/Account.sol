@@ -200,16 +200,48 @@ contract Account is
         return address(0);
     }
 
-    function abiDecodeForKnownSelectorHelper(bytes4 selector, bytes calldata data) external pure returns (address) {
-        if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
-            (, address group,) = abi.decode(data, (bytes32, address, KeyValue[]));
-            return group;
-        } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
-            (, address group,) = abi.decode(data, (bytes32, address, KeyValue[]));
-            return group;
+    function abiDecodeForKnownSelectorHelper(bytes4 selector, bytes calldata encodedParams)
+        external
+        pure
+        returns (address, uint256, address)
+    {
+        if (
+            selector == bytes4(keccak256("transferFrom(address,address,uint256)"))
+                || selector == bytes4(keccak256("safeTransferFrom(address,address,uint256)"))
+        ) {
+            (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
+            return (from, amount, to);
+        } else if (
+            selector == bytes4(keccak256("transfer(address,uint256)"))
+                || selector == bytes4(keccak256("approve(address,uint256)"))
+                || selector == bytes4(keccak256("increaseAllowance(address,uint256)"))
+        ) {
+            (address to, uint256 amount) = abi.decode(encodedParams, (address, uint256));
+            return (to, amount, address(0));
+        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"))) {
+            (address from, address to, uint256 amount,) = abi.decode(encodedParams, (address, address, uint256, bytes));
+            return (from, amount, to);
+        } else if (selector == bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)"))) {
+            (address from, address to, uint256 amount,,) =
+                abi.decode(encodedParams, (address, address, uint256, uint256, bytes));
+            return (from, amount, to);
+        } else if (selector == bytes4(keccak256("safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)"))) {
+            (address from, address to,,,) = abi.decode(encodedParams, (address, address, uint256[], uint256[], bytes));
+            return (from, 0, to);
+        } else if (selector == bytes4(keccak256("setApprovalForAll(address,bool)"))) {
+            (address operator,) = abi.decode(encodedParams, (address, bool));
+            return (operator, 0, address(0));
+        } else if (
+            selector == IRequestBasedGroupRule.sendMembershipRequest.selector
+                || selector == IRequestBasedGroupRule.cancelMembershipRequest.selector
+        ) {
+            (, address group,) = abi.decode(encodedParams, (bytes32, address, KeyValue[]));
+            return (group, 0, address(0));
         } else if (selector == IGraph.follow.selector) {
-            abi.decode(data, (address, address, KeyValue[], RuleProcessingParams[], RuleProcessingParams[], KeyValue[]));
-            return address(0);
+            abi.decode(
+                encodedParams, (address, address, KeyValue[], RuleProcessingParams[], RuleProcessingParams[], KeyValue[])
+            );
+            return (address(0), 0, address(0));
         } else {
             revert Errors.NotImplemented();
         }
@@ -422,19 +454,19 @@ contract Account is
         ) {
             require(isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canTransferTokens);
         } else if (selector == IRequestBasedGroupRule.sendMembershipRequest.selector) {
-            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group) {
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group, uint256, address) {
                 $storage().didSendRequestToGroup[group] = true;
             } catch {
                 return;
             }
         } else if (selector == IRequestBasedGroupRule.cancelMembershipRequest.selector) {
-            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group) {
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address group, uint256, address) {
                 $storage().didSendRequestToGroup[group] = false;
             } catch {
                 return;
             }
         } else if (selector == IGraph.follow.selector) {
-            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address) {
+            try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address, uint256, address) {
                 $storage().didFollowOnGraph[target] = true;
             } catch {
                 return;
