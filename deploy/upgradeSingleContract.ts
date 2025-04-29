@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 
 async function deploy() {
   //////////////// SETUP /////////////////
-  const contractToUpgrade = 'LensFactory';
+  const contractToUpgrade = 'AccountFactory';
   ////////////////////////////////////////
 
   const proxyOwnerPrivateKey = process.env.PROXY_ADMIN_PRIVATE_KEY;
@@ -38,7 +38,7 @@ async function deploy() {
   const oldImplementation = await hre.upgrades.erc1967.getImplementationAddress(transparentUpgradeableProxyAddress);
   console.log(`Old implementation in the Proxy: ${oldImplementation}`);
 
-  const newImplementation = loadContractAddressFromAddressBook(contractToUpgrade + 'Impl');
+  const newImplementation = "0xE238cEFc68F9CD55061a8Ab7E339cF9178dFf55B"; //loadContractAddressFromAddressBook(contractToUpgrade + 'Impl');
   if (!newImplementation) {
     throw new Error(`${contractToUpgrade} implementation not found in address book`);
   }
