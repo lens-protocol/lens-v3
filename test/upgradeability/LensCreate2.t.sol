@@ -21,7 +21,7 @@ contract LensCreate2Test is ZkTest {
     address lensCreate2ProxyAdmin = makeAddr("LENS_CREATE_2_PROXY_ADMIN");
     address lensCreate2Owner = makeAddr("LENS_CREATE_2_OWNER");
 
-    function setUp() public virtual onlyZkEvm {
+    function setUp() public virtual onlyZkEvm nonFork {
         _deployLensCreate2To(LENS_CREATE_2_ADDRESS);
 
         // NOTE: Add fork-check later if needed

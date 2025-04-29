@@ -17,20 +17,6 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
-import {MigrationApp} from "contracts/migration/primitives/MigrationApp.sol";
-import {MigrationAccount} from "contracts/migration/primitives/MigrationAccount.sol";
-import {MigrationFeed} from "contracts/migration/primitives/MigrationFeed.sol";
-import {MigrationGraph} from "contracts/migration/primitives/MigrationGraph.sol";
-import {MigrationNamespace} from "contracts/migration/primitives/MigrationNamespace.sol";
-
-import {MigrationAccessControlFactory} from "contracts/migration/factories/MigrationAccessControlFactory.sol";
-import {MigrationAppFactory} from "contracts/migration/factories/MigrationAppFactory.sol";
-import {MigrationAccountFactory} from "contracts/migration/factories/MigrationAccountFactory.sol";
-import {MigrationFeedFactory} from "contracts/migration/factories/MigrationFeedFactory.sol";
-import {MigrationGraphFactory} from "contracts/migration/factories/MigrationGraphFactory.sol";
-import {MigrationNamespaceFactory} from "contracts/migration/factories/MigrationNamespaceFactory.sol";
-import {MigrationLensFactory} from "contracts/migration/factories/MigrationLensFactory.sol";
-
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
 import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
 
@@ -61,9 +47,25 @@ contract BaseDeployments is Test {
         // Prevents being included in the foundry coverage report
     }
 
+    using stdJson for string;
+
+    string json;
+
+    function _loadAddressBookJson() internal {
+        string memory root = vm.projectRoot();
+        string memory path = string(abi.encodePacked(root, "/addressBook.json"));
+        assertTrue(vm.isFile(path), "Address book not found");
+        json = vm.readFile(path);
+    }
+
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
-    address proxyAdminLock;
+    address appLock;
+    address accountLock;
+    address feedLock;
+    address graphLock;
+    address groupLock;
+    address namespaceLock;
     address accessControlLock;
 
     address proxyAdminLockOwner = vm.envOr("PROXY_ADMIN_LOCK_OWNER", makeAddr("PROXY_ADMIN_LOCK_OWNER"));
@@ -114,14 +116,45 @@ contract BaseDeployments is Test {
     address addRemovePidGroupRule;
     address usernameReservedNamespaceRule;
 
-    bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
-
-    function switchMigrationMode(bool newMigrationMode) public {
-        migrationMode = newMigrationMode;
+    function setUp() public virtual {
+        if (isFork()) {
+            _loadAddressBookJson();
+            _loadFromFork();
+        } else {
+            _deployNewContracts();
+        }
     }
 
-    function setUp() public virtual {
-        proxyAdminLock = address(new Lock(proxyAdminLockOwner, true));
+    function _loadFromFork() internal {
+        appLock = json.readAddress(".AppLock.address");
+        accountLock = json.readAddress(".AccountLock.address");
+        feedLock = json.readAddress(".FeedLock.address");
+        graphLock = json.readAddress(".GraphLock.address");
+        groupLock = json.readAddress(".GroupLock.address");
+        namespaceLock = json.readAddress(".NamespaceLock.address");
+        accessControlLock = json.readAddress(".AccessControlLock.address");
+
+        _loadImplementations();
+        _loadBeacons();
+        _loadFactoryImplementations();
+        _loadFactoryProxies();
+
+        accountBlockingRule = json.readAddress(".AccountBlockingRule.address");
+        groupGatedFeedRule = json.readAddress(".GroupGatedFeedRule.address");
+        usernameSimpleCharsetRule = json.readAddress(".UsernameSimpleCharsetNamespaceRule.address");
+        banMemberGroupRule = json.readAddress(".BanMemberGroupRule.address");
+        addRemovePidGroupRule = json.readAddress(".AdditionRemovalPidGroupRule.address");
+        usernameReservedNamespaceRule = json.readAddress(".UsernameReservedNamespaceRule.address");
+        lensFactory = LensFactory(json.readAddress(".LensFactory.address"));
+    }
+
+    function _deployNewContracts() internal {
+        appLock = address(new Lock(proxyAdminLockOwner, true));
+        accountLock = address(new Lock(proxyAdminLockOwner, true));
+        feedLock = address(new Lock(proxyAdminLockOwner, true));
+        graphLock = address(new Lock(proxyAdminLockOwner, true));
+        groupLock = address(new Lock(proxyAdminLockOwner, true));
+        namespaceLock = address(new Lock(proxyAdminLockOwner, true));
         accessControlLock = address(new Lock(accessControlLockOwner, true));
         _deployImplementations();
         _deployBeacons();
@@ -179,49 +212,27 @@ contract BaseDeployments is Test {
             )
         );
 
-        address lensFactoryImpl = migrationMode
-            ? address(
-                new MigrationLensFactory({
-                    factories: FactoryConstructorParams({
-                        accessControlFactory: accessControlFactory,
-                        accountFactory: accountFactory,
-                        appFactory: appFactory,
-                        groupFactory: groupFactory,
-                        feedFactory: feedFactory,
-                        graphFactory: graphFactory,
-                        namespaceFactory: namespaceFactory
-                    }),
-                    rules: RuleConstructorParams({
-                        accountBlockingRule: address(0),
-                        groupGatedFeedRule: address(0),
-                        usernameSimpleCharsetRule: address(0),
-                        banMemberGroupRule: address(0),
-                        addRemovePidGroupRule: address(0),
-                        usernameReservedNamespaceRule: address(0)
-                    })
+        address lensFactoryImpl = address(
+            new LensFactory({
+                factories: FactoryConstructorParams({
+                    accessControlFactory: accessControlFactory,
+                    accountFactory: accountFactory,
+                    appFactory: appFactory,
+                    groupFactory: groupFactory,
+                    feedFactory: feedFactory,
+                    graphFactory: graphFactory,
+                    namespaceFactory: namespaceFactory
+                }),
+                rules: RuleConstructorParams({
+                    accountBlockingRule: accountBlockingRule,
+                    groupGatedFeedRule: groupGatedFeedRule,
+                    usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+                    banMemberGroupRule: banMemberGroupRule,
+                    addRemovePidGroupRule: addRemovePidGroupRule,
+                    usernameReservedNamespaceRule: usernameReservedNamespaceRule
                 })
-            )
-            : address(
-                new LensFactory({
-                    factories: FactoryConstructorParams({
-                        accessControlFactory: accessControlFactory,
-                        accountFactory: accountFactory,
-                        appFactory: appFactory,
-                        groupFactory: groupFactory,
-                        feedFactory: feedFactory,
-                        graphFactory: graphFactory,
-                        namespaceFactory: namespaceFactory
-                    }),
-                    rules: RuleConstructorParams({
-                        accountBlockingRule: accountBlockingRule,
-                        groupGatedFeedRule: groupGatedFeedRule,
-                        usernameSimpleCharsetRule: usernameSimpleCharsetRule,
-                        banMemberGroupRule: banMemberGroupRule,
-                        addRemovePidGroupRule: addRemovePidGroupRule,
-                        usernameReservedNamespaceRule: usernameReservedNamespaceRule
-                    })
-                })
-            );
+            })
+        );
         TransparentUpgradeableProxy lensFactoryProxy =
             new TransparentUpgradeableProxy(address(lensFactoryImpl), factoriesProxyOwner, "");
 
@@ -235,12 +246,24 @@ contract BaseDeployments is Test {
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
-        appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
-        accountImpl = migrationMode ? address(new MigrationAccount()) : address(new AccountContract());
-        feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
-        graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
+        appImpl = address(new App());
+        accountImpl = address(new AccountContract());
+        feedImpl = address(new Feed());
+        graphImpl = address(new Graph());
         groupImpl = address(new Group());
-        namespaceImpl = migrationMode ? address(new MigrationNamespace()) : address(new Namespace());
+        namespaceImpl = address(new Namespace());
+    }
+
+    function _loadImplementations() internal {
+        simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
+        simpleTokenURIProvider = new LensUsernameTokenURIProvider();
+
+        appImpl = json.readAddress(".AppImpl.address");
+        accountImpl = json.readAddress(".AccountImpl.address");
+        feedImpl = json.readAddress(".FeedImpl.address");
+        graphImpl = json.readAddress(".GraphImpl.address");
+        groupImpl = json.readAddress(".GroupImpl.address");
+        namespaceImpl = json.readAddress(".NamespaceImpl.address");
     }
 
     function _deployBeacons() internal {
@@ -252,32 +275,39 @@ contract BaseDeployments is Test {
         namespaceBeacon = address(new Beacon(beaconOwner, 1, namespaceImpl));
     }
 
+    function _loadBeacons() internal {
+        appBeacon = json.readAddress(".AppBeacon.address");
+        accountBeacon = json.readAddress(".AccountBeacon.address");
+        feedBeacon = json.readAddress(".FeedBeacon.address");
+        graphBeacon = json.readAddress(".GraphBeacon.address");
+        groupBeacon = json.readAddress(".GroupBeacon.address");
+        namespaceBeacon = json.readAddress(".NamespaceBeacon.address");
+    }
+
     function _deployFactoryImplementations() internal {
-        accessControlFactoryImpl = migrationMode
-            ? address(new MigrationAccessControlFactory(accessControlLock))
-            : address(new AccessControlFactory(accessControlLock));
+        accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
 
-        accountFactoryImpl = migrationMode
-            ? address(new MigrationAccountFactory(accountBeacon, proxyAdminLock))
-            : address(new AccountFactory(accountBeacon, proxyAdminLock));
+        accountFactoryImpl = address(new AccountFactory(accountBeacon, accountLock));
 
-        appFactoryImpl = migrationMode
-            ? address(new MigrationAppFactory(appBeacon, proxyAdminLock))
-            : address(new AppFactory(appBeacon, proxyAdminLock));
+        appFactoryImpl = address(new AppFactory(appBeacon, appLock));
 
-        feedFactoryImpl = migrationMode
-            ? address(new MigrationFeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)))
-            : address(new FeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)));
+        feedFactoryImpl = address(new FeedFactory(feedBeacon, feedLock, address(lensFactory)));
 
-        graphFactoryImpl = migrationMode
-            ? address(new MigrationGraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)))
-            : address(new GraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)));
+        graphFactoryImpl = address(new GraphFactory(graphBeacon, graphLock, address(lensFactory)));
 
-        groupFactoryImpl = address(new GroupFactory(groupBeacon, proxyAdminLock, address(lensFactory)));
+        groupFactoryImpl = address(new GroupFactory(groupBeacon, groupLock, address(lensFactory)));
 
-        namespaceFactoryImpl = migrationMode
-            ? address(new MigrationNamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)))
-            : address(new NamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)));
+        namespaceFactoryImpl = address(new NamespaceFactory(namespaceBeacon, namespaceLock, address(lensFactory)));
+    }
+
+    function _loadFactoryImplementations() internal {
+        accessControlFactoryImpl = json.readAddress(".AccessControlFactoryImpl.address");
+        accountFactoryImpl = json.readAddress(".AccountFactoryImpl.address");
+        appFactoryImpl = json.readAddress(".AppFactoryImpl.address");
+        feedFactoryImpl = json.readAddress(".FeedFactoryImpl.address");
+        graphFactoryImpl = json.readAddress(".GraphFactoryImpl.address");
+        groupFactoryImpl = json.readAddress(".GroupFactoryImpl.address");
+        namespaceFactoryImpl = json.readAddress(".NamespaceFactoryImpl.address");
     }
 
     function _deployFactoryProxies() internal {
@@ -308,6 +338,16 @@ contract BaseDeployments is Test {
         TransparentUpgradeableProxy namespaceFactoryProxy =
             new TransparentUpgradeableProxy(namespaceFactoryImpl, factoriesProxyOwner, "");
         namespaceFactory = NamespaceFactory(address(namespaceFactoryProxy));
+    }
+
+    function _loadFactoryProxies() internal {
+        accessControlFactory = AccessControlFactory(json.readAddress(".AccessControlFactory.address"));
+        accountFactory = AccountFactory(json.readAddress(".AccountFactory.address"));
+        appFactory = AppFactory(json.readAddress(".AppFactory.address"));
+        feedFactory = FeedFactory(json.readAddress(".FeedFactory.address"));
+        graphFactory = GraphFactory(json.readAddress(".GraphFactory.address"));
+        groupFactory = GroupFactory(json.readAddress(".GroupFactory.address"));
+        namespaceFactory = NamespaceFactory(json.readAddress(".NamespaceFactory.address"));
     }
 
     function _setFactoryImplementationsToProxies() internal {
