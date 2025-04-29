@@ -17,6 +17,8 @@ import {Graph} from "contracts/core/primitives/graph/Graph.sol";
 import {Group} from "contracts/core/primitives/group/Group.sol";
 import {Namespace} from "contracts/core/primitives/namespace/Namespace.sol";
 
+import {ActionHub} from "@extensions/actions/ActionHub.sol";
+
 import {AccessControlFactory} from "@extensions/factories/AccessControlFactory.sol";
 import {AccountFactory} from "@extensions/factories/AccountFactory.sol";
 
@@ -26,6 +28,9 @@ import {GraphFactory} from "@extensions/factories/GraphFactory.sol";
 import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
 import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
 import {LensFactory, FactoryConstructorParams, RuleConstructorParams} from "@extensions/factories/LensFactory.sol";
+
+import {CONTRACT__LENS_FEES} from "contracts/core/types/Constants.sol";
+import {LENS_CREATE_2_ADDRESS} from "contracts/core/upgradeability/LensCreate2.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
@@ -37,12 +42,29 @@ import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
 import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
 
+import {TippingAccountAction} from "contracts/actions/account/TippingAccountAction.sol";
+
+import {LensFees} from "contracts/extensions/fees/LensFees.sol";
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
 } from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract BaseDeployments is Test {
+import {ZkTester} from "test/helpers/ZkTest.sol";
+
+contract MockLensCreate2 {
+    mapping(bytes32 => address) public addresses;
+
+    function getAddress(bytes32 salt) public view returns (address) {
+        return addresses[salt];
+    }
+
+    function setAddress(bytes32 salt, address addr) public {
+        addresses[salt] = addr;
+    }
+}
+
+contract BaseDeployments is Test, ZkTester {
     function testBaseDeployments() public {
         // Prevents being included in the foundry coverage report
     }
@@ -83,6 +105,7 @@ contract BaseDeployments is Test {
     address graphImpl;
     address groupImpl;
     address namespaceImpl;
+    address actionHubImpl;
 
     address appBeacon;
     address accountBeacon;
@@ -90,6 +113,11 @@ contract BaseDeployments is Test {
     address graphBeacon;
     address groupBeacon;
     address namespaceBeacon;
+
+    address actionHub;
+
+    address lensFeesImpl;
+    address lensFees;
 
     AppFactory appFactory;
     AccessControlFactory accessControlFactory;
@@ -116,16 +144,42 @@ contract BaseDeployments is Test {
     address addRemovePidGroupRule;
     address usernameReservedNamespaceRule;
 
+    address tippingAccountActionImpl;
+    address tippingAccountAction;
+
+    address TREASURY_ADDRESS = makeAddr("TREASURY_ADDRESS");
+    uint16 TREASURY_FEE_BPS = 150;
+
     function setUp() public virtual {
         if (isFork()) {
             _loadAddressBookJson();
             _loadFromFork();
         } else {
+            _deployMockLensCreate2();
             _deployNewContracts();
         }
     }
 
+    function _deployMockLensCreate2() internal {
+        console.log("Deploying mock LensCreate2");
+
+        // TODO: This doesn't work with --zksync tests (Multiple artifacts found), only getCode() works
+        vm.etch(LENS_CREATE_2_ADDRESS, vm.getDeployedCode("test/helpers/BaseDeployments.sol:MockLensCreate2"));
+        // TODO: But on the other hand, getCode() doesn't work with native foundry tests...
+        // vm.etch(LENS_CREATE_2_ADDRESS, vm.getCode("test/helpers/BaseDeployments.sol:MockLensCreate2"));
+        // TODO: So you kinda cannot auto-test both lol :) Uncomment one line above and comment the other to switch.
+
+        console.log("Mock LensCreate2 deployed. Trying...");
+        MockLensCreate2(LENS_CREATE_2_ADDRESS).setAddress(CONTRACT__LENS_FEES, makeAddr("LENS_FEES"));
+        console.log("Mock LensCreate2 set address");
+        address lensFeesAddress = MockLensCreate2(LENS_CREATE_2_ADDRESS).getAddress(CONTRACT__LENS_FEES);
+        console.log("lensFeesAddress is", lensFeesAddress);
+    }
+
     function _loadFromFork() internal {
+        // TODO: Load TREASURY_ADDRESS and TREASURY_FEE_BPS from addressBook.json
+
+        console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
         accountLock = json.readAddress(".AccountLock.address");
         feedLock = json.readAddress(".FeedLock.address");
@@ -134,10 +188,14 @@ contract BaseDeployments is Test {
         namespaceLock = json.readAddress(".NamespaceLock.address");
         accessControlLock = json.readAddress(".AccessControlLock.address");
 
+        actionHubImpl = json.readAddress(".ActionHubImpl.address");
+        actionHub = json.readAddress(".ActionHub.address");
+
         _loadImplementations();
         _loadBeacons();
         _loadFactoryImplementations();
         _loadFactoryProxies();
+        _loadActions();
 
         accountBlockingRule = json.readAddress(".AccountBlockingRule.address");
         groupGatedFeedRule = json.readAddress(".GroupGatedFeedRule.address");
@@ -149,6 +207,7 @@ contract BaseDeployments is Test {
     }
 
     function _deployNewContracts() internal {
+        console.log("Deploying new contracts");
         appLock = address(new Lock(proxyAdminLockOwner, true));
         accountLock = address(new Lock(proxyAdminLockOwner, true));
         feedLock = address(new Lock(proxyAdminLockOwner, true));
@@ -156,10 +215,20 @@ contract BaseDeployments is Test {
         groupLock = address(new Lock(proxyAdminLockOwner, true));
         namespaceLock = address(new Lock(proxyAdminLockOwner, true));
         accessControlLock = address(new Lock(accessControlLockOwner, true));
+
+        actionHubImpl = address(new ActionHub());
+        actionHub = address(new TransparentUpgradeableProxy(actionHubImpl, factoriesProxyOwner, ""));
+
+        lensFeesImpl = address(new LensFees(TREASURY_ADDRESS, TREASURY_FEE_BPS));
+        lensFees = address(new TransparentUpgradeableProxy(lensFeesImpl, factoriesProxyOwner, ""));
+        MockLensCreate2(LENS_CREATE_2_ADDRESS).setAddress(CONTRACT__LENS_FEES, lensFees);
+
         _deployImplementations();
         _deployBeacons();
         _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
         _deployFactoryProxies();
+
+        _deployActions();
 
         accountBlockingRule = address(
             new TransparentUpgradeableProxy(
@@ -240,9 +309,11 @@ contract BaseDeployments is Test {
 
         _deployFactoryImplementations();
         _setFactoryImplementationsToProxies();
+        console.log("Finished deploying new contracts");
     }
 
     function _deployImplementations() internal {
+        console.log("Deploying implementations");
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
@@ -255,6 +326,7 @@ contract BaseDeployments is Test {
     }
 
     function _loadImplementations() internal {
+        console.log("Loading implementations");
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
@@ -266,7 +338,21 @@ contract BaseDeployments is Test {
         namespaceImpl = json.readAddress(".NamespaceImpl.address");
     }
 
+    function _deployActions() internal {
+        console.log("Deploying actions");
+        tippingAccountActionImpl = address(new TippingAccountAction(actionHub));
+        tippingAccountAction =
+            address(new TransparentUpgradeableProxy(tippingAccountActionImpl, factoriesProxyOwner, ""));
+    }
+
+    function _loadActions() internal {
+        console.log("Loading actions");
+        tippingAccountActionImpl = json.readAddress(".TippingAccountActionImpl.address");
+        tippingAccountAction = json.readAddress(".TippingAccountAction.address");
+    }
+
     function _deployBeacons() internal {
+        console.log("Deploying beacons");
         appBeacon = address(new Beacon(beaconOwner, 1, appImpl));
         accountBeacon = address(new Beacon(beaconOwner, 1, accountImpl));
         feedBeacon = address(new Beacon(beaconOwner, 1, feedImpl));
@@ -276,6 +362,7 @@ contract BaseDeployments is Test {
     }
 
     function _loadBeacons() internal {
+        console.log("Loading beacons");
         appBeacon = json.readAddress(".AppBeacon.address");
         accountBeacon = json.readAddress(".AccountBeacon.address");
         feedBeacon = json.readAddress(".FeedBeacon.address");
@@ -285,6 +372,7 @@ contract BaseDeployments is Test {
     }
 
     function _deployFactoryImplementations() internal {
+        console.log("Deploying factory implementations");
         accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
 
         accountFactoryImpl = address(new AccountFactory(accountBeacon, accountLock));
@@ -301,6 +389,7 @@ contract BaseDeployments is Test {
     }
 
     function _loadFactoryImplementations() internal {
+        console.log("Loading factory implementations");
         accessControlFactoryImpl = json.readAddress(".AccessControlFactoryImpl.address");
         accountFactoryImpl = json.readAddress(".AccountFactoryImpl.address");
         appFactoryImpl = json.readAddress(".AppFactoryImpl.address");
@@ -311,6 +400,7 @@ contract BaseDeployments is Test {
     }
 
     function _deployFactoryProxies() internal {
+        console.log("Deploying factory proxies");
         TransparentUpgradeableProxy accessControlFactoryProxy =
             new TransparentUpgradeableProxy(accessControlFactoryImpl, factoriesProxyOwner, "");
         accessControlFactory = AccessControlFactory(address(accessControlFactoryProxy));
@@ -341,6 +431,7 @@ contract BaseDeployments is Test {
     }
 
     function _loadFactoryProxies() internal {
+        console.log("Loading factory proxies");
         accessControlFactory = AccessControlFactory(json.readAddress(".AccessControlFactory.address"));
         accountFactory = AccountFactory(json.readAddress(".AccountFactory.address"));
         appFactory = AppFactory(json.readAddress(".AppFactory.address"));
@@ -351,6 +442,7 @@ contract BaseDeployments is Test {
     }
 
     function _setFactoryImplementationsToProxies() internal {
+        console.log("Setting factory implementations to proxies");
         vm.startPrank(factoriesProxyOwner);
         ITransparentUpgradeableProxy(address(accessControlFactory)).upgradeTo(accessControlFactoryImpl);
         ITransparentUpgradeableProxy(address(appFactory)).upgradeTo(appFactoryImpl);
