@@ -35,6 +35,7 @@ contract AccountFactory_ControlledOwner {
         KeyValue[] calldata extraData
     ) external returns (address) {
         // address proxyAdmin = address(new ProxyAdmin(owner, _lock)); // Owner of Proxy Admin same as owner of Account
+        // TODO: Need to remove BeaconProxy.transferOwnership() in LensFactory.sol for this to work
         address proxyAdmin = 0x9248090e86BCE5Ae1420B98751404D654C35cf0D; // Controlled owner (before upgrade)
         Account account = Account(payable(new BeaconProxy(proxyAdmin, _beacon)));
         account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
