@@ -47,9 +47,25 @@ contract BaseDeployments is Test {
         // Prevents being included in the foundry coverage report
     }
 
+    using stdJson for string;
+
+    string json;
+
+    function _loadAddressBookJson() internal {
+        string memory root = vm.projectRoot();
+        string memory path = string(abi.encodePacked(root, "/addressBook.json"));
+        assertTrue(vm.isFile(path), "Address book not found");
+        json = vm.readFile(path);
+    }
+
     IAccessControl simpleAccessControl;
     ITokenURIProvider simpleTokenURIProvider;
-    address proxyAdminLock;
+    address appLock;
+    address accountLock;
+    address feedLock;
+    address graphLock;
+    address groupLock;
+    address namespaceLock;
     address accessControlLock;
 
     address proxyAdminLockOwner = vm.envOr("PROXY_ADMIN_LOCK_OWNER", makeAddr("PROXY_ADMIN_LOCK_OWNER"));
@@ -101,7 +117,44 @@ contract BaseDeployments is Test {
     address usernameReservedNamespaceRule;
 
     function setUp() public virtual {
-        proxyAdminLock = address(new Lock(proxyAdminLockOwner, true));
+        if (isFork()) {
+            _loadAddressBookJson();
+            _loadFromFork();
+        } else {
+            _deployNewContracts();
+        }
+    }
+
+    function _loadFromFork() internal {
+        appLock = json.readAddress(".AppLock.address");
+        accountLock = json.readAddress(".AccountLock.address");
+        feedLock = json.readAddress(".FeedLock.address");
+        graphLock = json.readAddress(".GraphLock.address");
+        groupLock = json.readAddress(".GroupLock.address");
+        namespaceLock = json.readAddress(".NamespaceLock.address");
+        accessControlLock = json.readAddress(".AccessControlLock.address");
+
+        _loadImplementations();
+        _loadBeacons();
+        _loadFactoryImplementations();
+        _loadFactoryProxies();
+
+        accountBlockingRule = json.readAddress(".AccountBlockingRule.address");
+        groupGatedFeedRule = json.readAddress(".GroupGatedFeedRule.address");
+        usernameSimpleCharsetRule = json.readAddress(".UsernameSimpleCharsetNamespaceRule.address");
+        banMemberGroupRule = json.readAddress(".BanMemberGroupRule.address");
+        addRemovePidGroupRule = json.readAddress(".AdditionRemovalPidGroupRule.address");
+        usernameReservedNamespaceRule = json.readAddress(".UsernameReservedNamespaceRule.address");
+        lensFactory = LensFactory(json.readAddress(".LensFactory.address"));
+    }
+
+    function _deployNewContracts() internal {
+        appLock = address(new Lock(proxyAdminLockOwner, true));
+        accountLock = address(new Lock(proxyAdminLockOwner, true));
+        feedLock = address(new Lock(proxyAdminLockOwner, true));
+        graphLock = address(new Lock(proxyAdminLockOwner, true));
+        groupLock = address(new Lock(proxyAdminLockOwner, true));
+        namespaceLock = address(new Lock(proxyAdminLockOwner, true));
         accessControlLock = address(new Lock(accessControlLockOwner, true));
         _deployImplementations();
         _deployBeacons();
@@ -201,6 +254,18 @@ contract BaseDeployments is Test {
         namespaceImpl = address(new Namespace());
     }
 
+    function _loadImplementations() internal {
+        simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
+        simpleTokenURIProvider = new LensUsernameTokenURIProvider();
+
+        appImpl = json.readAddress(".AppImpl.address");
+        accountImpl = json.readAddress(".AccountImpl.address");
+        feedImpl = json.readAddress(".FeedImpl.address");
+        graphImpl = json.readAddress(".GraphImpl.address");
+        groupImpl = json.readAddress(".GroupImpl.address");
+        namespaceImpl = json.readAddress(".NamespaceImpl.address");
+    }
+
     function _deployBeacons() internal {
         appBeacon = address(new Beacon(beaconOwner, 1, appImpl));
         accountBeacon = address(new Beacon(beaconOwner, 1, accountImpl));
@@ -210,20 +275,39 @@ contract BaseDeployments is Test {
         namespaceBeacon = address(new Beacon(beaconOwner, 1, namespaceImpl));
     }
 
+    function _loadBeacons() internal {
+        appBeacon = json.readAddress(".AppBeacon.address");
+        accountBeacon = json.readAddress(".AccountBeacon.address");
+        feedBeacon = json.readAddress(".FeedBeacon.address");
+        graphBeacon = json.readAddress(".GraphBeacon.address");
+        groupBeacon = json.readAddress(".GroupBeacon.address");
+        namespaceBeacon = json.readAddress(".NamespaceBeacon.address");
+    }
+
     function _deployFactoryImplementations() internal {
         accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
 
-        accountFactoryImpl = address(new AccountFactory(accountBeacon, proxyAdminLock));
+        accountFactoryImpl = address(new AccountFactory(accountBeacon, accountLock));
 
-        appFactoryImpl = address(new AppFactory(appBeacon, proxyAdminLock));
+        appFactoryImpl = address(new AppFactory(appBeacon, appLock));
 
-        feedFactoryImpl = address(new FeedFactory(feedBeacon, proxyAdminLock, address(lensFactory)));
+        feedFactoryImpl = address(new FeedFactory(feedBeacon, feedLock, address(lensFactory)));
 
-        graphFactoryImpl = address(new GraphFactory(graphBeacon, proxyAdminLock, address(lensFactory)));
+        graphFactoryImpl = address(new GraphFactory(graphBeacon, graphLock, address(lensFactory)));
 
-        groupFactoryImpl = address(new GroupFactory(groupBeacon, proxyAdminLock, address(lensFactory)));
+        groupFactoryImpl = address(new GroupFactory(groupBeacon, groupLock, address(lensFactory)));
 
-        namespaceFactoryImpl = address(new NamespaceFactory(namespaceBeacon, proxyAdminLock, address(lensFactory)));
+        namespaceFactoryImpl = address(new NamespaceFactory(namespaceBeacon, namespaceLock, address(lensFactory)));
+    }
+
+    function _loadFactoryImplementations() internal {
+        accessControlFactoryImpl = json.readAddress(".AccessControlFactoryImpl.address");
+        accountFactoryImpl = json.readAddress(".AccountFactoryImpl.address");
+        appFactoryImpl = json.readAddress(".AppFactoryImpl.address");
+        feedFactoryImpl = json.readAddress(".FeedFactoryImpl.address");
+        graphFactoryImpl = json.readAddress(".GraphFactoryImpl.address");
+        groupFactoryImpl = json.readAddress(".GroupFactoryImpl.address");
+        namespaceFactoryImpl = json.readAddress(".NamespaceFactoryImpl.address");
     }
 
     function _deployFactoryProxies() internal {
@@ -254,6 +338,16 @@ contract BaseDeployments is Test {
         TransparentUpgradeableProxy namespaceFactoryProxy =
             new TransparentUpgradeableProxy(namespaceFactoryImpl, factoriesProxyOwner, "");
         namespaceFactory = NamespaceFactory(address(namespaceFactoryProxy));
+    }
+
+    function _loadFactoryProxies() internal {
+        accessControlFactory = AccessControlFactory(json.readAddress(".AccessControlFactory.address"));
+        accountFactory = AccountFactory(json.readAddress(".AccountFactory.address"));
+        appFactory = AppFactory(json.readAddress(".AppFactory.address"));
+        feedFactory = FeedFactory(json.readAddress(".FeedFactory.address"));
+        graphFactory = GraphFactory(json.readAddress(".GraphFactory.address"));
+        groupFactory = GroupFactory(json.readAddress(".GroupFactory.address"));
+        namespaceFactory = NamespaceFactory(json.readAddress(".NamespaceFactory.address"));
     }
 
     function _setFactoryImplementationsToProxies() internal {
