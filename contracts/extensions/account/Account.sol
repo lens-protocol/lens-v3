@@ -22,9 +22,7 @@ import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {IAccountGroupAdditionSettings} from "contracts/core/interfaces/IAccountGroupAdditionSettings.sol";
 import {IRequestBasedGroupRule} from "contracts/core/interfaces/IRequestBasedGroupRule.sol";
 import {SELECTOR_BYTE_LENGTH} from "contracts/core/types/Constants.sol";
-import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IERC721} from "@openzeppelin/contracts/interfaces/IERC721.sol";
-import {IERC1155} from "@openzeppelin/contracts/interfaces/IERC1155.sol";
 
 library PermissionsHelper {
     function equals(AccountManagerPermissions memory permissions, AccountManagerPermissions memory otherPermissions)
@@ -71,7 +69,8 @@ contract Account is
         mapping(address group => bool wasRequestSent) didSendRequestToGroup;
         mapping(address graph => bool usedGraph) didFollowOnGraph; // Written in current impl for future use.
         mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition; // Not written in current impl.
-        mapping(address manager => mapping(address currency => uint256 allowance)) allowance;
+        mapping(address manager => uint256 allowanceKey) allowanceKey;
+        mapping(address manager => mapping(uint256 key => mapping(address currency => uint256 allowance))) allowance;
     }
 
     /// @custom:keccak lens.storage.Account
@@ -294,7 +293,7 @@ contract Account is
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
 
-    function changeAllowance(AllowanceChange[] calldata allowanceChanges) external onlyOwner {
+    function changeAllowance(AllowanceChange[] calldata allowanceChanges) external override onlyOwner {
         for (uint256 i = 0; i < allowanceChanges.length; i++) {
             for (uint256 j = 0; j < allowanceChanges[i].allowanceIncreases.length; j++) {
                 require(_isAccountManager(allowanceChanges[i].spender), Errors.InvalidParameter());
@@ -314,31 +313,42 @@ contract Account is
         }
     }
 
-    function clearAllAllowances(address[] calldata managers) external onlyOwner {
-        // TODO: reset all the allowances for the given managers for all tokens
-    }
-
-    function _increaseAllowance(address spender, address currency, uint256 byAmount) internal {
-        $storage().allowance[spender][currency] += byAmount;
-        emit Lens_Account_AllowanceIncreased(spender, currency, $storage().allowance[spender][currency]);
-    }
-
-    function _decreaseAllowance(address spender, address currency, uint256 byAmount) internal {
-        _decreaseAllowance({spender: spender, currency: currency, byAmount: byAmount, failOnUnderflow: false});
-    }
-
-    function _spendAllowance(address spender, address currency, uint256 amount) internal {
-        _decreaseAllowance({spender: spender, currency: currency, byAmount: amount, failOnUnderflow: true});
-    }
-
-    function _decreaseAllowance(address spender, address currency, uint256 byAmount, bool failOnUnderflow) internal {
-        if ($storage().allowance[spender][currency] < byAmount) {
-            require(failOnUnderflow == false, Errors.InsufficientAllowance());
-            $storage().allowance[spender][currency] = 0;
-        } else {
-            $storage().allowance[spender][currency] -= byAmount;
+    function clearAllAllowances(address[] calldata managers) external override onlyOwner {
+        for (uint256 i = 0; i < managers.length; i++) {
+            $storage().allowanceKey[managers[i]]++;
+            emit Lens_Account_AllAllowancesCleared(managers[i]);
         }
-        emit Lens_Account_AllowanceDecreased(spender, currency, $storage().allowance[spender][currency]);
+    }
+
+    function _increaseAllowance(address spender, address currency, uint256 byAmount) internal returns (uint256) {
+        uint256 allowanceKey = $storage().allowanceKey[spender];
+        uint256 newAllowance = $storage().allowance[spender][allowanceKey][currency] += byAmount;
+        emit Lens_Account_AllowanceIncreased(spender, currency, newAllowance);
+        return newAllowance;
+    }
+
+    function _decreaseAllowance(address spender, address currency, uint256 byAmount) internal returns (uint256) {
+        return _decreaseAllowance({spender: spender, currency: currency, byAmount: byAmount, failOnUnderflow: false});
+    }
+
+    function _spendAllowance(address spender, address currency, uint256 amount) internal returns (uint256) {
+        return _decreaseAllowance({spender: spender, currency: currency, byAmount: amount, failOnUnderflow: true});
+    }
+
+    function _decreaseAllowance(address spender, address currency, uint256 byAmount, bool failOnUnderflow)
+        internal
+        returns (uint256)
+    {
+        uint256 newAllowance = 0;
+        uint256 allowanceKey = $storage().allowanceKey[spender];
+        if ($storage().allowance[spender][allowanceKey][currency] < byAmount) {
+            require(failOnUnderflow == false, Errors.InsufficientAllowance());
+            $storage().allowance[spender][allowanceKey][currency] = 0;
+        } else {
+            newAllowance = $storage().allowance[spender][allowanceKey][currency] -= byAmount;
+        }
+        emit Lens_Account_AllowanceDecreased(spender, currency, newAllowance);
+        return newAllowance;
     }
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external onlyOwner {
@@ -388,9 +398,11 @@ contract Account is
         virtual
         returns (bytes memory)
     {
-        _handleSpecificSelectorLogicBeforeCall(
-            isMsgSenderOwner, target, value, bytes4(data[:SELECTOR_BYTE_LENGTH]), data[SELECTOR_BYTE_LENGTH:]
-        );
+        if (data.length >= SELECTOR_BYTE_LENGTH) {
+            _handleSpecificSelectorLogicBeforeCall(
+                isMsgSenderOwner, target, value, bytes4(data[:SELECTOR_BYTE_LENGTH]), data[SELECTOR_BYTE_LENGTH:]
+            );
+        }
         bytes memory returnData = target.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(target, value, data, msg.sender);
         return returnData;
@@ -426,7 +438,6 @@ contract Account is
             try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (
                 address from, uint256 amount, address to
             ) {
-                (address from, address to, uint256 amount) = abi.decode(encodedParams, (address, address, uint256));
                 if (_isERC20(target)) {
                     if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
                         if (from == msg.sender && to == address(this)) {

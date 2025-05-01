@@ -44,6 +44,7 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
     event Lens_Account_ExtraDataRemoved(bytes32 indexed key);
     event Lens_Account_AllowanceIncreased(address indexed spender, address indexed currency, uint256 newAllowance);
     event Lens_Account_AllowanceDecreased(address indexed spender, address indexed currency, uint256 newAllowance);
+    event Lens_Account_AllAllowancesCleared(address indexed spender);
 
     function addAccountManager(address _accountManager, AccountManagerPermissions calldata accountManagerPermissions)
         external;
@@ -54,6 +55,10 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
         address accountManager,
         AccountManagerPermissions calldata accountManagerPermissions
     ) external;
+
+    function changeAllowance(AllowanceChange[] calldata allowanceChanges) external;
+
+    function clearAllAllowances(address[] calldata managers) external;
 
     function setMetadataURI(string calldata _metadataURI, SourceStamp calldata sourceStamp) external;
 
