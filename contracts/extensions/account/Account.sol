@@ -32,13 +32,71 @@ library PermissionsHelper {
     {
         return permissions.canExecuteTransactions == otherPermissions.canExecuteTransactions
             && permissions.canTransferTokens == otherPermissions.canTransferTokens
-            && permissions.canTransferNative == otherPermissions.canTransferNative
             && permissions.canSetMetadataURI == otherPermissions.canSetMetadataURI;
+    }
+
+    function equals(AccountManagerPermissions memory permissions, AccountManagerStorage memory storagePermissions)
+        internal
+        pure
+        returns (bool)
+    {
+        return permissions.canExecuteTransactions == storagePermissions.canExecuteTransactions
+            && permissions.canTransferTokens == storagePermissions.canTransferTokens
+            && permissions.canSetMetadataURI == storagePermissions.canSetMetadataURI;
+    }
+
+    function equals(AccountManagerStorage memory storagePermissions, AccountManagerPermissions memory permissions)
+        internal
+        pure
+        returns (bool)
+    {
+        return equals(permissions, storagePermissions);
     }
 
     function isAccountManager(AccountManagerPermissions memory managerPermissions) internal pure returns (bool) {
         return managerPermissions.canExecuteTransactions || managerPermissions.canSetMetadataURI;
     }
+
+    function isAccountManager(AccountManagerStorage memory managerPermissions) internal pure returns (bool) {
+        return managerPermissions.canExecuteTransactions || managerPermissions.canSetMetadataURI;
+    }
+
+    function toAccountManagerPermissions(AccountManagerStorage memory storagePermissions)
+        internal
+        pure
+        returns (AccountManagerPermissions memory)
+    {
+        return AccountManagerPermissions({
+            canExecuteTransactions: storagePermissions.canExecuteTransactions,
+            canTransferTokens: storagePermissions.canTransferTokens,
+            canTransferNative: storagePermissions.canTransferTokens, // Intentionally derived from `canTransferTokens`
+            canSetMetadataURI: storagePermissions.canSetMetadataURI
+        });
+    }
+
+    function updatePermissionsTo(
+        AccountManagerStorage storage _storagePermissions,
+        AccountManagerPermissions memory permission
+    ) internal {
+        _storagePermissions.canExecuteTransactions = permission.canExecuteTransactions;
+        _storagePermissions.canTransferTokens = permission.canTransferTokens;
+        _storagePermissions.canSetMetadataURI = permission.canSetMetadataURI;
+    }
+
+    function clearPermissions(AccountManagerStorage storage _storagePermissions) internal {
+        delete _storagePermissions.canExecuteTransactions;
+        delete _storagePermissions.canTransferTokens;
+        delete _storagePermissions.canSetMetadataURI;
+    }
+}
+
+struct AccountManagerStorage {
+    bool canExecuteTransactions;
+    bool canTransferTokens;
+    bool __deprecated__; // It was `bool canTransferNative`.
+    bool canSetMetadataURI;
+    uint192 __gap__;
+    uint32 allowanceKey;
 }
 
 enum WhoCanAddMeToGroups {
@@ -61,15 +119,15 @@ contract Account is
 {
     using CallLib for address;
     using PermissionsHelper for AccountManagerPermissions;
+    using PermissionsHelper for AccountManagerStorage;
 
     struct Storage {
-        mapping(address account => AccountManagerPermissions permissions) accountManagerPermissions;
-        uint256 __gap__; // Deprecated field. It was `uint256 allowNonOwnerSpendingTimestamp`.
+        mapping(address manager => AccountManagerStorage permissions) managerStorage;
+        uint256 __deprecated__; // It was `uint256 allowNonOwnerSpendingTimestamp`.
         WhoCanAddMeToGroups whoCanAddMeToGroups;
         mapping(address group => bool wasRequestSent) didSendRequestToGroup;
         mapping(address graph => bool usedGraph) didFollowOnGraph; // Written in current impl for future use.
         mapping(address graph => bool canAddMeToGroups) isGraphAllowedForGroupAddition; // Not written in current impl.
-        mapping(address manager => uint256 allowanceKey) allowanceKey;
         mapping(address manager => mapping(uint256 key => mapping(address currency => uint256 allowance))) allowance;
     }
 
@@ -109,13 +167,14 @@ contract Account is
     function _initialize(
         string memory metadataURI,
         address[] memory accountManagers,
-        AccountManagerPermissions[] memory accountManagerPermissions,
+        AccountManagerPermissions[] memory permissions,
         SourceStamp memory sourceStamp,
         KeyValue[] calldata extraData
     ) internal {
         for (uint256 i = 0; i < accountManagers.length; i++) {
-            $storage().accountManagerPermissions[accountManagers[i]] = accountManagerPermissions[i];
-            emit Lens_Account_AccountManagerAdded(accountManagers[i], accountManagerPermissions[i]);
+            _validateAccountManagerPermissions(permissions[i]);
+            $storage().managerStorage[accountManagers[i]].updatePermissionsTo(permissions[i]);
+            emit Lens_Account_AccountManagerAdded(accountManagers[i], permissions[i]);
         }
         _setExtraData(extraData);
         if (sourceStamp.source != address(0)) {
@@ -145,7 +204,7 @@ contract Account is
 
     function setMetadataURI(string calldata metadataURI, SourceStamp calldata sourceStamp) external override {
         if (msg.sender != owner()) {
-            require($storage().accountManagerPermissions[msg.sender].canSetMetadataURI, Errors.NotAllowed());
+            require($storage().managerStorage[msg.sender].canSetMetadataURI, Errors.NotAllowed());
         }
         if (sourceStamp.source != address(0)) {
             ISource(sourceStamp.source).validateSource(sourceStamp);
@@ -167,10 +226,8 @@ contract Account is
         if ($storage().didSendRequestToGroup[group]) {
             return true;
         }
-        if (
-            addedBy == address(this) || addedBy == owner()
-                || $storage().accountManagerPermissions[addedBy].canExecuteTransactions
-        ) {
+        if (addedBy == address(this) || addedBy == owner() || $storage().managerStorage[addedBy].canExecuteTransactions)
+        {
             return true;
         }
         if ($storage().whoCanAddMeToGroups == WhoCanAddMeToGroups.NOBODY) {
@@ -249,34 +306,39 @@ contract Account is
     // Owner Only functions
 
     function _isAccountManager(address accountManager) internal view returns (bool) {
-        return $storage().accountManagerPermissions[accountManager].isAccountManager();
+        return $storage().managerStorage[accountManager].isAccountManager();
     }
 
-    function _validateAccountManagerPermissions(AccountManagerPermissions calldata permissions) internal pure {
-        if (permissions.canTransferNative || permissions.canTransferTokens) {
+    function _validateAccountManagerPermissions(AccountManagerPermissions memory permissions) internal pure {
+        // Both permissions are merged into a single one, to not break interface, we require them to match.
+        require(permissions.canTransferNative == permissions.canTransferTokens, Errors.InvalidParameter());
+        if (permissions.canTransferTokens) {
             require(permissions.canExecuteTransactions, Errors.InvalidParameter());
         } else {
             require(permissions.isAccountManager(), Errors.InvalidParameter());
         }
     }
 
-    function addAccountManager(address accountManager, AccountManagerPermissions calldata accountManagerPermissions)
+    function addAccountManager(address accountManager, AccountManagerPermissions calldata permissions)
         external
         override
         onlyOwner
     {
         require(!_isAccountManager(accountManager), Errors.RedundantStateChange());
-        _validateAccountManagerPermissions(accountManagerPermissions);
+        _validateAccountManagerPermissions(permissions);
         require(accountManager != owner(), Errors.InvalidParameter());
         require(accountManager != address(0), Errors.InvalidParameter());
-        $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
-        emit Lens_Account_AccountManagerAdded(accountManager, accountManagerPermissions);
+        $storage().managerStorage[accountManager].updatePermissionsTo(permissions);
+        emit Lens_Account_AccountManagerAdded(accountManager, permissions);
     }
 
-    function removeAccountManager(address accountManager) external override onlyOwner {
+    function removeAccountManager(address accountManager) external override {
+        // Manager can remove itself.
+        require(msg.sender == owner() || msg.sender == accountManager, Errors.InvalidMsgSender());
         require(_isAccountManager(accountManager), Errors.RedundantStateChange());
-        delete $storage().accountManagerPermissions[accountManager];
+        $storage().managerStorage[accountManager].clearPermissions();
         emit Lens_Account_AccountManagerRemoved(accountManager);
+        _clearAllAllowances(accountManager);
     }
 
     function updateAccountManagerPermissions(
@@ -286,10 +348,13 @@ contract Account is
         require(_isAccountManager(accountManager), Errors.InvalidParameter());
         _validateAccountManagerPermissions(accountManagerPermissions);
         require(
-            !$storage().accountManagerPermissions[accountManager].equals(accountManagerPermissions),
-            Errors.RedundantStateChange()
+            !$storage().managerStorage[accountManager].equals(accountManagerPermissions), Errors.RedundantStateChange()
         );
-        $storage().accountManagerPermissions[accountManager] = accountManagerPermissions;
+        if ($storage().managerStorage[accountManager].canTransferTokens && !accountManagerPermissions.canTransferTokens)
+        {
+            _clearAllAllowances(accountManager);
+        }
+        $storage().managerStorage[accountManager].updatePermissionsTo(accountManagerPermissions);
         emit Lens_Account_AccountManagerUpdated(accountManager, accountManagerPermissions);
     }
 
@@ -297,6 +362,10 @@ contract Account is
         for (uint256 i = 0; i < allowanceChanges.length; i++) {
             for (uint256 j = 0; j < allowanceChanges[i].allowanceIncreases.length; j++) {
                 require(_isAccountManager(allowanceChanges[i].spender), Errors.InvalidParameter());
+                require(
+                    $storage().managerStorage[allowanceChanges[i].spender].canTransferTokens == false,
+                    Errors.RedundantStateChange() // Manager has infinite allowance by canTransferTokens permission
+                );
                 _increaseAllowance(
                     allowanceChanges[i].spender,
                     allowanceChanges[i].allowanceIncreases[j].currency,
@@ -304,6 +373,10 @@ contract Account is
                 );
             }
             for (uint256 j = 0; j < allowanceChanges[i].allowanceDecreases.length; j++) {
+                require(
+                    $storage().managerStorage[allowanceChanges[i].spender].canTransferTokens == false,
+                    Errors.InvalidParameter() // Manager has infinite allowance by canTransferTokens permission
+                );
                 _decreaseAllowance(
                     allowanceChanges[i].spender,
                     allowanceChanges[i].allowanceDecreases[j].currency,
@@ -315,13 +388,17 @@ contract Account is
 
     function clearAllAllowances(address[] calldata managers) external override onlyOwner {
         for (uint256 i = 0; i < managers.length; i++) {
-            $storage().allowanceKey[managers[i]]++;
-            emit Lens_Account_AllAllowancesCleared(managers[i]);
+            _clearAllAllowances(managers[i]);
         }
     }
 
+    function _clearAllAllowances(address manager) internal {
+        $storage().managerStorage[manager].allowanceKey++;
+        emit Lens_Account_AllAllowancesCleared(manager);
+    }
+
     function _increaseAllowance(address spender, address currency, uint256 byAmount) internal returns (uint256) {
-        uint256 allowanceKey = $storage().allowanceKey[spender];
+        uint256 allowanceKey = $storage().managerStorage[spender].allowanceKey;
         uint256 newAllowance = $storage().allowance[spender][allowanceKey][currency] += byAmount;
         emit Lens_Account_AllowanceIncreased(spender, currency, newAllowance);
         return newAllowance;
@@ -340,7 +417,7 @@ contract Account is
         returns (uint256)
     {
         uint256 newAllowance = 0;
-        uint256 allowanceKey = $storage().allowanceKey[spender];
+        uint256 allowanceKey = $storage().managerStorage[spender].allowanceKey;
         if ($storage().allowance[spender][allowanceKey][currency] < byAmount) {
             require(failOnUnderflow == false, Errors.InsufficientAllowance());
             $storage().allowance[spender][allowanceKey][currency] = 0;
@@ -383,11 +460,8 @@ contract Account is
 
     function _beforeExecuteTransaction() internal returns (bool) {
         bool isMsgSenderOwner = msg.sender == owner();
-        require(
-            isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canExecuteTransactions,
-            Errors.NotAllowed()
-        );
-        if (msg.value > 0 && !isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferNative) {
+        require(isMsgSenderOwner || $storage().managerStorage[msg.sender].canExecuteTransactions, Errors.NotAllowed());
+        if (msg.value > 0 && !isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens) {
             _increaseAllowance(msg.sender, GHO, msg.value);
         }
         return isMsgSenderOwner;
@@ -416,6 +490,9 @@ contract Account is
         return callSucceeded == false;
     }
 
+    /// NOTE: This approach is not ideal. We should switch to a denied-by-default strategy.
+    /// Then, specific selectors must be enabled for specific contract addresses.
+    /// This hints to use Access Control with scoped (address-based) Roles and Permissions.
     function _handleSpecificSelectorLogicBeforeCall(
         bool isMsgSenderOwner,
         address target,
@@ -424,13 +501,13 @@ contract Account is
         bytes calldata encodedParams
     ) internal {
         if (target == address(WGHO) && selector == bytes4(keccak256("deposit()"))) {
-            if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferNative) {
+            if (!isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens) {
                 _spendAllowance(msg.sender, GHO, value);
                 _increaseAllowance(msg.sender, WGHO, value);
             }
         } else if (target == address(WGHO) && selector == bytes4(keccak256("withdraw(uint256)"))) {
             (uint256 amount) = abi.decode(encodedParams, (uint256));
-            if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferNative) {
+            if (!isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens) {
                 _spendAllowance(msg.sender, WGHO, amount);
                 _increaseAllowance(msg.sender, GHO, amount);
             }
@@ -439,7 +516,7 @@ contract Account is
                 address from, uint256 amount, address to
             ) {
                 if (_isERC20(target)) {
-                    if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
+                    if (!isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens) {
                         if (from == msg.sender && to == address(this)) {
                             _increaseAllowance(msg.sender, target, amount);
                         } else {
@@ -447,7 +524,7 @@ contract Account is
                         }
                     }
                 } else {
-                    require($storage().accountManagerPermissions[msg.sender].canTransferTokens, Errors.NotAllowed());
+                    require($storage().managerStorage[msg.sender].canTransferTokens, Errors.NotAllowed());
                 }
             } catch {
                 return;
@@ -460,7 +537,7 @@ contract Account is
             // Intentionally skipped decreaseAllowance case, allowing it for any manager, as emergency/safety mechanism
             try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address, uint256 amount, address)
             {
-                if (!isMsgSenderOwner && !$storage().accountManagerPermissions[msg.sender].canTransferTokens) {
+                if (!isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens) {
                     _spendAllowance(msg.sender, target, amount);
                 }
             } catch {
@@ -474,7 +551,7 @@ contract Account is
                 || selector == bytes4(keccak256("setApprovalForAll(address,bool)"))
         ) {
             try this.abiDecodeForKnownSelectorHelper(selector, encodedParams) returns (address, uint256, address) {
-                require(isMsgSenderOwner || $storage().accountManagerPermissions[msg.sender].canTransferTokens);
+                require(isMsgSenderOwner || $storage().managerStorage[msg.sender].canTransferTokens);
             } catch {
                 return;
             }
@@ -506,7 +583,7 @@ contract Account is
     // Getters
 
     function canExecuteTransactions(address executor) external view override returns (bool) {
-        return $storage().accountManagerPermissions[executor].canExecuteTransactions || executor == owner();
+        return $storage().managerStorage[executor].canExecuteTransactions || executor == owner();
     }
 
     function isAccountManager(address accountManager) external view override returns (bool) {
@@ -514,7 +591,7 @@ contract Account is
     }
 
     function canSetMetadataURI(address accountManager) external view override returns (bool) {
-        return $storage().accountManagerPermissions[accountManager].canSetMetadataURI;
+        return $storage().managerStorage[accountManager].canSetMetadataURI;
     }
 
     function getAccountManagerPermissions(address accountManager)
@@ -523,7 +600,7 @@ contract Account is
         override
         returns (AccountManagerPermissions memory)
     {
-        return $storage().accountManagerPermissions[accountManager];
+        return $storage().managerStorage[accountManager].toAccountManagerPermissions();
     }
 
     function getExtraData(bytes32 key) external view override returns (bytes memory) {

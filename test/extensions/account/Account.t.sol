@@ -85,16 +85,19 @@ contract AccountTest is Test, BaseDeployments {
         address anotherAccount = makeAddr("ANOTHER_ACCOUNT");
         vm.assume(msgValue > 0);
         msgValue = msgValue % 1 << 95;
-        anotherAccount.call{value: msgValue}("");
+        (bool success,) = anotherAccount.call{value: msgValue}("");
+        assertTrue(success, "Low-level call failed");
         assertEq(anotherAccount.balance, msgValue);
 
         vm.prank(anotherAccount);
-        address(account).call{value: msgValue}("");
+        (success,) = address(account).call{value: msgValue}("");
+        assertTrue(success, "Low-level call failed");
+
         assertEq(address(account).balance, msgValue, "Account didn't receive native token");
         assertEq(anotherAccount.balance, 0, "AnotherAccount didn't send native token");
 
         vm.prank(owner);
-        bytes memory returnData = account.executeTransaction({target: anotherAccount, value: 0, data: ""});
+        account.executeTransaction({target: anotherAccount, value: 0, data: ""});
         assertEq(anotherAccount.balance, msgValue, "AnotherAccount didn't receive native token");
         assertEq(address(account).balance, 0, "Account didn't send native token");
     }
@@ -103,16 +106,18 @@ contract AccountTest is Test, BaseDeployments {
         address anotherAccount = makeAddr("ANOTHER_ACCOUNT");
         vm.assume(msgValue > 0);
         msgValue = msgValue % 1 << 95;
-        anotherAccount.call{value: msgValue}("");
+        (bool success,) = anotherAccount.call{value: msgValue}("");
+        assertTrue(success, "Low-level call failed");
         assertEq(anotherAccount.balance, msgValue);
 
         vm.prank(anotherAccount);
-        address(account).call{value: msgValue}("");
+        (success,) = address(account).call{value: msgValue}("");
+        assertTrue(success, "Low-level call failed");
         assertEq(address(account).balance, msgValue, "Account didn't receive native token");
         assertEq(anotherAccount.balance, 0, "AnotherAccount didn't send native token");
 
         vm.prank(manager);
-        bytes memory returnData = account.executeTransaction({target: anotherAccount, value: 0, data: ""});
+        account.executeTransaction({target: anotherAccount, value: 0, data: ""});
         assertEq(anotherAccount.balance, msgValue, "AnotherAccount didn't receive native token");
         assertEq(address(account).balance, 0, "Account didn't send native token");
     }
@@ -155,6 +160,7 @@ contract AccountTest is Test, BaseDeployments {
         vm.assume(accountManager != address(0));
         vm.assume(accountManager != owner);
         vm.assume(accountManager != manager);
+        vm.assume(canTransferTokens == canTransferNative); // New condition in Account Manager permissions
 
         vm.prank(owner);
         account.addAccountManager(
@@ -201,6 +207,8 @@ contract AccountTest is Test, BaseDeployments {
         vm.assume(canTransferTokensBefore != canTransferTokensAfter);
         vm.assume(canTransferNativeBefore != canTransferNativeAfter);
         vm.assume(canSetMetadataURIBefore != canSetMetadataURIAfter);
+        vm.assume(canTransferTokensBefore == canTransferNativeBefore); // New condition in Account Manager permissions
+        vm.assume(canTransferTokensAfter == canTransferNativeAfter); // New condition in Account Manager permissions
 
         vm.prank(owner);
         account.addAccountManager(
@@ -236,6 +244,7 @@ contract AccountTest is Test, BaseDeployments {
         vm.assume(accountManager != address(0));
         vm.assume(accountManager != owner);
         vm.assume(accountManager != manager);
+        vm.assume(canTransferTokens == canTransferNative); // New condition in Account Manager permissions
 
         vm.prank(owner);
         account.addAccountManager(
