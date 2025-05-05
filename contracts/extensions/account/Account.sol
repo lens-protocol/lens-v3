@@ -476,6 +476,10 @@ contract Account is
             _handleSpecificSelectorLogicBeforeCall(
                 isMsgSenderOwner, target, value, bytes4(data[:SELECTOR_BYTE_LENGTH]), data[SELECTOR_BYTE_LENGTH:]
             );
+        } else if (
+            value > 0 && msg.value > 0 && !isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens
+        ) {
+            _spendAllowance(msg.sender, GHO, msg.value);
         }
         bytes memory returnData = target.handledcall(value, data);
         emit Lens_Account_TransactionExecuted(target, value, data, msg.sender);
