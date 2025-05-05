@@ -51,6 +51,10 @@ import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
 import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
 
+import {MockCurrency} from "test/mocks/MockCurrency.sol";
+import {MockWrapperCurrency} from "test/mocks/MockWrapperCurrency.sol";
+import {MockNft} from "test/mocks/MockNft.sol";
+
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
@@ -113,6 +117,11 @@ contract BaseDeployments is Test {
     address banMemberGroupRule;
     address addRemovePidGroupRule;
     address usernameReservedNamespaceRule;
+
+    address GHO = address(0x800A);
+    MockWrapperCurrency WGHO;
+    MockCurrency someCurrency;
+    MockNft someNft;
 
     bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
 
@@ -236,8 +245,9 @@ contract BaseDeployments is Test {
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
         appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
-        accountImpl =
-            migrationMode ? address(new MigrationAccount()) : address(new AccountContract(address(0), address(0)));
+        accountImpl = migrationMode
+            ? address(new MigrationAccount())
+            : address(new AccountContract({nativeGHO: address(GHO), wrappedGHO: address(WGHO)}));
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());

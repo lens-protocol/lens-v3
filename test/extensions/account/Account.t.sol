@@ -4,12 +4,17 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import "./../../helpers/TypeHelpers.sol";
-import {IAccount, AccountManagerPermissions} from "@extensions/account/IAccount.sol";
+import {IAccount, AccountManagerPermissions, Transaction} from "@extensions/account/IAccount.sol";
 import {Account} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {MockCurrency} from "test/mocks/MockCurrency.sol";
+import {MockWrapperCurrency} from "test/mocks/MockWrapperCurrency.sol";
+import {MockNft} from "test/mocks/MockNft.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract AccountTest is Test, BaseDeployments {
     address owner = makeAddr("OWNER");
@@ -49,6 +54,10 @@ contract AccountTest is Test, BaseDeployments {
                 extraData: _emptyKeyValueArray()
             })
         );
+
+        WGHO = new MockWrapperCurrency("Wrapped GHO", "WGHO");
+        someCurrency = new MockCurrency("Aave", "AAVE");
+        someNft = new MockNft("Milady Maker", "MIL");
     }
 
     function testCanExecuteTxDirectly() public {
@@ -289,6 +298,161 @@ contract AccountTest is Test, BaseDeployments {
             value: 0,
             data: abi.encodeWithSelector(ErrorsTest.customErrorWithValue.selector, uint256(123))
         });
+    }
+
+    function test_spending_AnyManagerCanSpendItsOwnFunds(address someManager, uint256 amount) public {
+        vm.assume(amount > 0);
+        vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
+        someCurrency.mint(someManager, amount);
+
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
+
+        vm.prank(someManager);
+        someCurrency.approve(address(account), amount);
+
+        Transaction[] memory transactions = new Transaction[](2);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (someManager, address(account), amount))
+        });
+
+        transactions[1] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transfer, (someManager, amount))
+        });
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function test_spending_AnyManagerCanSpendItsOwnFunds_Native(address someManager, uint256 amount) public {
+        address newAddress = makeAddr("NEW_ADDRESS");
+        vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
+        vm.assume(someManager.balance == 0);
+        uint256 forGas = 1 ether;
+        // Bound msgValue [0, 2^95), as test contract's native balance is 2^96, and vm.deal has issues in zksync foundry
+        vm.assume(amount > 0 && amount <= 1 << 95);
+        vm.deal(someManager, amount + forGas);
+
+        assertEq(someManager.balance, amount + forGas);
+        assertEq(newAddress.balance, 0);
+
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({target: address(newAddress), value: amount, data: ""});
+
+        vm.prank(someManager);
+        account.executeTransactions{value: amount}(transactions);
+
+        assertEq(newAddress.balance, amount);
+    }
+
+    function test_spending_Manager_Cannot_SpendMoreThanHeHasAllowed_FundingHimself(
+        address someManager,
+        uint256 amount,
+        uint256 biggerAmount
+    ) public {
+        vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
+        vm.assume(amount > 0);
+        vm.assume(biggerAmount > amount);
+        someCurrency.mint(someManager, amount);
+
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
+
+        vm.prank(someManager);
+        someCurrency.approve(address(account), amount);
+
+        Transaction[] memory transactions = new Transaction[](2);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (someManager, address(account), amount))
+        });
+
+        transactions[1] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transfer, (someManager, biggerAmount))
+        });
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+        account.executeTransactions(transactions);
+    }
+
+    function test_spending_Manager_Cannot_TreatNftAsCurrencyAndTradeIt(address someManager) public {
+        vm.assume(account.isAccountManager(someManager) == false);
+
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
+
+        // Mint super valuable NFT Token ID #1 to the account, it is super valuable!
+        someNft.mint(address(account), 1);
+
+        // Mint less relevant NFT Token ID #9999 to the manager
+        someNft.mint(someManager, 9999);
+
+        vm.prank(someManager);
+        someNft.approve(address(account), 9999);
+
+        Transaction[] memory transactions = new Transaction[](2);
+
+        // Transfer the NFT #9999 to the account, expecting to be treated as ERC-20, then to increase allowance by 9999
+        transactions[0] = Transaction({
+            target: address(someNft),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (someManager, address(account), 9999))
+        });
+
+        // Then, expect to steal/trade the NFT #1 from the account to the manager, given the allowance is expected to
+        // be at 9999, then it will just spend 1, succeed and leave allowance decreased to 9998.
+        transactions[1] = Transaction({
+            target: address(someNft),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (address(account), someManager, 1))
+        });
+
+        vm.prank(someManager);
+        // Call should fail because it should detect that the target is an ERC-721, not ERC-721, then ask for the
+        // specific `canTransferTokens` permission in order to transfer the token.
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.executeTransactions(transactions);
     }
 }
 
