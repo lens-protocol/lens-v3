@@ -10,11 +10,7 @@ import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "@core/types/Errors.sol";
-import {MockCurrency} from "test/mocks/MockCurrency.sol";
-import {MockWrapperCurrency} from "test/mocks/MockWrapperCurrency.sol";
-import {MockNft} from "test/mocks/MockNft.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 contract AccountTest is Test, BaseDeployments {
     address owner = makeAddr("OWNER");
@@ -54,10 +50,6 @@ contract AccountTest is Test, BaseDeployments {
                 extraData: _emptyKeyValueArray()
             })
         );
-
-        WGHO = new MockWrapperCurrency("Wrapped GHO", "WGHO");
-        someCurrency = new MockCurrency("Aave", "AAVE");
-        someNft = new MockNft("Milady Maker", "MIL");
     }
 
     function testCanExecuteTxDirectly() public {
@@ -412,6 +404,7 @@ contract AccountTest is Test, BaseDeployments {
 
     function test_spending_Manager_Cannot_TreatNftAsCurrencyAndTradeIt(address someManager) public {
         vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
 
         AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
             canExecuteTransactions: true,

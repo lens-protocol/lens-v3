@@ -137,6 +137,10 @@ contract BaseDeployments is Test {
         _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
         _deployFactoryProxies();
 
+        WGHO = new MockWrapperCurrency("Wrapped GHO", "WGHO");
+        someCurrency = new MockCurrency("Aave", "AAVE");
+        someNft = new MockNft("Milady Maker", "MIL");
+
         accountBlockingRule = address(
             new TransparentUpgradeableProxy(
                 address(new AccountBlockingRule()),
