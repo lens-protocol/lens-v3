@@ -82,6 +82,8 @@ interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
         view
         returns (AccountManagerPermissions memory);
 
+    function getAccountManagerAllowance(address accountManager, address currency) external view returns (uint256);
+
     function getExtraData(bytes32 key) external view returns (bytes memory);
 
     receive() external payable;

@@ -607,6 +607,20 @@ contract Account is
         return $storage().managerStorage[accountManager].toAccountManagerPermissions();
     }
 
+    function getAccountManagerAllowance(address accountManager, address currency)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        AccountManagerStorage memory managerStorage = $storage().managerStorage[accountManager];
+        if (managerStorage.canTransferTokens) {
+            return type(uint256).max;
+        } else {
+            return $storage().allowance[accountManager][managerStorage.allowanceKey][currency];
+        }
+    }
+
     function getExtraData(bytes32 key) external view override returns (bytes memory) {
         return _getExtraData(key);
     }
