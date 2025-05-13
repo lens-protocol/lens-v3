@@ -336,9 +336,7 @@ contract Account is
         // Manager can remove itself.
         require(msg.sender == owner() || msg.sender == accountManager, Errors.InvalidMsgSender());
         require(_isAccountManager(accountManager), Errors.RedundantStateChange());
-        $storage().managerStorage[accountManager].clearPermissions();
-        emit Lens_Account_AccountManagerRemoved(accountManager);
-        _clearAllAllowances(accountManager);
+        _removeAccountManager(accountManager);
     }
 
     function updateAccountManagerPermissions(
@@ -580,9 +578,27 @@ contract Account is
         }
     }
 
+    // Permissionless function to remove owners set as manager during migration,
+    // as that is an undesired state.
+    function removeOwnerAsManager() external {
+        address owner = owner();
+        if (_isAccountManager(owner)) {
+            _removeAccountManager(owner);
+        }
+    }
+
+    function _removeAccountManager(address accountManager) internal {
+        $storage().managerStorage[accountManager].clearPermissions();
+        emit Lens_Account_AccountManagerRemoved(accountManager);
+        _clearAllAllowances(accountManager);
+    }
+
     // Receiver
 
-    receive() external payable override {}
+    receive() external payable override {
+        // NOTE: This way of funding does not increase allowance. You need to fund through executeTransaction(s) if you
+        // want your allowance to be increased.
+    }
 
     // Getters
 
@@ -626,6 +642,9 @@ contract Account is
     }
 
     function _transferOwnership(address newOwner) internal override {
+        if (_isAccountManager(newOwner)) {
+            _removeAccountManager(newOwner);
+        }
         address oldOwner = owner();
         super._transferOwnership(newOwner);
         emit Lens_Account_OwnershipTransferred(oldOwner, newOwner);
