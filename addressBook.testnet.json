@@ -742,11 +742,10 @@
     "name": "TippingPostActionImpl",
     "contractName": "TippingPostAction",
     "contractType": 0,
-    "address": "0x98ea8565fDB55bBe94937307D657a9Bfdb762609",
-    "bytecodeHash": "0100023d8e36bcdc8b61f16bdf163ba024ebf33e2b87ee31d43518f658d7ff95",
     "constructorArguments": [
       "0x4A92a97Ff3a3604410945ae8CA25df4fBB2fDC11"
-    ]
+    ],
+    "address": "0xed9Bc75C4c55A0904D94472D8AF82adA682c3847"
   },
   "TippingPostAction": {
     "contractName": "TransparentUpgradeableProxy",
@@ -757,7 +756,7 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0x34EF0F5e41cB6c7ad9438079c179d70C7567ae00",
-    "implementation": "0x98ea8565fDB55bBe94937307D657a9Bfdb762609",
+    "implementation": "0xed9Bc75C4c55A0904D94472D8AF82adA682c3847",
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "SimpleCollectActionImpl": {

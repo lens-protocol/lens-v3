@@ -17,12 +17,17 @@ async function deploy() {
   console.log(`Using proxy owner private key with address: ${await getWallet(proxyOwnerPrivateKey).getAddress()}`);
   console.log(`Proxy owner balance: ${ethers.formatEther(proxyOwnerBalance)}`);
 
+  const actionHubAddress = loadContractAddressFromAddressBook('ActionHub');
+  if (!actionHubAddress) {
+    throw new Error('ActionHub not found in address book');
+  }
+
   const contractToUpgrade: ContractInfo =
     {
-      name: 'ActionHubImpl',
-      contractName: 'ActionHub',
+      name: 'TippingPostActionImpl',
+      contractName: 'TippingPostAction',
       contractType: ContractType.Implementation,
-      constructorArguments: [],
+      constructorArguments: [actionHubAddress],
     };
 
   const transparentUpgradeableProxyAddress = loadContractAddressFromAddressBook(contractToUpgrade.contractName);
