@@ -132,14 +132,15 @@ contract BaseDeployments is Test {
     function setUp() public virtual {
         proxyAdminLock = address(new Lock(proxyAdminLockOwner, true));
         accessControlLock = address(new Lock(accessControlLockOwner, true));
-        _deployImplementations();
-        _deployBeacons();
-        _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
-        _deployFactoryProxies();
 
         WGHO = new MockWrapperCurrency("Wrapped GHO", "WGHO");
         someCurrency = new MockCurrency("Aave", "AAVE");
         someNft = new MockNft("Milady Maker", "MIL");
+
+        _deployImplementations();
+        _deployBeacons();
+        _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
+        _deployFactoryProxies();
 
         accountBlockingRule = address(
             new TransparentUpgradeableProxy(

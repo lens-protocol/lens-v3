@@ -4,7 +4,13 @@ pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
 import "./../../helpers/TypeHelpers.sol";
-import {IAccount, AccountManagerPermissions, Transaction} from "@extensions/account/IAccount.sol";
+import {
+    IAccount,
+    AccountManagerPermissions,
+    Transaction,
+    Allowance,
+    AllowanceChange
+} from "@extensions/account/IAccount.sol";
 import {Account} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
@@ -292,7 +298,7 @@ contract AccountTest is Test, BaseDeployments {
         });
     }
 
-    function test_spending_AnyManagerCanSpendItsOwnFunds(address someManager, uint256 amount) public {
+    function test_AnyManagerCanSpendItsOwnFunds(address someManager, uint256 amount) public {
         vm.assume(amount > 0);
         vm.assume(account.isAccountManager(someManager) == false);
         vm.assume(someManager != owner);
@@ -328,7 +334,7 @@ contract AccountTest is Test, BaseDeployments {
         account.executeTransactions(transactions);
     }
 
-    function test_spending_AnyManagerCanSpendItsOwnFunds_Native(address someManager, uint256 amount) public {
+    function test_AnyManagerCanSpendItsOwnFunds_Native(address someManager, uint256 amount) public {
         address newAddress = makeAddr("NEW_ADDRESS");
         vm.assume(account.isAccountManager(someManager) == false);
         vm.assume(someManager != owner);
@@ -360,7 +366,7 @@ contract AccountTest is Test, BaseDeployments {
         assertEq(newAddress.balance, amount);
     }
 
-    function test_spending_Manager_Cannot_SpendMoreThanHeHasAllowed_FundingHimself(
+    function test_Manager_Cannot_SpendMoreThanHeHasAllowed_FundingHimself(
         address someManager,
         uint256 amount,
         uint256 biggerAmount
@@ -402,7 +408,7 @@ contract AccountTest is Test, BaseDeployments {
         account.executeTransactions(transactions);
     }
 
-    function test_spending_Manager_Cannot_TreatNftAsCurrencyAndTradeIt(address someManager) public {
+    function test_Manager_Cannot_TreatNftAsCurrencyAndTradeIt(address someManager) public {
         vm.assume(account.isAccountManager(someManager) == false);
         vm.assume(someManager != owner);
 
@@ -446,6 +452,167 @@ contract AccountTest is Test, BaseDeployments {
         // specific `canTransferTokens` permission in order to transfer the token.
         vm.expectRevert(Errors.NotAllowed.selector);
         account.executeTransactions(transactions);
+    }
+
+    ///[TEST]/// TODO: Increase various allowances, then remove manager, then all those allowances are cleared
+
+    ///[TEST]/// TODO: Increase various allowances, then grant permission, then all those allowances are now infinite (are they? or you can just spend infinite?)
+
+    ///[TEST]/// TODO: Increase various allowances, then grant and revoke permission, then all those allowances are now cleared
+
+    function test_FundingAccount_IncreasesAllowance_ViaTransferFrom(address someManager, uint256 amount) public {
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        someCurrency.mint(someManager, amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (someManager, address(account), amount))
+        });
+
+        vm.prank(someManager);
+        someCurrency.approve(address(account), amount);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+    }
+
+    function test_FundingAccount_IncreasesAllowance_ViaDeposit(address someManager, uint256 amount) public {
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        vm.deal(address(account), amount);
+        _increaseAllowance(someManager, GHO, amount);
+
+        assertEq(
+            account.getAccountManagerAllowance(someManager, address(GHO)),
+            amount,
+            "GHO allowance wasn't increased to `amount`"
+        );
+        assertEq(account.getAccountManagerAllowance(someManager, address(WGHO)), 0, "WGHO allowance wasn't 0");
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({target: address(WGHO), value: amount, data: abi.encodeCall(WGHO.deposit, ())});
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(GHO)), 0, "GHO allowance wasn't decreased to 0");
+        assertEq(
+            account.getAccountManagerAllowance(someManager, address(WGHO)),
+            amount,
+            "WGHO allowance wasn't increased to `amount`"
+        );
+    }
+
+    ///[TEST]/// TODO: Fund account, allowance increased (via withdraw())
+
+    ///[TEST]/// TODO: transferFrom(!msg.sender, account) is allowed (but doesn't increase allowance)
+    ///[TEST]/// TODO: transferFrom(msg.sender, !account) is allowed (but doesn't increase allowance)
+
+    ///[TEST]/// TODO: transferFrom(!msg.sender, account) is allowed (and decreases allowance)
+    ///[TEST]/// TODO: transferFrom(msg.sender, !account) is allowed (and decreases allowance)
+
+    function test_SpendMoney_AllowanceDecreased_viaDeposit(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend
+    ) public {
+        vm.assume(initialAllowance > 0);
+        amountToSpend = bound(amountToSpend, 1, initialAllowance);
+        _setManagerWithoutFundManagementPermission(someManager);
+        _increaseAllowance(someManager, address(GHO), initialAllowance);
+
+        uint256 allowanceBefore = account.getAccountManagerAllowance(someManager, address(GHO));
+        console.log("allowanceBefore", allowanceBefore);
+
+        vm.deal(address(account), amountToSpend);
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] =
+            Transaction({target: address(WGHO), value: amountToSpend, data: abi.encodeCall(WGHO.deposit, ())});
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        uint256 allowanceAfter = account.getAccountManagerAllowance(someManager, address(GHO));
+        console.log("allowanceAfter", allowanceAfter);
+
+        assertTrue(allowanceAfter < allowanceBefore, "Manager's Allowance does not decrease on deposit()");
+        assertEq(
+            allowanceAfter,
+            allowanceBefore - amountToSpend,
+            "Manager's Allowance does not decrease precisely on deposit()"
+        );
+    }
+
+    ///[TEST]/// TODO: Spend money, allowance decreased (via withdraw())
+    ///[TEST]/// TODO: Spend money, allowance decreased (via transferFrom())
+    ///[TEST]/// TODO: Spend money, allowance decreased (via transfer())
+    ///[TEST]/// TODO: Spend money, allowance decreased (via approve())
+    ///[TEST]/// TODO: Spend money, allowance decreased (via increaseAllowance())
+
+    ///[TEST]/// TODO: Cannot spend more money than allowance (via deposit())
+    ///[TEST]/// TODO: Cannot spend more money than allowance (via withdraw())
+    ///[TEST]/// TODO: Cannot spend more money than allowance (via transferFrom())
+    ///[TEST]/// TODO: Cannot spend more money than allowance (via transfer())
+    ///[TEST]/// TODO: Cannot spend more money than allowance (via approve())
+    ///[TEST]/// TODO: Cannot spend more money than allowance (via increaseAllowance())
+
+    function test_FundingThroughPlainCall_DoesNotIncreaseAllowance(address someManager) public {
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        vm.deal(someManager, 5 ether);
+
+        assertEq(account.getAccountManagerAllowance(someManager, GHO), 0);
+
+        uint256 accountBalanceBefore = address(account).balance;
+
+        vm.prank(someManager);
+        (bool success,) = address(account).call{value: 1 ether}("");
+        assertTrue(success, "Low-level call failed");
+
+        assertEq(account.getAccountManagerAllowance(someManager, GHO), 0);
+
+        assertEq(accountBalanceBefore + 1 ether, address(account).balance);
+    }
+
+    function _increaseAllowance(address toManager, address currency, uint256 byAmount) internal {
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](1);
+
+        allowanceIncreases[0] = Allowance({currency: currency, byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: toManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: new Allowance[](0)
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function _setManagerWithoutFundManagementPermission(address someManager) internal {
+        vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
     }
 }
 
