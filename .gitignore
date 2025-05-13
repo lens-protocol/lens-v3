@@ -19,6 +19,8 @@ docs/
 
 # Dotenv file
 .env
+.env.testnet
+.env.mainnet
 
 # Logs
 logs
