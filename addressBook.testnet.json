@@ -418,9 +418,8 @@
     "name": "ActionHubImpl",
     "contractName": "ActionHub",
     "contractType": 0,
-    "address": "0x4e6cF1F803CdbEE5Fe02360C7242268f3D9C2235",
-    "bytecodeHash": "010006c717619898f32961e5517ebda8cbad5ea8ad83b031c26e48c52d22f392",
-    "constructorArguments": []
+    "constructorArguments": [],
+    "address": "0x865856952cceF0C3CBa5589543A6e4Fdac00B5fA"
   },
   "ActionHub": {
     "contractName": "TransparentUpgradeableProxy",
