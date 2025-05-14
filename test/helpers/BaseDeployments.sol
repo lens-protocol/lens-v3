@@ -52,8 +52,6 @@ import {
 
 import {ZkTest} from "test/helpers/ZkTest.sol";
 
-import "forge-std/console.sol";
-
 import {MockLensCreate2} from "test/helpers/MockLensCreate2.sol";
 import {EmptyImplementation} from "@core/upgradeability/EmptyImplementation.sol";
 
@@ -155,8 +153,6 @@ contract BaseDeployments is ZkTest {
     }
 
     function _deployMockLensCreate2() internal {
-        console.log("Deploying mock LensCreate2");
-
         address emptyImpl = address(new EmptyImplementation());
         new TransparentUpgradeableProxy(emptyImpl, emptyImpl, ""); // Discarded, just to avoid UnknownCodeHash error
 
@@ -183,14 +179,6 @@ contract BaseDeployments is ZkTest {
             LENS_CREATE_2_ADDRESS,
             0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103, // bytes32(uint256(keccak256('eip1967.proxy.admin')) - 1)
             bytes32(uint256(uint160(lensCreate2ProxyAdmin)))
-        );
-
-        address proxyImplementation = address(
-            uint160(
-                uint256(
-                    vm.load(LENS_CREATE_2_ADDRESS, 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc)
-                )
-            )
         );
 
         MockLensCreate2(LENS_CREATE_2_ADDRESS).setAddress(CONTRACT__LENS_FEES, makeAddr("LENS_FEES"));

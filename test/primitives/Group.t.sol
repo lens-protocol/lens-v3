@@ -104,7 +104,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_AddMember_LensFactoryConfiguration_MsgSenderIsOwner(address newMember) public {
         vm.assume(newMember != address(0));
-        vm.assume(newMember != address(vm));
+        assumeNotForgeAddress(newMember);
 
         vm.assume(factoryDeployedGroup.isMember(newMember) == false);
 
@@ -208,7 +208,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_AddMember_PermissionlessIfNoProcessAdditionRules(address msgSender, address newMember) public {
         vm.assume(newMember != address(0));
-        vm.assume(newMember != address(vm));
+        assumeNotForgeAddress(newMember);
 
         mockAccessControl.mockAccess(groupOwner, address(group), PID__CHANGE_RULES, true);
         _disableAllRulesFromGroupSelector(address(group), IGroupRule.processAddition.selector, groupOwner);
@@ -271,7 +271,7 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     // TODO: Add this to GroupHelpers or something
     function _forceMemberIntoGroup(address member) internal {
-        vm.assume(member != address(vm)); // skip vm contract
+        assumeNotForgeAddress(member); // skip vm contract
         if (group.isMember(member) == false) {
             vm.mockCall(
                 member,

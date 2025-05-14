@@ -22,6 +22,9 @@ contract TippingAccountActionTest is Test, BaseDeployments {
     function testCanTipNative_woReferrals(uint256 msgValue, address account) public {
         vm.assume(account != address(0));
         vm.assume(account.code.length == 0);
+        vm.assume(uint160(account) > type(uint16).max); // skip system contracts
+        assumeNotForgeAddress(account);
+
         msgValue = msgValue % (1 << 95);
         vm.assume(msgValue > 0);
         vm.deal(address(this), msgValue);
