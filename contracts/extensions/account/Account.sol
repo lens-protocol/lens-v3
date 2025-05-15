@@ -25,16 +25,6 @@ import {SELECTOR_BYTE_LENGTH} from "contracts/core/types/Constants.sol";
 import {IERC721} from "@openzeppelin/contracts/interfaces/IERC721.sol";
 
 library PermissionsHelper {
-    function equals(AccountManagerPermissions memory permissions, AccountManagerPermissions memory otherPermissions)
-        internal
-        pure
-        returns (bool)
-    {
-        return permissions.canExecuteTransactions == otherPermissions.canExecuteTransactions
-            && permissions.canTransferTokens == otherPermissions.canTransferTokens
-            && permissions.canSetMetadataURI == otherPermissions.canSetMetadataURI;
-    }
-
     function equals(AccountManagerPermissions memory permissions, AccountManagerStorage memory storagePermissions)
         internal
         pure

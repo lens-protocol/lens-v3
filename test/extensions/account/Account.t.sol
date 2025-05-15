@@ -455,6 +455,37 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.executeTransactions(transactions);
     }
 
+    function test_ClearAllAllowances_UsingClearAllAllowancesFunction(address someManager, uint256 initialAllowance)
+        public
+    {
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        // Give native GHO allowance
+        _increaseAllowance(someManager, address(GHO), initialAllowance);
+        // Give WHO allowance
+        _increaseAllowance(someManager, address(WGHO), initialAllowance);
+        // Give some other currency allowance
+        _increaseAllowance(someManager, address(someCurrency), initialAllowance);
+
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        assertTrue(account.isAccountManager(someManager));
+
+        address[] memory managers = new address[](1);
+        managers[0] = someManager;
+
+        vm.prank(owner);
+        account.clearAllAllowances(managers);
+
+        assertTrue(account.isAccountManager(someManager));
+
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+    }
+
     function test_RemovingManager_ClearItsAllowance(address someManager, uint256 initialAllowance) public {
         _setManagerWithoutFundManagementPermission(someManager);
 
@@ -559,31 +590,6 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         assertEq(0, account.getAccountManagerAllowance(someManager, address(someNft)));
     }
 
-    function test_IncreasesAllowance_ViaTransferFrom(address someManager, uint256 amount) public {
-        vm.assume(amount > 0);
-        _setManagerWithoutFundManagementPermission(someManager);
-
-        someCurrency.mint(someManager, amount);
-
-        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
-
-        Transaction[] memory transactions = new Transaction[](1);
-
-        transactions[0] = Transaction({
-            target: address(someCurrency),
-            value: 0,
-            data: abi.encodeCall(IERC20.transferFrom, (someManager, address(account), amount))
-        });
-
-        vm.prank(someManager);
-        someCurrency.approve(address(account), amount);
-
-        vm.prank(someManager);
-        account.executeTransactions(transactions);
-
-        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
-    }
-
     function test_IncreasesAllowance_ViaDeposit(address someManager, uint256 amount) public {
         amount = _boundAmount(amount);
         _setManagerWithoutFundManagementPermission(someManager);
@@ -640,8 +646,122 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         );
     }
 
-    ///[TEST]/// TODO: transferFrom(msg.sender && account) is allowed (and increases allowance)
-    ///[TEST]/// TODO: transferFrom(!msg.sender && !account) is allowed (and decreases allowance)
+    function test_IncreasesAllowance_ViaTransferFrom(address someManager, uint256 amount) public {
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        someCurrency.mint(someManager, amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (someManager, address(account), amount))
+        });
+
+        vm.prank(someManager);
+        someCurrency.approve(address(account), amount);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+    }
+
+    function test_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToAccount(address someManager, uint256 amount)
+        public
+    {
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        address newAddress = makeAddr("NEW_ADDRESS");
+        someCurrency.mint(newAddress, amount);
+        vm.prank(newAddress);
+        someCurrency.approve(address(account), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        _increaseAllowance(someManager, address(someCurrency), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (newAddress, address(account), amount))
+        });
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+    }
+
+    function test_SpendAllowance_ViaTransferFrom_FromMsgSender_ToAccount(address someManager, uint256 amount) public {
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        address newAddress = makeAddr("NEW_ADDRESS");
+        someCurrency.mint(newAddress, amount);
+        vm.prank(newAddress);
+        someCurrency.approve(address(account), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        _increaseAllowance(someManager, address(someCurrency), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (newAddress, address(account), amount))
+        });
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+    }
+
+    function test_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToNotAccount(address someManager, uint256 amount)
+        public
+    {
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        address newAddress = makeAddr("NEW_ADDRESS");
+        address anotherNewAddress = makeAddr("ANOTHER_NEW_ADDRESS");
+        someCurrency.mint(newAddress, amount);
+        vm.prank(newAddress);
+        someCurrency.approve(address(account), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        _increaseAllowance(someManager, address(someCurrency), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (newAddress, address(anotherNewAddress), amount))
+        });
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+    }
 
     function test_SpendMoney_AllowanceDecreased_viaDeposit(
         address someManager,
