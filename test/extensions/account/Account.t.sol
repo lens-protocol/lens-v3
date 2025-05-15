@@ -809,12 +809,165 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         );
     }
 
-    ///[TEST]/// TODO: Cannot spend more money than allowance (via deposit())
-    ///[TEST]/// TODO: Cannot spend more money than allowance (via withdraw())
-    ///[TEST]/// TODO: Cannot spend more money than allowance (via transferFrom())
-    ///[TEST]/// TODO: Cannot spend more money than allowance (via transfer())
-    ///[TEST]/// TODO: Cannot spend more money than allowance (via approve())
-    ///[TEST]/// TODO: Cannot spend more money than allowance (via increaseAllowance())
+    function testCannot_SpendMoreMoneyThanAllowance_viaDeposit(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend
+    ) public {
+        amountToSpend = _boundAmount(amountToSpend);
+        initialAllowance = bound(initialAllowance, 0, amountToSpend - 1);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        if (initialAllowance > 0) {
+            _increaseAllowance(someManager, address(GHO), initialAllowance);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] =
+            Transaction({target: address(WGHO), value: amountToSpend, data: abi.encodeCall(WGHO.deposit, ())});
+
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_SpendMoreMoneyThanAllowance_viaWithdraw(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend
+    ) public {
+        amountToSpend = _boundAmount(amountToSpend);
+        initialAllowance = bound(initialAllowance, 0, amountToSpend - 1);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        if (initialAllowance > 0) {
+            _increaseAllowance(someManager, address(WGHO), initialAllowance);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] =
+            Transaction({target: address(WGHO), value: 0, data: abi.encodeCall(WGHO.withdraw, (amountToSpend))});
+
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_SpendMoreMoneyThanAllowance_viaApprove(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend,
+        address approveTo
+    ) public {
+        vm.assume(amountToSpend > 0);
+        initialAllowance = bound(initialAllowance, 0, amountToSpend - 1);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        if (initialAllowance > 0) {
+            _increaseAllowance(someManager, address(someCurrency), initialAllowance);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(someCurrency.approve, (approveTo, amountToSpend))
+        });
+
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_SpendMoreMoneyThanAllowance_viaIncreaseAllowance(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend,
+        address approveTo
+    ) public {
+        vm.assume(amountToSpend > 0);
+        initialAllowance = bound(initialAllowance, 0, amountToSpend - 1);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        if (initialAllowance > 0) {
+            _increaseAllowance(someManager, address(someCurrency), initialAllowance);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(someCurrency.increaseAllowance, (approveTo, amountToSpend))
+        });
+
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_SpendMoreMoneyThanAllowance_viaTransfer(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend,
+        address transferTo
+    ) public {
+        vm.assume(amountToSpend > 0);
+        initialAllowance = bound(initialAllowance, 0, amountToSpend - 1);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        if (initialAllowance > 0) {
+            _increaseAllowance(someManager, address(someCurrency), initialAllowance);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transfer, (transferTo, amountToSpend))
+        });
+
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_SpendMoreMoneyThanAllowance_viaTransferFrom(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 amountToSpend,
+        address transferFrom,
+        address transferTo
+    ) public {
+        vm.assume(amountToSpend > 0);
+        vm.assume(transferFrom != transferTo);
+        vm.assume(transferFrom != address(someManager) && transferTo != address(account));
+        initialAllowance = bound(initialAllowance, 0, amountToSpend - 1);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        if (initialAllowance > 0) {
+            _increaseAllowance(someManager, address(someCurrency), initialAllowance);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (transferFrom, transferTo, amountToSpend))
+        });
+
+        vm.expectRevert(Errors.InsufficientAllowance.selector);
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    ///[TEST]/// TODO: ChangeAllowance() function tests:
+    ///[TEST]/// TODO: ...
 
     function test_FundingThroughPlainCall_DoesNotIncreaseAllowance(address someManager) public {
         _setManagerWithoutFundManagementPermission(someManager);
