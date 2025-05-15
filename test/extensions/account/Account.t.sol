@@ -1086,8 +1086,15 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.executeTransactions(transactions);
     }
 
-    ///[TEST]/// TODO: ChangeAllowance() function tests:
-    ///[TEST]/// TODO: ...
+    // TODO: Test changeAllowance - Increase allowance for someCurrency, GHO, and WGHO
+    // TODO: Test changeAllowance - Decrease allowance for someCurrency, GHO, and WGHO
+    // TODO: Test changeAllowance - Decrease allowance for bigger than current allowance and check that does not fail
+    // TODO: Test changeAllowance - Increase allowance if canTransferTokens fails
+    // TODO: Test changeAllowance - Decrease allowance if canTransferTokens fails
+    // TODO: Test changeAllowance - Increase allowance if owner fails
+    // TODO: Test changeAllowance - Decrease allowance if owner fails
+    // TODO: Test changeAllowance - Increase allowance if not a manager fails
+    // TODO: Test changeAllowance - Decrease allowance if not a manager fails
 
     function test_FundingThroughPlainCall_DoesNotIncreaseAllowance(address someManager) public {
         _setManagerWithoutFundManagementPermission(someManager);
