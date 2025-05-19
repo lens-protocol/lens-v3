@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Lens Labs. All Rights Reserved.
 pragma solidity ^0.8.26;
 
-import {ILock} from "contracts/core/interfaces/ILock.sol";
+import {IDependentLock} from "contracts/core/interfaces/IDependentLock.sol";
 import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
@@ -11,18 +11,16 @@ import {Errors} from "contracts/core/types/Errors.sol";
 contract ProxyAdminForOwnable {
     using CallLib for address;
 
-    ILock immutable LOCK;
+    IDependentLock immutable LOCK;
 
     constructor(address lock) {
-        LOCK = ILock(lock);
-        LOCK.isLocked(); // Aims to verify the given address follows ILock interface
+        LOCK = IDependentLock(lock);
+        LOCK.isLocked(address(this)); // Aims to verify the given address follows IDependentLock interface
     }
 
     function call(address to, uint256 value, bytes calldata data) external payable returns (bytes memory) {
         bytes4 selector = bytes4(data);
-        // TODO: In this approach, lock is shared for all proxy admins...
-        // ...unless we do a special lock that receives an address param, so we can ask for the `to` address
-        if (LOCK.isLocked()) {
+        if (LOCK.isLocked(to)) {
             // While the Proxy Admin is locked it:
             // - Cannot change Proxy Admin in the Proxy, only in the ProxyAdmin contract itself
             require(selector != BeaconProxy.proxy__changeProxyAdmin.selector, Errors.Locked());
@@ -38,9 +36,11 @@ contract ProxyAdminForOwnable {
             // - Cannot opt-in to auto-upgrade in the Proxy
             require(selector != BeaconProxy.proxy__optInToAutoUpgrade.selector, Errors.Locked());
         }
+        // Require the msg.sender to match the owner
         require(msg.sender == IOwnable(to).owner(), Errors.InvalidMsgSender());
         bytes memory returnData = to.handledsafecall(value, data);
-        IOwnable(to).owner(); // Aims to verify the proxy still follows IOwnable interface after a potential upgrade
+        // Require the owner to not be altered by the executed transaction
+        require(IOwnable(to).owner() == msg.sender, Errors.UnexpectedValue());
         return returnData;
     }
 }
