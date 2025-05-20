@@ -1086,15 +1086,342 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.executeTransactions(transactions);
     }
 
-    // TODO: Test changeAllowance - Increase allowance for someCurrency, GHO, and WGHO
-    // TODO: Test changeAllowance - Decrease allowance for someCurrency, GHO, and WGHO
-    // TODO: Test changeAllowance - Decrease allowance for bigger than current allowance and check that does not fail
-    // TODO: Test changeAllowance - Increase allowance if canTransferTokens fails
-    // TODO: Test changeAllowance - Decrease allowance if canTransferTokens fails
-    // TODO: Test changeAllowance - Increase allowance if owner fails
-    // TODO: Test changeAllowance - Decrease allowance if owner fails
-    // TODO: Test changeAllowance - Increase allowance if not a manager fails
-    // TODO: Test changeAllowance - Decrease allowance if not a manager fails
+    function test_ChangeAllowance_IncreaseAllowance(address someManager, uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](0);
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(byAmount, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(byAmount, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(byAmount, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: 1});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: 2});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: 3});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(byAmount + 1, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(byAmount + 2, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(byAmount + 3, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+    }
+
+    function test_ChangeAllowance_DecreaseAllowance(address someManager, uint256 initialAllowance, uint256 byAmount)
+        public
+    {
+        initialAllowance = _boundAmount(initialAllowance);
+        vm.assume(byAmount <= initialAllowance);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](3);
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: initialAllowance});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: initialAllowance});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: initialAllowance});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: new Allowance[](0)
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        allowanceDecreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceDecreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceDecreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: new Allowance[](0),
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(initialAllowance - byAmount, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(initialAllowance - byAmount, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(initialAllowance - byAmount, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+    }
+
+    function test_ChangeAllowance_DecreaseAllowance_DoesNotFailWithUnderflow(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 byAmount
+    ) public {
+        initialAllowance = _boundAmount(initialAllowance);
+        vm.assume(byAmount > initialAllowance);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](3);
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: initialAllowance});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: initialAllowance});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: initialAllowance});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: new Allowance[](0)
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        allowanceDecreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceDecreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceDecreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: new Allowance[](0),
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(0, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+    }
+
+    function test_ChangeAllowance_IncreaseAllowance_FailsIfCanTransferTokensEnabled(uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+
+        assertTrue(account.getAccountManagerPermissions(manager).canTransferTokens);
+
+        assertEq(type(uint256).max, account.getAccountManagerAllowance(manager, address(GHO)));
+        assertEq(type(uint256).max, account.getAccountManagerAllowance(manager, address(WGHO)));
+        assertEq(type(uint256).max, account.getAccountManagerAllowance(manager, address(someCurrency)));
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](0);
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: manager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function test_ChangeAllowance_DecreaseAllowance_FailsIfCanTransferTokensEnabled(uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+
+        assertTrue(account.getAccountManagerPermissions(manager).canTransferTokens);
+
+        assertEq(type(uint256).max, account.getAccountManagerAllowance(manager, address(GHO)));
+        assertEq(type(uint256).max, account.getAccountManagerAllowance(manager, address(WGHO)));
+        assertEq(type(uint256).max, account.getAccountManagerAllowance(manager, address(someCurrency)));
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](0);
+        Allowance[] memory allowanceDecreases = new Allowance[](3);
+
+        allowanceDecreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceDecreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceDecreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: manager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function test_ChangeAllowance_CanSetSpecificAllowance_WithoutKnowingCurrentAllowance(
+        address someManager,
+        uint256 initialAllowance,
+        uint256 desiredAllowance
+    ) public {
+        initialAllowance = _boundAmount(initialAllowance);
+        desiredAllowance = _boundAmount(desiredAllowance);
+        _setManagerWithoutFundManagementPermission(someManager);
+        _increaseAllowance(someManager, address(GHO), initialAllowance);
+        _increaseAllowance(someManager, address(WGHO), initialAllowance);
+        _increaseAllowance(someManager, address(someCurrency), initialAllowance);
+
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(initialAllowance, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](3);
+
+        allowanceDecreases[0] = Allowance({currency: address(GHO), byAmount: type(uint256).max});
+        allowanceDecreases[1] = Allowance({currency: address(WGHO), byAmount: type(uint256).max});
+        allowanceDecreases[2] = Allowance({currency: address(someCurrency), byAmount: type(uint256).max});
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: desiredAllowance});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: desiredAllowance});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: desiredAllowance});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: someManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+
+        assertEq(desiredAllowance, account.getAccountManagerAllowance(someManager, address(GHO)));
+        assertEq(desiredAllowance, account.getAccountManagerAllowance(someManager, address(WGHO)));
+        assertEq(desiredAllowance, account.getAccountManagerAllowance(someManager, address(someCurrency)));
+    }
+
+    function test_ChangeAllowance_IncreaseAllowance_FailsOnTheOwner(uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](0);
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: owner,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function test_ChangeAllowance_DecreaseAllowance_FailsOnTheOwner(uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](0);
+        Allowance[] memory allowanceDecreases = new Allowance[](3);
+
+        allowanceDecreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceDecreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceDecreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: owner,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function test_ChangeAllowance_IncreaseAllowance_FailsOnNonManagers(address nonManager, uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+        vm.assume(account.isAccountManager(nonManager) == false);
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](3);
+        Allowance[] memory allowanceDecreases = new Allowance[](0);
+
+        allowanceIncreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceIncreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceIncreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: nonManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function test_ChangeAllowance_DecreaseAllowance_FailsOnNonManagers(address nonManager, uint256 byAmount) public {
+        byAmount = _boundAmount(byAmount);
+        vm.assume(account.isAccountManager(nonManager) == false);
+
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](0);
+        Allowance[] memory allowanceDecreases = new Allowance[](3);
+
+        allowanceDecreases[0] = Allowance({currency: address(GHO), byAmount: byAmount});
+        allowanceDecreases[1] = Allowance({currency: address(WGHO), byAmount: byAmount});
+        allowanceDecreases[2] = Allowance({currency: address(someCurrency), byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: nonManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: allowanceDecreases
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.changeAllowance(allowanceChanges);
+    }
 
     function test_FundingThroughPlainCall_DoesNotIncreaseAllowance(address someManager) public {
         _setManagerWithoutFundManagementPermission(someManager);
