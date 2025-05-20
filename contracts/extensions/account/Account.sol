@@ -349,6 +349,7 @@ contract Account is
     function changeAllowance(AllowanceChange[] calldata allowanceChanges) external override onlyOwner {
         for (uint256 i = 0; i < allowanceChanges.length; i++) {
             for (uint256 j = 0; j < allowanceChanges[i].allowanceDecreases.length; j++) {
+                require(_isAccountManager(allowanceChanges[i].spender), Errors.InvalidParameter());
                 require(
                     $storage().managerStorage[allowanceChanges[i].spender].canTransferTokens == false,
                     Errors.InvalidParameter() // Manager has infinite allowance by canTransferTokens permission
