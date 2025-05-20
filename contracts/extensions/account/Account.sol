@@ -348,6 +348,17 @@ contract Account is
 
     function changeAllowance(AllowanceChange[] calldata allowanceChanges) external override onlyOwner {
         for (uint256 i = 0; i < allowanceChanges.length; i++) {
+            for (uint256 j = 0; j < allowanceChanges[i].allowanceDecreases.length; j++) {
+                require(
+                    $storage().managerStorage[allowanceChanges[i].spender].canTransferTokens == false,
+                    Errors.InvalidParameter() // Manager has infinite allowance by canTransferTokens permission
+                );
+                _decreaseAllowance(
+                    allowanceChanges[i].spender,
+                    allowanceChanges[i].allowanceDecreases[j].currency,
+                    allowanceChanges[i].allowanceDecreases[j].byAmount
+                );
+            }
             for (uint256 j = 0; j < allowanceChanges[i].allowanceIncreases.length; j++) {
                 require(_isAccountManager(allowanceChanges[i].spender), Errors.InvalidParameter());
                 require(
@@ -358,17 +369,6 @@ contract Account is
                     allowanceChanges[i].spender,
                     allowanceChanges[i].allowanceIncreases[j].currency,
                     allowanceChanges[i].allowanceIncreases[j].byAmount
-                );
-            }
-            for (uint256 j = 0; j < allowanceChanges[i].allowanceDecreases.length; j++) {
-                require(
-                    $storage().managerStorage[allowanceChanges[i].spender].canTransferTokens == false,
-                    Errors.InvalidParameter() // Manager has infinite allowance by canTransferTokens permission
-                );
-                _decreaseAllowance(
-                    allowanceChanges[i].spender,
-                    allowanceChanges[i].allowanceDecreases[j].currency,
-                    allowanceChanges[i].allowanceDecreases[j].byAmount
                 );
             }
         }

@@ -27,8 +27,8 @@ struct Allowance {
 
 struct AllowanceChange {
     address spender;
-    Allowance[] allowanceIncreases;
     Allowance[] allowanceDecreases;
+    Allowance[] allowanceIncreases;
 }
 
 interface IAccount is IMetadataBased, IERC1155Receiver, IERC721Receiver {
