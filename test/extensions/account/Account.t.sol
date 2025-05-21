@@ -59,6 +59,39 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         );
     }
 
+    /// Helpers ///
+
+    function _increaseAllowance(address toManager, address currency, uint256 byAmount) internal {
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](1);
+
+        allowanceIncreases[0] = Allowance({currency: currency, byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: toManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: new Allowance[](0)
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function _setManagerWithoutFundManagementPermission(address someManager) internal {
+        vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
+    }
+
+    /////////////////
+
     function testCanExecuteTxDirectly() public {
         bytes memory txData = abi.encodeCall(
             Feed.createPost,
@@ -928,6 +961,80 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
             "Manager's Allowance does not decrease precisely on transfer()"
         );
     }
+}
+
+contract AccountTest2 is FuzzZkTest, BaseDeployments {
+    address owner = makeAddr("OWNER");
+    address manager = makeAddr("MANAGER");
+
+    IAccount account;
+    IFeed feed;
+
+    function setUp() public override {
+        super.setUp();
+
+        address[] memory accountManagers = new address[](1);
+        accountManagers[0] = manager;
+
+        AccountManagerPermissions[] memory accountManagersPermissions = new AccountManagerPermissions[](1);
+        accountManagersPermissions[0] = AccountManagerPermissions(true, true, true, true);
+
+        account = IAccount(
+            payable(
+                lensFactory.deployAccount({
+                    metadataURI: "uri://account-metadata",
+                    owner: owner,
+                    accountManagers: accountManagers,
+                    accountManagersPermissions: accountManagersPermissions,
+                    sourceStamp: _emptySourceStamp(),
+                    extraData: _emptyKeyValueArray()
+                })
+            )
+        );
+
+        feed = IFeed(
+            lensFactory.deployFeed({
+                metadataURI: "some metadata uri",
+                owner: address(account),
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
+    }
+
+    /// Helpers ///
+
+    function _increaseAllowance(address toManager, address currency, uint256 byAmount) internal {
+        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
+        Allowance[] memory allowanceIncreases = new Allowance[](1);
+
+        allowanceIncreases[0] = Allowance({currency: currency, byAmount: byAmount});
+
+        allowanceChanges[0] = AllowanceChange({
+            spender: toManager,
+            allowanceIncreases: allowanceIncreases,
+            allowanceDecreases: new Allowance[](0)
+        });
+
+        vm.prank(owner);
+        account.changeAllowance(allowanceChanges);
+    }
+
+    function _setManagerWithoutFundManagementPermission(address someManager) internal {
+        vm.assume(account.isAccountManager(someManager) == false);
+        vm.assume(someManager != owner);
+        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, basicPermissionSet);
+    }
+
+    /////////////////
 
     function testCannot_SpendMoreMoneyThanAllowance_viaDeposit(
         address someManager,
@@ -1439,35 +1546,6 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         assertEq(account.getAccountManagerAllowance(someManager, GHO), 0);
 
         assertEq(accountBalanceBefore + 1 ether, address(account).balance);
-    }
-
-    function _increaseAllowance(address toManager, address currency, uint256 byAmount) internal {
-        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
-        Allowance[] memory allowanceIncreases = new Allowance[](1);
-
-        allowanceIncreases[0] = Allowance({currency: currency, byAmount: byAmount});
-
-        allowanceChanges[0] = AllowanceChange({
-            spender: toManager,
-            allowanceIncreases: allowanceIncreases,
-            allowanceDecreases: new Allowance[](0)
-        });
-
-        vm.prank(owner);
-        account.changeAllowance(allowanceChanges);
-    }
-
-    function _setManagerWithoutFundManagementPermission(address someManager) internal {
-        vm.assume(account.isAccountManager(someManager) == false);
-        vm.assume(someManager != owner);
-        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
-            canExecuteTransactions: true,
-            canTransferTokens: false,
-            canTransferNative: false,
-            canSetMetadataURI: false
-        });
-        vm.prank(owner);
-        account.addAccountManager(someManager, basicPermissionSet);
     }
 }
 
