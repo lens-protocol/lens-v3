@@ -51,6 +51,10 @@ import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
 import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
 
+import {MockCurrency} from "test/mocks/MockCurrency.sol";
+import {MockWrapperCurrency} from "test/mocks/MockWrapperCurrency.sol";
+import {MockNft} from "test/mocks/MockNft.sol";
+
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
@@ -114,6 +118,11 @@ contract BaseDeployments is Test {
     address addRemovePidGroupRule;
     address usernameReservedNamespaceRule;
 
+    address GHO = address(0x800A);
+    MockWrapperCurrency WGHO;
+    MockCurrency someCurrency;
+    MockNft someNft;
+
     bool migrationMode = vm.envOr("MIGRATION_TESTS", false);
 
     function switchMigrationMode(bool newMigrationMode) public {
@@ -123,6 +132,11 @@ contract BaseDeployments is Test {
     function setUp() public virtual {
         proxyAdminLock = address(new Lock(proxyAdminLockOwner, true));
         accessControlLock = address(new Lock(accessControlLockOwner, true));
+
+        WGHO = new MockWrapperCurrency("Wrapped GHO", "WGHO");
+        someCurrency = new MockCurrency("Aave", "AAVE");
+        someNft = new MockNft("Milady Maker", "MIL");
+
         _deployImplementations();
         _deployBeacons();
         _deployFactoryImplementations(); // We have to do that because ERC1967 doesn't like address(0) as implementation
@@ -236,7 +250,9 @@ contract BaseDeployments is Test {
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
         appImpl = migrationMode ? address(new MigrationApp()) : address(new App());
-        accountImpl = migrationMode ? address(new MigrationAccount()) : address(new AccountContract());
+        accountImpl = migrationMode
+            ? address(new MigrationAccount())
+            : address(new AccountContract({nativeGHO: address(GHO), wrappedGHO: address(WGHO)}));
         feedImpl = migrationMode ? address(new MigrationFeed()) : address(new Feed());
         graphImpl = migrationMode ? address(new MigrationGraph()) : address(new Graph());
         groupImpl = address(new Group());

@@ -20,6 +20,13 @@ docs/
 
 # Dotenv file
 .env
+.env.testnet
+.env.mainnet
+
+# Backend .env
+contracts.env
+contracts.testnet.env
+contracts.mainnet.env
 
 # Logs
 logs

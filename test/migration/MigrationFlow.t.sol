@@ -429,7 +429,7 @@ contract MigrationFlowTest is BaseDeployments {
 
     function _upgradeBeacons() internal {
         appImpl = address(new App());
-        accountImpl = address(new AccountContract());
+        accountImpl = address(new AccountContract(address(0), address(0)));
         feedImpl = address(new Feed());
         graphImpl = address(new Graph());
         namespaceImpl = address(new Namespace());
