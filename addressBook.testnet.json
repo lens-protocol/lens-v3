@@ -78,8 +78,12 @@
   "AccountImpl": {
     "contractName": "Account",
     "contractType": 0,
-    "address": "0x30135da9dAB10c5a6377f23566c7b6084193866a",
-    "bytecodeHash": "0x4c17423c01c82c036994fc0eaccd6cd688d9a61fa18b8b6f2cc05834b2257a40"
+    "address": "0x307C07845BfCBC983bf1246758abD5f9B7F54Bd3",
+    "bytecodeHash": "010009a791681790e37e74d65ac250303cd9999cef078a44cb1d5cd124ca6b5f",
+    "constructorArguments": [
+      "0x000000000000000000000000000000000000800A",
+      "0xeee5a340Cdc9c179Db25dea45AcfD5FE8d4d3eB8"
+    ]
   },
   "FeedImpl": {
     "contractName": "Feed",
@@ -120,12 +124,13 @@
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0x4aE8eAEa3A12E6246b80F5Bbe6aa569c981952c1",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       1,
       "0x6ED9f259D7e0056835E1c69f52956B43a85f390a"
-    ]
+    ],
+    "implementation": "0x307C07845BfCBC983bf1246758abD5f9B7F54Bd3"
   },
   "FeedBeacon": {
     "contractName": "Beacon",

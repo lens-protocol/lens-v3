@@ -45,6 +45,11 @@ import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameR
 import {TippingAccountAction} from "contracts/actions/account/TippingAccountAction.sol";
 
 import {LensFees} from "contracts/extensions/fees/LensFees.sol";
+
+import {MockCurrency} from "test/mocks/MockCurrency.sol";
+import {MockWrapperCurrency} from "test/mocks/MockWrapperCurrency.sol";
+import {MockNft} from "test/mocks/MockNft.sol";
+
 import {
     TransparentUpgradeableProxy,
     ITransparentUpgradeableProxy
@@ -142,6 +147,11 @@ contract BaseDeployments is ZkTest {
     address TREASURY_ADDRESS = makeAddr("TREASURY_ADDRESS");
     uint16 TREASURY_FEE_BPS = 150;
 
+    address GHO = address(0x800A);
+    MockWrapperCurrency WGHO;
+    MockCurrency someCurrency;
+    MockNft someNft;
+
     function setUp() public virtual {
         if (isFork()) {
             _loadAddressBookJson();
@@ -225,6 +235,10 @@ contract BaseDeployments is ZkTest {
         groupLock = address(new Lock(proxyAdminLockOwner, true));
         namespaceLock = address(new Lock(proxyAdminLockOwner, true));
         accessControlLock = address(new Lock(accessControlLockOwner, true));
+
+        WGHO = new MockWrapperCurrency("Wrapped GHO", "WGHO");
+        someCurrency = new MockCurrency("Aave", "AAVE");
+        someNft = new MockNft("Milady Maker", "MIL");
 
         actionHubImpl = address(new ActionHub());
         actionHub = address(new TransparentUpgradeableProxy(actionHubImpl, factoriesProxyOwner, ""));
@@ -328,7 +342,7 @@ contract BaseDeployments is ZkTest {
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
         appImpl = address(new App());
-        accountImpl = address(new AccountContract());
+        accountImpl = address(new AccountContract({nativeGHO: address(GHO), wrappedGHO: address(WGHO)}));
         feedImpl = address(new Feed());
         graphImpl = address(new Graph());
         groupImpl = address(new Group());
