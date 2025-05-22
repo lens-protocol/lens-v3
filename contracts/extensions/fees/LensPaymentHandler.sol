@@ -65,15 +65,18 @@ abstract contract LensPaymentHandler {
             return amount;
         }
         uint16 accumulatedSplitBps;
+        uint256 accumulatedAmountForReferrals;
         for (uint256 i = 0; i < referrals.length; i++) {
             uint256 amountForReferral = (totalAmountForReferrals * referrals[i].splitBps) / BPS_MAX;
             accumulatedSplitBps += referrals[i].splitBps;
+            accumulatedAmountForReferrals += amountForReferral;
             if (amountForReferral > 0) {
                 IERC20(token).safeTransferFrom(payer, referrals[i].recipient, amountForReferral);
             }
         }
         require(accumulatedSplitBps <= BPS_MAX);
-        return amount - totalAmountForReferrals;
+        require(accumulatedAmountForReferrals <= totalAmountForReferrals);
+        return amount - accumulatedAmountForReferrals;
     }
 
     function _processRecipient(address payer, address token, uint256 amount, address recipient) internal virtual {
