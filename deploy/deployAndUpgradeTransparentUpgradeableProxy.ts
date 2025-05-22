@@ -17,35 +17,42 @@ async function deploy() {
   console.log(`Using proxy owner private key with address: ${await getWallet(proxyOwnerPrivateKey).getAddress()}`);
   console.log(`Proxy owner balance: ${ethers.formatEther(proxyOwnerBalance)}`);
 
-  const contractToUpgrade: ContractInfo =
-    // Factories
-    {
-      name: 'AccessControlFactoryImpl',
-      contractName: 'AccessControlFactory',
-      contractType: ContractType.Factory,
-      constructorArguments: [loadContractAddressFromAddressBook('AccessControlLock')],
-    };
-
-  if (contractToUpgrade.constructorArguments === undefined) {
-    throw new Error('AccessControlLock not found in address book');
+  const actionHubAddress = loadContractAddressFromAddressBook('ActionHub');
+  if (!actionHubAddress) {
+    throw new Error('ActionHub not found in address book');
   }
+
+  const contractToUpgradeName = 'SimpleCollectAction';
+
+  const contractToUpgrade: ContractInfo =
+    {
+      name: contractToUpgradeName + 'Impl',
+      contractName: contractToUpgradeName,
+      contractType: ContractType.Implementation,
+      constructorArguments: [actionHubAddress],
+    };
 
   const transparentUpgradeableProxyAddress = loadContractAddressFromAddressBook(contractToUpgrade.contractName);
   if (!transparentUpgradeableProxyAddress) {
-    throw new Error(`${contractToUpgrade.contractName} not found in address book`);
+    throw new Error(`${contractToUpgrade.contractName} TransparentUpgradeableProxy not found in address book`);
   }
 
-  console.log(`${contractToUpgrade.contractName} transparent upgradeable proxy address: ${transparentUpgradeableProxyAddress}`);
+  console.log(`${contractToUpgrade.contractName} TransparentUpgradeableProxy address: ${transparentUpgradeableProxyAddress}`);
 
-  // const proxyAdmin = await getProvider().getStorage(transparentUpgradeableProxyAddress, proxyAdminSlot);
   const proxyAdmin = await hre.upgrades.erc1967.getAdminAddress(transparentUpgradeableProxyAddress);
 
   if (proxyAdmin !== await getWallet(proxyOwnerPrivateKey).getAddress()) {
     throw new Error(`Proxy admin (${proxyAdmin}) in the contract is not the proxy owner derived from private key: ${await getWallet(proxyOwnerPrivateKey).getAddress()}`);
   }
 
+  const oldImplementationInTheAddressBook = loadContractAddressFromAddressBook(contractToUpgrade.name!);
+  console.log(`Old implementation in the Address Book: ${oldImplementationInTheAddressBook}`);
   const oldImplementation = await hre.upgrades.erc1967.getImplementationAddress(transparentUpgradeableProxyAddress);
   console.log(`Old implementation in the Proxy: ${oldImplementation}`);
+
+  if (oldImplementationInTheAddressBook !== oldImplementation) {
+    throw new Error(`Old implementation in the Address Book (${oldImplementationInTheAddressBook}) is not the same as the old implementation in the Proxy (${oldImplementation}).\nMaybe it was upgraded before? Or address book is outdated?`);
+  }
 
   const deployedImplementation = await deployContract(
     contractToUpgrade.contractName,
@@ -53,7 +60,7 @@ async function deploy() {
   );
 
   console.log(
-      `${contractToUpgrade.contractName} implementation deployed at ${await deployedImplementation.getAddress()}`
+      `${contractToUpgrade.contractName} new implementation deployed at ${await deployedImplementation.getAddress()}`
   );
 
   const proxyOwnerWallet = getWallet(proxyOwnerPrivateKey);
