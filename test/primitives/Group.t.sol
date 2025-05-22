@@ -27,6 +27,38 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
     MockAccessControl mockAccessControl;
     address groupForRules;
 
+    event Lens_Group_MemberAdded(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Group_MemberRemoved(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Group_MemberJoined(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Group_MemberLeft(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
     function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
         BaseDeployments.setUp();
 
@@ -79,14 +111,6 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         RuleExecutionTest.setUp();
     }
 
-    event Lens_Group_MemberAdded(
-        address indexed account,
-        uint256 indexed membershipId,
-        KeyValue[] customParams,
-        RuleProcessingParams[] ruleProcessingParams,
-        address indexed source
-    );
-
     // TODO: Move these to a PID Helper or something
     function _getAccountWithPID(uint256 PID) internal returns (address) {
         address accountWithPID = makeAddr(string.concat("PID_HOLDER_", vm.toString(PID)));
@@ -101,6 +125,114 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assertFalse(mockAccessControl.hasAccess(accountWithoutPID, address(group), PID));
         return accountWithoutPID;
     }
+
+    function _disableAllRulesFromGroupSelector(address groupAddress, bytes4 selector, address msgSender) internal {
+        Rule[] memory requiredRules = IGroup(groupAddress).getGroupRules(selector, true);
+        Rule[] memory anyOfRules = IGroup(groupAddress).getGroupRules(selector, false);
+        RuleChange[] memory ruleChanges = new RuleChange[](requiredRules.length + anyOfRules.length);
+
+        RuleConfigurationChange memory noRuleConfigChanges =
+            RuleConfigurationChange({configure: false, ruleParams: _emptyKeyValueArray()});
+
+        RuleSelectorChange[] memory disableSelectorForRequired = new RuleSelectorChange[](1);
+        disableSelectorForRequired[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
+        for (uint256 i = 0; i < requiredRules.length; i++) {
+            ruleChanges[i] = RuleChange({
+                ruleAddress: requiredRules[i].ruleAddress,
+                configSalt: requiredRules[i].configSalt,
+                configurationChanges: noRuleConfigChanges,
+                selectorChanges: disableSelectorForRequired
+            });
+        }
+
+        RuleSelectorChange[] memory disableSelectorForAnyOf = new RuleSelectorChange[](1);
+        disableSelectorForAnyOf[0] = RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
+        for (uint256 i = 0; i < anyOfRules.length; i++) {
+            ruleChanges[i + requiredRules.length] = RuleChange({
+                ruleAddress: requiredRules[i].ruleAddress,
+                configSalt: requiredRules[i].configSalt,
+                configurationChanges: noRuleConfigChanges,
+                selectorChanges: disableSelectorForAnyOf
+            });
+        }
+
+        vm.prank(msgSender);
+        IGroup(groupAddress).changeGroupRules(ruleChanges);
+    }
+
+    // TODO: Add this to GroupHelpers or something
+    function _forceMemberIntoGroup(address member) internal {
+        assumeNotForgeAddress(member); // skip vm contract
+        if (group.isMember(member) == false) {
+            vm.mockCall(
+                member,
+                abi.encodeWithSelector(
+                    IAccountGroupAdditionSettings.canBeAddedToGroup.selector,
+                    address(group),
+                    groupOwner,
+                    _emptyKeyValueArray()
+                ),
+                abi.encode(true)
+            );
+            vm.prank(groupOwner);
+            group.addMember({
+                account: member,
+                customParams: _emptyKeyValueArray(),
+                ruleProcessingParams: _emptyRuleProcessingParamsArray()
+            });
+        }
+        assertTrue(group.isMember(member));
+    }
+
+    // TODO: Add this to GroupHelpers or something
+    function _setGroupNotMember(address member) internal {
+        if (group.isMember(member)) {
+            vm.prank(groupOwner);
+            group.removeMember({
+                account: member,
+                customParams: _emptyKeyValueArray(),
+                ruleProcessingParams: _emptyRuleProcessingParamsArray()
+            });
+        }
+        assertFalse(group.isMember(member));
+    }
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        IGroup(groupForRules).changeGroupRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override(RulesTest) returns (address) {
+        return groupForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override(RulesTest) returns (bytes4) {
+        return IGroupRule.processAddition.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override(RulesTest) returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IGroupRule.processAddition.selector;
+        selectors[1] = IGroupRule.processRemoval.selector;
+        selectors[2] = IGroupRule.processJoining.selector;
+        selectors[3] = IGroupRule.processLeaving.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required)
+        internal
+        view
+        virtual
+        override(RulesTest)
+        returns (Rule[] memory)
+    {
+        return IGroup(groupForRules).getGroupRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IGroupRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function test_AddMember_LensFactoryConfiguration_MsgSenderIsOwner(address newMember) public {
         vm.assume(newMember != address(0));
@@ -172,40 +304,6 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertFalse(group.isMember(newMember));
     }
 
-    function _disableAllRulesFromGroupSelector(address groupAddress, bytes4 selector, address msgSender) internal {
-        Rule[] memory requiredRules = IGroup(groupAddress).getGroupRules(selector, true);
-        Rule[] memory anyOfRules = IGroup(groupAddress).getGroupRules(selector, false);
-        RuleChange[] memory ruleChanges = new RuleChange[](requiredRules.length + anyOfRules.length);
-
-        RuleConfigurationChange memory noRuleConfigChanges =
-            RuleConfigurationChange({configure: false, ruleParams: _emptyKeyValueArray()});
-
-        RuleSelectorChange[] memory disableSelectorForRequired = new RuleSelectorChange[](1);
-        disableSelectorForRequired[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
-        for (uint256 i = 0; i < requiredRules.length; i++) {
-            ruleChanges[i] = RuleChange({
-                ruleAddress: requiredRules[i].ruleAddress,
-                configSalt: requiredRules[i].configSalt,
-                configurationChanges: noRuleConfigChanges,
-                selectorChanges: disableSelectorForRequired
-            });
-        }
-
-        RuleSelectorChange[] memory disableSelectorForAnyOf = new RuleSelectorChange[](1);
-        disableSelectorForAnyOf[0] = RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
-        for (uint256 i = 0; i < anyOfRules.length; i++) {
-            ruleChanges[i + requiredRules.length] = RuleChange({
-                ruleAddress: requiredRules[i].ruleAddress,
-                configSalt: requiredRules[i].configSalt,
-                configurationChanges: noRuleConfigChanges,
-                selectorChanges: disableSelectorForAnyOf
-            });
-        }
-
-        vm.prank(msgSender);
-        IGroup(groupAddress).changeGroupRules(ruleChanges);
-    }
-
     function test_AddMember_PermissionlessIfNoProcessAdditionRules(address msgSender, address newMember) public {
         vm.assume(newMember != address(0));
         assumeNotForgeAddress(newMember);
@@ -269,6 +367,212 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         vm.assume(group.isMember(memberToRemove) == false);
     }
 
+    function test_RemoveMember_LensFactoryConfiguration_MsgSenderIsOwner(address memberToRemove) public {
+        vm.assume(memberToRemove != address(0));
+
+        _forceMemberIntoGroup(memberToRemove);
+        uint256 expectedMembershipId = group.getMembershipId(memberToRemove);
+
+        vm.expectEmit(true, true, true, true);
+        emit Lens_Group_MemberRemoved(
+            memberToRemove, expectedMembershipId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), address(0)
+        );
+
+        vm.prank(groupOwner);
+        group.removeMember({
+            account: memberToRemove,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertFalse(group.isMember(memberToRemove));
+    }
+
+    function test_joinGroup(address newMember) public {
+        vm.assume(newMember != address(0));
+        vm.assume(group.isMember(newMember) == false);
+
+        uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
+
+        vm.expectEmit(true, true, true, true);
+        emit Lens_Group_MemberJoined(
+            newMember, expectedMembershipId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), address(0)
+        );
+
+        vm.prank(newMember);
+        group.joinGroup({
+            account: newMember,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertTrue(group.isMember(newMember));
+    }
+
+    function test_leaveGroup(address memberToLeave) public {
+        vm.assume(memberToLeave != address(0));
+
+        _forceMemberIntoGroup(memberToLeave);
+
+        uint256 expectedMembershipId = group.getMembershipId(memberToLeave);
+
+        vm.expectEmit(true, true, true, true);
+        emit Lens_Group_MemberLeft(
+            memberToLeave, expectedMembershipId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), address(0)
+        );
+
+        vm.prank(memberToLeave);
+        group.leaveGroup({
+            account: memberToLeave,
+            customParams: _emptyKeyValueArray(),
+            ruleProcessingParams: _emptyRuleProcessingParamsArray()
+        });
+
+        assertFalse(group.isMember(memberToLeave));
+    }
+}
+
+contract GroupTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
+    IGroup group;
+    IGroup factoryDeployedGroup;
+    address account = makeAddr("ACCOUNT");
+    address groupOwner = makeAddr("GROUP_OWNER");
+    MockAccessControl mockAccessControl;
+    address groupForRules;
+
+    event Lens_Group_MemberAdded(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Group_MemberRemoved(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Group_MemberJoined(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    event Lens_Group_MemberLeft(
+        address indexed account,
+        uint256 indexed membershipId,
+        KeyValue[] customParams,
+        RuleProcessingParams[] ruleProcessingParams,
+        address indexed source
+    );
+
+    function setUp() public override(RulesTest, BaseDeployments, RuleExecutionTest) {
+        BaseDeployments.setUp();
+
+        group = IGroup(
+            lensFactory.deployGroup({
+                metadataURI: "some metadata uri",
+                owner: groupOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray(),
+                foundingMember: address(0)
+            })
+        );
+
+        factoryDeployedGroup = IGroup(
+            lensFactory.deployGroup({
+                metadataURI: "some metadata uri",
+                owner: groupOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray(),
+                foundingMember: address(0)
+            })
+        );
+
+        mockAccessControl = new MockAccessControl();
+
+        vm.prank(address(lensFactory));
+        groupForRules = groupFactory.deployGroup({
+            metadataURI: "uri://group",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray(),
+            foundingMember: address(0)
+        });
+
+        address groupAccessControl = address(AccessControlled(address(group)).getAccessControl());
+        vm.prank(accessControlLockOwner);
+        Lock(accessControlLock).setLockStatusForAddress(groupAccessControl, false);
+
+        vm.prank(groupOwner);
+        AccessControlled(address(group)).setAccessControl(IAccessControl(address(mockAccessControl)));
+
+        mockAccessControl.mockAccess(groupOwner, address(group), PID__ADD_MEMBER, true);
+        mockAccessControl.mockAccess(groupOwner, address(group), PID__REMOVE_MEMBER, true);
+
+        RulesTest.setUp();
+
+        RuleExecutionTest.setUp();
+    }
+
+    // TODO: Move these to a PID Helper or something
+    function _getAccountWithPID(uint256 PID) internal returns (address) {
+        address accountWithPID = makeAddr(string.concat("PID_HOLDER_", vm.toString(PID)));
+        mockAccessControl.mockAccess(accountWithPID, address(group), PID, true);
+        vm.assertTrue(mockAccessControl.hasAccess(accountWithPID, address(group), PID));
+        return accountWithPID;
+    }
+
+    function _getAccountWithoutPID(uint256 PID) internal returns (address) {
+        address accountWithoutPID = makeAddr(string.concat("PID_HOLDER_", vm.toString(PID)));
+        mockAccessControl.mockAccess(accountWithoutPID, address(group), PID, false);
+        vm.assertFalse(mockAccessControl.hasAccess(accountWithoutPID, address(group), PID));
+        return accountWithoutPID;
+    }
+
+    function _disableAllRulesFromGroupSelector(address groupAddress, bytes4 selector, address msgSender) internal {
+        Rule[] memory requiredRules = IGroup(groupAddress).getGroupRules(selector, true);
+        Rule[] memory anyOfRules = IGroup(groupAddress).getGroupRules(selector, false);
+        RuleChange[] memory ruleChanges = new RuleChange[](requiredRules.length + anyOfRules.length);
+
+        RuleConfigurationChange memory noRuleConfigChanges =
+            RuleConfigurationChange({configure: false, ruleParams: _emptyKeyValueArray()});
+
+        RuleSelectorChange[] memory disableSelectorForRequired = new RuleSelectorChange[](1);
+        disableSelectorForRequired[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
+        for (uint256 i = 0; i < requiredRules.length; i++) {
+            ruleChanges[i] = RuleChange({
+                ruleAddress: requiredRules[i].ruleAddress,
+                configSalt: requiredRules[i].configSalt,
+                configurationChanges: noRuleConfigChanges,
+                selectorChanges: disableSelectorForRequired
+            });
+        }
+
+        RuleSelectorChange[] memory disableSelectorForAnyOf = new RuleSelectorChange[](1);
+        disableSelectorForAnyOf[0] = RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
+        for (uint256 i = 0; i < anyOfRules.length; i++) {
+            ruleChanges[i + requiredRules.length] = RuleChange({
+                ruleAddress: requiredRules[i].ruleAddress,
+                configSalt: requiredRules[i].configSalt,
+                configurationChanges: noRuleConfigChanges,
+                selectorChanges: disableSelectorForAnyOf
+            });
+        }
+
+        vm.prank(msgSender);
+        IGroup(groupAddress).changeGroupRules(ruleChanges);
+    }
+
     // TODO: Add this to GroupHelpers or something
     function _forceMemberIntoGroup(address member) internal {
         assumeNotForgeAddress(member); // skip vm contract
@@ -306,93 +610,42 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertFalse(group.isMember(member));
     }
 
-    event Lens_Group_MemberRemoved(
-        address indexed account,
-        uint256 indexed membershipId,
-        KeyValue[] customParams,
-        RuleProcessingParams[] ruleProcessingParams,
-        address indexed source
-    );
-
-    function test_RemoveMember_LensFactoryConfiguration_MsgSenderIsOwner(address memberToRemove) public {
-        vm.assume(memberToRemove != address(0));
-
-        _forceMemberIntoGroup(memberToRemove);
-        uint256 expectedMembershipId = group.getMembershipId(memberToRemove);
-
-        vm.expectEmit(true, true, true, true);
-        emit Lens_Group_MemberRemoved(
-            memberToRemove, expectedMembershipId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), address(0)
-        );
-
-        vm.prank(groupOwner);
-        group.removeMember({
-            account: memberToRemove,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        assertFalse(group.isMember(memberToRemove));
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        IGroup(groupForRules).changeGroupRules(ruleChanges);
     }
 
-    event Lens_Group_MemberJoined(
-        address indexed account,
-        uint256 indexed membershipId,
-        KeyValue[] customParams,
-        RuleProcessingParams[] ruleProcessingParams,
-        address indexed source
-    );
-
-    function test_joinGroup(address newMember) public {
-        vm.assume(newMember != address(0));
-        vm.assume(group.isMember(newMember) == false);
-
-        uint256 expectedMembershipId = group.getNumberOfMembers() + 1;
-
-        vm.expectEmit(true, true, true, true);
-        emit Lens_Group_MemberJoined(
-            newMember, expectedMembershipId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), address(0)
-        );
-
-        vm.prank(newMember);
-        group.joinGroup({
-            account: newMember,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        assertTrue(group.isMember(newMember));
+    function _primitiveAddress() internal view override(RulesTest) returns (address) {
+        return groupForRules;
     }
 
-    event Lens_Group_MemberLeft(
-        address indexed account,
-        uint256 indexed membershipId,
-        KeyValue[] customParams,
-        RuleProcessingParams[] ruleProcessingParams,
-        address indexed source
-    );
-
-    function test_leaveGroup(address memberToLeave) public {
-        vm.assume(memberToLeave != address(0));
-
-        _forceMemberIntoGroup(memberToLeave);
-
-        uint256 expectedMembershipId = group.getMembershipId(memberToLeave);
-
-        vm.expectEmit(true, true, true, true);
-        emit Lens_Group_MemberLeft(
-            memberToLeave, expectedMembershipId, _emptyKeyValueArray(), _emptyRuleProcessingParamsArray(), address(0)
-        );
-
-        vm.prank(memberToLeave);
-        group.leaveGroup({
-            account: memberToLeave,
-            customParams: _emptyKeyValueArray(),
-            ruleProcessingParams: _emptyRuleProcessingParamsArray()
-        });
-
-        assertFalse(group.isMember(memberToLeave));
+    function _aValidRuleSelector() internal pure override(RulesTest) returns (bytes4) {
+        return IGroupRule.processAddition.selector;
     }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override(RulesTest) returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IGroupRule.processAddition.selector;
+        selectors[1] = IGroupRule.processRemoval.selector;
+        selectors[2] = IGroupRule.processJoining.selector;
+        selectors[3] = IGroupRule.processLeaving.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required)
+        internal
+        view
+        virtual
+        override(RulesTest)
+        returns (Rule[] memory)
+    {
+        return IGroup(groupForRules).getGroupRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IGroupRule.configure.selector;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function test_CannotAddMemberIf_AlreadyMember(address member) public {
         vm.assume(member != address(0));
@@ -667,45 +920,6 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         IMetadataBased(address(group)).setMetadataURI(newMetadataURI);
         assertEq(IMetadataBased(address(group)).getMetadataURI(), oldMetadataURI);
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IGroup(groupForRules).changeGroupRules(ruleChanges);
-    }
-
-    function _primitiveAddress() internal view override(RulesTest) returns (address) {
-        return groupForRules;
-    }
-
-    function _aValidRuleSelector() internal pure override(RulesTest) returns (bytes4) {
-        return IGroupRule.processAddition.selector;
-    }
-
-    function _getPrimitiveSupportedRuleSelectors() internal virtual override(RulesTest) returns (bytes4[] memory) {
-        bytes4[] memory selectors = new bytes4[](4);
-        selectors[0] = IGroupRule.processAddition.selector;
-        selectors[1] = IGroupRule.processRemoval.selector;
-        selectors[2] = IGroupRule.processJoining.selector;
-        selectors[3] = IGroupRule.processLeaving.selector;
-        return selectors;
-    }
-
-    function _getPrimitiveRules(bytes4 selector, bool required)
-        internal
-        view
-        virtual
-        override(RulesTest)
-        returns (Rule[] memory)
-    {
-        return IGroup(groupForRules).getGroupRules(selector, required);
-    }
-
-    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
-        return IGroupRule.configure.selector;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function testRuleExecution_JoinGroup(
         bool mandatory1_passes,
