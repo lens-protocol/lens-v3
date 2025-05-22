@@ -22,10 +22,12 @@ async function deploy() {
     throw new Error('ActionHub not found in address book');
   }
 
+  const contractToUpgradeName = 'SimpleCollectAction';
+
   const contractToUpgrade: ContractInfo =
     {
-      name: 'TippingPostActionImpl',
-      contractName: 'TippingPostAction',
+      name: contractToUpgradeName + 'Impl',
+      contractName: contractToUpgradeName,
       contractType: ContractType.Implementation,
       constructorArguments: [actionHubAddress],
     };
