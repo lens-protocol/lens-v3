@@ -22,6 +22,11 @@ docs/
 .env.testnet
 .env.mainnet
 
+# Backend .env
+contracts.env
+contracts.testnet.env
+contracts.mainnet.env
+
 # Logs
 logs
 *.log
