@@ -7,6 +7,7 @@ import "../helpers/TypeHelpers.sol";
 import {NATIVE_TOKEN, BPS_MAX} from "contracts/core/types/Constants.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {ActionHub} from "contracts/extensions/actions/ActionHub.sol";
+import {MockFeed} from "test/helpers/MockFeed.sol";
 
 /// @custom:keccak lens.param.amount
 bytes32 constant PARAM__TIP_AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
@@ -14,11 +15,14 @@ bytes32 constant PARAM__TIP_AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e31089
 bytes32 constant PARAM__TIP_TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 
 contract TippingAccountActionTest is Test, BaseDeployments {
+    address mockFeed;
+
     function setUp() public override {
+        mockFeed = address(new MockFeed());
         super.setUp();
     }
 
-    function testCanAccountTipNative_woReferrals(uint256 msgValue, address account) public {
+    function testCanPostTipNative_woReferrals(uint256 msgValue, address account) public {
         vm.assume(account != address(0));
         vm.assume(account != address(TREASURY_ADDRESS));
         vm.assume(account.code.length == 0);
@@ -29,6 +33,9 @@ contract TippingAccountActionTest is Test, BaseDeployments {
         vm.assume(msgValue > 0);
         vm.deal(address(this), msgValue);
 
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, account);
+
         KeyValue[] memory params = _toKeyValueArray(
             KeyValue({key: PARAM__TIP_AMOUNT, value: abi.encode(msgValue)}),
             KeyValue({key: PARAM__TIP_TOKEN, value: abi.encode(NATIVE_TOKEN)})
@@ -37,7 +44,7 @@ contract TippingAccountActionTest is Test, BaseDeployments {
         uint256 accountBalanceBefore = account.balance;
         uint256 treasuryBalanceBefore = address(TREASURY_ADDRESS).balance;
 
-        ActionHub(actionHub).executeAccountAction{value: msgValue}(address(tippingAccountAction), account, params);
+        ActionHub(actionHub).executePostAction{value: msgValue}(address(tippingPostAction), mockFeed, postId, params);
 
         uint256 accountBalanceAfter = account.balance;
         uint256 treasuryBalanceAfter = address(TREASURY_ADDRESS).balance;
