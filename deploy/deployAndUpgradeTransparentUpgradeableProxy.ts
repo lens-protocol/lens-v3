@@ -1,5 +1,5 @@
-import { ContractType, ContractInfo, loadContractAddressFromAddressBook, saveContractToAddressBook } from './lensUtils';
-import { deployContract, getWallet } from './utils';
+import { deployLensContract, ContractType, ContractInfo, loadContractAddressFromAddressBook, loadContractFromAddressBook, saveContractToAddressBook } from './lensUtils';
+import { getWallet } from './utils';
 import * as hre from 'hardhat';
 import { ethers } from 'ethers';
 
@@ -32,10 +32,11 @@ async function deploy() {
       constructorArguments: [actionHubAddress],
     };
 
-  const transparentUpgradeableProxyAddress = loadContractAddressFromAddressBook(contractToUpgrade.contractName);
-  if (!transparentUpgradeableProxyAddress) {
+  const transparentUpgradeableProxyContract = loadContractFromAddressBook(contractToUpgrade.contractName);
+  if (!transparentUpgradeableProxyContract || !transparentUpgradeableProxyContract.address) {
     throw new Error(`${contractToUpgrade.contractName} TransparentUpgradeableProxy not found in address book`);
   }
+  const transparentUpgradeableProxyAddress = transparentUpgradeableProxyContract.address;
 
   console.log(`${contractToUpgrade.contractName} TransparentUpgradeableProxy address: ${transparentUpgradeableProxyAddress}`);
 
@@ -54,14 +55,19 @@ async function deploy() {
     throw new Error(`Old implementation in the Address Book (${oldImplementationInTheAddressBook}) is not the same as the old implementation in the Proxy (${oldImplementation}).\nMaybe it was upgraded before? Or address book is outdated?`);
   }
 
-  const deployedImplementation = await deployContract(
-    contractToUpgrade.contractName,
-    contractToUpgrade.constructorArguments
+  const deployedImplementation = await deployLensContract(
+    contractToUpgrade,
+    true
   );
 
-  console.log(
-      `${contractToUpgrade.contractName} new implementation deployed at ${await deployedImplementation.getAddress()}`
-  );
+
+  if (!deployedImplementation.address) {
+    throw new Error(`${contractToUpgrade.contractName} new implementation not deployed`);
+  } else {
+    console.log(
+        `${contractToUpgrade.contractName} new implementation deployed at ${deployedImplementation.address}`
+    );
+  }
 
   const proxyOwnerWallet = getWallet(proxyOwnerPrivateKey);
 
@@ -69,21 +75,21 @@ async function deploy() {
   const transparentUpgradeableProxy = new ethers.Contract(transparentUpgradeableProxyAddress, transparentUpgradeableProxyArtifact.abi, proxyOwnerWallet);
 
   const upgradeTx = await transparentUpgradeableProxy.upgradeTo(
-    await deployedImplementation.getAddress()
+    deployedImplementation.address
   );
   await upgradeTx.wait();
 
   const newImplementation = await hre.upgrades.erc1967.getImplementationAddress(transparentUpgradeableProxyAddress);
 
-  if (newImplementation !== await deployedImplementation.getAddress()) {
+  if (newImplementation !== deployedImplementation.address) {
     throw new Error(`${contractToUpgrade.contractName} upgrade failed`);
   }
 
   console.log(`${contractToUpgrade.contractName} upgraded to ${newImplementation}`);
 
   saveContractToAddressBook({
-    ...contractToUpgrade,
-    address: newImplementation,
+    ...transparentUpgradeableProxyContract,
+    implementation: newImplementation,
   });
 }
 
