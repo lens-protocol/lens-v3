@@ -400,12 +400,10 @@
     "address": "0x52AF9CF29976C310E3DE03C509E108edB6edb8c0"
   },
   "ActionHubImpl": {
-    "name": "ActionHubImpl",
     "contractName": "ActionHub",
     "contractType": 0,
-    "address": "0xea21E3E70248e483c2F1ed2617E9d939eA8904bd",
-    "bytecodeHash": "010006c717619898f32961e5517ebda8cbad5ea8ad83b031c26e48c52d22f392",
-    "constructorArguments": []
+    "address": "0x4596724eA4bA9Cac81CDcD0d1ca860a3a92248b5",
+    "bytecodeHash": "010006cd37e8116ecfb153d64729eaace5c7e8aea3dfeb634ee1868915c34de1"
   },
   "ActionHub": {
     "name": "ActionHub",
@@ -413,7 +411,7 @@
     "contractType": 4,
     "address": "0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802",
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
-    "implementation": "0xea21E3E70248e483c2F1ed2617E9d939eA8904bd",
+    "implementation": "0x4596724eA4bA9Cac81CDcD0d1ca860a3a92248b5",
     "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
     "lensCreate2PreSalt": "lens.contract.ActionHub"
   },
