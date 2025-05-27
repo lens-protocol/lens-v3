@@ -37,6 +37,7 @@
     "deploy:local:migration": "hardhat compile && DEPLOY_MIGRATION=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
     "deploy:local:migration:fr": "hardhat compile && DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network inMemoryNode",
     "deploy:zkstack::migration": "hardhat compile &&DEPLOY_MIGRATION=true DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network zkstackMigrationNode",
+    "deployAndUpgrade:mainnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeTransparentUpgradeableProxy.ts --network lensMainnet",
     "deployAndUpgrade:testnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeTransparentUpgradeableProxy.ts --network lensSepoliaTestnet",
     "deployAndUpgrade:local": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeTransparentUpgradeableProxy.ts --network inMemoryNode",
     "interact:mainnet": "hardhat compile && hardhat deploy-zksync --script interact.ts --network lensMainnet",
