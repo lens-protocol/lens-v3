@@ -43,6 +43,8 @@ import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemoval
 import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
 
 import {TippingAccountAction} from "contracts/actions/account/TippingAccountAction.sol";
+import {TippingPostAction} from "contracts/actions/post/TippingPostAction.sol";
+import {SimpleCollectAction} from "contracts/actions/post/collect/SimpleCollectAction.sol";
 
 import {LensFees} from "contracts/extensions/fees/LensFees.sol";
 
@@ -143,6 +145,12 @@ contract BaseDeployments is ZkTest {
 
     address tippingAccountActionImpl;
     address tippingAccountAction;
+
+    address tippingPostActionImpl;
+    address tippingPostAction;
+
+    address simpleCollectActionImpl;
+    address simpleCollectAction;
 
     address TREASURY_ADDRESS = makeAddr("TREASURY_ADDRESS");
     uint16 TREASURY_FEE_BPS = 150;
@@ -367,12 +375,24 @@ contract BaseDeployments is ZkTest {
         tippingAccountActionImpl = address(new TippingAccountAction(actionHub));
         tippingAccountAction =
             address(new TransparentUpgradeableProxy(tippingAccountActionImpl, factoriesProxyOwner, ""));
+
+        tippingPostActionImpl = address(new TippingPostAction(actionHub));
+        tippingPostAction = address(new TransparentUpgradeableProxy(tippingPostActionImpl, factoriesProxyOwner, ""));
+
+        simpleCollectActionImpl = address(new SimpleCollectAction(actionHub));
+        simpleCollectAction = address(new TransparentUpgradeableProxy(simpleCollectActionImpl, factoriesProxyOwner, ""));
     }
 
     function _loadActions() internal {
         console.log("Loading actions");
         tippingAccountActionImpl = json.readAddress(".TippingAccountActionImpl.address");
         tippingAccountAction = json.readAddress(".TippingAccountAction.address");
+
+        tippingPostActionImpl = json.readAddress(".TippingPostActionImpl.address");
+        tippingPostAction = json.readAddress(".TippingPostAction.address");
+
+        simpleCollectActionImpl = json.readAddress(".SimpleCollectActionImpl.address");
+        simpleCollectAction = json.readAddress(".SimpleCollectAction.address");
     }
 
     function _deployBeacons() internal {

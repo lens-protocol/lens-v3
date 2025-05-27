@@ -2879,6 +2879,86 @@ contract FeedTest3 is RulesTest, BaseDeployments, RuleExecutionTest {
             "Different author's first post should have authorPostSequentialId = 1"
         );
     }
+}
+
+contract FeedTest4 is RulesTest, BaseDeployments, RuleExecutionTest {
+    IFeed feed;
+
+    address feedForRules;
+    MockAccessControl mockAccessControl;
+
+    address author = makeAddr("AUTHOR");
+    address feedOwner = makeAddr("FEED_OWNER");
+
+    function setUp() public virtual override(RulesTest, BaseDeployments, RuleExecutionTest) {
+        BaseDeployments.setUp();
+
+        mockAccessControl = new MockAccessControl();
+
+        vm.prank(address(lensFactory));
+        feed = IFeed(
+            feedFactory.deployFeed({
+                metadataURI: "some metadata uri",
+                accessControl: mockAccessControl,
+                proxyAdminOwner: address(this),
+                ruleChanges: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray()
+            })
+        );
+
+        vm.prank(address(lensFactory));
+        feedForRules = feedFactory.deployFeed({
+            metadataURI: "uri://feed",
+            accessControl: mockAccessControl,
+            proxyAdminOwner: address(this),
+            ruleChanges: _emptyRuleChangeArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        RulesTest.setUp();
+        RuleExecutionTest.setUp();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
+        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    }
+
+    function _primitiveAddress() internal view override returns (address) {
+        return feedForRules;
+    }
+
+    function _aValidRuleSelector() internal pure override returns (bytes4) {
+        return IFeedRule.processCreatePost.selector;
+    }
+
+    function _getPrimitiveSupportedRuleSelectors() internal virtual override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](4);
+        selectors[0] = IFeedRule.processCreatePost.selector;
+        selectors[1] = IFeedRule.processEditPost.selector;
+        selectors[2] = IFeedRule.processDeletePost.selector;
+        selectors[3] = IFeedRule.processPostRuleChanges.selector;
+        return selectors;
+    }
+
+    function _getPrimitiveRules(bytes4 selector, bool required) internal view virtual override returns (Rule[] memory) {
+        return IFeed(feedForRules).getFeedRules(selector, required);
+    }
+
+    function _configureRuleSelector() internal pure override(RulesTest, RuleExecutionTest) returns (bytes4) {
+        return IFeedRule.configure.selector;
+    }
+
+    function _generatePostId(address _feed, address _author, uint256 _authorPostSequentialId)
+        internal
+        view
+        returns (uint256)
+    {
+        return uint256(keccak256(abi.encode("evm:", block.chainid, address(_feed), _author, _authorPostSequentialId)));
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     function test_PostSequentialId_Uniqueness(address firstAuthor, address secondAuthor) public {
         vm.assume(firstAuthor != address(0));

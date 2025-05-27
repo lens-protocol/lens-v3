@@ -3,8 +3,14 @@
 pragma solidity ^0.8.26;
 
 import {
-    RuleSelectorChange, RuleChange, RuleProcessingParams, SourceStamp, KeyValue
+    RuleSelectorChange,
+    RuleChange,
+    RuleProcessingParams,
+    SourceStamp,
+    KeyValue,
+    RecipientData
 } from "contracts/core/types/Types.sol";
+import {BPS_MAX} from "contracts/core/types/Constants.sol";
 import {AccountManagerPermissions} from "contracts/extensions/account/IAccount.sol";
 
 function _emptyAccountManagerPermissionsArray() pure returns (AccountManagerPermissions[] memory) {
@@ -46,6 +52,17 @@ function _toKeyValueArray(KeyValue memory kv0, KeyValue memory kv1) pure returns
     KeyValue[] memory ret = new KeyValue[](2);
     ret[0] = kv0;
     ret[1] = kv1;
+    return ret;
+}
+
+function _toKeyValueArray(KeyValue memory kv0, KeyValue memory kv1, KeyValue memory kv2)
+    pure
+    returns (KeyValue[] memory)
+{
+    KeyValue[] memory ret = new KeyValue[](3);
+    ret[0] = kv0;
+    ret[1] = kv1;
+    ret[2] = kv2;
     return ret;
 }
 
@@ -112,5 +129,11 @@ function _toAddressArray(address a0, address a1) pure returns (address[] memory)
     address[] memory ret = new address[](2);
     ret[0] = a0;
     ret[1] = a1;
+    return ret;
+}
+
+function _toRecipientDataArray(address recipient) pure returns (RecipientData[] memory) {
+    RecipientData[] memory ret = new RecipientData[](1);
+    ret[0] = RecipientData({recipient: recipient, splitBps: uint16(BPS_MAX)});
     return ret;
 }
