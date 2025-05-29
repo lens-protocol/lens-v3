@@ -12,6 +12,7 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
 
     function configure(address originalMsgSender, address account, KeyValue[] calldata params)
         external
+        payable
         override
         onlyActionHub
         returns (bytes memory)
@@ -21,6 +22,7 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
 
     function execute(address originalMsgSender, address account, KeyValue[] calldata params)
         external
+        payable
         override
         onlyActionHub
         returns (bytes memory)
@@ -30,6 +32,7 @@ abstract contract BaseAccountAction is BaseAction, IAccountAction {
 
     function setDisabled(address originalMsgSender, address account, bool isDisabled, KeyValue[] calldata params)
         external
+        payable
         override
         onlyActionHub
         returns (bytes memory)

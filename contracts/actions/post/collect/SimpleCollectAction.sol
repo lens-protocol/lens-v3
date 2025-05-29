@@ -14,6 +14,7 @@ import {Errors} from "contracts/core/types/Errors.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {BPS_MAX} from "contracts/core/types/Constants.sol";
 import {LensPaymentHandler} from "contracts/extensions/fees/LensPaymentHandler.sol";
+import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
 error InvalidSplits();
 error InvalidRecipient();
@@ -203,8 +204,10 @@ contract SimpleCollectAction is
             require(configData.recipients.length == 0, Errors.InvalidParameter());
             require(configData.referralFeeBps == 0, Errors.InvalidParameter());
         } else {
-            // We expect token to support ERC-20 interface (call balanceOf and expect it to not revert)
-            IERC20(configData.token).balanceOf(address(this));
+            if (configData.token != NATIVE_TOKEN) {
+                // We expect token to support ERC-20 interface (call balanceOf and expect it to not revert)
+                IERC20(configData.token).balanceOf(address(this));
+            }
             require(configData.recipients.length > 0, Errors.InvalidParameter());
             require(configData.referralFeeBps <= BPS_MAX, Errors.InvalidParameter());
         }

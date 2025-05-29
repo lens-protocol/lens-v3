@@ -19,6 +19,7 @@ library Errors {
     error DuplicatedValue();
     error Expired();
     error Immutable();
+    error InsufficientAllowance();
     error InvalidConfigSalt();
     error InvalidMsgSender();
     error InvalidParameter();

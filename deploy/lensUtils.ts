@@ -187,7 +187,8 @@ export async function deployLensContractAsProxy(
 
 export async function deployImplAndUpgradeTransparentProxy(
   proxyAdminWallet: Wallet,
-  contractToUpgrade: ContractInfo
+  contractToUpgrade: ContractInfo,
+  contractSolidityName?: string
 ) {
   const addressBook = loadAddressBook();
   const nameWithImplSuffix = contractToUpgrade.name ?? contractToUpgrade.contractName + 'Impl';
@@ -213,7 +214,7 @@ export async function deployImplAndUpgradeTransparentProxy(
     );
   }
 
-  const artifact = await hre.artifacts.readArtifact(contractToUpgrade.contractName);
+  const artifact = await hre.artifacts.readArtifact(contractSolidityName ?? contractToUpgrade.contractName);
   const bytecodeHash = calculateBytecodeHash(artifact.bytecode);
 
   const implOnAddressBook = addressBook[nameWithImplSuffix];
@@ -223,13 +224,13 @@ export async function deployImplAndUpgradeTransparentProxy(
     console.log(`Deploying ${nameWithImplSuffix}...`);
 
     const deployedImplementation = await deployContract(
-      contractToUpgrade.contractName,
+      contractSolidityName ?? contractToUpgrade.contractName,
       contractToUpgrade.constructorArguments
     );
 
 
     addressBook[nameWithImplSuffix] = {
-      contractName: contractToUpgrade.contractName,
+      contractName: contractSolidityName ?? contractToUpgrade.contractName,
       contractType: ContractType.Implementation,
       address: await deployedImplementation.getAddress(),
       bytecodeHash,

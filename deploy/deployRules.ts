@@ -1,4 +1,4 @@
-import { ContractRunner, ethers } from 'ethers';
+import { ContractRunner, ethers, Wallet } from 'ethers';
 import {
   ContractType,
   ContractInfo,
@@ -124,7 +124,7 @@ export async function deployRules(rulesOwner: string): Promise<void> {
   }
 }
 
-export async function deployRulesImplsAndUpgrade(proxyAdminWallet: ContractRunner): Promise<void> {
+export async function deployRulesImplsAndUpgrade(proxyAdminWallet: Wallet): Promise<void> {
   for (const contract of contracts) {
     await deployImplAndUpgradeTransparentProxy(proxyAdminWallet, contract);
   }

@@ -10,10 +10,12 @@ import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 interface IPostAction {
     function configure(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function setDisabled(
@@ -22,20 +24,23 @@ interface IPostAction {
         uint256 postId,
         bool isDisabled,
         KeyValue[] calldata params
-    ) external returns (bytes memory);
+    ) external payable returns (bytes memory);
 }
 
 interface IAccountAction {
     function configure(address originalMsgSender, address account, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function execute(address originalMsgSender, address account, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 
     function setDisabled(address originalMsgSender, address account, bool isDisabled, KeyValue[] calldata params)
         external
+        payable
         returns (bytes memory);
 }
 
@@ -177,8 +182,9 @@ contract ActionHub is SourceStampBased {
         }
     }
 
-    function signalUniversalPostAction(address action) external {
-        bytes memory returnData = IPostAction(action).configure(address(0), address(0), 0, new KeyValue[](0));
+    function signalUniversalPostAction(address action) external payable {
+        bytes memory returnData =
+            IPostAction(action).configure{value: msg.value}(address(0), address(0), 0, new KeyValue[](0));
         require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE, Errors.UnexpectedContractImpl());
         emit Lens_ActionHub_PostAction_Universal(action);
     }
@@ -188,7 +194,7 @@ contract ActionHub is SourceStampBased {
         payable
         returns (bytes memory)
     {
-        bytes memory returnData = IPostAction(action).configure(msg.sender, feed, postId, params);
+        bytes memory returnData = IPostAction(action).configure{value: msg.value}(msg.sender, feed, postId, params);
         address postAuthor = IFeed(feed).getPostAuthor(postId);
         address source = _processSourceStamp(params);
         if ($postActionStatus()[action][feed][postId].wasConfigured == false) {
@@ -210,7 +216,7 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.Disabled());
-        bytes memory returnData = IPostAction(action).execute(msg.sender, feed, postId, params);
+        bytes memory returnData = IPostAction(action).execute{value: msg.value}(msg.sender, feed, postId, params);
         address postAuthor = IFeed(feed).getPostAuthor(postId);
         address source = _processSourceStamp(params);
         emit Lens_ActionHub_PostAction_Executed(action, msg.sender, feed, postId, postAuthor, source, params, returnData);
@@ -223,7 +229,8 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($postActionStatus()[action][feed][postId].isDisabled == false, Errors.RedundantStateChange());
-        bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, true, params);
+        bytes memory returnData =
+            IPostAction(action).setDisabled{value: msg.value}(msg.sender, feed, postId, true, params);
         $postActionStatus()[action][feed][postId].isDisabled = true;
         address postAuthor = IFeed(feed).getPostAuthor(postId);
         address source = _processSourceStamp(params);
@@ -237,7 +244,8 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($postActionStatus()[action][feed][postId].isDisabled, Errors.RedundantStateChange());
-        bytes memory returnData = IPostAction(action).setDisabled(msg.sender, feed, postId, false, params);
+        bytes memory returnData =
+            IPostAction(action).setDisabled{value: msg.value}(msg.sender, feed, postId, false, params);
         $postActionStatus()[action][feed][postId].isDisabled = false;
         address postAuthor = IFeed(feed).getPostAuthor(postId);
         address source = _processSourceStamp(params);
@@ -245,8 +253,9 @@ contract ActionHub is SourceStampBased {
         return returnData;
     }
 
-    function signalUniversalAccountAction(address action) external {
-        bytes memory returnData = IAccountAction(action).configure(address(0), address(0), new KeyValue[](0));
+    function signalUniversalAccountAction(address action) external payable {
+        bytes memory returnData =
+            IAccountAction(action).configure{value: msg.value}(address(0), address(0), new KeyValue[](0));
         require(abi.decode(returnData, (bytes32)) == UNIVERSAL_ACTION_MAGIC_VALUE, Errors.UnexpectedContractImpl());
         emit Lens_ActionHub_AccountAction_Universal(action);
     }
@@ -257,7 +266,7 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
-        bytes memory returnData = IAccountAction(action).configure(msg.sender, account, params);
+        bytes memory returnData = IAccountAction(action).configure{value: msg.value}(msg.sender, account, params);
         address source = _processSourceStamp(params);
         if ($accountActionStatus()[action][account].wasConfigured == false) {
             $accountActionStatus()[action][account].wasConfigured = true;
@@ -274,7 +283,7 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.Disabled());
-        bytes memory returnData = IAccountAction(action).execute(msg.sender, account, params);
+        bytes memory returnData = IAccountAction(action).execute{value: msg.value}(msg.sender, account, params);
         address source = _processSourceStamp(params);
         emit Lens_ActionHub_AccountAction_Executed(action, msg.sender, account, source, params, returnData);
         return returnData;
@@ -286,7 +295,7 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($accountActionStatus()[action][account].isDisabled == false, Errors.RedundantStateChange());
-        bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, true, params);
+        bytes memory returnData = IAccountAction(action).setDisabled{value: msg.value}(msg.sender, account, true, params);
         $accountActionStatus()[action][account].isDisabled = true;
         address source = _processSourceStamp(params);
         emit Lens_ActionHub_AccountAction_Disabled(action, msg.sender, account, source, params, returnData);
@@ -299,7 +308,8 @@ contract ActionHub is SourceStampBased {
         returns (bytes memory)
     {
         require($accountActionStatus()[action][account].isDisabled, Errors.RedundantStateChange());
-        bytes memory returnData = IAccountAction(action).setDisabled(msg.sender, account, false, params);
+        bytes memory returnData =
+            IAccountAction(action).setDisabled{value: msg.value}(msg.sender, account, false, params);
         $accountActionStatus()[action][account].isDisabled = false;
         address source = _processSourceStamp(params);
         emit Lens_ActionHub_AccountAction_Enabled(action, msg.sender, account, source, params, returnData);
