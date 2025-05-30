@@ -8,6 +8,8 @@ import {ProxyAdminForOwnable} from "@core/upgradeability/ProxyAdminForOwnable.so
 import {BeaconProxy} from "@core/upgradeability/BeaconProxy.sol";
 import {Errors} from "@core/types/Errors.sol";
 import {MockOwnableUniversal} from "test/mocks/MockOwnableUniversal.sol";
+import {IOwnable} from "@core/interfaces/IOwnable.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract ProxyAdminForOwnableTest is Test {
     DependentLock lock;
@@ -216,5 +218,60 @@ contract ProxyAdminForOwnableTest is Test {
 
         vm.expectRevert();
         proxyAdmin.call(address(beaconProxy), 0, data);
+    }
+
+    function test_Call_Reverts_IfOwnerChangesAfterIt(address newOwner) public {
+        vm.assume(newOwner != beaconProxy.owner());
+
+        lock.setLockStatus(false);
+
+        bytes memory data = abi.encodeWithSelector(MockOwnableUniversal.mockOwner.selector, newOwner);
+
+        vm.expectRevert(Errors.UnexpectedValue.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+    }
+
+    function test_Call_Reverts_IfWrongOwner(address nonOwner) public {
+        vm.assume(nonOwner != beaconProxy.owner());
+
+        lock.setLockStatus(false);
+
+        bytes memory data = abi.encodeWithSelector(IOwnable.owner.selector);
+
+        vm.prank(nonOwner);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+    }
+
+    function test_Owner_FetchedFromUnderlyingProxyContract(address newOwner) public {
+        vm.assume(newOwner != address(this));
+
+        lock.setLockStatus(false);
+
+        assertEq(beaconProxy.owner(), address(this));
+
+        bytes memory data = abi.encodeWithSelector(IOwnable.owner.selector);
+
+        vm.prank(newOwner);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+
+        vm.prank(address(this));
+        proxyAdmin.call(address(beaconProxy), 0, data);
+
+        beaconProxy.mockOwner(newOwner);
+
+        assertEq(beaconProxy.owner(), newOwner);
+
+        vm.prank(address(this));
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+
+        vm.prank(newOwner);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+    }
+
+    function test_Call_Reverts_IfUnderlyingProxyContract_LosesOwnerFunction() public {
+        // TODO:
     }
 }
