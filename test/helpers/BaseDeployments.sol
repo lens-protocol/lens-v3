@@ -152,8 +152,8 @@ contract BaseDeployments is ZkTest {
     address simpleCollectActionImpl;
     address simpleCollectAction;
 
-    address TREASURY_ADDRESS = makeAddr("TREASURY_ADDRESS");
-    uint16 TREASURY_FEE_BPS = 150;
+    address TREASURY_ADDRESS = vm.envOr("TREASURY_ADDRESS", makeAddr("TREASURY_ADDRESS"));
+    uint16 TREASURY_FEE_BPS = uint16(vm.envOr("TREASURY_FEE_BPS", uint256(150)));
 
     address GHO = address(0x800A);
     MockWrapperCurrency WGHO;
@@ -205,8 +205,6 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadFromFork() internal {
-        // TODO: Load TREASURY_ADDRESS and TREASURY_FEE_BPS from addressBook.json
-
         console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
         accountLock = json.readAddress(".AccountLock.address");
