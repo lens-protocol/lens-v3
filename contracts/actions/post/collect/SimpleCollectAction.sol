@@ -313,16 +313,6 @@ contract SimpleCollectAction is
             );
         }
 
-        if (data.isImmutable) {
-            // If post is edited to a different content, we fail so people do not collect an unexpected thing.
-            string memory contentURI = IFeed(feed).getPost(postId).contentURI;
-            require(
-                keccak256(bytes(contentURI))
-                    == keccak256(bytes(LensCollectedPost(data.collectionAddress).tokenURI(data.currentCollects))),
-                Errors.InvalidParameter()
-            );
-        }
-
         if (data.isDisabled) {
             revert Errors.Disabled();
         }
