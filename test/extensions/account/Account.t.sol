@@ -738,6 +738,37 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
     }
 
+    function test_Cannot_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToAccount(address someManager, uint256 amount)
+        public
+    {
+        // Tweaked from the SKIPPED test `test_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToAccount`.
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        address newAddress = makeAddr("NEW_ADDRESS");
+        someCurrency.mint(newAddress, amount);
+        vm.prank(newAddress);
+        someCurrency.approve(address(account), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        _increaseAllowance(someManager, address(someCurrency), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (newAddress, address(account), amount))
+        });
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.executeTransactions(transactions);
+    }
+
     function test_SpendAllowance_ViaTransferFrom_FromMsgSender_ToAccount(address someManager, uint256 amount) public {
         // SKIPPED: We don't allow to `transferFrom` with `from != msg.sender` until EIP-7702 is supported by ZkSync.
         vm.skip(true);
@@ -803,6 +834,40 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.executeTransactions(transactions);
 
         assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+    }
+
+    function test_Cannot_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToNotAccount(
+        address someManager,
+        uint256 amount
+    ) public {
+        // Tweaked from the SKIPPED test `test_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToNotAccount`.
+
+        vm.assume(amount > 0);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        address newAddress = makeAddr("NEW_ADDRESS");
+        address anotherNewAddress = makeAddr("ANOTHER_NEW_ADDRESS");
+        someCurrency.mint(newAddress, amount);
+        vm.prank(newAddress);
+        someCurrency.approve(address(account), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), 0);
+
+        _increaseAllowance(someManager, address(someCurrency), amount);
+
+        assertEq(account.getAccountManagerAllowance(someManager, address(someCurrency)), amount);
+
+        Transaction[] memory transactions = new Transaction[](1);
+
+        transactions[0] = Transaction({
+            target: address(someCurrency),
+            value: 0,
+            data: abi.encodeCall(IERC20.transferFrom, (newAddress, address(anotherNewAddress), amount))
+        });
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.executeTransactions(transactions);
     }
 
     function test_SpendMoney_AllowanceDecreased_viaDeposit(
