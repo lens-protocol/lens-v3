@@ -707,6 +707,9 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     function test_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToAccount(address someManager, uint256 amount)
         public
     {
+        // SKIPPED: We don't allow to `transferFrom` with `from != msg.sender` until EIP-7702 is supported by ZkSync.
+        vm.skip(true);
+
         vm.assume(amount > 0);
         _setManagerWithoutFundManagementPermission(someManager);
 
@@ -736,6 +739,9 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     }
 
     function test_SpendAllowance_ViaTransferFrom_FromMsgSender_ToAccount(address someManager, uint256 amount) public {
+        // SKIPPED: We don't allow to `transferFrom` with `from != msg.sender` until EIP-7702 is supported by ZkSync.
+        vm.skip(true);
+
         vm.assume(amount > 0);
         _setManagerWithoutFundManagementPermission(someManager);
 
@@ -767,6 +773,9 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     function test_SpendAllowance_ViaTransferFrom_FromNotMsgSender_ToNotAccount(address someManager, uint256 amount)
         public
     {
+        // SKIPPED: We don't allow to `transferFrom` with `from != msg.sender` until EIP-7702 is supported by ZkSync.
+        vm.skip(true);
+
         vm.assume(amount > 0);
         _setManagerWithoutFundManagementPermission(someManager);
 
@@ -1170,6 +1179,9 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
         address transferFrom,
         address transferTo
     ) public {
+        // SKIPPED: We don't allow to `transferFrom` with `from != msg.sender` until EIP-7702 is supported by ZkSync.
+        vm.skip(true);
+
         vm.assume(amountToSpend > 0);
         vm.assume(transferFrom != transferTo);
         vm.assume(transferFrom != address(someManager) && transferTo != address(account));
