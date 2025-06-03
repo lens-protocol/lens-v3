@@ -10,7 +10,23 @@ contract MockOwnableUniversal is MockUniversal, Ownable {
         // Prevents being included in the foundry coverage report
     }
 
+    bool _mockOwnerOnNextCall;
+    address _ownerToMock;
+
     function mockOwner(address newOwner) external {
         _transferOwnership(newOwner);
+    }
+
+    function mockOwnerOnNextCall(address newOwner) external {
+        _mockOwnerOnNextCall = true;
+        _ownerToMock = newOwner;
+    }
+
+    function _fallback() internal override {
+        super._fallback();
+        if (_mockOwnerOnNextCall) {
+            delete _mockOwnerOnNextCall;
+            _transferOwnership(_ownerToMock);
+        }
     }
 }
