@@ -513,8 +513,7 @@ contract Account is
                      * Until EIP-7702 is supported by ZkSync, we only allow `transferFrom` from the msg.sender.
                      * In other words, we only allow you to spend your own funds.
                      *
-                     * This is to prevent some manager draining another manager's funds in case infinite approval was
-                     * granted.
+                     * This is to prevent owner/managers draining managers' funds in case infinite approval was granted.
                      *
                      * EIP-7702 will allow multi-calling from any account, allowing multi-step approval-requiring
                      * operations to be done as a single-tx.
