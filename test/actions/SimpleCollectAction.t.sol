@@ -9,7 +9,7 @@ import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {ActionHub} from "contracts/extensions/actions/ActionHub.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
 import {Post, IFeed} from "contracts/core/interfaces/IFeed.sol";
-import {MockFeed} from "test/helpers/MockFeed.sol";
+import {MockFeed} from "test/mocks/MockFeed.sol";
 import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
 import {CollectActionData} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
 import {MockSimpleCollectAction} from "test/mocks/MockSimpleCollectAction.sol";
