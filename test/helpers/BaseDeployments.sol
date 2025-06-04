@@ -59,7 +59,7 @@ import {
 
 import {ZkTest} from "test/helpers/ZkTest.sol";
 
-import {MockLensCreate2} from "test/helpers/MockLensCreate2.sol";
+import {MockLensCreate2} from "test/mocks/MockLensCreate2.sol";
 import {EmptyImplementation} from "@core/upgradeability/EmptyImplementation.sol";
 
 contract BaseDeployments is ZkTest {
