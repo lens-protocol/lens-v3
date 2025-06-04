@@ -10,6 +10,11 @@ import {ActionHub} from "contracts/extensions/actions/ActionHub.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
 import {Post, IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {MockFeed} from "test/helpers/MockFeed.sol";
+import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
+import {CollectActionData} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
+import {MockSimpleCollectAction} from "test/mocks/MockSimpleCollectAction.sol";
+import {MockLegacyLensCollectedPost} from "test/mocks/MockLegacyLensCollectedPost.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 /// @custom:keccak lens.param.amount
 bytes32 constant PARAM__AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
@@ -104,5 +109,118 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         assertEq(
             treasuryBalanceAfter, treasuryBalanceBefore + expectedTreasuryBalanceChange, "Treasury balance mismatch"
         );
+    }
+
+    function testCanCollectAfterEdits() public {
+        KeyValue[] memory params = _emptyKeyValueArray();
+
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, address(this));
+
+        MockFeed(mockFeed).setContentURI("1");
+        bytes memory result =
+            ActionHub(actionHub).configurePostAction(address(simpleCollectAction), mockFeed, postId, params);
+        CollectActionData memory configurationData = abi.decode(result, (CollectActionData));
+
+        KeyValue[] memory collectParams = _emptyKeyValueArray();
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId1 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("2");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId2 = abi.decode(result, (uint256));
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId3 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("4");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId4 = abi.decode(result, (uint256));
+
+        LensCollectedPost collection = LensCollectedPost(configurationData.collectionAddress);
+
+        assertEq(collection.tokenURI(tokenId1), "1");
+        assertEq(collection.tokenURI(tokenId2), "2");
+        assertEq(collection.tokenURI(tokenId3), "2");
+        assertEq(collection.tokenURI(tokenId4), "4");
+    }
+
+    function testCanCollectAfterEdits_EditBeforeFirstCollect() public {
+        KeyValue[] memory params = _emptyKeyValueArray();
+
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, address(this));
+
+        MockFeed(mockFeed).setContentURI("0");
+        bytes memory result =
+            ActionHub(actionHub).configurePostAction(address(simpleCollectAction), mockFeed, postId, params);
+        CollectActionData memory configurationData = abi.decode(result, (CollectActionData));
+
+        MockFeed(mockFeed).setContentURI("1");
+
+        KeyValue[] memory collectParams = _emptyKeyValueArray();
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId1 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("2");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId2 = abi.decode(result, (uint256));
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId3 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("4");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId4 = abi.decode(result, (uint256));
+
+        LensCollectedPost collection = LensCollectedPost(configurationData.collectionAddress);
+
+        assertEq(collection.tokenURI(tokenId1), "1");
+        assertEq(collection.tokenURI(tokenId2), "2");
+        assertEq(collection.tokenURI(tokenId3), "2");
+        assertEq(collection.tokenURI(tokenId4), "4");
+    }
+
+    function testCannotCollectAfterEdits_PreviousCollectionVersion() public {
+        KeyValue[] memory params = _emptyKeyValueArray();
+
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, address(this));
+        MockFeed(mockFeed).setContentURI("1");
+
+        MockSimpleCollectAction mockSimpleCollectAction = new MockSimpleCollectAction(actionHub);
+
+        vm.prank(address(mockSimpleCollectAction));
+        MockLegacyLensCollectedPost legacyCollection = new MockLegacyLensCollectedPost(mockFeed, postId, true);
+
+        bytes memory result =
+            ActionHub(actionHub).configurePostAction(address(mockSimpleCollectAction), mockFeed, postId, params);
+
+        mockSimpleCollectAction.setCollectionAddress(mockFeed, postId, address(legacyCollection));
+        CollectActionData memory configurationData = abi.decode(result, (CollectActionData));
+        configurationData.collectionAddress = address(legacyCollection);
+
+        KeyValue[] memory collectParams = _emptyKeyValueArray();
+
+        result =
+            ActionHub(actionHub).executePostAction(address(mockSimpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId1 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("2");
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        ActionHub(actionHub).executePostAction(address(mockSimpleCollectAction), mockFeed, postId, collectParams);
+
+        MockFeed(mockFeed).setContentURI("1");
+
+        result =
+            ActionHub(actionHub).executePostAction(address(mockSimpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId2 = abi.decode(result, (uint256));
+
+        LensCollectedPost collection = LensCollectedPost(configurationData.collectionAddress);
+        assertEq(collection.tokenURI(tokenId1), "1");
+        assertEq(collection.tokenURI(tokenId2), "1");
     }
 }
