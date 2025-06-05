@@ -6,23 +6,26 @@ import "forge-std/Test.sol";
 import {DependentLock} from "@core/upgradeability/DependentLock.sol";
 import {ProxyAdminForOwnable} from "@core/upgradeability/ProxyAdminForOwnable.sol";
 import {BeaconProxy} from "@core/upgradeability/BeaconProxy.sol";
+import {MockVersionedBeacon} from "test/mocks/MockVersionedBeacon.sol";
 import {Errors} from "@core/types/Errors.sol";
 import {MockOwnableUniversal} from "test/mocks/MockOwnableUniversal.sol";
 import {IOwnable} from "@core/interfaces/IOwnable.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {console} from "forge-std/console.sol";
 
 contract ProxyAdminForOwnableTest is Test {
     DependentLock lock;
     ProxyAdminForOwnable proxyAdmin;
-    MockOwnableUniversal beaconProxy;
+    BeaconProxy beaconProxy;
+    MockVersionedBeacon beacon;
+    MockOwnableUniversal defaultImplementation;
 
     function setUp() public virtual {
         lock = new DependentLock({owner: address(this), locked: true});
-        beaconProxy = new MockOwnableUniversal();
-        beaconProxy.mockOwner(address(this));
+        beacon = new MockVersionedBeacon();
+        defaultImplementation = new MockOwnableUniversal();
+        beacon.mockImplementation(address(defaultImplementation));
         proxyAdmin = new ProxyAdminForOwnable({lock: address(lock)});
+        beaconProxy = new BeaconProxy({proxyAdmin: address(proxyAdmin), beacon: address(beacon)});
+        MockOwnableUniversal(address(beaconProxy)).mockOwner(address(this));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +195,7 @@ contract ProxyAdminForOwnableTest is Test {
 
         bytes memory data = abi.encodeWithSelector(selector);
 
-        beaconProxy.mockToRevertOnNextCallWith("Some error message");
+        MockOwnableUniversal(address(beaconProxy)).mockToRevertOnNextCallWith("Some error message");
 
         vm.expectRevert("Some error message");
         proxyAdmin.call(address(beaconProxy), 0, data);
@@ -205,7 +208,7 @@ contract ProxyAdminForOwnableTest is Test {
 
         bytes memory data = abi.encodeWithSelector(selector);
 
-        beaconProxy.mockToRevertOnNextCallWith(errorSelector);
+        MockOwnableUniversal(address(beaconProxy)).mockToRevertOnNextCallWith(errorSelector);
 
         vm.expectRevert(errorSelector);
         proxyAdmin.call(address(beaconProxy), 0, data);
@@ -216,14 +219,14 @@ contract ProxyAdminForOwnableTest is Test {
 
         bytes memory data = abi.encodeWithSelector(selector);
 
-        beaconProxy.mockToRevertOnNextCall();
+        MockOwnableUniversal(address(beaconProxy)).mockToRevertOnNextCall();
 
         vm.expectRevert();
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
     function test_Call_Reverts_IfOwnerChangesAfterIt(address newOwner) public {
-        vm.assume(newOwner != beaconProxy.owner());
+        vm.assume(newOwner != IOwnable(address(beaconProxy)).owner());
 
         lock.setLockStatus(false);
 
@@ -234,7 +237,7 @@ contract ProxyAdminForOwnableTest is Test {
     }
 
     function test_Call_Reverts_IfWrongOwner(address nonOwner) public {
-        vm.assume(nonOwner != beaconProxy.owner());
+        vm.assume(nonOwner != IOwnable(address(beaconProxy)).owner());
 
         lock.setLockStatus(false);
 
@@ -250,7 +253,7 @@ contract ProxyAdminForOwnableTest is Test {
 
         lock.setLockStatus(false);
 
-        assertEq(beaconProxy.owner(), address(this));
+        assertEq(IOwnable(address(beaconProxy)).owner(), address(this));
 
         bytes memory data = abi.encodeWithSelector(IOwnable.owner.selector);
 
@@ -261,9 +264,9 @@ contract ProxyAdminForOwnableTest is Test {
         vm.prank(address(this));
         proxyAdmin.call(address(beaconProxy), 0, data);
 
-        beaconProxy.mockOwner(newOwner);
+        MockOwnableUniversal(address(beaconProxy)).mockOwner(newOwner);
 
-        assertEq(beaconProxy.owner(), newOwner);
+        assertEq(IOwnable(address(beaconProxy)).owner(), newOwner);
 
         vm.prank(address(this));
         vm.expectRevert(Errors.InvalidMsgSender.selector);
@@ -273,35 +276,49 @@ contract ProxyAdminForOwnableTest is Test {
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
-    // function test_Call_Reverts_IfUnderlyingProxyContract_LosesOwnerFunction(address newOwner) public {
-    //     vm.assume(newOwner != address(this));
+    function test_Call_Reverts_IfUnderlyingProxyContract_LosesOwnerFunction() public {
+        lock.setLockStatus(false);
 
-    //     address implementation = address(new NoOwnerFunctionImpl());
+        assertEq(IOwnable(address(beaconProxy)).owner(), address(this));
 
-    //     address proxy = address(new LogTransparentProxy(address(beaconProxy), address(proxyAdmin), ""));
+        address noOwnerImplementation = address(new NoOwnerFunctionImpl());
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
 
-    //     // MockOwnableUniversal(proxy).mockOwner(address(this));
-    //     MockOwnableUniversal(proxy).mockOwner(newOwner);
+        address(proxyAdmin).call(data);
 
-    //     // assertEq(IOwnable(proxy).owner(), address(this));
-    //     assertEq(IOwnable(proxy).owner(), newOwner);
+        data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, noOwnerImplementation);
 
-    //     bytes memory data = abi.encodeWithSelector(ITransparentUpgradeableProxy.upgradeTo.selector, implementation);
+        vm.expectRevert();
+        address(proxyAdmin).call(data);
+    }
 
-    //     address(proxyAdmin).call(data);
-    // }
+    function test_Call_Reverts_IfOwnerChangesDuringCall_UpgradeCall(address newOwner) public {
+        vm.assume(newOwner != address(this));
 
-    // TODO: Test: Owner is set as the proxy admin address
-}
+        lock.setLockStatus(false);
 
-contract LogTransparentProxy is TransparentUpgradeableProxy {
-    constructor(address implementation, address admin, bytes memory data)
-        TransparentUpgradeableProxy(implementation, admin, data)
-    {}
+        assertEq(IOwnable(address(beaconProxy)).owner(), address(this));
 
-    function _beforeFallback() internal override {
-        super._beforeFallback();
-        console.log("msg.sender at proxy = ", msg.sender);
+        address newOwnerImplementation = address(new FixedOwnerImpl(newOwner));
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
+
+        address(proxyAdmin).call(data);
+
+        data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, newOwnerImplementation);
+
+        vm.expectRevert();
+        address(proxyAdmin).call(data);
+    }
+
+    function test_Call_Reverts_IfOwnerChangesDuringCall_NoUpgradeCall(address newOwner) public {
+        vm.assume(newOwner != address(this));
+
+        assertEq(IOwnable(address(beaconProxy)).owner(), address(this));
+
+        bytes memory data = abi.encodeWithSelector(MockOwnableUniversal.mockOwnerOnNextCall.selector, newOwner);
+
+        vm.expectRevert(Errors.UnexpectedValue.selector);
+        address(proxyAdmin).call(data);
     }
 }
 
