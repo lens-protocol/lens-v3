@@ -10,6 +10,8 @@ import {Errors} from "@core/types/Errors.sol";
 import {MockOwnableUniversal} from "test/mocks/MockOwnableUniversal.sol";
 import {IOwnable} from "@core/interfaces/IOwnable.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {console} from "forge-std/console.sol";
 
 contract ProxyAdminForOwnableTest is Test {
     DependentLock lock;
@@ -271,7 +273,64 @@ contract ProxyAdminForOwnableTest is Test {
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
-    function test_Call_Reverts_IfUnderlyingProxyContract_LosesOwnerFunction() public {
-        // TODO:
+    // function test_Call_Reverts_IfUnderlyingProxyContract_LosesOwnerFunction(address newOwner) public {
+    //     vm.assume(newOwner != address(this));
+
+    //     address implementation = address(new NoOwnerFunctionImpl());
+
+    //     address proxy = address(new LogTransparentProxy(address(beaconProxy), address(proxyAdmin), ""));
+
+    //     // MockOwnableUniversal(proxy).mockOwner(address(this));
+    //     MockOwnableUniversal(proxy).mockOwner(newOwner);
+
+    //     // assertEq(IOwnable(proxy).owner(), address(this));
+    //     assertEq(IOwnable(proxy).owner(), newOwner);
+
+    //     bytes memory data = abi.encodeWithSelector(ITransparentUpgradeableProxy.upgradeTo.selector, implementation);
+
+    //     address(proxyAdmin).call(data);
+    // }
+
+    // TODO: Test: Owner is set as the proxy admin address
+}
+
+contract LogTransparentProxy is TransparentUpgradeableProxy {
+    constructor(address implementation, address admin, bytes memory data)
+        TransparentUpgradeableProxy(implementation, admin, data)
+    {}
+
+    function _beforeFallback() internal override {
+        super._beforeFallback();
+        console.log("msg.sender at proxy = ", msg.sender);
+    }
+}
+
+contract FixedOwnerImpl is IOwnable {
+    function testFixedOwnerImpl() public {
+        // Prevents being included in the foundry coverage report
+    }
+
+    address private immutable OWNER;
+
+    constructor(address fixedOwner) {
+        OWNER = fixedOwner;
+    }
+
+    function owner() external view returns (address) {
+        return OWNER;
+    }
+
+    function transferOwnership(address /* newOwner */ ) external pure override {
+        revert Errors.NotAllowed();
+    }
+}
+
+contract NoOwnerFunctionImpl {
+    function testNoOwnerFunctionImpl() public {
+        // Prevents being included in the foundry coverage report
+    }
+
+    fallback() external {
+        // Allow any call
     }
 }
