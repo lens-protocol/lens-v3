@@ -102,20 +102,28 @@ contract ProxyAdminForOwnableTest is Test {
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
-    function test_Call_SetBeacon_IfNotLocked(address beacon) public {
+    function test_Call_SetBeacon_IfNotLocked() public {
         lock.setLockStatus(false);
         assertFalse(lock.isLocked(address(beaconProxy)));
 
-        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__setBeacon.selector, beacon);
+        address newBeacon = address(new MockVersionedBeacon());
+        MockVersionedBeacon(newBeacon).mockImplementation(address(defaultImplementation));
+
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__setBeacon.selector, newBeacon);
 
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
-    function test_Call_SetImplementation_IfNotLocked(address implementation) public {
+    function test_Call_SetImplementation_IfNotLocked() public {
         lock.setLockStatus(false);
         assertFalse(lock.isLocked(address(beaconProxy)));
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+        assertFalse(beaconProxy.proxy__getAutoUpgrade());
 
-        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, implementation);
+        address newImpl = address(new MockOwnableUniversal());
+
+        data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, newImpl);
 
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
@@ -123,8 +131,14 @@ contract ProxyAdminForOwnableTest is Test {
     function test_Call_TriggerUpgradeToVersion_IfNotLocked(uint256 version) public {
         lock.setLockStatus(false);
         assertFalse(lock.isLocked(address(beaconProxy)));
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+        assertFalse(beaconProxy.proxy__getAutoUpgrade());
 
-        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__triggerUpgradeToVersion.selector, version);
+        address newImpl = address(new MockOwnableUniversal());
+        MockVersionedBeacon(address(beacon)).mockImplementationForVersion(version, newImpl);
+
+        data = abi.encodeWithSelector(BeaconProxy.proxy__triggerUpgradeToVersion.selector, version);
 
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
@@ -132,8 +146,11 @@ contract ProxyAdminForOwnableTest is Test {
     function test_Call_TriggerUpgrade_IfNotLocked() public {
         lock.setLockStatus(false);
         assertFalse(lock.isLocked(address(beaconProxy)));
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+        assertFalse(beaconProxy.proxy__getAutoUpgrade());
 
-        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__triggerUpgrade.selector);
+        data = abi.encodeWithSelector(BeaconProxy.proxy__triggerUpgrade.selector);
 
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
@@ -150,10 +167,15 @@ contract ProxyAdminForOwnableTest is Test {
     function test_Call_OptInToAutoUpgrade_IfNotLocked() public {
         lock.setLockStatus(false);
         assertFalse(lock.isLocked(address(beaconProxy)));
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
+        proxyAdmin.call(address(beaconProxy), 0, data);
+        assertFalse(beaconProxy.proxy__getAutoUpgrade());
 
-        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optInToAutoUpgrade.selector);
+        data = abi.encodeWithSelector(BeaconProxy.proxy__optInToAutoUpgrade.selector);
 
         proxyAdmin.call(address(beaconProxy), 0, data);
+
+        assertTrue(beaconProxy.proxy__getAutoUpgrade());
     }
 
     function test_Call_OtherSelectors_RegardlessOfLockStatus(bytes4 selector, bool locked) public {
