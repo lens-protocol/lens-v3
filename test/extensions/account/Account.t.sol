@@ -77,9 +77,14 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.changeAllowance(allowanceChanges);
     }
 
-    function _setManagerWithoutFundManagementPermission(address someManager) internal {
-        vm.assume(account.isAccountManager(someManager) == false);
+    function _assumeCanBeAddedAsManager(address someManager) internal {
+        vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
+        vm.assume(account.isAccountManager(someManager) == false);
+    }
+
+    function _setManagerWithoutFundManagementPermission(address someManager) internal {
+        _assumeCanBeAddedAsManager(someManager);
         AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
             canExecuteTransactions: true,
             canTransferTokens: false,
@@ -198,9 +203,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         bool canTransferNative,
         bool canSetMetadataURI
     ) public {
-        vm.assume(accountManager != address(0));
-        vm.assume(accountManager != owner);
-        vm.assume(accountManager != manager);
+        _assumeCanBeAddedAsManager(accountManager);
         vm.assume(canTransferTokens == canTransferNative); // New condition in Account Manager permissions
 
         vm.prank(owner);
@@ -242,9 +245,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         bool canTransferNativeAfter,
         bool canSetMetadataURIAfter
     ) public {
-        vm.assume(accountManager != address(0));
-        vm.assume(accountManager != owner);
-        vm.assume(accountManager != manager);
+        _assumeCanBeAddedAsManager(accountManager);
         vm.assume(canTransferTokensBefore != canTransferTokensAfter);
         vm.assume(canTransferNativeBefore != canTransferNativeAfter);
         vm.assume(canSetMetadataURIBefore != canSetMetadataURIAfter);
@@ -282,9 +283,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         bool canTransferNative,
         bool canSetMetadataURI
     ) public {
-        vm.assume(accountManager != address(0));
-        vm.assume(accountManager != owner);
-        vm.assume(accountManager != manager);
+        _assumeCanBeAddedAsManager(accountManager);
         vm.assume(canTransferTokens == canTransferNative); // New condition in Account Manager permissions
 
         vm.prank(owner);
@@ -333,9 +332,8 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     }
 
     function test_AnyManagerCanSpendItsOwnFunds(address someManager, uint256 amount) public {
+        _assumeCanBeAddedAsManager(someManager);
         vm.assume(amount > 0);
-        vm.assume(account.isAccountManager(someManager) == false);
-        vm.assume(someManager != owner);
         someCurrency.mint(someManager, amount);
 
         AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
@@ -369,10 +367,9 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     }
 
     function test_AnyManagerCanSpendItsOwnFunds_Native(address someManager, uint256 amount) public {
-        address newAddress = makeAddr("NEW_ADDRESS");
-        vm.assume(account.isAccountManager(someManager) == false);
-        vm.assume(someManager != owner);
+        _assumeCanBeAddedAsManager(someManager);
         vm.assume(someManager.balance == 0);
+        address newAddress = makeAddr("NEW_ADDRESS");
         uint256 forGas = 1 ether;
         // Bound msgValue [0, 2^95), as test contract's native balance is 2^96, and vm.deal has issues in zksync foundry
         vm.assume(amount > 0 && amount <= 1 << 95);
@@ -405,8 +402,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         uint256 amount,
         uint256 biggerAmount
     ) public {
-        vm.assume(account.isAccountManager(someManager) == false);
-        vm.assume(someManager != owner);
+        _assumeCanBeAddedAsManager(someManager);
         vm.assume(amount > 0);
         vm.assume(biggerAmount > amount);
         someCurrency.mint(someManager, amount);
@@ -443,8 +439,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     }
 
     function test_Manager_Cannot_TreatNftAsCurrencyAndTradeIt(address someManager) public {
-        vm.assume(account.isAccountManager(someManager) == false);
-        vm.assume(someManager != owner);
+        _assumeCanBeAddedAsManager(someManager);
 
         AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
             canExecuteTransactions: true,
@@ -942,6 +937,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         address approveTo
     ) public {
         vm.assume(initialAllowance > 0);
+        vm.assume(approveTo != address(0));
         amountToSpend = bound(amountToSpend, 1, initialAllowance);
         _setManagerWithoutFundManagementPermission(someManager);
         _increaseAllowance(someManager, address(someCurrency), initialAllowance);
@@ -975,6 +971,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         address approveTo
     ) public {
         vm.assume(initialAllowance > 0);
+        vm.assume(approveTo != address(0));
         amountToSpend = bound(amountToSpend, 1, initialAllowance);
         _setManagerWithoutFundManagementPermission(someManager);
         _increaseAllowance(someManager, address(someCurrency), initialAllowance);
@@ -1008,6 +1005,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         address transferTo
     ) public {
         vm.assume(initialAllowance > 0);
+        vm.assume(transferTo != address(0));
         amountToSpend = bound(amountToSpend, 1, initialAllowance);
         _setManagerWithoutFundManagementPermission(someManager);
         _increaseAllowance(someManager, address(someCurrency), initialAllowance);
@@ -1095,9 +1093,14 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
         account.changeAllowance(allowanceChanges);
     }
 
-    function _setManagerWithoutFundManagementPermission(address someManager) internal {
-        vm.assume(account.isAccountManager(someManager) == false);
+    function _assumeCanBeAddedAsManager(address someManager) internal {
+        vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
+        vm.assume(account.isAccountManager(someManager) == false);
+    }
+
+    function _setManagerWithoutFundManagementPermission(address someManager) internal {
+        _assumeCanBeAddedAsManager(someManager);
         AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
             canExecuteTransactions: true,
             canTransferTokens: false,
