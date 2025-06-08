@@ -158,6 +158,7 @@ contract LensFactoryTest is Test, BaseDeployments {
     }
 
     function testCreateGroupWithFeed_FailsToAddFoundingMemberThatIsNotMsgSender(address randomFoundingMember) public {
+        vm.assume(randomFoundingMember != address(0));
         vm.assume(randomFoundingMember != ownerAccount);
         vm.expectRevert(Errors.InvalidParameter.selector);
         IAccount(payable(ownerAccount)).executeTransaction(
