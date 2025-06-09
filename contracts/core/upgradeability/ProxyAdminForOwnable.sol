@@ -8,6 +8,12 @@ import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
+/**
+ * Contract to ensure that the proxy admin is synced with the underlying contract's owner.
+ *
+ * Given that fetches the owner from the contract, it does not work with TransparentUpgradeableProxy, as in those type
+ * of proxies, the proxy admin cannot fallback to the proxy target.
+ */
 contract ProxyAdminForOwnable {
     using CallLib for address;
 

@@ -33,6 +33,9 @@ import {CONTRACT__LENS_FEES} from "contracts/core/types/Constants.sol";
 import {LENS_CREATE_2_ADDRESS} from "contracts/core/upgradeability/LensCreate2.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
+import {DependentLock} from "contracts/core/upgradeability/DependentLock.sol";
+import {ProxyAdminForOwnable} from "contracts/core/upgradeability/ProxyAdminForOwnable.sol";
+
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 
 import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
@@ -97,6 +100,8 @@ contract BaseDeployments is ZkTest {
     address rulesProxyOwner = vm.envOr("RULES_PROXY_OWNER", makeAddr("RULES_PROXY_OWNER"));
     address primitivesOwner = vm.envOr("PRIMITIVES_OWNER", makeAddr("PRIMITIVES_OWNER"));
     address lensCreate2ProxyAdmin = vm.envOr("LENS_CREATE_2_PROXY_ADMIN", makeAddr("LENS_CREATE_2_PROXY_ADMIN"));
+
+    address accountProxyAdmin;
 
     address appImpl;
     address accountImpl;
@@ -210,6 +215,7 @@ contract BaseDeployments is ZkTest {
         console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
         accountLock = json.readAddress(".AccountLock.address");
+        accountProxyAdmin = json.readAddress(".AccountProxyAdmin.address");
         feedLock = json.readAddress(".FeedLock.address");
         graphLock = json.readAddress(".GraphLock.address");
         groupLock = json.readAddress(".GroupLock.address");
@@ -237,7 +243,8 @@ contract BaseDeployments is ZkTest {
     function _deployNewContracts() internal {
         console.log("Deploying new contracts");
         appLock = address(new Lock(proxyAdminLockOwner, true));
-        accountLock = address(new Lock(proxyAdminLockOwner, true));
+        accountLock = address(new DependentLock(proxyAdminLockOwner, true));
+        accountProxyAdmin = address(new ProxyAdminForOwnable(accountLock));
         feedLock = address(new Lock(proxyAdminLockOwner, true));
         graphLock = address(new Lock(proxyAdminLockOwner, true));
         groupLock = address(new Lock(proxyAdminLockOwner, true));

@@ -175,7 +175,6 @@ contract LensFactory {
         );
         IAccount(payable(account)).executeTransaction(namespacePrimitiveAddress, uint256(0), txData);
         IOwnable(account).transferOwnership(accountParams.owner);
-        IOwnable(BeaconProxy(payable(account)).proxy__getProxyAdmin()).transferOwnership(accountParams.owner);
         return account;
     }
 
