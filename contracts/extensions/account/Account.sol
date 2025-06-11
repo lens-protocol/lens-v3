@@ -611,8 +611,8 @@ contract Account is
         return _isAccountManager(accountManager);
     }
 
-    function canSetMetadataURI(address accountManager) external view override returns (bool) {
-        return $storage().managerStorage[accountManager].canSetMetadataURI;
+    function canSetMetadataURI(address executor) external view override returns (bool) {
+        return $storage().managerStorage[executor].canSetMetadataURI || executor == owner();
     }
 
     function getAccountManagerPermissions(address accountManager)

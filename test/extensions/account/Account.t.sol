@@ -1627,6 +1627,24 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
 
         assertEq(accountBalanceBefore + 1 ether, address(account).balance);
     }
+
+    function test_canSetMetadataURI_TrueForOwnerAndManagerWithPermition(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        assertTrue(account.canSetMetadataURI(owner), "Owner can set metadataURI");
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: false,
+                canTransferTokens: false,
+                canTransferNative: false,
+                canSetMetadataURI: true
+            })
+        );
+        assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+    }
 }
 
 contract ErrorsTest {
