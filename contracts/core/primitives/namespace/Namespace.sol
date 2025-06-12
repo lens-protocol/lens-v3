@@ -19,6 +19,7 @@ import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 import {IAccessControlled} from "contracts/core/interfaces/IAccessControlled.sol";
+import {UsesLensNativeHelperModifier} from "contracts/extensions/fees/LensNativeHelper.sol";
 
 contract Namespace is
     IERC721Namespace,
@@ -29,7 +30,8 @@ contract Namespace is
     ExtraDataBased,
     EntityExtraDataBased,
     SourceStampBased,
-    MetadataBased
+    MetadataBased,
+    UsesLensNativeHelperModifier
 {
     /// @custom:keccak lens.permission.SetMetadata
     uint256 constant PID__SET_METADATA = uint256(0xe40fdb273cda3c78f0d9b6d20f5378755989e26c60c89696e5eea644d84eefea);
@@ -155,7 +157,7 @@ contract Namespace is
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams,
         KeyValue[] memory extraData
-    ) external {
+    ) external payable usesNativePaymentHelper {
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
@@ -178,7 +180,7 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
-    ) external override {
+    ) external payable override usesNativePaymentHelper {
         uint256 id = _computeId(username);
         _safeMint(account, id);
         $storage().idToUsername[id] = username;
@@ -194,7 +196,7 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningRuleProcessingParams,
         RuleProcessingParams[] calldata removalRuleProcessingParams
-    ) external override {
+    ) external payable override usesNativePaymentHelper {
         uint256 id = _computeId(username);
         address owner = ownerOf(id);
         require(msg.sender == owner, Errors.InvalidMsgSender()); // msg.sender must be the owner of the username
@@ -214,7 +216,7 @@ contract Namespace is
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
-    ) external override {
+    ) external payable override usesNativePaymentHelper {
         uint256 id = _computeId(username);
         // msg.sender should own the tokenized username
         require(msg.sender == ownerOf(id), Errors.InvalidMsgSender());
@@ -251,7 +253,7 @@ contract Namespace is
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usesNativePaymentHelper {
         address account = Core.$storage().usernameToAccount[username];
         uint256 id = _computeId(username);
         require(msg.sender == ownerOf(id) || msg.sender == account, Errors.InvalidMsgSender());

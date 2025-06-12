@@ -7,10 +7,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {TrustBasedRule} from "contracts/rules/base/TrustBasedRule.sol";
-import {LensPaymentHandler} from "contracts/extensions/fees/LensPaymentHandler.sol";
+import {LensRulePaymentHandler} from "contracts/extensions/fees/LensRulePaymentHandler.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
 
-abstract contract SimplePaymentRule is LensPaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
+abstract contract SimplePaymentRule is LensRulePaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
     using SafeERC20 for IERC20;
 
     /// @custom:keccak lens.param.paymentConfiguration
