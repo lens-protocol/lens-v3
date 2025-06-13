@@ -4,7 +4,6 @@ pragma solidity ^0.8.26;
 
 import {Errors} from "contracts/core/types/Errors.sol";
 import {LENS_CREATE_2_ADDRESS, ILensCreate2} from "contracts/core/upgradeability/LensCreate2.sol";
-import {ILensNativePaymentHelper} from "contracts/extensions/fees/LensNativePaymentHelper.sol";
 import {CONTRACT__LENS_NATIVE_PAYMENT_HELPER} from "contracts/core/types/Constants.sol";
 
 interface ILensNativePaymentHelper {
@@ -38,7 +37,7 @@ contract LensNativePaymentHelper {
     }
 }
 
-abstract contract UsingNativePaymentHelperModifier {
+abstract contract PayableUsingNativePaymentHelper {
     ILensNativePaymentHelper immutable LENS_NATIVE_PAYMENT_HELPER;
 
     constructor() {

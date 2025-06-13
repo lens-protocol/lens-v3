@@ -13,9 +13,9 @@ import {
 } from "contracts/core/types/Types.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
-import {UsingNativePaymentHelperModifier} from "contracts/extensions/fees/LensNativePaymentHelper.sol";
+import {PayableUsingNativePaymentHelper} from "contracts/extensions/fees/LensNativePaymentHelper.sol";
 
-abstract contract RuleBasedPrimitive is UsingNativePaymentHelperModifier {
+abstract contract RuleBasedPrimitive is PayableUsingNativePaymentHelper {
     using RulesLib for RulesStorage;
     using CallLib for address;
 
