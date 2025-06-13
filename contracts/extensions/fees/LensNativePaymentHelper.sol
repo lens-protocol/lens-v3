@@ -11,11 +11,14 @@ interface ILensNativePaymentHelper {
     function refundNative(address to) external;
 }
 
-/// @title LensNativePaymentHelper
-/// @notice This contract is used to help with native token payments during rules fund distribution.
-/// @dev We assume that native token is funded here by the primitive in the beginning of TX before all rules, and then
-/// @dev is spent by each rule permissionlessly until depleted. In the end of TX, the primitive might transfer the
-/// @dev remaining balance back to caller.
+/**
+ * @title LensNativePaymentHelper
+ * @notice This contract is used to help with native token payments during rules fund distribution.
+ * @dev We assume that native token is sent here by the primitive at the beginning of the tx before processing rules.
+ * Then, each rule permissionlessly spends funds until depleted.
+ * At the end of the tx, if there are any remaining funds, they can be claimed back.
+ * This contract avoids the complexity of sending native tokens back and forth between the primitive and the rules.
+ */
 contract LensNativePaymentHelper {
     receive() external payable {}
 
