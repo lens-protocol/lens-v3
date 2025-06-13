@@ -9,6 +9,7 @@ import {Errors} from "contracts/core/types/Errors.sol";
 import {TrustBasedRule} from "contracts/rules/base/TrustBasedRule.sol";
 import {LensRulePaymentHandler} from "contracts/extensions/fees/LensRulePaymentHandler.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
+import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
 abstract contract SimplePaymentRule is LensRulePaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
     using SafeERC20 for IERC20;
@@ -44,8 +45,10 @@ abstract contract SimplePaymentRule is LensRulePaymentHandler, TrustBasedRule, O
         require(configuration.token == expectedConfiguration.token, Errors.InvalidParameter());
         require(configuration.amount == expectedConfiguration.amount, Errors.InvalidParameter());
         require(configuration.recipient == expectedConfiguration.recipient, Errors.InvalidParameter());
-        // Requires payer to trust the msg.sender, which is acting as the primitive
-        _requireTrust({fromAccount: payer, toTarget: msg.sender});
+        if (configuration.token != NATIVE_TOKEN) {
+            // Requires payer to trust the msg.sender (we assume msg.sender is the primitive)
+            _requireTrust({fromAccount: payer, toTarget: msg.sender});
+        }
     }
 
     function _processPayment(
