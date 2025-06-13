@@ -1628,10 +1628,42 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
         assertEq(accountBalanceBefore + 1 ether, address(account).balance);
     }
 
-    function test_canSetMetadataURI_TrueForOwnerAndManagerWithPermition(address someManager) public {
-        _assumeCanBeAddedAsManager(someManager);
-
+    function test_canSetMetadataURI_TrueForOwner() public {
         assertTrue(account.canSetMetadataURI(owner), "Owner can set metadataURI");
+    }
+
+    function test_canSetMetadataURI_TrueForManagerWithPermission(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: false,
+                canTransferTokens: false,
+                canTransferNative: false,
+                canSetMetadataURI: true
+            })
+        );
+        assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+    }
+
+    function test_canSetMetadataURI_FalseForManagerWithoutPermission(address someManager, bool canTransferTokens)
+        public
+    {
+        _assumeCanBeAddedAsManager(someManager);
+        AccountManagerPermissions memory permissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: canTransferTokens,
+            canTransferNative: canTransferTokens,
+            canSetMetadataURI: false
+        });
+        vm.prank(owner);
+        account.addAccountManager(someManager, permissions);
+        assertFalse(account.canSetMetadataURI(someManager), "Manager without permision cannot set metadataURI");
+    }
+
+    function test_canSetMetadataURI_FalseForRemovedManager(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
 
         vm.prank(owner);
         account.addAccountManager(
@@ -1644,6 +1676,17 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
             })
         );
         assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+
+        vm.prank(owner);
+        account.removeAccountManager(someManager);
+        assertFalse(account.canSetMetadataURI(someManager), "Removed manager cannot set metadataURI");
+    }
+
+    function test_canSetMetadataURI_FalseForRandomAddress(address randomAddress) public {
+        vm.assume(randomAddress != owner);
+        vm.assume(account.isAccountManager(randomAddress) == false);
+
+        assertFalse(account.canSetMetadataURI(randomAddress), "Random address cannot set metadataURI");
     }
 }
 
