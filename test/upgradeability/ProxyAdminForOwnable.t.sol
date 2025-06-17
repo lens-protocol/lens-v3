@@ -39,10 +39,10 @@ contract ProxyAdminForOwnableTest is Test {
         proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
-    function test_Cannot_Call_SetBeacon_IfLocked(address beacon) public {
+    function test_Cannot_Call_SetBeacon_IfLocked(address newBeacon) public {
         assertTrue(lock.isLocked(address(beaconProxy)));
 
-        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__setBeacon.selector, beacon);
+        bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__setBeacon.selector, newBeacon);
 
         vm.expectRevert(Errors.Locked.selector);
         proxyAdmin.call(address(beaconProxy), 0, data);

@@ -4,9 +4,8 @@ pragma solidity ^0.8.26;
 
 import {IDependentLock} from "contracts/core/interfaces/IDependentLock.sol";
 import {Ownable} from "contracts/core/access/Ownable.sol";
-import {EventEmitterEarly} from "contracts/migration/EventEmitterEarly.sol";
 
-contract DependentLock is Ownable, IDependentLock, EventEmitterEarly {
+contract DependentLock is Ownable, IDependentLock {
     event Lens_Lock_LockStatusSet(bool indexed locked);
     event Lens_Lock_LockStatusSet(address indexed target, bool indexed locked);
 
