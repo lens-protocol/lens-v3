@@ -313,7 +313,7 @@ contract SimpleCollectAction is
             );
         }
 
-        (bool success,) = data.collectionAddress.call(abi.encodeCall(LensCollectedPost.getVersion, ()));
+        (bool success,) = data.collectionAddress.staticcall(abi.encodeCall(LensCollectedPost.getVersion, ()));
         if (!success && data.isImmutable) {
             // If the collection is a previous version of LensCollectedPost (which doesn't support multiple snapshots)
             // AND
