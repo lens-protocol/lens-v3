@@ -81,10 +81,6 @@ contract LensCollectedPost is LensERC721, IERC7572 {
         }
     }
 
-    function getVersion() external pure returns (uint256) {
-        return 2;
-    }
-
     // Internal
 
     function _takeContentURISnapshotIfNeeded(uint256 tokenId) internal {
