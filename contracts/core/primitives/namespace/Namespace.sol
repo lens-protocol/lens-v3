@@ -156,7 +156,7 @@ contract Namespace is
         RuleProcessingParams[] calldata assigningProcessingParams,
         KeyValue[] memory extraData
     ) external payable usingNativePaymentHelper {
-        require(msg.sender == account, Errors.InvalidMsgSender());
+        require(msg.sender == account || _doesMsgSenderControlAccount(account), Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
         $storage().idToUsername[id] = username;
