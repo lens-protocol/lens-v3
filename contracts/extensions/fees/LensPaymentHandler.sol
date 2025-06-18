@@ -106,4 +106,11 @@ abstract contract LensPaymentHandler {
             IERC20(token).safeTransferFrom(payer, recipient, amount);
         }
     }
+
+    function _validateToken(address token) internal view virtual {
+        if (token != NATIVE_TOKEN) {
+            // Expects token to support ERC-20 interface, we call balanceOf and expect it to not revert
+            IERC20(token).balanceOf(address(this));
+        }
+    }
 }

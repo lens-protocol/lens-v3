@@ -31,8 +31,7 @@ abstract contract SimplePaymentRule is LensRulePaymentHandler, TrustBasedRule, O
 
     function _validatePaymentConfiguration(PaymentConfiguration memory configuration) internal view virtual {
         require(configuration.amount > 0, Errors.InvalidParameter());
-        // Expects token to support ERC-20 interface, we call balanceOf and expect it to not revert
-        IERC20(configuration.token).balanceOf(address(this));
+        _validateToken(configuration.token);
     }
 
     function _beforePayment(
