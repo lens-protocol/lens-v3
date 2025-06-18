@@ -106,8 +106,9 @@
   "NamespaceImpl": {
     "contractName": "Namespace",
     "contractType": 0,
-    "address": "0xd2Fb86A63891415244A7D9d02148D5b230bE69FB",
-    "bytecodeHash": "0x7cff12cd56a1af9f8d89eb260173a455cad11ba64644419532f33756624e85bc"
+    "address": "0xfD1874cbf2662216db923A8241fd39E22A5D304d",
+    "bytecodeHash": "010014c3e28c760da77def60d8042a082cefe8ce2db91e59ea189ce309268512",
+    "constructorArguments": []
   },
   "AppBeacon": {
     "contractName": "Beacon",
@@ -169,12 +170,13 @@
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0x1a0cF59005eDb06F922B5E169a90E4DC5c91e988",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       1,
       "0xd2Fb86A63891415244A7D9d02148D5b230bE69FB"
-    ]
+    ],
+    "implementation": "0xfD1874cbf2662216db923A8241fd39E22A5D304d"
   },
   "AccessControlFactory": {
     "name": "AccessControlFactory",
