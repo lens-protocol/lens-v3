@@ -77,9 +77,10 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.changeAllowance(allowanceChanges);
     }
 
-    function _assumeCanBeAddedAsManager(address someManager) internal {
+    function _assumeCanBeAddedAsManager(address someManager) internal view {
         vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
+        vm.assume(someManager != address(account));
         vm.assume(account.isAccountManager(someManager) == false);
     }
 
@@ -1093,9 +1094,10 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
         account.changeAllowance(allowanceChanges);
     }
 
-    function _assumeCanBeAddedAsManager(address someManager) internal {
+    function _assumeCanBeAddedAsManager(address someManager) internal view {
         vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
+        vm.assume(someManager != address(account));
         vm.assume(account.isAccountManager(someManager) == false);
     }
 

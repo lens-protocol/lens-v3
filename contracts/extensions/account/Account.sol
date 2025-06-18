@@ -318,6 +318,7 @@ contract Account is
         _validateAccountManagerPermissions(permissions);
         require(accountManager != owner(), Errors.InvalidParameter());
         require(accountManager != address(0), Errors.InvalidParameter());
+        require(accountManager != address(this), Errors.InvalidParameter());
         $storage().managerStorage[accountManager].updatePermissionsTo(permissions);
         emit Lens_Account_AccountManagerAdded(accountManager, permissions);
     }
