@@ -238,22 +238,24 @@ contract Namespace is
                 return true;
             }
         } catch {
-            // Account is not ownable: checking if it's AccessControlled
-            try IAccessControlled(account).getAccessControl() returns (IAccessControl accountAccessControl) {
-                // Account is AccessControlled: checking if msg.sender has access to assign username
-                try accountAccessControl.hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME) returns (
-                    bool hasAccessToAssignUsername
-                ) {
-                    // Account has AssignUsername permission
-                    return hasAccessToAssignUsername;
-                } catch {
-                    // No access
-                    return false;
-                }
+            // Account is not ownable:
+            // Do nothing, still needs to check if msg.sender has access through the access control.
+        }
+
+        try IAccessControlled(account).getAccessControl() returns (IAccessControl accountAccessControl) {
+            // Account is AccessControlled: checking if msg.sender has access to assign username
+            try accountAccessControl.hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME) returns (
+                bool hasAccessToAssignUsername
+            ) {
+                // Account has AssignUsername permission
+                return hasAccessToAssignUsername;
             } catch {
-                // Account is not ownable nor AccessControlled: no access
+                // No access
                 return false;
             }
+        } catch {
+            // Account is not ownable nor AccessControlled: no access
+            return false;
         }
     }
 
