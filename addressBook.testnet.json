@@ -446,8 +446,8 @@
   "SimplePaymentFeedRuleImpl": {
     "contractName": "SimplePaymentFeedRule",
     "contractType": 0,
-    "address": "0xcdcE4d6fc3b84FEC29bBE09B206ca6eDBB2cf52F",
-    "bytecodeHash": "01000333d19b0d79deb74cead05c9b1e943f46e00b3357f757bfd18f488464ee",
+    "address": "0x22A9a270A599f535518C830bac25401cB569eCb1",
+    "bytecodeHash": "010003334e2a747339505d6b451bb6a6df098bfe24cb91818187bb4fdf21be59",
     "constructorArguments": []
   },
   "SimplePaymentFeedRule": {
@@ -460,7 +460,7 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0x55efA60BE4fd711C114B853A5d251b95bdCC4F66",
-    "implementation": "0xcdcE4d6fc3b84FEC29bBE09B206ca6eDBB2cf52F",
+    "implementation": "0x22A9a270A599f535518C830bac25401cB569eCb1",
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedFeedRuleImpl": {
@@ -546,8 +546,8 @@
   "SimplePaymentFollowRuleImpl": {
     "contractName": "SimplePaymentFollowRule",
     "contractType": 0,
-    "address": "0x6E6698B547F57EE34fE119B3B73C305Ba8e1b28D",
-    "bytecodeHash": "010002c77dafdee25bc0dc00b6a7530a79c7c31ef84fd66f2e38ea75584a1c22",
+    "address": "0xE3C9a3d257E3B73edc2feD080A0eE97BD5229381",
+    "bytecodeHash": "010002c7d27f6670806f244caa5cd804e13157f7a34e9fdb240084d59af83ab3",
     "constructorArguments": []
   },
   "SimplePaymentFollowRule": {
@@ -560,7 +560,7 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0x7EA84D750E8C2b7D0EB5e8114f54111d78Eeb992",
-    "implementation": "0x6E6698B547F57EE34fE119B3B73C305Ba8e1b28D",
+    "implementation": "0xE3C9a3d257E3B73edc2feD080A0eE97BD5229381",
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedFollowRuleImpl": {
@@ -606,8 +606,8 @@
   "SimplePaymentGroupRuleImpl": {
     "contractName": "SimplePaymentGroupRule",
     "contractType": 0,
-    "address": "0x918d88Ca9626CB505a17afDAD8e37Ad7689FC8b8",
-    "bytecodeHash": "010003312b1ea85aae105ab92ab3f220bf755bee760bdb209c828131654dbc71",
+    "address": "0x2dbA07936cAAB8B77d1bd7C0D87486DCB05C1903",
+    "bytecodeHash": "0100032f90907a81767064af305c44ddb87aa6c5916f2a23e6b58da2fb026a0d",
     "constructorArguments": []
   },
   "SimplePaymentGroupRule": {
@@ -620,7 +620,7 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0xC99b11687d91EC4f6e65EcFa205795101BbaB5B2",
-    "implementation": "0x918d88Ca9626CB505a17afDAD8e37Ad7689FC8b8",
+    "implementation": "0x2dbA07936cAAB8B77d1bd7C0D87486DCB05C1903",
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TokenGatedGroupRuleImpl": {
@@ -706,8 +706,8 @@
   "UsernamePricePerLengthNamespaceRuleImpl": {
     "contractName": "UsernamePricePerLengthNamespaceRule",
     "contractType": 0,
-    "address": "0x5d00E2DfF87eF6057ea9f523e91c1D2e3fD70398",
-    "bytecodeHash": "010003a1ff408129ac4e3f0152f4777088110eb61177482562c5ea6af2e15e85",
+    "address": "0x5eEFE4a92ABcb6F5B0963598c7b0607047d0BB21",
+    "bytecodeHash": "010003a1de222c705607b2ddf722662d227ce4f21298a493f65f29e66b0a420e",
     "constructorArguments": []
   },
   "UsernamePricePerLengthNamespaceRule": {
@@ -720,7 +720,7 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0x4aBdf719Bc6659e91233c62D4d08D6F4229989e8",
-    "implementation": "0x5d00E2DfF87eF6057ea9f523e91c1D2e3fD70398",
+    "implementation": "0x5eEFE4a92ABcb6F5B0963598c7b0607047d0BB21",
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "TippingAccountActionImpl": {
