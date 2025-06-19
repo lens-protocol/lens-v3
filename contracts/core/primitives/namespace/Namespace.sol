@@ -233,17 +233,27 @@ contract Namespace is
 
     function _doesMsgSenderControlAccount(address account) internal view returns (bool) {
         try IOwnable(account).owner() returns (address accountOwner) {
+            // Account is Ownable: checking if msg.sender is the owner
             if (msg.sender == accountOwner) {
                 return true;
             }
         } catch {
-            // Do nothing, still needs to check if msg.sender has access through the access control.
-        }
-        try IAccessControlled(account).getAccessControl().hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME)
-        returns (bool hasAccessToAssignUsername) {
-            return hasAccessToAssignUsername;
-        } catch {
-            return false;
+            // Account is not ownable: checking if it's AccessControlled
+            try IAccessControlled(account).getAccessControl() returns (IAccessControl accountAccessControl) {
+                // Account is AccessControlled: checking if msg.sender has access to assign username
+                try accountAccessControl.hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME) returns (
+                    bool hasAccessToAssignUsername
+                ) {
+                    // Account has AssignUsername permission
+                    return hasAccessToAssignUsername;
+                } catch {
+                    // No access
+                    return false;
+                }
+            } catch {
+                // Account is not ownable nor AccessControlled: no access
+                return false;
+            }
         }
     }
 
