@@ -25,6 +25,10 @@ struct PaymentConfiguration {
 // This contraption can be used as a template for debugging on-chain transactions.
 
 contract DebugTest is Test, BaseDeployments {
+    function testDebugTest() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     function setUp() public override onlyFork {
         // super.setUp();
         // address usernamePricePerLengthNamespaceRuleImpl = address(new UsernamePricePerLengthNamespaceRule());
