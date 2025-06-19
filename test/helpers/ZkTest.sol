@@ -38,4 +38,9 @@ contract ZkTest is Test {
         vm.skip(isFork());
         _;
     }
+
+    modifier onlyFork() {
+        vm.skip(!isFork());
+        _;
+    }
 }
