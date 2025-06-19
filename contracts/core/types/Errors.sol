@@ -25,7 +25,7 @@ library Errors {
     error InvalidMsgSender();
     error InvalidParameter();
     error InvalidSignature();
-    error InvalidSourceStamp();
+    error InvalidSourceStampOriginalMsgSender();
     error LimitReached();
     error Locked();
     error NonceUsed();
