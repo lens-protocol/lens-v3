@@ -9,7 +9,7 @@ import {CONTRACT__LENS_NATIVE_PAYMENT_HELPER, NATIVE_TOKEN} from "contracts/core
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract LensRulePaymentHandler is LensPaymentHandler {
+abstract contract LensRulePaymentHandler is LensPaymentHandler {
     using SafeERC20 for IERC20;
 
     ILensNativePaymentHelper private immutable LENS_NATIVE_PAYMENT_HELPER;
