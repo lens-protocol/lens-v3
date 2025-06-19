@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 import {KeyValue, SourceStamp} from "contracts/core/types/Types.sol";
 import {ExtraStorageBased} from "contracts/core/base/ExtraStorageBased.sol";
 import {ISource} from "contracts/core/interfaces/ISource.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract SourceStampBased is ExtraStorageBased {
     /// @custom:keccak lens.param.sourceStamp
@@ -30,7 +31,7 @@ abstract contract SourceStampBased is ExtraStorageBased {
         for (uint256 i = 0; i < customParams.length; i++) {
             if (customParams[i].key == PARAM__SOURCE_STAMP) {
                 SourceStamp memory sourceStamp = abi.decode(customParams[i].value, (SourceStamp));
-                require(sourceStamp.originalMsgSender == msg.sender);
+                require(sourceStamp.originalMsgSender == msg.sender, Errors.InvalidSourceStamp());
                 ISource(sourceStamp.source).validateSource(sourceStamp);
                 return sourceStamp.source;
             }
