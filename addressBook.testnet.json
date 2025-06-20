@@ -842,14 +842,14 @@
     "contractName": "LensNativePaymentHelper",
     "contractType": 0,
     "address": "0x38Dc515EEaaeb0160Ff9F0CA4d326Dd04Ba32791",
-    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "bytecodeHash": "0100004de0da6148331eb239c0d9d93abcec5e55e16f5e90c088dc3a24a9cf2d",
     "constructorArguments": []
   },
   "LensNativePaymentHelper": {
     "contractName": "TransparentUpgradeableProxy",
     "contractType": 4,
     "address": "0x1cCf0A481e3824E271C4b89a79E00c838D4A465B",
-    "bytecodeHash": "0100004de0da6148331eb239c0d9d93abcec5e55e16f5e90c088dc3a24a9cf2d",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
     "implementation": "0x38Dc515EEaaeb0160Ff9F0CA4d326Dd04Ba32791",
     "proxyAdmin": "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
     "lensCreate2PreSalt": "lens.contract.LensNativePaymentHelper"
