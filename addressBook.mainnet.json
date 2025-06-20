@@ -110,8 +110,8 @@
   "NamespaceImpl": {
     "contractName": "Namespace",
     "contractType": 0,
-    "address": "0x1Cfb6619bAEE3F5E47236E6B2e166B4B8ACf1e6f",
-    "bytecodeHash": "0100142b07b818f045f59ae419a1b1cafb262746d8e6d4bb3599db15d896b882",
+    "address": "0x3b670D827E2D9c665e8eB28e7758A24C2048FD91",
+    "bytecodeHash": "010014bf117fe9d7564b133bea19b45a44e21a83f6fa728880b2bc759c550e32",
     "constructorArguments": []
   },
   "AppBeacon": {
@@ -184,7 +184,7 @@
       1,
       "0x701E3f4553D11978dC36163FEcBB1a327C6a2CFE"
     ],
-    "implementation": "0x1Cfb6619bAEE3F5E47236E6B2e166B4B8ACf1e6f"
+    "implementation": "0x3b670D827E2D9c665e8eB28e7758A24C2048FD91"
   },
   "AccessControlFactory": {
     "name": "AccessControlFactory",
