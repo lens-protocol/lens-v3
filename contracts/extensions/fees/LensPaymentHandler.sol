@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {CONTRACT__LENS_FEES, NATIVE_TOKEN, BPS_MAX} from "contracts/core/types/Constants.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
 import {LENS_CREATE_2_ADDRESS, ILensCreate2} from "contracts/core/upgradeability/LensCreate2.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 abstract contract LensPaymentHandler {
     using SafeERC20 for IERC20;
@@ -100,9 +101,16 @@ abstract contract LensPaymentHandler {
     function _sendToken(address token, address payer, address recipient, uint256 amount) internal virtual {
         if (token == NATIVE_TOKEN) {
             (bool success,) = payable(recipient).call{value: amount}("");
-            require(success, "Transfer failed");
+            require(success, Errors.FailedToTransferNative());
         } else {
             IERC20(token).safeTransferFrom(payer, recipient, amount);
+        }
+    }
+
+    function _validateToken(address token) internal view virtual {
+        if (token != NATIVE_TOKEN) {
+            // Expects token to support ERC-20 interface, we call balanceOf and expect it to not revert
+            IERC20(token).balanceOf(address(this));
         }
     }
 }

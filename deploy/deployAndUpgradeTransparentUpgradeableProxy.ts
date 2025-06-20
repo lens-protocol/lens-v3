@@ -22,14 +22,14 @@ async function deploy() {
     throw new Error('ActionHub not found in address book');
   }
 
-  const contractToUpgradeName = 'SimpleCollectAction';
+  const contractToUpgradeName = 'UsernamePricePerLengthNamespaceRule';
 
   const contractToUpgrade: ContractInfo =
     {
       name: contractToUpgradeName + 'Impl',
       contractName: contractToUpgradeName,
       contractType: ContractType.Implementation,
-      constructorArguments: [actionHubAddress],
+      constructorArguments: [],
     };
 
   const transparentUpgradeableProxyContract = loadContractFromAddressBook(contractToUpgrade.contractName);
@@ -88,6 +88,7 @@ async function deploy() {
   console.log(`${contractToUpgrade.contractName} upgraded to ${newImplementation}`);
 
   saveContractToAddressBook({
+    name: contractToUpgradeName,
     ...transparentUpgradeableProxyContract,
     implementation: newImplementation,
   });

@@ -23,6 +23,10 @@ import {RulesTest} from "test/primitives/rules/Rules.t.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
+    function testNamespaceTest() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     /// @custom:keccak lens.permission.AssignUsername
     uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
 
@@ -931,6 +935,10 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
 }
 
 contract NamespaceTestII is BaseDeployments {
+    function testNamespaceTestII() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     /// @custom:keccak lens.permission.AssignUsername
     uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
 
@@ -1204,6 +1212,10 @@ contract MockOwnable is IOwnable {
 }
 
 contract MockOwnableERC721Receiver is MockOwnable, IERC721Receiver {
+    function testMockOwnableERC721Receiver() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     function onERC721Received(
         address, /* operator */
         address, /* from */
@@ -1235,6 +1247,10 @@ contract MockAccessControllable is IAccessControlled {
 }
 
 contract MockAccessControllableERC721Receiver is MockAccessControllable, IERC721Receiver {
+    function testMockAccessControllableERC721Receiver() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     function onERC721Received(
         address, /* operator */
         address, /* from */
@@ -1245,7 +1261,11 @@ contract MockAccessControllableERC721Receiver is MockAccessControllable, IERC721
     }
 }
 
-contract MockOwnableAccessControllable is MockOwnable, MockAccessControllable {}
+contract MockOwnableAccessControllable is MockOwnable, MockAccessControllable {
+    function testMockOwnableAccessControllable() public {
+        // Prevents being included in the foundry coverage report
+    }
+}
 
 contract MockNonOwnableNonAccessControllable {
     function testMockNonOwnableNonAccessControllable() public {

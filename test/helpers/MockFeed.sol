@@ -5,6 +5,10 @@ pragma solidity ^0.8.26;
 import {Post} from "contracts/core/interfaces/IFeed.sol";
 
 contract MockFeed {
+    function testMockFeed() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     address internal _postAuthor;
     bool internal _postExists = true;
     string internal _contentURI = "someContentURI";
