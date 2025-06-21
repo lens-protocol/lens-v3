@@ -2026,7 +2026,7 @@ contract AccountTest2 is AccountTestBase {
 
     function test_executeTransactions_IfOwner(address target, uint256 amount, bytes4 selector) public {
         _assumeEOA(target);
-        _boundAmountAllowZero(amount);
+        amount = _boundAmountAllowZero(amount);
         if (amount > 0) {
             vm.deal(address(account), amount);
         }
@@ -2045,7 +2045,7 @@ contract AccountTest2 is AccountTestBase {
         bytes4 selector
     ) public {
         _assumeEOA(target);
-        _boundAmountAllowZero(amount);
+        amount = _boundAmountAllowZero(amount);
         if (amount > 0) {
             vm.deal(address(account), amount);
         }
@@ -2077,7 +2077,7 @@ contract AccountTest2 is AccountTestBase {
         bytes4 selector
     ) public {
         _assumeEOA(target);
-        _boundAmountAllowZero(amount);
+        amount = _boundAmountAllowZero(amount);
         if (amount > 0) {
             vm.deal(address(account), amount);
         }
@@ -2110,7 +2110,7 @@ contract AccountTest2 is AccountTestBase {
         bytes4 selector
     ) public {
         _assumeEOA(target);
-        _boundAmountAllowZero(amount);
+        amount = _boundAmountAllowZero(amount);
         if (amount > 0) {
             vm.deal(address(account), amount);
         }
