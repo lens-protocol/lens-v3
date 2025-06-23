@@ -20,6 +20,8 @@ evm_version = 'paris'
 #   zkSync's zkEVM has a bigger size limit than classic EVM, and we sometimes use classic foundry for quicker
 #   compilation during development. Also, tests will trigger this warning otherwise too.
 ignored_error_codes = [5740, 5574] 
+# Mask warnings as compilation errors. An easy way to make our CI fail anytime new warnings are introduced.
+deny_warnings = true
 
 [profile.default.fuzz]
 runs = 1024
