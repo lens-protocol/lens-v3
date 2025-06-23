@@ -88,20 +88,23 @@
   "FeedImpl": {
     "contractName": "Feed",
     "contractType": 0,
-    "address": "0x5c42953E74fa9b1Be38304a3a99Ed0D3b4659df1",
-    "bytecodeHash": "0x76e61dde355a4b7d48d0a05fa77da0e00967ad2efbd20274f25725da3044057b"
+    "address": "0xBB2c7BD84283367fC52eE8f6712272f947e57Da4",
+    "bytecodeHash": "0100129b2c93ce903f101221d72af4e340405e41af5c435e35b1d43f49a15092",
+    "constructorArguments": []
   },
   "GraphImpl": {
     "contractName": "Graph",
     "contractType": 0,
-    "address": "0xa8E929435EC93956b055938930dbB134db984E49",
-    "bytecodeHash": "0x4b30ab0e7c66ffd538ed938605fd29089d2d0e4656198759c4b91347c55b423e"
+    "address": "0x182405b358bB0e05c321d392aa395d9c80d3665E",
+    "bytecodeHash": "01000b3b4fb78ceff2179c4603c42853eb03a10b7ca5297853e62b12581314bd",
+    "constructorArguments": []
   },
   "GroupImpl": {
     "contractName": "Group",
     "contractType": 0,
-    "address": "0x9CEB814FE36C7613F0fB4841D8d2a0e4Ad59f817",
-    "bytecodeHash": "0x6d7d50a71da43d3b3d977ed5fa6e517bfbc513536f64e8fba474bb76e6392aa2"
+    "address": "0x115d3078F8759Cdba40E652afA3255f78D023636",
+    "bytecodeHash": "01000c1328bd21c2e749bb9b37457e2023c7b10331ac818c1dc19c7695c9216b",
+    "constructorArguments": []
   },
   "NamespaceImpl": {
     "contractName": "Namespace",
@@ -137,34 +140,37 @@
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0x940b8E3Efe263A863B7Cd3f452A94E962e11c8a3",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       1,
       "0x5c42953E74fa9b1Be38304a3a99Ed0D3b4659df1"
-    ]
+    ],
+    "implementation": "0xBB2c7BD84283367fC52eE8f6712272f947e57Da4"
   },
   "GraphBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0xc28f232D86EEde9F33B0083fFCf9ec8Ef0f98ce9",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       1,
       "0xa8E929435EC93956b055938930dbB134db984E49"
-    ]
+    ],
+    "implementation": "0x182405b358bB0e05c321d392aa395d9c80d3665E"
   },
   "GroupBeacon": {
     "contractName": "Beacon",
     "contractType": 1,
     "address": "0x777FF4456377b084EbCfD1eB20DAcB78278677e5",
-    "bytecodeHash": "0x6fc08e64902fe41f1a5cb7e99b0422816177332c7b8ebcb144c4996909778799",
+    "bytecodeHash": "010000fb799cf0ba852b1caf74860f7c7178e36ebbe76d8858c3affd27a6e4bc",
     "constructorArguments": [
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       1,
       "0xb530A71C8011d2b92b711e265F62C5565fc8630e"
-    ]
+    ],
+    "implementation": "0x115d3078F8759Cdba40E652afA3255f78D023636"
   },
   "NamespaceBeacon": {
     "contractName": "Beacon",
