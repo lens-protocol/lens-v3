@@ -124,7 +124,7 @@ contract Group is
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         _addMember(account, customParams, ruleProcessingParams, _processSourceStamp(customParams));
     }
 
@@ -140,7 +140,7 @@ contract Group is
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._grantMembership(account);
         _processMemberJoining(msg.sender, account, customParams, ruleProcessingParams);

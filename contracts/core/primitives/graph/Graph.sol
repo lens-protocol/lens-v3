@@ -101,7 +101,7 @@ contract Graph is
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external virtual override returns (uint256) {
+    ) external payable virtual override usingNativePaymentHelper returns (uint256) {
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         // If some implementation wants to allow followId specification, it can be implemented using customParams.
         uint256 assignedFollowId = Core._follow(followerAccount, accountToFollow, 0, block.timestamp);

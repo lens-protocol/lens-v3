@@ -70,7 +70,7 @@ interface IGroup is IMetadataBased {
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function removeMember(
         address account,
@@ -82,7 +82,7 @@ interface IGroup is IMetadataBased {
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function leaveGroup(
         address account,

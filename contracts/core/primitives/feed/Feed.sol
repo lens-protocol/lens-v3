@@ -123,7 +123,7 @@ contract Feed is
         RuleProcessingParams[] memory feedRulesParams,
         RuleProcessingParams[] memory rootPostRulesParams,
         RuleProcessingParams[] memory quotedPostRulesParams
-    ) external virtual override returns (uint256) {
+    ) external payable virtual override usingNativePaymentHelper returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         _validateExpectedPostIdIfPresent(customParams, postId);

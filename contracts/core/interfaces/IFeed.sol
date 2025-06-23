@@ -129,7 +129,7 @@ interface IFeed is IMetadataBased {
         RuleProcessingParams[] calldata feedRulesParams,
         RuleProcessingParams[] calldata rootPostRulesParams,
         RuleProcessingParams[] calldata quotedPostRulesParams
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     function editPost(
         uint256 postId,
