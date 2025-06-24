@@ -80,7 +80,7 @@ contract AccountTestBase is FuzzZkTest, BaseDeployments {
         account.changeAllowance(allowanceChanges);
     }
 
-    function _assumeCanBeAddedAsManager(address someManager) internal {
+    function _assumeCanBeAddedAsManager(address someManager) internal view {
         vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
         vm.assume(account.isAccountManager(someManager) == false);
@@ -98,7 +98,7 @@ contract AccountTestBase is FuzzZkTest, BaseDeployments {
         account.addAccountManager(someManager, basicPermissionSet);
     }
 
-    function _assumeEOA(address someAddress) internal {
+    function _assumeEOA(address someAddress) internal view {
         assumeNotForgeAddress(someAddress);
         vm.assume(someAddress.code.length == 0);
         vm.assume(uint160(someAddress) > type(uint16).max); // skip system contracts
@@ -1606,14 +1606,14 @@ contract AccountTest2 is AccountTestBase {
         assertFalse(account.isAccountManager(otherAddress), "Other address is not an account manager");
     }
 
-    function test_canExecuteTransactions_TrueForOwner(address someManager) public {
+    function test_canExecuteTransactions_TrueForOwner() public view {
         assertTrue(account.canExecuteTransactions(owner), "Owner can execute transactions");
     }
 
     function test_canExecuteTransactions_TrueForManagerWithPermission(address someManager) public {
         _assumeCanBeAddedAsManager(someManager);
         _setManagerWithoutFundManagementPermission(someManager);
-        assertTrue(account.canExecuteTransactions(someManager), "Manager with permision can execute transactions");
+        assertTrue(account.canExecuteTransactions(someManager), "Manager with permission can execute transactions");
     }
 
     function test_canExecuteTransactions_FalseForManagerWithoutPermission(address someManager) public {
@@ -1629,7 +1629,9 @@ contract AccountTest2 is AccountTestBase {
                 canSetMetadataURI: true
             })
         );
-        assertFalse(account.canExecuteTransactions(someManager), "Manager without permision cannot execute transactions");
+        assertFalse(
+            account.canExecuteTransactions(someManager), "Manager without permission cannot execute transactions"
+        );
     }
 
     function test_canExecuteTransactions_FalseForRemovedManager(address someManager) public {
@@ -1645,14 +1647,16 @@ contract AccountTest2 is AccountTestBase {
                 canSetMetadataURI: true
             })
         );
-        assertTrue(account.canExecuteTransactions(someManager), "Manager with permision can execute transactions");
+        assertTrue(account.canExecuteTransactions(someManager), "Manager with permission can execute transactions");
 
         vm.prank(owner);
         account.removeAccountManager(someManager);
-        assertFalse(account.canExecuteTransactions(someManager), "Manager without permision cannot execute transactions");
+        assertFalse(
+            account.canExecuteTransactions(someManager), "Manager without permission cannot execute transactions"
+        );
     }
 
-    function test_canSetMetadataURI_TrueForOwner() public {
+    function test_canSetMetadataURI_TrueForOwner() public view {
         assertTrue(account.canSetMetadataURI(owner), "Owner can set metadataURI");
     }
 
@@ -1668,7 +1672,7 @@ contract AccountTest2 is AccountTestBase {
                 canSetMetadataURI: true
             })
         );
-        assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+        assertTrue(account.canSetMetadataURI(someManager), "Manager with permission can set metadataURI");
     }
 
     function test_canSetMetadataURI_FalseForManagerWithoutPermission(address someManager, bool canTransferTokens)
@@ -1683,7 +1687,7 @@ contract AccountTest2 is AccountTestBase {
         });
         vm.prank(owner);
         account.addAccountManager(someManager, permissions);
-        assertFalse(account.canSetMetadataURI(someManager), "Manager without permision cannot set metadataURI");
+        assertFalse(account.canSetMetadataURI(someManager), "Manager without permission cannot set metadataURI");
     }
 
     function test_canSetMetadataURI_FalseForRemovedManager(address someManager) public {
@@ -1699,14 +1703,14 @@ contract AccountTest2 is AccountTestBase {
                 canSetMetadataURI: true
             })
         );
-        assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+        assertTrue(account.canSetMetadataURI(someManager), "Manager with permission can set metadataURI");
 
         vm.prank(owner);
         account.removeAccountManager(someManager);
         assertFalse(account.canSetMetadataURI(someManager), "Removed manager cannot set metadataURI");
     }
 
-    function test_canSetMetadataURI_FalseForRandomAddress(address randomAddress) public {
+    function test_canSetMetadataURI_FalseForRandomAddress(address randomAddress) public view {
         vm.assume(randomAddress != owner);
         vm.assume(account.isAccountManager(randomAddress) == false);
 
@@ -2254,7 +2258,7 @@ contract AccountTest3 is AccountTestBase {
         account.removeAccountManager(someManager);
     }
 
-    function test_supportsInterface() public {
+    function test_supportsInterface() public view {
         assertTrue(account.supportsInterface(type(IERC1155Receiver).interfaceId));
         assertFalse(account.supportsInterface(0xdeadbeef));
     }
@@ -2270,7 +2274,7 @@ contract AccountTestHarness is FuzzZkTest, BaseDeployments {
         account = IHarnessAccount(payable(address(new HarnessAccount(address(GHO), address(WGHO)))));
     }
 
-    function test_extractGraphFromParams(address addressToExtract) public {
+    function test_extractGraphFromParams(address addressToExtract) public view {
         KeyValue memory kv1 = KeyValue({key: keccak256("key1"), value: abi.encode("value1")});
         KeyValue memory kv2 = KeyValue({key: PARAM__GRAPH, value: abi.encode(addressToExtract)});
         KeyValue memory kv3 = KeyValue({key: keccak256("key3"), value: abi.encode("value3")});
