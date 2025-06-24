@@ -65,11 +65,13 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        string memory uri;
         if (_isImmutable) {
             for (uint256 i = _contentURISnapshots.length - 1; i >= 0; i--) {
                 if (_contentURISnapshots[i].tokenId <= tokenId) {
                     // This should always return something because contentURISnapshot[0] always has a tokenId 0
-                    return _contentURISnapshots[i].contentURI;
+                    uri = _contentURISnapshots[i].contentURI;
+                    break;
                 }
             }
         } else {
@@ -77,8 +79,9 @@ contract LensCollectedPost is LensERC721, IERC7572 {
             string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
             // If content was deleted we fail. You can override this to return the empty URI if preferred.
             require(bytes(contentURI).length > 0, Errors.DoesNotExist());
-            return contentURI;
+            uri = contentURI;
         }
+        return uri;
     }
 
     // Internal
