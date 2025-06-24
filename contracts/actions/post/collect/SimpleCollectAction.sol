@@ -14,7 +14,6 @@ import {Errors} from "contracts/core/types/Errors.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {BPS_MAX} from "contracts/core/types/Constants.sol";
 import {LensPaymentHandler} from "contracts/extensions/fees/LensPaymentHandler.sol";
-import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
 error InvalidSplits();
 error InvalidRecipient();
@@ -72,12 +71,12 @@ contract SimpleCollectAction is
      * @param isImmutable If true, it means that:
      *          - The Post URI is snapshotted at collect time for each collected NFT.
      *          - Collected posts' NFTs remain permanently available.
-     *          - What you see is what you get (for non-legacy LensCollectedPost collections*)
-     *          - Deleting the post will disable further collection
+     *          - What you see is what you get (*).
+     *          - Deleting the post will disable further collection.
      *         Note: This immutability is only guaranteed if the URI is hosted on immutable storage. Mutability inherent
      *         to the chosen storage technology exceeds the on-chain verification capabilities.
-     *         * WYSIWYG is not preserved for Legacy LensCollectedPost collections would have a snapshot of the post at
-     *           configuration time and if the post was edited - NFT would still have same configuration-time snapshot.
+     *         (*) WYSIWYG is not preserved for Legacy LensCollectedPost collections. Those will have a snapshot of the
+     *           post at configuration time and, if the post was edited, the NFT would still have same snapshot.
      *           This decision was made to prevent legacy collections from breaking on editing.
      */
     struct CollectActionConfigureParams {

@@ -87,6 +87,7 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     // Internal
 
     function _takeContentURISnapshotIfNeeded(uint256 tokenId) internal {
+        // IFeed::getPost will revert if the post was deleted or does not exist.
         string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
         string memory latestContentURISnapshot = _contentURISnapshots[_contentURISnapshots.length - 1].contentURI;
         bool isContentURIChanged = keccak256(bytes(contentURI)) != keccak256(bytes(latestContentURISnapshot));
