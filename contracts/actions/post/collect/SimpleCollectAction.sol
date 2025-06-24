@@ -208,10 +208,7 @@ contract SimpleCollectAction is
             require(configData.recipients.length == 0, Errors.InvalidParameter());
             require(configData.referralFeeBps == 0, Errors.InvalidParameter());
         } else {
-            if (configData.token != NATIVE_TOKEN) {
-                // We expect token to support ERC-20 interface (call balanceOf and expect it to not revert)
-                IERC20(configData.token).balanceOf(address(this));
-            }
+            _validateToken(configData.token);
             require(configData.recipients.length > 0, Errors.InvalidParameter());
             require(configData.referralFeeBps <= BPS_MAX, Errors.InvalidParameter());
         }

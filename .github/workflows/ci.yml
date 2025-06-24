@@ -36,4 +36,4 @@ jobs:
       - name: Run Tests
         run: forge test -vvv
       - name: Run Tests - ZKsync Environment
-        run: DAPP_TEST_FUZZ_RUNS=5 forge test --zksync -vvv
+        run: DAPP_TEST_FUZZ_RUNS=5 forge test --zksync -vvv --suppress-warnings assemblycreate

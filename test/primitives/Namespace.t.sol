@@ -20,8 +20,13 @@ import {Namespace} from "@core/primitives/namespace/Namespace.sol";
 import {Rule} from "@core/types/Types.sol";
 import {RuleExecutionTest} from "test/primitives/rules/RuleExecution.t.sol";
 import {RulesTest} from "test/primitives/rules/Rules.t.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
+    function testNamespaceTest() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     /// @custom:keccak lens.permission.AssignUsername
     uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
 
@@ -528,7 +533,7 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertEq(namespace.usernameOf(account), localName, "Account should still have the username");
     }
 
-    function test_CreateAndAssignUsername() public {
+    function test_CreateAndAssignUsername_MsgSenderIsAccount() public {
         string memory localName = "satoshi";
         uint256 tokenId = uint256(keccak256(bytes(localName)));
 
@@ -549,6 +554,61 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertEq(LensERC721(address(namespace)).ownerOf(tokenId), account, "Token should be owned by account");
         assertEq(namespace.accountOf(localName), account, "Username should be assigned to account");
         assertEq(namespace.usernameOf(account), localName, "Account should have the username");
+    }
+
+    function test_CreateAndAssignUsername_MsgSenderControlsAccount_ThroughOwnable() public {
+        string memory localName = "satoshi";
+        uint256 tokenId = uint256(keccak256(bytes(localName)));
+
+        // Create account
+        address ownedAccount = address(new MockOwnableERC721Receiver());
+        MockOwnableERC721Receiver(ownedAccount).mockOwner(account);
+
+        // Create and assign username in one operation
+        vm.prank(account);
+        Namespace(address(namespace)).createAndAssignUsername({
+            account: ownedAccount,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassigningProcessingParams: _emptyRuleProcessingParamsArray(),
+            creationProcessingParams: _emptyRuleProcessingParamsArray(),
+            assigningProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify token ownership and username assignment
+        assertTrue(namespace.exists(localName), "Username should exist");
+        assertEq(LensERC721(address(namespace)).ownerOf(tokenId), ownedAccount, "Token should be owned by account");
+        assertEq(namespace.accountOf(localName), ownedAccount, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(ownedAccount), localName, "Account should have the username");
+    }
+
+    function test_CreateAndAssignUsername_MsgSenderControlsAccount_ThroughAccessControl() public {
+        string memory localName = "satoshi";
+        uint256 tokenId = uint256(keccak256(bytes(localName)));
+
+        // Create account
+        address controlledAccount = address(new MockAccessControllableERC721Receiver());
+        MockAccessControllableERC721Receiver(controlledAccount).mockAccessControl(mockAccessControl);
+        mockAccessControl.mockAccess(account, address(namespace), PID__ASSIGN_USERNAME, true);
+
+        // Create and assign username in one operation
+        vm.prank(account);
+        Namespace(address(namespace)).createAndAssignUsername({
+            account: controlledAccount,
+            username: localName,
+            customParams: _emptyKeyValueArray(),
+            unassigningProcessingParams: _emptyRuleProcessingParamsArray(),
+            creationProcessingParams: _emptyRuleProcessingParamsArray(),
+            assigningProcessingParams: _emptyRuleProcessingParamsArray(),
+            extraData: _emptyKeyValueArray()
+        });
+
+        // Verify token ownership and username assignment
+        assertTrue(namespace.exists(localName), "Username should exist");
+        assertEq(LensERC721(address(namespace)).ownerOf(tokenId), controlledAccount, "Token should be owned by account");
+        assertEq(namespace.accountOf(localName), controlledAccount, "Username should be assigned to account");
+        assertEq(namespace.usernameOf(controlledAccount), localName, "Account should have the username");
     }
 
     function test_CannotAssignToZeroAddress() public {
@@ -875,6 +935,10 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
 }
 
 contract NamespaceTestII is BaseDeployments {
+    function testNamespaceTestII() public {
+        // Prevents being included in the foundry coverage report
+    }
+
     /// @custom:keccak lens.permission.AssignUsername
     uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
 
@@ -1147,6 +1211,21 @@ contract MockOwnable is IOwnable {
     }
 }
 
+contract MockOwnableERC721Receiver is MockOwnable, IERC721Receiver {
+    function testMockOwnableERC721Receiver() public {
+        // Prevents being included in the foundry coverage report
+    }
+
+    function onERC721Received(
+        address, /* operator */
+        address, /* from */
+        uint256, /* tokenId */
+        bytes calldata /* data */
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
+
 contract MockAccessControllable is IAccessControlled {
     function testMockAccessControllable() public {
         // Prevents being included in the foundry coverage report
@@ -1167,7 +1246,26 @@ contract MockAccessControllable is IAccessControlled {
     }
 }
 
-contract MockOwnableAccessControllable is MockOwnable, MockAccessControllable {}
+contract MockAccessControllableERC721Receiver is MockAccessControllable, IERC721Receiver {
+    function testMockAccessControllableERC721Receiver() public {
+        // Prevents being included in the foundry coverage report
+    }
+
+    function onERC721Received(
+        address, /* operator */
+        address, /* from */
+        uint256, /* tokenId */
+        bytes calldata /* data */
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
+
+contract MockOwnableAccessControllable is MockOwnable, MockAccessControllable {
+    function testMockOwnableAccessControllable() public {
+        // Prevents being included in the foundry coverage report
+    }
+}
 
 contract MockNonOwnableNonAccessControllable {
     function testMockNonOwnableNonAccessControllable() public {
