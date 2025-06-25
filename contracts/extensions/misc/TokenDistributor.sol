@@ -86,7 +86,7 @@ contract TokenDistributor is Ownable {
     ) external {
         require(deadline >= block.timestamp, Errors.Expired());
         _validateBatch(distributionId, batchId);
-        _validateSignature(distributionId, batchId, deadline, signature);
+        _validateSignature(distributionId, batchId, transfers, deadline, signature);
         _markBatchAsProcessed(distributionId, batchId);
         _validateAmountToDistribute(distributionId, amountToDistribute);
         _distributions[distributionId].remainingAmount -= amountToDistribute;
@@ -112,13 +112,12 @@ contract TokenDistributor is Ownable {
         bytes32 batchId,
         TokenTransfer[] calldata transfers,
         uint256 deadline,
-        bytes calldata signature
+        bytes memory signature
     ) internal view {
         bytes32 digest = _calculateDigest(distributionId, batchId, transfers, deadline);
         bytes32 r;
         bytes32 s;
         uint8 v;
-        bytes memory signature = signature;
         assembly {
             r := mload(add(signature, 0x20))
             s := mload(add(signature, 0x40))
@@ -133,13 +132,13 @@ contract TokenDistributor is Ownable {
         bytes32 batchId,
         TokenTransfer[] calldata transfers,
         uint256 deadline
-    ) internal view {
-        bytes32 hashedData = keccak256(
-            abi.encode(DISTRIBUTE_TOKENS_TYPEHASH, distributionId, batchId, encodeForEIP712(transfers), deadline)
+    ) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(DISTRIBUTE_TOKENS_TYPEHASH, distributionId, batchId, _encodeForEIP712(transfers), deadline)
         );
     }
 
-    function encodeForEIP712(TokenTransfer memory tokenTransfer) internal pure returns (bytes32) {
+    function _encodeForEIP712(TokenTransfer memory tokenTransfer) internal pure returns (bytes32) {
         return keccak256(
             abi.encode(
                 keccak256("TokenTransfer(address recipient,uint256 amount)"), // Type Hash
@@ -149,15 +148,15 @@ contract TokenDistributor is Ownable {
         );
     }
 
-    function encodeForEIP712(TokenTransfer[] memory tokenTransferArray) internal pure returns (bytes32) {
+    function _encodeForEIP712(TokenTransfer[] memory tokenTransferArray) internal pure returns (bytes32) {
         bytes32[] memory tokenTransferEncodedElements = new bytes32[](tokenTransferArray.length);
         for (uint256 i = 0; i < tokenTransferArray.length; i++) {
-            tokenTransferEncodedElements[i] = encodeForEIP712(tokenTransferArray[i]);
+            tokenTransferEncodedElements[i] = _encodeForEIP712(tokenTransferArray[i]);
         }
-        return encodeForEIP712(tokenTransferEncodedElements);
+        return _encodeForEIP712(tokenTransferEncodedElements);
     }
 
-    function encodeForEIP712(bytes32[] memory bytes32Array) internal pure returns (bytes32) {
+    function _encodeForEIP712(bytes32[] memory bytes32Array) internal pure returns (bytes32) {
         return keccak256(abi.encode(bytes32Array));
     }
 
