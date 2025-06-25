@@ -65,23 +65,22 @@ contract LensCollectedPost is LensERC721, IERC7572 {
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        string memory uri;
         if (_isImmutable) {
-            for (uint256 i = _contentURISnapshots.length - 1; i >= 0; i--) {
+            // Searching for snapshots (starting from latest)
+            for (uint256 i = _contentURISnapshots.length - 1; i > 0; i--) {
                 if (_contentURISnapshots[i].tokenId <= tokenId) {
-                    // This should always return something because contentURISnapshot[0] always has a tokenId 0
-                    uri = _contentURISnapshots[i].contentURI;
-                    break;
+                    return _contentURISnapshots[i].contentURI;
                 }
             }
+            // contentURISnapshot[0] is set on construction if isImmutable so it's always present and non empty.
+            return _contentURISnapshots[0].contentURI;
         } else {
             // Not immutable - we mirror the contentURI of the post.
             string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
             // If content was deleted we fail. You can override this to return the empty URI if preferred.
             require(bytes(contentURI).length > 0, Errors.DoesNotExist());
-            uri = contentURI;
+            return contentURI;
         }
-        return uri;
     }
 
     // Internal
