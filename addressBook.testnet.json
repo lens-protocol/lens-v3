@@ -766,15 +766,16 @@
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "SimpleCollectActionImpl": {
-    "name": "SimpleCollectActionImpl",
     "contractName": "SimpleCollectAction",
     "contractType": 0,
+    "address": "0xB3a967B3BEc5cC2061AdA884F513401cE3494061",
+    "bytecodeHash": "010004d9eb758f448f3af91d424503e2d6b5b823ca313423c046959e3de7888b",
     "constructorArguments": [
       "0x4A92a97Ff3a3604410945ae8CA25df4fBB2fDC11"
-    ],
-    "address": "0xD2f90542be809d10C416a6f6E0619100A6B0FdC5"
+    ]
   },
   "SimpleCollectAction": {
+    "name": "SimpleCollectAction",
     "contractName": "TransparentUpgradeableProxy",
     "contractType": 5,
     "constructorArguments": [
@@ -783,7 +784,7 @@
       "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
     ],
     "address": "0x17d5B3917Eab14Ab4923DEc597B39EF64863C830",
-    "implementation": "0xD2f90542be809d10C416a6f6E0619100A6B0FdC5",
+    "implementation": "0xB3a967B3BEc5cC2061AdA884F513401cE3494061",
     "bytecodeHash": "0100000098fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
   "LensCreate2": {
