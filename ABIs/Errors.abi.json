@@ -81,7 +81,17 @@
   },
   {
     "type": "error",
+    "name": "FailedToTransferNative",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "Immutable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientAllowance",
     "inputs": []
   },
   {
@@ -102,6 +112,11 @@
   {
     "type": "error",
     "name": "InvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSourceStampOriginalMsgSender",
     "inputs": []
   },
   {
@@ -137,6 +152,11 @@
   {
     "type": "error",
     "name": "NotEnough",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotEnoughBalance",
     "inputs": []
   },
   {
