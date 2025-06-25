@@ -59,7 +59,7 @@ contract TokenDistributor is Ownable {
         emit Lens_TokenDistributor_SignerUpdated(oldSigner, newSigner);
     }
 
-    function createDistribution(address token, uint256 amount) external onlyOwner returns (uint256) {
+    function createDistribution(address token, uint256 amount) external payable onlyOwner returns (uint256) {
         uint256 distributionId = ++_lastDistributionId;
         require(amount > 0, Errors.InvalidParameter());
         _pullTokens(token, amount);
@@ -203,5 +203,24 @@ contract TokenDistributor is Ownable {
 
     function _distributeTokensTo(address token, address recipient, uint256 amount) internal {
         require(_tryDistributeTokensTo(token, recipient, amount)); // TODO: new error?
+    }
+
+    // Getters
+
+    function getDistribution(uint256 distributionId) external view returns (Distribution memory) {
+        return _distributions[distributionId];
+    }
+
+    function getDistributionCount() external view returns (uint256) {
+        return _lastDistributionId;
+    }
+
+    function getSigner() external view returns (address) {
+        return _signer;
+    }
+
+    // TODO: Decide on the name (is or was?) - keep aligned with internal variable name
+    function wasBatchProcessed(uint256 distributionId, bytes32 batchId) external view returns (bool) {
+        return _wasBatchProcessed[distributionId][batchId];
     }
 }
