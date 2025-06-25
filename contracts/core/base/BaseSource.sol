@@ -42,7 +42,6 @@ abstract contract BaseSource is ISource {
         emit Lens_Source_NonceUsed(nonce);
     }
 
-    // Signature Standard: EIP-191 - Version Byte: 0x00
     function _validateSource(SourceStamp calldata sourceStamp) internal virtual {
         require(!$baseSourceStorage().wasSourceStampNonceUsed[sourceStamp.nonce], Errors.NonceUsed());
         require(sourceStamp.deadline >= block.timestamp, Errors.Expired());
