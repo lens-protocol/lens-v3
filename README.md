@@ -50,13 +50,23 @@ yarn
 
 ### 3. Compile
 
+To compile the project to be ready for a zkSync's zkEVM deployment, run:
+
 ```
 npx hardhat compile
 ```
 
+or
+
+```
+forge b --zksync --suppress-warnings assemblycreate
+```
+
 ### 4. Test
 
-The test coverage is still in progress, and mostly not present in this version of the codebase.
+```
+yarn coverage:report:filtered -vvv
+```
 
 ### 5. Deploy
 
