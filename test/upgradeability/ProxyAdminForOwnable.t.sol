@@ -306,13 +306,12 @@ contract ProxyAdminForOwnableTest is Test {
         address noOwnerImplementation = address(new NoOwnerFunctionImpl());
         bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
 
-        (bool callSucceeded,) = address(proxyAdmin).call(data);
-        assertTrue(callSucceeded);
+        proxyAdmin.call(address(beaconProxy), 0, data);
 
         data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, noOwnerImplementation);
 
         vm.expectRevert();
-        (callSucceeded,) = address(proxyAdmin).call(data);
+        proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
     function test_Call_Reverts_IfOwnerChangesDuringCall_UpgradeCall(address newOwner) public {
@@ -325,13 +324,12 @@ contract ProxyAdminForOwnableTest is Test {
         address newOwnerImplementation = address(new FixedOwnerImpl(newOwner));
         bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
 
-        (bool callSucceeded,) = address(proxyAdmin).call(data);
-        assertTrue(callSucceeded);
+        proxyAdmin.call(address(beaconProxy), 0, data);
 
         data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, newOwnerImplementation);
 
         vm.expectRevert();
-        (callSucceeded,) = address(proxyAdmin).call(data);
+        proxyAdmin.call(address(beaconProxy), 0, data);
     }
 
     function test_Call_Reverts_IfOwnerChangesDuringCall_NoUpgradeCall(address newOwner) public {
@@ -339,12 +337,13 @@ contract ProxyAdminForOwnableTest is Test {
 
         assertEq(IOwnable(address(beaconProxy)).owner(), address(this));
 
-        bytes memory data = abi.encodeWithSelector(MockOwnableUniversal.mockOwnerOnNextCall.selector, newOwner);
+        MockOwnableUniversal(address(beaconProxy)).mockOwnerOnNextCall(newOwner);
+
+        // Intentionally invalid selector to go through the fallback function.
+        bytes memory data = abi.encodeWithSelector(bytes4(0xC00FEE00));
 
         vm.expectRevert(Errors.UnexpectedValue.selector);
-        (bool callSucceeded,) = address(proxyAdmin).call(data);
-
-        assertFalse(callSucceeded); // Should not be reached. Avoids warning.
+        proxyAdmin.call(address(beaconProxy), 0, data);
     }
 }
 
