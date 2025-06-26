@@ -5,10 +5,6 @@ pragma solidity ^0.8.26;
 import {IVersionedBeacon} from "@core/interfaces/IVersionedBeacon.sol";
 
 contract MockVersionedBeacon is IVersionedBeacon {
-    function testMockVersionedBeacon() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     address _mockedImplementation;
     mapping(uint256 => address) internal _mockedImplementations;
 

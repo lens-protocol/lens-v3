@@ -23,11 +23,11 @@ contract Query is Script {
         // Prevents being counted in Foundry Coverage
     }
 
-    function _generatePostId(address author, uint256 authorPostSequentialId) internal view returns (uint256) {
+    function _generatePostId(address author, uint256 authorPostSequentialId) internal pure returns (uint256) {
         return uint256(keccak256(abi.encode("evm:", 271, LENS_GLOBAL_FEED, author, authorPostSequentialId)));
     }
 
-    function run() external {
+    function run() external view {
         console.log("ChainID: ", block.chainid);
         address author = address(0x2aa01F5cDF6403B3b53826e7798790069185bE2F);
         uint256 postCount = IFeed(LENS_GLOBAL_FEED).getPostCount(author);

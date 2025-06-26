@@ -11,10 +11,6 @@ import {Errors} from "@core/types/Errors.sol";
 import {LensNativePaymentHelper} from "@extensions/fees/LensNativePaymentHelper.sol";
 
 contract LensNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
-    function testPayableUsingNativePaymentHelperTest() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     LensNativePaymentHelper lensNativePaymentHelper;
 
     function setUp() public override {

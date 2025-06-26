@@ -18,8 +18,11 @@ import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {Errors} from "@core/types/Errors.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {FuzzZkTest} from "test/helpers/FuzzZkTest.sol";
+import {IOwnable} from "@core/interfaces/IOwnable.sol";
+import {IHarnessAccount, HarnessAccount} from "test/harness/HarnessAccount.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
-contract AccountTest is FuzzZkTest, BaseDeployments {
+contract AccountTestBase is FuzzZkTest, BaseDeployments {
     address owner = makeAddr("OWNER");
     address manager = makeAddr("MANAGER");
 
@@ -77,7 +80,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.changeAllowance(allowanceChanges);
     }
 
-    function _assumeCanBeAddedAsManager(address someManager) internal {
+    function _assumeCanBeAddedAsManager(address someManager) internal view {
         vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
         vm.assume(account.isAccountManager(someManager) == false);
@@ -95,8 +98,14 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
         account.addAccountManager(someManager, basicPermissionSet);
     }
 
-    /////////////////
+    function _assumeEOA(address someAddress) internal view {
+        assumeNotForgeAddress(someAddress);
+        vm.assume(someAddress.code.length == 0);
+        vm.assume(uint160(someAddress) > type(uint16).max); // skip system contracts
+    }
+}
 
+contract AccountTest is AccountTestBase {
     function testCanExecuteTxDirectly() public {
         bytes memory txData = abi.encodeCall(
             Feed.createPost,
@@ -1035,84 +1044,7 @@ contract AccountTest is FuzzZkTest, BaseDeployments {
     }
 }
 
-contract AccountTest2 is FuzzZkTest, BaseDeployments {
-    address owner = makeAddr("OWNER");
-    address manager = makeAddr("MANAGER");
-
-    IAccount account;
-    IFeed feed;
-
-    function setUp() public override {
-        super.setUp();
-
-        address[] memory accountManagers = new address[](1);
-        accountManagers[0] = manager;
-
-        AccountManagerPermissions[] memory accountManagersPermissions = new AccountManagerPermissions[](1);
-        accountManagersPermissions[0] = AccountManagerPermissions(true, true, true, true);
-
-        account = IAccount(
-            payable(
-                lensFactory.deployAccount({
-                    metadataURI: "uri://account-metadata",
-                    owner: owner,
-                    accountManagers: accountManagers,
-                    accountManagersPermissions: accountManagersPermissions,
-                    sourceStamp: _emptySourceStamp(),
-                    extraData: _emptyKeyValueArray()
-                })
-            )
-        );
-
-        feed = IFeed(
-            lensFactory.deployFeed({
-                metadataURI: "some metadata uri",
-                owner: address(account),
-                admins: _emptyAddressArray(),
-                rules: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray()
-            })
-        );
-    }
-
-    /// Helpers ///
-
-    function _increaseAllowance(address toManager, address currency, uint256 byAmount) internal {
-        AllowanceChange[] memory allowanceChanges = new AllowanceChange[](1);
-        Allowance[] memory allowanceIncreases = new Allowance[](1);
-
-        allowanceIncreases[0] = Allowance({currency: currency, byAmount: byAmount});
-
-        allowanceChanges[0] = AllowanceChange({
-            spender: toManager,
-            allowanceIncreases: allowanceIncreases,
-            allowanceDecreases: new Allowance[](0)
-        });
-
-        vm.prank(owner);
-        account.changeAllowance(allowanceChanges);
-    }
-
-    function _assumeCanBeAddedAsManager(address someManager) internal {
-        vm.assume(someManager != address(0));
-        vm.assume(someManager != owner);
-        vm.assume(account.isAccountManager(someManager) == false);
-    }
-
-    function _setManagerWithoutFundManagementPermission(address someManager) internal {
-        _assumeCanBeAddedAsManager(someManager);
-        AccountManagerPermissions memory basicPermissionSet = AccountManagerPermissions({
-            canExecuteTransactions: true,
-            canTransferTokens: false,
-            canTransferNative: false,
-            canSetMetadataURI: false
-        });
-        vm.prank(owner);
-        account.addAccountManager(someManager, basicPermissionSet);
-    }
-
-    /////////////////
-
+contract AccountTest2 is AccountTestBase {
     function testCannot_SpendMoreMoneyThanAllowance_viaDeposit(
         address someManager,
         uint256 initialAllowance,
@@ -1628,7 +1560,103 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
         assertEq(accountBalanceBefore + 1 ether, address(account).balance);
     }
 
-    function test_canSetMetadataURI_TrueForOwner() public {
+    function test_isAccountManager_TrueForManager(
+        address managerWithExecuteTransactions,
+        address managerWithSetMetadataURI,
+        address otherAddress,
+        bool canTransferTokens
+    ) public {
+        vm.assume(managerWithExecuteTransactions != managerWithSetMetadataURI);
+        vm.assume(managerWithExecuteTransactions != otherAddress);
+        vm.assume(managerWithSetMetadataURI != otherAddress);
+        _assumeCanBeAddedAsManager(managerWithExecuteTransactions);
+        _assumeCanBeAddedAsManager(managerWithSetMetadataURI);
+        _assumeCanBeAddedAsManager(otherAddress);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            managerWithExecuteTransactions,
+            AccountManagerPermissions({
+                canExecuteTransactions: true,
+                canTransferTokens: canTransferTokens,
+                canTransferNative: canTransferTokens,
+                canSetMetadataURI: false
+            })
+        );
+        assertTrue(
+            account.isAccountManager(managerWithExecuteTransactions),
+            "Manager with execute transactions permission is an account manager"
+        );
+        assertFalse(account.isAccountManager(otherAddress), "Other address is not an account manager");
+
+        vm.prank(owner);
+        account.addAccountManager(
+            managerWithSetMetadataURI,
+            AccountManagerPermissions({
+                canExecuteTransactions: false,
+                canTransferTokens: false,
+                canTransferNative: false,
+                canSetMetadataURI: true
+            })
+        );
+        assertTrue(
+            account.isAccountManager(managerWithSetMetadataURI),
+            "Manager with set metadata URI permission is an account manager"
+        );
+        assertFalse(account.isAccountManager(otherAddress), "Other address is not an account manager");
+    }
+
+    function test_canExecuteTransactions_TrueForOwner() public view {
+        assertTrue(account.canExecuteTransactions(owner), "Owner can execute transactions");
+    }
+
+    function test_canExecuteTransactions_TrueForManagerWithPermission(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        _setManagerWithoutFundManagementPermission(someManager);
+        assertTrue(account.canExecuteTransactions(someManager), "Manager with permission can execute transactions");
+    }
+
+    function test_canExecuteTransactions_FalseForManagerWithoutPermission(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: false,
+                canTransferTokens: false,
+                canTransferNative: false,
+                canSetMetadataURI: true
+            })
+        );
+        assertFalse(
+            account.canExecuteTransactions(someManager), "Manager without permission cannot execute transactions"
+        );
+    }
+
+    function test_canExecuteTransactions_FalseForRemovedManager(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: true,
+                canTransferTokens: true,
+                canTransferNative: true,
+                canSetMetadataURI: true
+            })
+        );
+        assertTrue(account.canExecuteTransactions(someManager), "Manager with permission can execute transactions");
+
+        vm.prank(owner);
+        account.removeAccountManager(someManager);
+        assertFalse(
+            account.canExecuteTransactions(someManager), "Manager without permission cannot execute transactions"
+        );
+    }
+
+    function test_canSetMetadataURI_TrueForOwner() public view {
         assertTrue(account.canSetMetadataURI(owner), "Owner can set metadataURI");
     }
 
@@ -1644,7 +1672,7 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
                 canSetMetadataURI: true
             })
         );
-        assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+        assertTrue(account.canSetMetadataURI(someManager), "Manager with permission can set metadataURI");
     }
 
     function test_canSetMetadataURI_FalseForManagerWithoutPermission(address someManager, bool canTransferTokens)
@@ -1659,7 +1687,7 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
         });
         vm.prank(owner);
         account.addAccountManager(someManager, permissions);
-        assertFalse(account.canSetMetadataURI(someManager), "Manager without permision cannot set metadataURI");
+        assertFalse(account.canSetMetadataURI(someManager), "Manager without permission cannot set metadataURI");
     }
 
     function test_canSetMetadataURI_FalseForRemovedManager(address someManager) public {
@@ -1675,26 +1703,591 @@ contract AccountTest2 is FuzzZkTest, BaseDeployments {
                 canSetMetadataURI: true
             })
         );
-        assertTrue(account.canSetMetadataURI(someManager), "Manager with permision can set metadataURI");
+        assertTrue(account.canSetMetadataURI(someManager), "Manager with permission can set metadataURI");
 
         vm.prank(owner);
         account.removeAccountManager(someManager);
         assertFalse(account.canSetMetadataURI(someManager), "Removed manager cannot set metadataURI");
     }
 
-    function test_canSetMetadataURI_FalseForRandomAddress(address randomAddress) public {
+    function test_canSetMetadataURI_FalseForRandomAddress(address randomAddress) public view {
         vm.assume(randomAddress != owner);
         vm.assume(account.isAccountManager(randomAddress) == false);
 
         assertFalse(account.canSetMetadataURI(randomAddress), "Random address cannot set metadataURI");
     }
+
+    function test_setMetadataURI_IfOwner() public {
+        assertEq(IOwnable(address(account)).owner(), owner);
+        string memory metadataURI = "uri://new-metadata";
+
+        vm.expectEmit(true, true, true, true);
+        emit IAccount.Lens_Account_MetadataURISet(metadataURI, address(0));
+
+        vm.prank(owner);
+        account.setMetadataURI(metadataURI, _emptySourceStamp());
+        assertEq(account.getMetadataURI(), metadataURI);
+    }
+
+    function test_setMetadataURI_IfManagerWithFullPermission(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: true,
+                canTransferTokens: true,
+                canTransferNative: true,
+                canSetMetadataURI: true
+            })
+        );
+
+        string memory metadataURI = "uri://new-metadata";
+
+        vm.prank(manager);
+        account.setMetadataURI(metadataURI, _emptySourceStamp());
+        assertEq(account.getMetadataURI(), metadataURI);
+    }
+
+    function test_setMetadataURI_IfManagerWithSetMetadataURIPermission(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: false,
+                canTransferTokens: false,
+                canTransferNative: false,
+                canSetMetadataURI: true
+            })
+        );
+
+        string memory metadataURI = "uri://new-metadata";
+
+        vm.prank(someManager);
+        account.setMetadataURI(metadataURI, _emptySourceStamp());
+        assertEq(account.getMetadataURI(), metadataURI);
+    }
+
+    function testCannot_setMetadataURI_IfManagerWithoutPermission(address someManager, bool canTransfer) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        string memory metadataURI = "uri://new-metadata";
+
+        AccountManagerPermissions memory permissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: canTransfer,
+            canTransferNative: canTransfer,
+            canSetMetadataURI: false
+        });
+
+        vm.prank(owner);
+        account.addAccountManager(someManager, permissions);
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.setMetadataURI(metadataURI, _emptySourceStamp());
+    }
+
+    function testCannot_setMetadataURI_IfManagerRemoved(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        string memory metadataURI = "uri://new-metadata-for-manager";
+
+        AccountManagerPermissions memory permissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: true,
+            canTransferNative: true,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(owner);
+        account.addAccountManager(someManager, permissions);
+
+        vm.prank(someManager);
+        account.setMetadataURI(metadataURI, _emptySourceStamp());
+        assertEq(account.getMetadataURI(), metadataURI);
+
+        vm.prank(owner);
+        account.removeAccountManager(someManager);
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.setMetadataURI(metadataURI, _emptySourceStamp());
+    }
+
+    function test_getExtraData_ReturnValidData() public {
+        KeyValue memory data = KeyValue({key: keccak256("test.key"), value: abi.encode("test value")});
+
+        vm.expectEmit(true, true, true, true);
+        emit IAccount.Lens_Account_ExtraDataAdded(data.key, data.value, data.value);
+
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(data));
+        assertEq(account.getExtraData(data.key), data.value);
+    }
+
+    function test_setExtraData_OnlyOwner() public {
+        KeyValue memory extraData = KeyValue({key: keccak256("test.key"), value: abi.encode("test value")});
+
+        assertEq(account.getExtraData(extraData.key).length, 0);
+
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(extraData));
+        assertEq(account.getExtraData(extraData.key), extraData.value);
+    }
+
+    function testCannot_setExtraData_IfNotOwner(address notOwner) public {
+        vm.assume(notOwner != owner);
+
+        KeyValue memory extraData = KeyValue({key: keccak256("test.key"), value: abi.encode("test value")});
+
+        assertEq(account.getExtraData(extraData.key).length, 0);
+
+        vm.prank(notOwner);
+        vm.expectRevert();
+        account.setExtraData(_toKeyValueArray(extraData));
+    }
+
+    function test_setExtraData_CanUpdateExtraData() public {
+        bytes32 testKey = keccak256("test.key");
+        bytes memory initialValue = abi.encode("initial value");
+        bytes memory updatedValue = abi.encode("updated value");
+
+        KeyValue memory initialData = KeyValue({key: testKey, value: initialValue});
+        assertEq(account.getExtraData(testKey).length, 0);
+
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(initialData));
+        assertEq(account.getExtraData(initialData.key), initialValue);
+
+        KeyValue memory updatedData = KeyValue({key: testKey, value: updatedValue});
+
+        vm.expectEmit(true, true, true, true);
+        emit IAccount.Lens_Account_ExtraDataUpdated(testKey, updatedValue, updatedValue);
+
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(updatedData));
+        assertEq(account.getExtraData(testKey), updatedValue);
+    }
+
+    function test_setExtraData_CanRemoveExtraData() public {
+        bytes32 testKey = keccak256("test.key");
+        bytes memory testValue = abi.encode("test value");
+
+        KeyValue memory initialData = KeyValue({key: testKey, value: testValue});
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(initialData));
+        assertEq(account.getExtraData(initialData.key), initialData.value);
+
+        KeyValue memory removeData = KeyValue({key: testKey, value: ""});
+
+        vm.expectEmit(true, true, true, true);
+        emit IAccount.Lens_Account_ExtraDataRemoved(testKey);
+
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(removeData));
+        assertEq(account.getExtraData(testKey).length, 0);
+    }
+
+    function test_setExtraData_CanSetMultipleData() public {
+        KeyValue memory kv1 = KeyValue({key: keccak256("key1"), value: abi.encode("value1")});
+        KeyValue memory kv2 = KeyValue({key: keccak256("key2"), value: abi.encode("value2")});
+        KeyValue memory kv3 = KeyValue({key: keccak256("key3"), value: abi.encode("value3")});
+
+        vm.prank(owner);
+        account.setExtraData(_toKeyValueArray(kv1, kv2, kv3));
+
+        assertEq(account.getExtraData(keccak256("key1")), abi.encode("value1"));
+        assertEq(account.getExtraData(keccak256("key2")), abi.encode("value2"));
+        assertEq(account.getExtraData(keccak256("key3")), abi.encode("value3"));
+    }
+
+    function test_transferOwnership(address newOwner) public {
+        vm.assume(newOwner != owner);
+        vm.assume(newOwner != address(0));
+
+        vm.expectRevert();
+        IOwnable(address(account)).transferOwnership(newOwner);
+
+        vm.expectEmit(true, true, true, true);
+        emit IAccount.Lens_Account_OwnershipTransferred(owner, newOwner);
+
+        vm.prank(owner);
+        IOwnable(address(account)).transferOwnership(newOwner);
+        assertEq(IOwnable(address(account)).owner(), newOwner);
+    }
+
+    function test_transferOwnership_RemoveManagerIfSameAsOwner(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: true,
+                canTransferTokens: true,
+                canTransferNative: true,
+                canSetMetadataURI: true
+            })
+        );
+        assertTrue(account.isAccountManager(someManager));
+
+        vm.prank(owner);
+        IOwnable(address(account)).transferOwnership(someManager);
+
+        assertEq(IOwnable(address(account)).owner(), someManager);
+        assertFalse(account.isAccountManager(someManager));
+    }
+
+    function testCannot_transferOwnership_IfNotOwner(address notOwner) public {
+        vm.assume(notOwner != owner);
+
+        vm.prank(notOwner);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        IOwnable(address(account)).transferOwnership(notOwner);
+    }
+
+    function testCannot_transferOwnership_IfManagerWithFullPermission(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: true,
+                canTransferTokens: true,
+                canTransferNative: true,
+                canSetMetadataURI: true
+            })
+        );
+        assertTrue(account.isAccountManager(someManager));
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        IOwnable(address(account)).transferOwnership(someManager);
+    }
+
+    function testCannot_addAccountManager_IfWrongPermissions(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        AccountManagerPermissions memory canTransferTokensPermissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: true,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.addAccountManager(someManager, canTransferTokensPermissions);
+
+        AccountManagerPermissions memory canTransferNativePermissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: true,
+            canTransferNative: false,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.addAccountManager(someManager, canTransferNativePermissions);
+
+        AccountManagerPermissions memory transferWithoutExecuteTransactionsPermission = AccountManagerPermissions({
+            canExecuteTransactions: false,
+            canTransferTokens: true,
+            canTransferNative: true,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.addAccountManager(someManager, transferWithoutExecuteTransactionsPermission);
+
+        AccountManagerPermissions memory equalTransferWithoutExecuteTransactionsAndSetMetadataURIPermission =
+        AccountManagerPermissions({
+            canExecuteTransactions: false,
+            canTransferTokens: true,
+            canTransferNative: true,
+            canSetMetadataURI: false
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.addAccountManager(someManager, equalTransferWithoutExecuteTransactionsAndSetMetadataURIPermission);
+
+        AccountManagerPermissions memory withoutPermissions = AccountManagerPermissions({
+            canExecuteTransactions: false,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.addAccountManager(someManager, withoutPermissions);
+    }
+
+    function test_executeTransactions_IfOwner(address target, uint256 amount, bytes4 selector) public {
+        _assumeEOA(target);
+        amount = _boundAmountAllowZero(amount);
+        if (amount > 0) {
+            vm.deal(address(account), amount);
+        }
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({target: target, value: amount, data: abi.encode(selector)});
+
+        vm.prank(owner);
+        account.executeTransactions(transactions);
+    }
+
+    function test_executeTransactions_IfManagerWithFullPermission(
+        address someManager,
+        address target,
+        uint256 amount,
+        bytes4 selector
+    ) public {
+        _assumeEOA(target);
+        amount = _boundAmountAllowZero(amount);
+        if (amount > 0) {
+            vm.deal(address(account), amount);
+        }
+
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: true,
+                canTransferTokens: true,
+                canTransferNative: true,
+                canSetMetadataURI: true
+            })
+        );
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({target: target, value: amount, data: abi.encode(selector)});
+
+        vm.prank(someManager);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_executeTransactions_IfManagerWithoutPermission(
+        address someManager,
+        address target,
+        uint256 amount,
+        bytes4 selector
+    ) public {
+        _assumeEOA(target);
+        amount = _boundAmountAllowZero(amount);
+        if (amount > 0) {
+            vm.deal(address(account), amount);
+        }
+
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        account.addAccountManager(
+            someManager,
+            AccountManagerPermissions({
+                canExecuteTransactions: false,
+                canTransferTokens: false,
+                canTransferNative: false,
+                canSetMetadataURI: true
+            })
+        );
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({target: target, value: amount, data: abi.encode(selector)});
+
+        vm.prank(someManager);
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.executeTransactions(transactions);
+    }
+
+    function testCannot_executeTransactions_IfRandomAddress(
+        address randomAddress,
+        address target,
+        uint256 amount,
+        bytes4 selector
+    ) public {
+        _assumeEOA(target);
+        amount = _boundAmountAllowZero(amount);
+        if (amount > 0) {
+            vm.deal(address(account), amount);
+        }
+
+        vm.assume(randomAddress != owner);
+        vm.assume(account.isAccountManager(randomAddress) == false);
+
+        Transaction[] memory transactions = new Transaction[](1);
+        transactions[0] = Transaction({target: target, value: amount, data: abi.encode(selector)});
+
+        vm.prank(randomAddress);
+        vm.expectRevert(Errors.NotAllowed.selector);
+        account.executeTransactions(transactions);
+    }
+}
+
+contract AccountTest3 is AccountTestBase {
+    function test_updateAccountManagerPermissions_OnlyOwner(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        AccountManagerPermissions memory updatePermissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: true,
+            canTransferNative: true,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(owner);
+        account.updateAccountManagerPermissions(someManager, updatePermissions);
+
+        AccountManagerPermissions memory newPermissions = account.getAccountManagerPermissions(someManager);
+        assertEq(updatePermissions.canExecuteTransactions, newPermissions.canExecuteTransactions);
+        assertEq(updatePermissions.canTransferTokens, newPermissions.canTransferTokens);
+        assertEq(updatePermissions.canTransferNative, newPermissions.canTransferNative);
+        assertEq(updatePermissions.canSetMetadataURI, newPermissions.canSetMetadataURI);
+    }
+
+    function testCannot_updateAccountManagerPermissions_IfNotOwner(address someManager, address notOwner) public {
+        vm.assume(notOwner != owner);
+        vm.assume(notOwner != someManager);
+
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        AccountManagerPermissions memory updatePermissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: true,
+            canTransferNative: true,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(notOwner);
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        account.updateAccountManagerPermissions(someManager, updatePermissions);
+    }
+
+    function testCannot_updateAccountManagerPermissions_IfManagerHasFullPermissions(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        _setManagerWithoutFundManagementPermission(someManager);
+        AccountManagerPermissions memory updatePermissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: true,
+            canTransferNative: true,
+            canSetMetadataURI: true
+        });
+
+        vm.prank(manager); // global manager with full permissions
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        account.updateAccountManagerPermissions(someManager, updatePermissions);
+    }
+
+    function testCannot_updateAccountManagerPermissions_ForNotManager(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.updateAccountManagerPermissions(someManager, AccountManagerPermissions(true, true, true, true));
+    }
+
+    function testCannot_updateAccountManagerPermissions_IfSamePermition(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        _setManagerWithoutFundManagementPermission(someManager);
+
+        AccountManagerPermissions memory samePermissions = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: false
+        });
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        account.updateAccountManagerPermissions(someManager, samePermissions);
+    }
+
+    function test_removeAccountManager_IfOwner() public {
+        assertTrue(account.isAccountManager(manager)); // global manager
+        vm.prank(owner);
+        account.removeAccountManager(manager);
+        assertFalse(account.isAccountManager(manager));
+    }
+
+    function test_removeAccountManager_SelfRemove(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        _setManagerWithoutFundManagementPermission(someManager);
+        assertTrue(account.isAccountManager(someManager));
+
+        vm.prank(someManager);
+        account.removeAccountManager(someManager);
+        assertFalse(account.isAccountManager(someManager));
+    }
+
+    function testCannot_removeAccountManager_Twice() public {
+        vm.prank(owner);
+        account.removeAccountManager(manager);
+        assertFalse(account.isAccountManager(manager));
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        account.removeAccountManager(manager);
+    }
+
+    function testCannot_removeAccountManager_IfAddressIsNotManager(address notManager) public {
+        _assumeCanBeAddedAsManager(notManager);
+        assertFalse(account.isAccountManager(notManager));
+
+        vm.prank(owner);
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        account.removeAccountManager(notManager);
+    }
+
+    function testCannot_removeAccountManager_IfManagerRemovesAnotherManager(address someManager) public {
+        _assumeCanBeAddedAsManager(someManager);
+        _setManagerWithoutFundManagementPermission(someManager);
+        assertTrue(account.isAccountManager(someManager));
+
+        vm.prank(manager); // global manager
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        account.removeAccountManager(someManager);
+    }
+
+    function test_supportsInterface() public view {
+        assertTrue(account.supportsInterface(type(IERC1155Receiver).interfaceId));
+        assertFalse(account.supportsInterface(0xdeadbeef));
+    }
+}
+
+contract AccountTestHarness is FuzzZkTest, BaseDeployments {
+    IHarnessAccount account;
+
+    bytes32 constant PARAM__GRAPH = 0x7d50408405f482949cd317ab452b66f1104c85a1708ae5be893385b1c898c6d9;
+
+    function setUp() public override {
+        super.setUp();
+        account = IHarnessAccount(payable(address(new HarnessAccount(address(GHO), address(WGHO)))));
+    }
+
+    function test_extractGraphFromParams(address addressToExtract) public view {
+        KeyValue memory kv1 = KeyValue({key: keccak256("key1"), value: abi.encode("value1")});
+        KeyValue memory kv2 = KeyValue({key: PARAM__GRAPH, value: abi.encode(addressToExtract)});
+        KeyValue memory kv3 = KeyValue({key: keccak256("key3"), value: abi.encode("value3")});
+
+        assertEq(account.extractGraphFromParams(_emptyKeyValueArray()), address(0));
+        assertEq(account.extractGraphFromParams(_toKeyValueArray(kv1, kv3)), address(0));
+
+        assertEq(account.extractGraphFromParams(_toKeyValueArray(kv2)), addressToExtract);
+        assertEq(account.extractGraphFromParams(_toKeyValueArray(kv1, kv2, kv3)), addressToExtract);
+    }
 }
 
 contract ErrorsTest {
-    function testErrorsTest() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     function stringError() public pure {
         revert("This is an error message");
     }
