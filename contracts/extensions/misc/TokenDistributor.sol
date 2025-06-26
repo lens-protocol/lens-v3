@@ -104,6 +104,9 @@ contract TokenDistributor is Ownable {
         require(distributedAmount <= amountToDistribute, Errors.InvalidParameter());
         if (distributedAmount != amountToDistribute) {
             _distributions[distributionId].remainingAmount += amountToDistribute - distributedAmount;
+        } else if (_distributions[distributionId].remainingAmount == 0) {
+            // Distribution ended naturally by distributing all the initially allocated tokens.
+            emit Lens_TokenDistributor_DistributionEnded(distributionId, 0);
         }
     }
 
