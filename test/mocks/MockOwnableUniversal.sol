@@ -6,10 +6,6 @@ import {Ownable} from "contracts/core/access/Ownable.sol";
 import {MockUniversal} from "test/mocks/MockUniversal.sol";
 
 contract MockOwnableUniversal is MockUniversal, Ownable {
-    function testMockOwnableUniversal() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     bool _mockOwnerOnNextCall;
     address _ownerToMock;
 

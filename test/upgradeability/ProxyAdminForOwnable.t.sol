@@ -306,12 +306,13 @@ contract ProxyAdminForOwnableTest is Test {
         address noOwnerImplementation = address(new NoOwnerFunctionImpl());
         bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
 
-        address(proxyAdmin).call(data);
+        (bool callSucceeded,) = address(proxyAdmin).call(data);
+        assertTrue(callSucceeded);
 
         data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, noOwnerImplementation);
 
         vm.expectRevert();
-        address(proxyAdmin).call(data);
+        (callSucceeded,) = address(proxyAdmin).call(data);
     }
 
     function test_Call_Reverts_IfOwnerChangesDuringCall_UpgradeCall(address newOwner) public {
@@ -324,12 +325,13 @@ contract ProxyAdminForOwnableTest is Test {
         address newOwnerImplementation = address(new FixedOwnerImpl(newOwner));
         bytes memory data = abi.encodeWithSelector(BeaconProxy.proxy__optOutFromAutoUpgrade.selector);
 
-        address(proxyAdmin).call(data);
+        (bool callSucceeded,) = address(proxyAdmin).call(data);
+        assertTrue(callSucceeded);
 
         data = abi.encodeWithSelector(BeaconProxy.proxy__setImplementation.selector, newOwnerImplementation);
 
         vm.expectRevert();
-        address(proxyAdmin).call(data);
+        (callSucceeded,) = address(proxyAdmin).call(data);
     }
 
     function test_Call_Reverts_IfOwnerChangesDuringCall_NoUpgradeCall(address newOwner) public {
@@ -340,15 +342,13 @@ contract ProxyAdminForOwnableTest is Test {
         bytes memory data = abi.encodeWithSelector(MockOwnableUniversal.mockOwnerOnNextCall.selector, newOwner);
 
         vm.expectRevert(Errors.UnexpectedValue.selector);
-        address(proxyAdmin).call(data);
+        (bool callSucceeded,) = address(proxyAdmin).call(data);
+
+        assertFalse(callSucceeded); // Should not be reached. Avoids warning.
     }
 }
 
 contract FixedOwnerImpl is IOwnable {
-    function testFixedOwnerImpl() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     address private immutable OWNER;
 
     constructor(address fixedOwner) {
@@ -365,10 +365,6 @@ contract FixedOwnerImpl is IOwnable {
 }
 
 contract NoOwnerFunctionImpl {
-    function testNoOwnerFunctionImpl() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     fallback() external {
         // Allow any call
     }
