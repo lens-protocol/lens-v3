@@ -214,7 +214,6 @@ contract UsernamePricePerLengthNamespaceRule is SimplePaymentRule, Initializable
     }
 
     function _validatePaymentConfiguration(PaymentConfiguration memory configuration) internal view virtual override {
-        // Expects token to support ERC-20 interface, we call balanceOf and expect it to not revert
-        IERC20(configuration.token).balanceOf(address(this));
+        _validateToken(configuration.token);
     }
 }

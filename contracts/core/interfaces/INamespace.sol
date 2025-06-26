@@ -85,14 +85,14 @@ interface INamespace is IMetadataBased {
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
-    ) external;
+    ) external payable;
 
     function removeUsername(
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningRuleProcessingParams,
         RuleProcessingParams[] calldata removalRuleProcessingParams
-    ) external;
+    ) external payable;
 
     function assignUsername(
         address account,
@@ -101,13 +101,13 @@ interface INamespace is IMetadataBased {
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
-    ) external;
+    ) external payable;
 
     function unassignUsername(
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function setUsernameExtraData(string memory username, KeyValue[] calldata extraDataToSet) external;
 

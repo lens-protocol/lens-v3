@@ -1184,10 +1184,6 @@ contract NamespaceTestII is BaseDeployments {
 }
 
 contract MockOwnable is IOwnable {
-    function testMockOwnable() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     address internal _owner;
 
     function transferOwnership(address newOwner) external override {
@@ -1215,10 +1211,6 @@ contract MockOwnableERC721Receiver is MockOwnable, IERC721Receiver {
 }
 
 contract MockAccessControllable is IAccessControlled {
-    function testMockAccessControllable() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     IAccessControl internal _accessControl;
 
     function getAccessControl() external view override returns (IAccessControl) {
@@ -1248,10 +1240,6 @@ contract MockAccessControllableERC721Receiver is MockAccessControllable, IERC721
 contract MockOwnableAccessControllable is MockOwnable, MockAccessControllable {}
 
 contract MockNonOwnableNonAccessControllable {
-    function testMockNonOwnableNonAccessControllable() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     function foo() external pure returns (uint256) {
         return 69;
     }

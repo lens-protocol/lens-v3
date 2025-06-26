@@ -7,10 +7,11 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {OwnableMetadataBasedRule} from "contracts/rules/base/OwnableMetadataBasedRule.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 import {TrustBasedRule} from "contracts/rules/base/TrustBasedRule.sol";
-import {LensPaymentHandler} from "contracts/extensions/fees/LensPaymentHandler.sol";
+import {LensRulePaymentHandler} from "contracts/extensions/fees/LensRulePaymentHandler.sol";
 import {RecipientData} from "contracts/core/types/Types.sol";
+import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
-abstract contract SimplePaymentRule is LensPaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
+abstract contract SimplePaymentRule is LensRulePaymentHandler, TrustBasedRule, OwnableMetadataBasedRule {
     using SafeERC20 for IERC20;
 
     /// @custom:keccak lens.param.paymentConfiguration
@@ -30,8 +31,7 @@ abstract contract SimplePaymentRule is LensPaymentHandler, TrustBasedRule, Ownab
 
     function _validatePaymentConfiguration(PaymentConfiguration memory configuration) internal view virtual {
         require(configuration.amount > 0, Errors.InvalidParameter());
-        // Expects token to support ERC-20 interface, we call balanceOf and expect it to not revert
-        IERC20(configuration.token).balanceOf(address(this));
+        _validateToken(configuration.token);
     }
 
     function _beforePayment(
@@ -44,8 +44,10 @@ abstract contract SimplePaymentRule is LensPaymentHandler, TrustBasedRule, Ownab
         require(configuration.token == expectedConfiguration.token, Errors.InvalidParameter());
         require(configuration.amount == expectedConfiguration.amount, Errors.InvalidParameter());
         require(configuration.recipient == expectedConfiguration.recipient, Errors.InvalidParameter());
-        // Requires payer to trust the msg.sender, which is acting as the primitive
-        _requireTrust({fromAccount: payer, toTarget: msg.sender});
+        if (configuration.token != NATIVE_TOKEN) {
+            // Requires payer to trust the msg.sender (we assume msg.sender is the primitive)
+            _requireTrust({fromAccount: payer, toTarget: msg.sender});
+        }
     }
 
     function _processPayment(
