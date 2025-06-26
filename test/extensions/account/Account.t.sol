@@ -2288,10 +2288,6 @@ contract AccountTestHarness is FuzzZkTest, BaseDeployments {
 }
 
 contract ErrorsTest {
-    function testErrorsTest() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     function stringError() public pure {
         revert("This is an error message");
     }

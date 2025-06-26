@@ -10,10 +10,6 @@ import {MockRule} from "test/mocks/MockRule.sol";
 import {Errors} from "@core/types/Errors.sol";
 
 abstract contract RuleExecutionTest is Test {
-    function test__RuleExecutionTest() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     MockRule rule1;
     MockRule rule2;
     MockRule rule3;

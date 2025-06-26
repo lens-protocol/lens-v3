@@ -3,10 +3,6 @@
 pragma solidity ^0.8.26;
 
 contract MockUniversal {
-    function testMockUniversal() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     bool _revertNextCall;
     string _errorMessage;
 
