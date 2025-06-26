@@ -96,6 +96,9 @@ contract TokenDistributor is Ownable {
         for (uint256 i = 0; i < transfers.length; i++) {
             if (_tryDistributeTokensTo(token, transfers[i].recipient, transfers[i].amount)) {
                 distributedAmount += transfers[i].amount;
+                emit Lens_TokenDistributor_TransferSucceeded(
+                    distributionId, batchId, transfers[i].recipient, transfers[i].amount
+                );
             } else {
                 emit Lens_TokenDistributor_TransferFailed(
                     distributionId, batchId, transfers[i].recipient, transfers[i].amount
