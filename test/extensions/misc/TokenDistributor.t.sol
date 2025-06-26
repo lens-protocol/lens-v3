@@ -7,15 +7,19 @@ import {FuzzZkTest} from "test/helpers/FuzzZkTest.sol";
 import {TokenDistributor} from "contracts/extensions/misc/TokenDistributor.sol";
 import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 import {MockCurrency} from "test/mocks/MockCurrency.sol";
+import {Errors} from "contracts/core/types/Errors.sol";
 
 contract TokenDistributorTest is FuzzZkTest {
     TokenDistributor tokenDistributor;
     address owner = makeAddr("OWNER");
+    address signer = makeAddr("SIGNER");
 
     MockCurrency mockCurrency;
 
     function setUp() public {
         tokenDistributor = new TokenDistributor(owner);
+        vm.prank(owner);
+        tokenDistributor.updateSigner(signer);
         mockCurrency = new MockCurrency("Mock", "MCK");
     }
 
@@ -109,20 +113,61 @@ contract TokenDistributorTest is FuzzZkTest {
     ////// Negatives
 
     function testCannot_createDistribution_ifNotOwner_withNative(address nonOwner, uint256 amount) public {
-        //
+        vm.assume(nonOwner != owner);
+        amount = _boundAmount(amount);
+        vm.deal(nonOwner, amount);
+
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        vm.prank(nonOwner);
+        tokenDistributor.createDistribution(NATIVE_TOKEN, amount);
     }
 
     function testCannot_createDistribution_ifNotOwner_withERC20(address nonOwner, uint256 amount) public {
-        //
+        vm.assume(nonOwner != owner);
+        amount = _boundAmount(amount);
+        mockCurrency.mint(nonOwner, amount);
+        vm.prank(nonOwner);
+        mockCurrency.approve(address(tokenDistributor), amount);
+
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        vm.prank(nonOwner);
+        tokenDistributor.createDistribution(address(mockCurrency), amount);
     }
 
-    // Cannot create if amount = 0 for Native
+    function testCannot_createDistribution_ifAmountIsZero_withNative() public {
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        vm.prank(owner);
+        tokenDistributor.createDistribution(NATIVE_TOKEN, 0);
+    }
 
-    // Cannot create if amount = 0 for ERC20
+    function testCannot_createDistribution_ifAmountIsZero_withERC20() public {
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        vm.prank(owner);
+        tokenDistributor.createDistribution(address(mockCurrency), 0);
+    }
 
-    // Cannot endDistribution if not owner
+    function testCannot_endDistribution_ifNotOwner(address nonOwner, uint256 amount, bool useNative) public {
+        vm.assume(nonOwner != owner);
 
-    // Cannot endDistribution if amount left = 0
+        uint256 distributionId = _createDistribution(amount, useNative);
+
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        vm.prank(nonOwner);
+        tokenDistributor.endDistribution(distributionId);
+    }
+
+    function testCannot_endDistribution_ifAlreadyEnded(uint256 amount, bool useNative) public {
+        uint256 distributionId = _createDistribution(amount, useNative);
+
+        vm.prank(owner);
+        tokenDistributor.endDistribution(distributionId);
+
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        vm.prank(owner);
+        tokenDistributor.endDistribution(distributionId);
+    }
+
+    // Cannot endDistribution if all tokens distributed, and remainingAmount is 0
 
     // Cannot Distribute tokens if after deadline
 
@@ -130,11 +175,17 @@ contract TokenDistributorTest is FuzzZkTest {
 
     // Cannot Distribute tokens if the same batchId was already used and processed
 
-    // Cannot Distribute tokens if amountToDistribute is largher than remainingAmount in the Distribution
+    // Cannot Distribute tokens if amountToDistribute is larger than remainingAmount in the Distribution
 
     // Cannot Distribute tokens if amountToDistribute is smaller the sum of all TokenTransfer amounts (put more balance on the contract to not fail with not enough balance)
 
-    // Cannot UpdateSigner if not Owner
+    function testCannot_updateSigner_ifNotOwner(address nonOwner, address newSigner) public {
+        vm.assume(nonOwner != owner);
+
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        vm.prank(nonOwner);
+        tokenDistributor.updateSigner(newSigner);
+    }
 
     // Cannot Distribute if the signer was changed and the signature is no longer valid
 
@@ -184,4 +235,23 @@ contract TokenDistributorTest is FuzzZkTest {
         [ ] Then on Distribute(with this ID) the amount is subtracted with every Transfer and cannot be more than the Distribution had
         [ ] Withdraw() full balance cancels further distribution and invalidates the DistributionID
     */
+
+    function _createDistribution(uint256 amount, bool useNative) internal returns (uint256) {
+        return _createDistribution(useNative ? NATIVE_TOKEN : address(mockCurrency), amount);
+    }
+
+    function _createDistribution(address token, uint256 amount) internal returns (uint256) {
+        amount = _boundAmount(amount);
+        uint256 msgValue;
+        if (token == NATIVE_TOKEN) {
+            vm.deal(owner, amount);
+            msgValue = amount;
+        } else {
+            mockCurrency.mint(owner, amount);
+            vm.prank(owner);
+            mockCurrency.approve(address(tokenDistributor), amount);
+        }
+        vm.prank(owner);
+        return tokenDistributor.createDistribution{value: msgValue}(token, amount);
+    }
 }
