@@ -9,10 +9,6 @@ import {Errors} from "@core/types/Errors.sol";
 import {ZkTest} from "test/helpers/ZkTest.sol";
 
 contract Impl {
-    function testImpl() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     address immutable IMPL_ADDRESS;
 
     uint256 internal _storageValue;
