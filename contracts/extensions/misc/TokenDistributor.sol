@@ -44,6 +44,7 @@ contract TokenDistributor is Ownable {
         uint256 amount;
     }
 
+    // TODO: Move to computed storage
     address internal _signer;
     uint256 internal _lastDistributionId;
     mapping(uint256 distributionId => Distribution distribution) internal _distributions;
@@ -172,7 +173,7 @@ contract TokenDistributor is Ownable {
     }
 
     function _validateBatch(uint256 distributionId, bytes32 batchId) internal view {
-        require(_wasBatchProcessed[distributionId][batchId] == false); // TODO: Errors.BatchAlreadyProcessed ?
+        require(_wasBatchProcessed[distributionId][batchId] == false); // TODO: Errors.AlreadyProcessed ?
     }
 
     function _markBatchAsProcessed(uint256 distributionId, bytes32 batchId) internal {
@@ -182,6 +183,7 @@ contract TokenDistributor is Ownable {
     function _validateAmountToDistribute(uint256 distributionId, uint256 amountToDistribute) internal view {
         Distribution memory distribution = _distributions[distributionId];
         require(amountToDistribute <= distribution.remainingAmount, Errors.InvalidParameter());
+        // TODO: Balance check is not needed anymore... if fails, it will fail in the line above
         require(_hasEnoughBalanceOfToken(distribution.token, amountToDistribute), Errors.NotEnoughBalance());
     }
 
@@ -222,7 +224,6 @@ contract TokenDistributor is Ownable {
         return _signer;
     }
 
-    // TODO: Decide on the name (is or was?) - keep aligned with internal variable name
     function wasBatchProcessed(uint256 distributionId, bytes32 batchId) external view returns (bool) {
         return _wasBatchProcessed[distributionId][batchId];
     }
