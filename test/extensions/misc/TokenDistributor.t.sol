@@ -11,12 +11,16 @@ import {Errors} from "contracts/core/types/Errors.sol";
 
 contract TokenDistributorTest is FuzzZkTest {
     TokenDistributor tokenDistributor;
-    address owner = makeAddr("OWNER");
-    address signer = makeAddr("SIGNER");
+    uint256 ownerPk;
+    address owner;
+    uint256 signerPk;
+    address signer;
 
     MockCurrency mockCurrency;
 
     function setUp() public {
+        (owner, ownerPk) = makeAddrAndKey("OWNER");
+        (signer, signerPk) = makeAddrAndKey("SIGNER");
         tokenDistributor = new TokenDistributor(owner);
         vm.prank(owner);
         tokenDistributor.updateSigner(signer);
@@ -24,6 +28,11 @@ contract TokenDistributorTest is FuzzZkTest {
     }
 
     ////// Scenarios
+
+    function testDeploying_SetsTheRightOwner(address initialOwner) public {
+        tokenDistributor = new TokenDistributor(initialOwner);
+        assertEq(tokenDistributor.owner(), initialOwner);
+    }
 
     function testCreateDistribution_withNative(uint256 amount) public {
         amount = _boundAmount(amount);
@@ -88,27 +97,125 @@ contract TokenDistributorTest is FuzzZkTest {
         assertEq(distribution.remainingAmount, amount, "distribution remaining amount mismatch");
     }
 
-    function testEndDistribution_withNative_immediately(uint256 amount) public {
-        // Create distribution then end distribution - check native is returned back and distributeToken doesn't work
-    }
+    // function testEndDistribution_withNative_immediately(uint256 amount) public {
+    //     // Create distribution then end distribution - check native is returned back and distributeToken doesn't work
+    // }
 
-    function testEndDistribution_withERC20_immediately(uint256 amount) public {
-        // Create distribution then end distribution - check ERC20 is returned back and distributeToken doesn't work
-    }
+    // function testEndDistribution_withERC20_immediately(uint256 amount) public {
+    //     // Create distribution then end distribution - check ERC20 is returned back and distributeToken doesn't work
+    // }
 
     // EndDistribution after distributing partial should refund the remained (Native)
 
     // EndDistribution after distributing partial should refund the remained (ERC20)
 
-    // DistributeTokens - Native (all transfers succeed and balances match)
+    function testDistributeTokens_Native_allTransfersSucceedAndBalancesMatch(
+        uint256 amount,
+        bytes32 batchId,
+        uint256 deadline
+    ) public {
+        address[] memory recipients = new address[](3);
+        recipients[0] = makeAddr("RECIPIENT_1");
+        recipients[1] = makeAddr("RECIPIENT_2");
+        recipients[2] = makeAddr("RECIPIENT_3");
 
-    // DistributeTokens - ERC20 (all transfers succeed and balances match)
+        uint256[] memory recipientBalancesBefore = new uint256[](3);
+        recipientBalancesBefore[0] = address(recipients[0]).balance;
+        recipientBalancesBefore[1] = address(recipients[1]).balance;
+        recipientBalancesBefore[2] = address(recipients[2]).balance;
+
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, true);
+
+        vm.assume(deadline >= block.timestamp);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, NATIVE_TOKEN);
+
+        vm.assume(amount / 3 > 0);
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = amount / 3;
+        transferAmounts[1] = amount / 3;
+        transferAmounts[2] = amount - (amount / 3) * 2;
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](3);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipients[0], amount: transferAmounts[0]});
+        transfers[1] = TokenDistributor.TokenTransfer({recipient: recipients[1], amount: transferAmounts[1]});
+        transfers[2] = TokenDistributor.TokenTransfer({recipient: recipients[2], amount: transferAmounts[2]});
+
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, 0);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, NATIVE_TOKEN);
+
+        assertEq(address(recipients[0]).balance, recipientBalancesBefore[0] + transferAmounts[0]);
+        assertEq(address(recipients[1]).balance, recipientBalancesBefore[1] + transferAmounts[1]);
+        assertEq(address(recipients[2]).balance, recipientBalancesBefore[2] + transferAmounts[2]);
+    }
+
+    function testDistributeTokens_ERC20_allTransfersSucceedAndBalancesMatch(
+        uint256 amount,
+        bytes32 batchId,
+        uint256 deadline
+    ) public {
+        address[] memory recipients = new address[](3);
+        recipients[0] = makeAddr("RECIPIENT_1");
+        recipients[1] = makeAddr("RECIPIENT_2");
+        recipients[2] = makeAddr("RECIPIENT_3");
+
+        uint256[] memory recipientBalancesBefore = new uint256[](3);
+        recipientBalancesBefore[0] = mockCurrency.balanceOf(address(recipients[0]));
+        recipientBalancesBefore[1] = mockCurrency.balanceOf(address(recipients[1]));
+        recipientBalancesBefore[2] = mockCurrency.balanceOf(address(recipients[2]));
+
+        vm.assume(deadline >= block.timestamp);
+
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, false);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, address(mockCurrency));
+
+        vm.assume(amount / 3 > 0);
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = amount / 3;
+        transferAmounts[1] = amount / 3;
+        transferAmounts[2] = amount - (amount / 3) * 2;
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](3);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipients[0], amount: transferAmounts[0]});
+        transfers[1] = TokenDistributor.TokenTransfer({recipient: recipients[1], amount: transferAmounts[1]});
+        transfers[2] = TokenDistributor.TokenTransfer({recipient: recipients[2], amount: transferAmounts[2]});
+
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, 0);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, address(mockCurrency));
+
+        assertEq(mockCurrency.balanceOf(address(recipients[0])), recipientBalancesBefore[0] + transferAmounts[0]);
+        assertEq(mockCurrency.balanceOf(address(recipients[1])), recipientBalancesBefore[1] + transferAmounts[1]);
+        assertEq(mockCurrency.balanceOf(address(recipients[2])), recipientBalancesBefore[2] + transferAmounts[2]);
+    }
 
     // DistributeTokens - Native partial distribution (some recipients failed to receive native)
 
-    // UpdateSigner updates the signer address
+    function testUpdateSigner(address newSigner) public {
+        vm.prank(owner);
+        tokenDistributor.updateSigner(newSigner);
+        assertEq(tokenDistributor.getSigner(), newSigner);
+    }
 
-    // Can transferOwnership (if owner)
+    function testTransferOwnership(address newOwner) public {
+        vm.prank(owner);
+        tokenDistributor.transferOwnership(newOwner);
+        assertEq(tokenDistributor.owner(), newOwner);
+    }
 
     ////// Negatives
 
@@ -148,6 +255,7 @@ contract TokenDistributorTest is FuzzZkTest {
 
     function testCannot_endDistribution_ifNotOwner(address nonOwner, uint256 amount, bool useNative) public {
         vm.assume(nonOwner != owner);
+        amount = _boundAmount(amount);
 
         uint256 distributionId = _createDistribution(amount, useNative);
 
@@ -157,6 +265,7 @@ contract TokenDistributorTest is FuzzZkTest {
     }
 
     function testCannot_endDistribution_ifAlreadyEnded(uint256 amount, bool useNative) public {
+        amount = _boundAmount(amount);
         uint256 distributionId = _createDistribution(amount, useNative);
 
         vm.prank(owner);
@@ -189,7 +298,13 @@ contract TokenDistributorTest is FuzzZkTest {
 
     // Cannot Distribute if the signer was changed and the signature is no longer valid
 
-    // Cannot transferOwnership if not Owner
+    function testCannot_transferOwnership_ifNotOwner(address nonOwner, address newOwner) public {
+        vm.assume(nonOwner != owner);
+
+        vm.expectRevert(Errors.InvalidMsgSender.selector);
+        vm.prank(nonOwner);
+        tokenDistributor.transferOwnership(newOwner);
+    }
 
     ////// Getters
 
@@ -241,7 +356,6 @@ contract TokenDistributorTest is FuzzZkTest {
     }
 
     function _createDistribution(address token, uint256 amount) internal returns (uint256) {
-        amount = _boundAmount(amount);
         uint256 msgValue;
         if (token == NATIVE_TOKEN) {
             vm.deal(owner, amount);
@@ -253,5 +367,60 @@ contract TokenDistributorTest is FuzzZkTest {
         }
         vm.prank(owner);
         return tokenDistributor.createDistribution{value: msgValue}(token, amount);
+    }
+
+    // Signature generation
+
+    bytes32 constant DISTRIBUTE_TOKENS_TYPEHASH = keccak256(
+        "DistributeTokens(uint256 distributionId,bytes32 batchId,TokenTransfer[] transfers,uint256 deadline)TokenTransfer(address recipient,uint256 amount)"
+    );
+
+    function _generateSignature(
+        uint256 pkToSignWith,
+        uint256 distributionId,
+        bytes32 batchId,
+        TokenDistributor.TokenTransfer[] memory transfers,
+        uint256 deadline
+    ) internal pure returns (bytes memory) {
+        bytes32 digest = _calculateDigest(distributionId, batchId, transfers, deadline);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(pkToSignWith, digest);
+        return abi.encodePacked(r, s, v);
+    }
+
+    function _calculateDigest(
+        uint256 distributionId,
+        bytes32 batchId,
+        TokenDistributor.TokenTransfer[] memory transfers,
+        uint256 deadline
+    ) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(DISTRIBUTE_TOKENS_TYPEHASH, distributionId, batchId, _encodeForEIP712(transfers), deadline)
+        );
+    }
+
+    function _encodeForEIP712(TokenDistributor.TokenTransfer memory tokenTransfer) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                keccak256("TokenTransfer(address recipient,uint256 amount)"), // Type Hash
+                tokenTransfer.recipient,
+                tokenTransfer.amount
+            )
+        );
+    }
+
+    function _encodeForEIP712(TokenDistributor.TokenTransfer[] memory tokenTransferArray)
+        internal
+        pure
+        returns (bytes32)
+    {
+        bytes32[] memory tokenTransferEncodedElements = new bytes32[](tokenTransferArray.length);
+        for (uint256 i = 0; i < tokenTransferArray.length; i++) {
+            tokenTransferEncodedElements[i] = _encodeForEIP712(tokenTransferArray[i]);
+        }
+        return _encodeForEIP712(tokenTransferEncodedElements);
+    }
+
+    function _encodeForEIP712(bytes32[] memory bytes32Array) internal pure returns (bytes32) {
+        return keccak256(abi.encode(bytes32Array));
     }
 }
