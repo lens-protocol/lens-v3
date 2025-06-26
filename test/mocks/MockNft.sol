@@ -5,10 +5,6 @@ pragma solidity ^0.8.26;
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract MockNft is ERC721 {
-    function testMockNft() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
 
     function mint(address to, uint256 tokenId) external {

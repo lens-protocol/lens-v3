@@ -13,10 +13,6 @@ import {CONTRACT__LENS_NATIVE_PAYMENT_HELPER} from "@core/types/Constants.sol";
 import {Errors} from "@core/types/Errors.sol";
 
 contract PayableUsingNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
-    function testPayableUsingNativePaymentHelperTest() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     address lensNativePaymentHelper;
 
     function setUp() public override {
@@ -55,20 +51,12 @@ contract PayableUsingNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
 }
 
 contract DummyPayableUsingNativePaymentHelper is PayableUsingNativePaymentHelper {
-    // function testDummyPayableUsingNativePaymentHelper() public {
-    //     // Prevents being included in the foundry coverage report
-    // }
-
     function somePayableFunction() public payable usingNativePaymentHelper {
         return;
     }
 }
 
 contract RevertingPayableUsingNativePaymentHelper is PayableUsingNativePaymentHelper {
-    // function testRevertingPayableUsingNativePaymentHelper() public {
-    //     // Prevents being included in the foundry coverage report
-    // }
-
     modifier spendSomeMsgValue() {
         if (msg.value > 0) {
             (bool callSucceeded,) = address(0).call{value: 1}("");

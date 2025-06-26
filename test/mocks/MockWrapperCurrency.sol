@@ -5,10 +5,6 @@ pragma solidity ^0.8.26;
 import {MockCurrency} from "./MockCurrency.sol";
 
 contract MockWrapperCurrency is MockCurrency {
-    function testMockWrapperCurrency() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     constructor(string memory name, string memory symbol) MockCurrency(name, symbol) {}
 
     function deposit() external payable {
