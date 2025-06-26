@@ -16,6 +16,7 @@ abstract contract LensERC721 is IERC721Metadata, ERC165 {
     using AddressUpgradeable for address;
 
     event Lens_ERC721_TokenURIProviderSet(address indexed tokenURIProvider);
+    event Lens_ERC721_Initialized(string name, string symbol);
 
     struct ERC721Storage {
         // Token name
@@ -47,6 +48,7 @@ abstract contract LensERC721 is IERC721Metadata, ERC165 {
         $erc721Storage().name = nftName;
         $erc721Storage().symbol = nftSymbol;
         $erc721Storage().tokenURIProvider = tokenURIProvider;
+        emit Lens_ERC721_Initialized(nftName, nftSymbol);
         emit Lens_ERC721_TokenURIProviderSet(address(tokenURIProvider));
     }
 

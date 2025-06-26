@@ -11,6 +11,19 @@ optimizer = false
 fs_permissions = [{ access = "read", path = "./test/token-uri/expected-svgs/"}, { access = "read", path = "./addressBook.json"}]
 allow_internal_expect_revert = true
 evm_version = 'paris'
+# Ignore the following warnings:
+#
+# - [5740] Unreachable code:
+#   It is triggered by code that is actually reachable because of inheritance. Unlikely to happen in production.
+#
+# - [5574] Size limit:
+#   zkSync's zkEVM has a bigger size limit than classic EVM, and we sometimes use classic foundry for quicker
+#   compilation during development. Also, tests will trigger this warning otherwise too.
+ignored_error_codes = [5740, 5574] 
+# Ignore warnings from dependencies.
+ignored_warnings_from = ["lib/", "node_modules/"]
+# Mask warnings as compilation errors. An easy way to make our CI fail anytime new warnings are introduced.
+deny_warnings = true
 
 [profile.default.fuzz]
 runs = 1024

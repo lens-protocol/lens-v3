@@ -8,10 +8,6 @@ import {MockVersionedBeacon} from "test/mocks/MockVersionedBeacon.sol";
 import {Errors} from "@core/types/Errors.sol";
 
 contract Impl {
-    function testImpl() public {
-        // Prevents being included in the foundry coverage report
-    }
-
     address immutable IMPL_ADDRESS;
 
     uint256 internal _storageValue;

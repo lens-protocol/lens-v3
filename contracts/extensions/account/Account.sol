@@ -509,6 +509,16 @@ contract Account is
                 address from, uint256 amount, address to
             ) {
                 if (_isERC20(target)) {
+                    /**
+                     * Until EIP-7702 is supported by ZkSync, we only allow `transferFrom` from the msg.sender.
+                     * In other words, we only allow you to spend your own funds.
+                     *
+                     * This is to prevent owner/managers draining managers' funds in case infinite approval was granted.
+                     *
+                     * EIP-7702 will allow multi-calling from any account, allowing multi-step approval-requiring
+                     * operations to be done as a single-tx.
+                     */
+                    require(from == msg.sender, Errors.NotAllowed());
                     if (!isMsgSenderOwner && !$storage().managerStorage[msg.sender].canTransferTokens) {
                         if (from == msg.sender && to == address(this)) {
                             _increaseAllowance(msg.sender, target, amount);
@@ -601,8 +611,8 @@ contract Account is
         return _isAccountManager(accountManager);
     }
 
-    function canSetMetadataURI(address accountManager) external view override returns (bool) {
-        return $storage().managerStorage[accountManager].canSetMetadataURI;
+    function canSetMetadataURI(address executor) external view override returns (bool) {
+        return $storage().managerStorage[executor].canSetMetadataURI || executor == owner();
     }
 
     function getAccountManagerPermissions(address accountManager)

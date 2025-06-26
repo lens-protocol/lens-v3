@@ -155,8 +155,8 @@ contract Namespace is
         RuleProcessingParams[] calldata creationProcessingParams,
         RuleProcessingParams[] calldata assigningProcessingParams,
         KeyValue[] memory extraData
-    ) external {
-        require(msg.sender == account, Errors.InvalidMsgSender());
+    ) external payable usingNativePaymentHelper {
+        require(msg.sender == account || _doesMsgSenderControlAccount(account), Errors.InvalidMsgSender());
         uint256 id = _computeId(username);
         _safeMint(account, id);
         $storage().idToUsername[id] = username;
@@ -178,7 +178,7 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams,
         KeyValue[] calldata extraData
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         uint256 id = _computeId(username);
         _safeMint(account, id);
         $storage().idToUsername[id] = username;
@@ -194,7 +194,7 @@ contract Namespace is
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata unassigningRuleProcessingParams,
         RuleProcessingParams[] calldata removalRuleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         uint256 id = _computeId(username);
         address owner = ownerOf(id);
         require(msg.sender == owner, Errors.InvalidMsgSender()); // msg.sender must be the owner of the username
@@ -214,7 +214,7 @@ contract Namespace is
         RuleProcessingParams[] calldata unassignAccountRuleProcessingParams,
         RuleProcessingParams[] calldata unassignUsernameRuleProcessingParams,
         RuleProcessingParams[] calldata assignRuleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         uint256 id = _computeId(username);
         // msg.sender should own the tokenized username
         require(msg.sender == ownerOf(id), Errors.InvalidMsgSender());
@@ -233,16 +233,28 @@ contract Namespace is
 
     function _doesMsgSenderControlAccount(address account) internal view returns (bool) {
         try IOwnable(account).owner() returns (address accountOwner) {
+            // Account is Ownable: checking if msg.sender is the owner
             if (msg.sender == accountOwner) {
                 return true;
             }
         } catch {
+            // Account is not ownable:
             // Do nothing, still needs to check if msg.sender has access through the access control.
         }
-        try IAccessControlled(account).getAccessControl().hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME)
-        returns (bool hasAccessToAssignUsername) {
-            return hasAccessToAssignUsername;
+
+        try IAccessControlled(account).getAccessControl() returns (IAccessControl accountAccessControl) {
+            // Account is AccessControlled: checking if msg.sender has access to assign username
+            try accountAccessControl.hasAccess(msg.sender, address(this), PID__ASSIGN_USERNAME) returns (
+                bool hasAccessToAssignUsername
+            ) {
+                // Account has AssignUsername permission
+                return hasAccessToAssignUsername;
+            } catch {
+                // No access
+                return false;
+            }
         } catch {
+            // Account is not ownable nor AccessControlled: no access
             return false;
         }
     }
@@ -251,7 +263,7 @@ contract Namespace is
         string calldata username,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         address account = Core.$storage().usernameToAccount[username];
         uint256 id = _computeId(username);
         require(msg.sender == ownerOf(id) || msg.sender == account, Errors.InvalidMsgSender());

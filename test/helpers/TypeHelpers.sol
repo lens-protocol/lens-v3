@@ -137,3 +137,12 @@ function _toRecipientDataArray(address recipient) pure returns (RecipientData[] 
     ret[0] = RecipientData({recipient: recipient, splitBps: uint16(BPS_MAX)});
     return ret;
 }
+
+function _toRuleProcessingParamsArray(RuleProcessingParams memory ruleProcessingParams)
+    pure
+    returns (RuleProcessingParams[] memory)
+{
+    RuleProcessingParams[] memory ret = new RuleProcessingParams[](1);
+    ret[0] = ruleProcessingParams;
+    return ret;
+}
