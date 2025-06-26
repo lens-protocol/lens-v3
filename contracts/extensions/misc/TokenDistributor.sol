@@ -70,7 +70,7 @@ contract TokenDistributor is Ownable {
 
     function endDistribution(uint256 distributionId) external onlyOwner {
         uint256 amountToWithdraw = _distributions[distributionId].remainingAmount;
-        require(amountToWithdraw > 0, Errors.InvalidParameter());
+        require(amountToWithdraw > 0, Errors.RedundantStateChange());
         _distributions[distributionId].remainingAmount = 0;
         _distributeTokensTo(_distributions[distributionId].token, msg.sender, amountToWithdraw);
         emit Lens_TokenDistributor_DistributionEnded(distributionId, amountToWithdraw);
