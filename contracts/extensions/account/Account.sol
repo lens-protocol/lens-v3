@@ -580,12 +580,18 @@ contract Account is
         }
     }
 
-    // Permissionless function to remove owners set as manager during migration,
-    // as that is an undesired state.
+    // Permissionless function to remove owners set as manager during migration, as that is an undesired state.
     function removeOwnerAsManager() external {
         address owner = owner();
         if (_isAccountManager(owner)) {
             _removeAccountManager(owner);
+        }
+    }
+
+    // Permissionless function to remove accounts that set itself as manager, as that is an undesired state.
+    function removeAccountAsManager() external {
+        if (_isAccountManager(address(this))) {
+            _removeAccountManager(address(this));
         }
     }
 
