@@ -97,17 +97,132 @@ contract TokenDistributorTest is FuzzZkTest {
         assertEq(distribution.remainingAmount, amount, "distribution remaining amount mismatch");
     }
 
-    // function testEndDistribution_withNative_immediately(uint256 amount) public {
-    //     // Create distribution then end distribution - check native is returned back and distributeToken doesn't work
-    // }
+    function testEndDistribution_withNative_AndEndItImmediately(uint256 amount) public {
+        amount = _boundAmount(amount);
 
-    // function testEndDistribution_withERC20_immediately(uint256 amount) public {
-    //     // Create distribution then end distribution - check ERC20 is returned back and distributeToken doesn't work
-    // }
+        uint256 distributionId = _createDistribution(amount, true);
 
-    // EndDistribution after distributing partial should refund the remained (Native)
+        uint256 ownerBalanceBefore = address(owner).balance;
+        uint256 tokenDistributorBalanceBefore = address(tokenDistributor).balance;
 
-    // EndDistribution after distributing partial should refund the remained (ERC20)
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+
+        vm.prank(owner);
+        tokenDistributor.endDistribution(distributionId);
+
+        assertEq(address(owner).balance, ownerBalanceBefore + amount);
+        assertEq(address(tokenDistributor).balance, tokenDistributorBalanceBefore - amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, 0);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+    }
+
+    function testEndDistribution_withERC20_AndEndItImmediately(uint256 amount) public {
+        amount = _boundAmount(amount);
+
+        uint256 distributionId = _createDistribution(amount, false);
+
+        uint256 ownerBalanceBefore = mockCurrency.balanceOf(owner);
+        uint256 tokenDistributorBalanceBefore = mockCurrency.balanceOf(address(tokenDistributor));
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+
+        vm.prank(owner);
+        tokenDistributor.endDistribution(distributionId);
+
+        assertEq(mockCurrency.balanceOf(owner), ownerBalanceBefore + amount);
+        assertEq(mockCurrency.balanceOf(address(tokenDistributor)), tokenDistributorBalanceBefore - amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, 0);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+    }
+
+    function test_PartialDistribution_ProperBalances(uint256 amount, bytes32 batchId, uint256 deadline) public {
+        address[] memory recipients = new address[](3);
+        recipients[0] = makeAddr("RECIPIENT_1");
+        recipients[1] = address(new RecipientThatCannotReceive());
+        recipients[2] = makeAddr("RECIPIENT_3");
+
+        uint256[] memory recipientBalancesBefore = new uint256[](3);
+        recipientBalancesBefore[0] = address(recipients[0]).balance;
+        recipientBalancesBefore[1] = address(recipients[1]).balance;
+        recipientBalancesBefore[2] = address(recipients[2]).balance;
+
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, true);
+
+        vm.assume(deadline >= block.timestamp);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, NATIVE_TOKEN);
+
+        vm.assume(amount / 3 > 0);
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = amount / 3;
+        transferAmounts[1] = amount / 3;
+        transferAmounts[2] = amount - (amount / 3) * 2;
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](3);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipients[0], amount: transferAmounts[0]});
+        transfers[1] = TokenDistributor.TokenTransfer({recipient: recipients[1], amount: transferAmounts[1]});
+        transfers[2] = TokenDistributor.TokenTransfer({recipient: recipients[2], amount: transferAmounts[2]});
+
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+
+        assertTrue(tokenDistributor.wasBatchProcessed(distributionId, batchId));
+        assertEq(
+            tokenDistributor.getDistribution(distributionId).remainingAmount,
+            amount - transferAmounts[0] - transferAmounts[2]
+        );
+
+        assertEq(address(recipients[0]).balance, recipientBalancesBefore[0] + transferAmounts[0]);
+        assertEq(address(recipients[1]).balance, recipientBalancesBefore[1]);
+        assertEq(address(recipients[2]).balance, recipientBalancesBefore[2] + transferAmounts[2]);
+    }
+
+    function test_PartialDistribution_AndThenEndDistribution(uint256 amount, bytes32 batchId, uint256 deadline) public {
+        address[] memory recipients = new address[](3);
+        recipients[0] = makeAddr("RECIPIENT_1");
+        recipients[1] = address(new RecipientThatCannotReceive());
+        recipients[2] = makeAddr("RECIPIENT_3");
+
+        uint256[] memory recipientBalancesBefore = new uint256[](3);
+        recipientBalancesBefore[0] = address(recipients[0]).balance;
+        recipientBalancesBefore[1] = address(recipients[1]).balance;
+        recipientBalancesBefore[2] = address(recipients[2]).balance;
+
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, true);
+
+        uint256 ownerBalanceBefore = address(owner).balance;
+
+        vm.assume(deadline >= block.timestamp);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, NATIVE_TOKEN);
+
+        vm.assume(amount / 3 > 0);
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = amount / 3;
+        transferAmounts[1] = amount / 3;
+        transferAmounts[2] = amount - (amount / 3) * 2;
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](3);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipients[0], amount: transferAmounts[0]});
+        transfers[1] = TokenDistributor.TokenTransfer({recipient: recipients[1], amount: transferAmounts[1]});
+        transfers[2] = TokenDistributor.TokenTransfer({recipient: recipients[2], amount: transferAmounts[2]});
+
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+
+        vm.prank(owner);
+        tokenDistributor.endDistribution(distributionId);
+
+        assertEq(address(owner).balance, ownerBalanceBefore + transferAmounts[1]);
+    }
 
     function testDistributeTokens_Native_allTransfersSucceedAndBalancesMatch(
         uint256 amount,
@@ -203,8 +318,6 @@ contract TokenDistributorTest is FuzzZkTest {
         assertEq(mockCurrency.balanceOf(address(recipients[2])), recipientBalancesBefore[2] + transferAmounts[2]);
     }
 
-    // DistributeTokens - Native partial distribution (some recipients failed to receive native)
-
     function testUpdateSigner(address newSigner) public {
         vm.prank(owner);
         tokenDistributor.updateSigner(newSigner);
@@ -276,17 +389,168 @@ contract TokenDistributorTest is FuzzZkTest {
         tokenDistributor.endDistribution(distributionId);
     }
 
-    // Cannot endDistribution if all tokens distributed, and remainingAmount is 0
+    function testCannot_endDistribution_ifAllTokensDistributed(uint256 amount, bool useNative) public {
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, useNative);
+        uint256 deadline = block.timestamp + 2 minutes;
+        bytes32 batchId = bytes32(uint256(69));
 
-    // Cannot Distribute tokens if after deadline
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
 
-    // Cannot Distribute tokens if any part of the signature is wrong
+        address recipient = makeAddr("RECIPIENT");
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](1);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipient, amount: amount});
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
 
-    // Cannot Distribute tokens if the same batchId was already used and processed
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, 0);
 
-    // Cannot Distribute tokens if amountToDistribute is larger than remainingAmount in the Distribution
+        vm.expectRevert(Errors.RedundantStateChange.selector);
+        vm.prank(owner);
+        tokenDistributor.endDistribution(distributionId);
+    }
 
-    // Cannot Distribute tokens if amountToDistribute is smaller the sum of all TokenTransfer amounts (put more balance on the contract to not fail with not enough balance)
+    function testCannot_distributeTokens_AfterSignatureDeadline(
+        uint256 amount,
+        bool useNative,
+        uint256 blockTimestamp,
+        uint256 sigDeadline
+    ) public {
+        vm.assume(sigDeadline < blockTimestamp);
+        vm.warp(blockTimestamp);
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, useNative);
+        bytes32 batchId = bytes32(uint256(69));
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+
+        address recipient = makeAddr("RECIPIENT");
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](1);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipient, amount: amount});
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, sigDeadline);
+
+        vm.expectRevert(Errors.Expired.selector);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, sigDeadline, signature);
+    }
+
+    function testCannot_distributeTokens_ifBatchIdAlreadyUsed(uint256 amount, bool useNative, bytes32 batchId) public {
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, useNative);
+        uint256 deadline = block.timestamp + 2 minutes;
+
+        vm.assume(tokenDistributor.wasBatchProcessed(distributionId, batchId) == false);
+
+        address recipient = makeAddr("RECIPIENT");
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](1);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipient, amount: amount});
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+
+        assertTrue(tokenDistributor.wasBatchProcessed(distributionId, batchId));
+
+        vm.expectRevert(Errors.AlreadyProcessed.selector);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+    }
+
+    function testCannot_distributeTokens_ifAmountToDistributeIsLargerThanRemainingAmount(
+        uint256 amount,
+        bool useNative,
+        uint256 amountToDistribute
+    ) public {
+        amount = _boundAmount(amount);
+        vm.assume(amountToDistribute > amount);
+        uint256 distributionId = _createDistribution(amount, useNative);
+        uint256 deadline = block.timestamp + 2 minutes;
+        bytes32 batchId = bytes32(uint256(69));
+
+        address recipient = makeAddr("RECIPIENT");
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](1);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipient, amount: amountToDistribute});
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amountToDistribute, deadline, signature);
+    }
+
+    function testCannot_distributeTokens_ifAmountToDistribute_IsSmallerThan_SumOfAllTokenTransferAmounts(
+        uint256 amount,
+        bytes32 batchId,
+        uint256 deadline
+    ) public {
+        address[] memory recipients = new address[](3);
+        recipients[0] = makeAddr("RECIPIENT_1");
+        recipients[1] = makeAddr("RECIPIENT_2");
+        recipients[2] = makeAddr("RECIPIENT_3");
+
+        uint256[] memory recipientBalancesBefore = new uint256[](3);
+        recipientBalancesBefore[0] = address(recipients[0]).balance;
+        recipientBalancesBefore[1] = address(recipients[1]).balance;
+        recipientBalancesBefore[2] = address(recipients[2]).balance;
+
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, true);
+
+        vm.assume(deadline >= block.timestamp);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, NATIVE_TOKEN);
+
+        vm.assume(amount / 3 > 0);
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = amount / 3;
+        transferAmounts[1] = amount / 3;
+        transferAmounts[2] = amount - (amount / 3) * 2;
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](3);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipients[0], amount: transferAmounts[0]});
+        transfers[1] = TokenDistributor.TokenTransfer({recipient: recipients[1], amount: transferAmounts[1]});
+        transfers[2] = TokenDistributor.TokenTransfer({recipient: recipients[2], amount: transferAmounts[2]});
+
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount - 1, deadline, signature);
+    }
+
+    function testCannot_distributeTokens_ifAmountToDistribute_IsBiggerThan_SumOfAllTokenTransferAmounts(
+        uint256 amount,
+        bytes32 batchId,
+        uint256 deadline
+    ) public {
+        address[] memory recipients = new address[](3);
+        recipients[0] = makeAddr("RECIPIENT_1");
+        recipients[1] = makeAddr("RECIPIENT_2");
+        recipients[2] = makeAddr("RECIPIENT_3");
+
+        uint256[] memory recipientBalancesBefore = new uint256[](3);
+        recipientBalancesBefore[0] = address(recipients[0]).balance;
+        recipientBalancesBefore[1] = address(recipients[1]).balance;
+        recipientBalancesBefore[2] = address(recipients[2]).balance;
+
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, true);
+
+        vm.assume(deadline >= block.timestamp);
+
+        assertEq(tokenDistributor.getDistribution(distributionId).remainingAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).initialAmount, amount);
+        assertEq(tokenDistributor.getDistribution(distributionId).token, NATIVE_TOKEN);
+
+        vm.assume(amount / 3 > 0);
+        uint256[] memory transferAmounts = new uint256[](3);
+        transferAmounts[0] = amount / 3;
+        transferAmounts[1] = amount / 3;
+        transferAmounts[2] = amount - (amount / 3) * 2;
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](3);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipients[0], amount: transferAmounts[0]});
+        transfers[1] = TokenDistributor.TokenTransfer({recipient: recipients[1], amount: transferAmounts[1]});
+        transfers[2] = TokenDistributor.TokenTransfer({recipient: recipients[2], amount: transferAmounts[2]});
+
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount + 1, deadline, signature);
+    }
 
     function testCannot_updateSigner_ifNotOwner(address nonOwner, address newSigner) public {
         vm.assume(nonOwner != owner);
@@ -296,7 +560,28 @@ contract TokenDistributorTest is FuzzZkTest {
         tokenDistributor.updateSigner(newSigner);
     }
 
-    // Cannot Distribute if the signer was changed and the signature is no longer valid
+    function testCannot_distributeTokens_ifSignerChangedAfterSignatureGeneration(
+        uint256 amount,
+        bool useNative,
+        address newSigner
+    ) public {
+        vm.assume(newSigner != signer);
+        amount = _boundAmount(amount);
+        uint256 distributionId = _createDistribution(amount, useNative);
+        uint256 deadline = block.timestamp + 2 minutes;
+        bytes32 batchId = bytes32(uint256(69));
+
+        address recipient = makeAddr("RECIPIENT");
+        TokenDistributor.TokenTransfer[] memory transfers = new TokenDistributor.TokenTransfer[](1);
+        transfers[0] = TokenDistributor.TokenTransfer({recipient: recipient, amount: amount});
+        bytes memory signature = _generateSignature(signerPk, distributionId, batchId, transfers, deadline);
+
+        vm.prank(owner);
+        tokenDistributor.updateSigner(newSigner);
+
+        vm.expectRevert(Errors.WrongSigner.selector);
+        tokenDistributor.distributeTokens(distributionId, batchId, transfers, amount, deadline, signature);
+    }
 
     function testCannot_transferOwnership_ifNotOwner(address nonOwner, address newOwner) public {
         vm.assume(nonOwner != owner);
@@ -306,50 +591,7 @@ contract TokenDistributorTest is FuzzZkTest {
         tokenDistributor.transferOwnership(newOwner);
     }
 
-    ////// Getters
-
-    // getDistribution
-
-    // getDistributionCount
-
-    // getSigner
-
-    // wasBatchProcessed
-
-    // owner()
-
-    ////// Make sure to test all the events are emitted
-
-    /*
-    /////////////////////// SPEC /////////////////////////
-
-    ////// Mark these as done when verified that the contract follows the points in spec
-
-    The system must be able to:
-    [ ] Send tokens to recipients
-        [ ] Based on a precomputed (by backend) list of {token,amount,recipient}
-        [ ] Don't fail the entire thing if single transfer fails
-        [ ] Prevent replay sending if a given transfer already succeeded (batch IDs)
-        [ ] Emit events on successful transfers (and maybe failed too) so Backend can track & adjust & resubmit the failed ones
-        [ ] Accept & Hold Deposited Funds on it's balance
-    [ ] Only callable with permission
-        [ ] Ideally with signatures (so EOA msg.sender doesn't matter: paymaster & throw[ ]away EOAs) by a trusted signer
-    [ ] Transfers would be periodic (weekly) but can be vested anytime with the config (BE only cares)
-    [ ] Token support:
-        [ ] Native GHO
-        [ ] ERC20 (in future)
-    [ ] Ownable
-        [ ] Owner can EmergencyWithdraw
-        [ ] Owner can change the TrustedSigner
-    [ ] Emergency Withdrawal (by Owner)
-    [ ] Upgradeable
-    [ ] Tracking Distributions (managing the funds, limiting & protecting)
-        [ ] Deposit(token, amount) returns (uint256 distributionID)
-            [ ] Amount
-            [ ] Token
-        [ ] Then on Distribute(with this ID) the amount is subtracted with every Transfer and cannot be more than the Distribution had
-        [ ] Withdraw() full balance cancels further distribution and invalidates the DistributionID
-    */
+    // Helpers
 
     function _createDistribution(uint256 amount, bool useNative) internal returns (uint256) {
         return _createDistribution(useNative ? NATIVE_TOKEN : address(mockCurrency), amount);
@@ -422,5 +664,11 @@ contract TokenDistributorTest is FuzzZkTest {
 
     function _encodeForEIP712(bytes32[] memory bytes32Array) internal pure returns (bytes32) {
         return keccak256(abi.encode(bytes32Array));
+    }
+}
+
+contract RecipientThatCannotReceive {
+    receive() external payable {
+        revert();
     }
 }
