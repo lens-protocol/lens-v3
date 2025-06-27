@@ -27,12 +27,6 @@ contract TokenDistributor is Ownable {
 
     event Lens_TokenDistributor_DistributionEnded(uint256 indexed distributionId, uint256 withdrawnAmount);
 
-    address public constant NATIVE_TOKEN_ADDRESS = address(0x800A);
-
-    bytes32 constant DISTRIBUTE_TOKENS_TYPEHASH = keccak256(
-        "DistributeTokens(uint256 distributionId,bytes32 batchId,TokenTransfer[] transfers,uint256 deadline)TokenTransfer(address recipient,uint256 amount)"
-    );
-
     struct Distribution {
         address token;
         uint256 initialAmount;
@@ -44,36 +38,54 @@ contract TokenDistributor is Ownable {
         uint256 amount;
     }
 
-    // TODO: Move to computed storage
-    address internal _signer;
-    uint256 internal _lastDistributionId;
-    mapping(uint256 distributionId => Distribution distribution) internal _distributions;
-    mapping(uint256 distributionId => mapping(bytes32 batchId => bool batchProcessed)) internal _wasBatchProcessed;
+    struct TokenDistributorStorage {
+        address signer;
+        uint256 lastDistributionId;
+        mapping(uint256 distributionId => Distribution distribution) distributions;
+        mapping(uint256 distributionId => mapping(bytes32 batchId => bool batchProcessed)) wasBatchProcessed;
+    }
 
+    address public constant NATIVE_TOKEN_ADDRESS = address(0x800A);
+
+    bytes32 constant DISTRIBUTE_TOKENS_TYPEHASH = keccak256(
+        "DistributeTokens(uint256 distributionId,bytes32 batchId,TokenTransfer[] transfers,uint256 deadline)TokenTransfer(address recipient,uint256 amount)"
+    );
+
+    /// @custom:keccak lens.storage.TokenDistributor
+    bytes32 constant STORAGE__TOKEN_DISTRIBUTOR = 0xdd92edd48247ec39dc282ea36076573b8a79476fbc92e4fa49507c701d8fcdd7;
+
+    function $storage() internal pure returns (TokenDistributorStorage storage _storage) {
+        assembly {
+            _storage.slot := STORAGE__TOKEN_DISTRIBUTOR
+        }
+    }
+
+    // TODO: Initializer instead of (or in addition to) constructor?
     constructor(address owner) {
         _transferOwnership(owner);
     }
 
     function updateSigner(address newSigner) external onlyOwner {
-        address oldSigner = _signer;
-        _signer = newSigner;
+        address oldSigner = $storage().signer;
+        $storage().signer = newSigner;
         emit Lens_TokenDistributor_SignerUpdated(oldSigner, newSigner);
     }
 
     function createDistribution(address token, uint256 amount) external payable onlyOwner returns (uint256) {
-        uint256 distributionId = ++_lastDistributionId;
+        uint256 distributionId = ++$storage().lastDistributionId;
         require(amount > 0, Errors.InvalidParameter());
         _pullTokens(token, amount);
-        _distributions[distributionId] = Distribution({token: token, initialAmount: amount, remainingAmount: amount});
+        $storage().distributions[distributionId] =
+            Distribution({token: token, initialAmount: amount, remainingAmount: amount});
         emit Lens_TokenDistributor_DistributionCreated(distributionId, token, amount);
         return distributionId;
     }
 
     function endDistribution(uint256 distributionId) external onlyOwner {
-        uint256 amountToWithdraw = _distributions[distributionId].remainingAmount;
+        uint256 amountToWithdraw = $storage().distributions[distributionId].remainingAmount;
         require(amountToWithdraw > 0, Errors.RedundantStateChange());
-        _distributions[distributionId].remainingAmount = 0;
-        _distributeTokensTo(_distributions[distributionId].token, msg.sender, amountToWithdraw);
+        $storage().distributions[distributionId].remainingAmount = 0;
+        _distributeTokensTo($storage().distributions[distributionId].token, msg.sender, amountToWithdraw);
         emit Lens_TokenDistributor_DistributionEnded(distributionId, amountToWithdraw);
     }
 
@@ -90,8 +102,8 @@ contract TokenDistributor is Ownable {
         _validateSignature(distributionId, batchId, transfers, deadline, signature);
         _markBatchAsProcessed(distributionId, batchId);
         _validateAmountToDistribute(distributionId, amountToDistribute);
-        _distributions[distributionId].remainingAmount -= amountToDistribute;
-        address token = _distributions[distributionId].token;
+        $storage().distributions[distributionId].remainingAmount -= amountToDistribute;
+        address token = $storage().distributions[distributionId].token;
         uint256 distributedAmount;
         for (uint256 i = 0; i < transfers.length; i++) {
             if (_tryDistributeTokensTo(token, transfers[i].recipient, transfers[i].amount)) {
@@ -107,8 +119,8 @@ contract TokenDistributor is Ownable {
         }
         require(distributedAmount <= amountToDistribute, Errors.InvalidParameter());
         if (distributedAmount != amountToDistribute) {
-            _distributions[distributionId].remainingAmount += amountToDistribute - distributedAmount;
-        } else if (_distributions[distributionId].remainingAmount == 0) {
+            $storage().distributions[distributionId].remainingAmount += amountToDistribute - distributedAmount;
+        } else if ($storage().distributions[distributionId].remainingAmount == 0) {
             // Distribution ended naturally by distributing all the initially allocated tokens.
             emit Lens_TokenDistributor_DistributionEnded(distributionId, 0);
         }
@@ -131,7 +143,7 @@ contract TokenDistributor is Ownable {
             v := byte(0, mload(add(signature, 0x60)))
         }
         address signer = ecrecover(digest, v, r, s);
-        require(signer == _signer, Errors.WrongSigner());
+        require(signer == $storage().signer, Errors.WrongSigner());
     }
 
     function _calculateDigest(
@@ -176,15 +188,17 @@ contract TokenDistributor is Ownable {
     }
 
     function _validateBatch(uint256 distributionId, bytes32 batchId) internal view {
-        require(_wasBatchProcessed[distributionId][batchId] == false, Errors.AlreadyProcessed());
+        require($storage().wasBatchProcessed[distributionId][batchId] == false, Errors.AlreadyProcessed());
     }
 
     function _markBatchAsProcessed(uint256 distributionId, bytes32 batchId) internal {
-        _wasBatchProcessed[distributionId][batchId] = true;
+        $storage().wasBatchProcessed[distributionId][batchId] = true;
     }
 
     function _validateAmountToDistribute(uint256 distributionId, uint256 amountToDistribute) internal view {
-        require(amountToDistribute <= _distributions[distributionId].remainingAmount, Errors.InvalidParameter());
+        require(
+            amountToDistribute <= $storage().distributions[distributionId].remainingAmount, Errors.InvalidParameter()
+        );
     }
 
     function _tryDistributeTokensTo(address token, address recipient, uint256 amount) internal returns (bool) {
@@ -205,18 +219,18 @@ contract TokenDistributor is Ownable {
     // Getters
 
     function getDistribution(uint256 distributionId) external view returns (Distribution memory) {
-        return _distributions[distributionId];
+        return $storage().distributions[distributionId];
     }
 
     function getDistributionCount() external view returns (uint256) {
-        return _lastDistributionId;
+        return $storage().lastDistributionId;
     }
 
     function getSigner() external view returns (address) {
-        return _signer;
+        return $storage().signer;
     }
 
     function wasBatchProcessed(uint256 distributionId, bytes32 batchId) external view returns (bool) {
-        return _wasBatchProcessed[distributionId][batchId];
+        return $storage().wasBatchProcessed[distributionId][batchId];
     }
 }
