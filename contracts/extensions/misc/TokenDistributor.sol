@@ -176,7 +176,7 @@ contract TokenDistributor is Ownable {
     }
 
     function _validateBatch(uint256 distributionId, bytes32 batchId) internal view {
-        require(_wasBatchProcessed[distributionId][batchId] == false); // TODO: Errors.AlreadyProcessed ?
+        require(_wasBatchProcessed[distributionId][batchId] == false, Errors.AlreadyProcessed());
     }
 
     function _markBatchAsProcessed(uint256 distributionId, bytes32 batchId) internal {
@@ -184,18 +184,7 @@ contract TokenDistributor is Ownable {
     }
 
     function _validateAmountToDistribute(uint256 distributionId, uint256 amountToDistribute) internal view {
-        Distribution memory distribution = _distributions[distributionId];
-        require(amountToDistribute <= distribution.remainingAmount, Errors.InvalidParameter());
-        // TODO: Balance check is not needed anymore... if fails, it will fail in the line above
-        require(_hasEnoughBalanceOfToken(distribution.token, amountToDistribute), Errors.NotEnoughBalance());
-    }
-
-    function _hasEnoughBalanceOfToken(address token, uint256 amount) internal view returns (bool) {
-        if (token == NATIVE_TOKEN_ADDRESS) {
-            return address(this).balance >= amount;
-        } else {
-            return IERC20(token).balanceOf(address(this)) >= amount;
-        }
+        require(amountToDistribute <= _distributions[distributionId].remainingAmount, Errors.InvalidParameter());
     }
 
     function _tryDistributeTokensTo(address token, address recipient, uint256 amount) internal returns (bool) {
@@ -210,7 +199,7 @@ contract TokenDistributor is Ownable {
     }
 
     function _distributeTokensTo(address token, address recipient, uint256 amount) internal {
-        require(_tryDistributeTokensTo(token, recipient, amount)); // TODO: new error?
+        require(_tryDistributeTokensTo(token, recipient, amount), Errors.TransferFailed());
     }
 
     // Getters
