@@ -7,8 +7,9 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {Ownable} from "contracts/core/access/Ownable.sol";
+import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 
-contract TokenDistributor is Ownable {
+contract TokenDistributor is Ownable, Initializable {
     using SafeERC20 for IERC20;
 
     event Lens_TokenDistributor_SignerUpdated(address indexed oldSigner, address indexed newSigner);
@@ -60,8 +61,12 @@ contract TokenDistributor is Ownable {
         }
     }
 
-    // TODO: Initializer instead of (or in addition to) constructor?
     constructor(address owner) {
+        _transferOwnership(owner);
+        _disableInitializers();
+    }
+
+    function initialize(address owner) external initializer {
         _transferOwnership(owner);
     }
 

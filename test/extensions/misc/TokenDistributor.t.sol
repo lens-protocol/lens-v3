@@ -9,6 +9,8 @@ import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 import {MockCurrency} from "test/mocks/MockCurrency.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
 
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 contract TokenDistributorTest is FuzzZkTest {
     TokenDistributor tokenDistributor;
     uint256 ownerPk;
@@ -29,9 +31,44 @@ contract TokenDistributorTest is FuzzZkTest {
 
     ////// Scenarios
 
-    function testDeploying_SetsTheRightOwner(address initialOwner) public {
+    function testDeploying_SetsTheRightOwner_Constructor(address initialOwner) public {
         tokenDistributor = new TokenDistributor(initialOwner);
         assertEq(tokenDistributor.owner(), initialOwner);
+    }
+
+    function testDeploying_SetsTheRightOwner_AndCannotInitializeAfter(address initialOwner, address anotherOwner)
+        public
+    {
+        vm.assume(initialOwner != anotherOwner);
+        tokenDistributor = new TokenDistributor(initialOwner);
+        assertEq(tokenDistributor.owner(), initialOwner);
+
+        vm.expectRevert(Errors.AlreadyInitialized.selector);
+        tokenDistributor.initialize(anotherOwner);
+
+        assertEq(tokenDistributor.owner(), initialOwner);
+    }
+
+    function testDeploying_ThroughProxy_InitializerSetsRightOwner(
+        address constructorOwner,
+        address initializerOwner,
+        address proxyAdmin
+    ) public {
+        vm.assume(constructorOwner != initializerOwner);
+        vm.assume(proxyAdmin != address(this));
+        address impl = address(new TokenDistributor(constructorOwner));
+
+        bytes memory initializeCall = abi.encodeCall(TokenDistributor.initialize, (initializerOwner));
+        tokenDistributor = TokenDistributor(address(new TransparentUpgradeableProxy(impl, proxyAdmin, initializeCall)));
+
+        assertEq(TokenDistributor(impl).owner(), constructorOwner);
+
+        assertEq(tokenDistributor.owner(), initializerOwner);
+
+        vm.expectRevert(Errors.AlreadyInitialized.selector);
+        tokenDistributor.initialize(constructorOwner);
+
+        assertEq(tokenDistributor.owner(), initializerOwner);
     }
 
     function testCreateDistribution_withNative(uint256 amount) public {
