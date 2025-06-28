@@ -26,6 +26,11 @@
   },
   {
     "type": "error",
+    "name": "AlreadyProcessed",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "AutoUpgradeEnabled",
     "inputs": []
   },
@@ -197,6 +202,11 @@
   {
     "type": "error",
     "name": "SingleAnyOfRule",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TransferFailed",
     "inputs": []
   },
   {
