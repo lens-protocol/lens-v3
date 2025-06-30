@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
+import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
 contract TokenDistributor is Ownable, Initializable {
     using SafeERC20 for IERC20;
@@ -45,8 +46,6 @@ contract TokenDistributor is Ownable, Initializable {
         mapping(uint256 distributionId => Distribution distribution) distributions;
         mapping(uint256 distributionId => mapping(bytes32 batchId => bool batchProcessed)) wasBatchProcessed;
     }
-
-    address public constant NATIVE_TOKEN_ADDRESS = address(0x800A);
 
     bytes32 constant DISTRIBUTE_TOKENS_TYPEHASH = keccak256(
         "DistributeTokens(uint256 distributionId,bytes32 batchId,TokenTransfer[] transfers,uint256 deadline)TokenTransfer(address recipient,uint256 amount)"
@@ -185,7 +184,7 @@ contract TokenDistributor is Ownable, Initializable {
     }
 
     function _pullTokens(address token, uint256 amount) internal {
-        if (token == NATIVE_TOKEN_ADDRESS) {
+        if (token == NATIVE_TOKEN) {
             require(msg.value == amount, Errors.FailedToTransferNative());
         } else {
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -208,7 +207,7 @@ contract TokenDistributor is Ownable, Initializable {
 
     function _tryDistributeTokensTo(address token, address recipient, uint256 amount) internal returns (bool) {
         bool transferSucceeded;
-        if (token == NATIVE_TOKEN_ADDRESS) {
+        if (token == NATIVE_TOKEN) {
             (transferSucceeded,) = recipient.call{value: amount}("");
         } else {
             IERC20(token).safeTransfer(recipient, amount);
