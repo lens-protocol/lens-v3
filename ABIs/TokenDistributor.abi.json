@@ -12,19 +12,6 @@
   },
   {
     "type": "function",
-    "name": "NATIVE_TOKEN_ADDRESS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "createDistribution",
     "inputs": [
       {
