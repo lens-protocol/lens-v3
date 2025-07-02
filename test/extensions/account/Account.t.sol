@@ -11,7 +11,7 @@ import {
     Allowance,
     AllowanceChange
 } from "@extensions/account/IAccount.sol";
-import {Account} from "@extensions/account/Account.sol";
+import {Account as LensAccount} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
@@ -2262,6 +2262,40 @@ contract AccountTest3 is AccountTestBase {
     function test_supportsInterface() public view {
         assertTrue(account.supportsInterface(type(IERC1155Receiver).interfaceId));
         assertFalse(account.supportsInterface(0xdeadbeef));
+    }
+
+    function test_RemoveAccountManager_Permissionless_IfAccountManagerIsAccountOwner() public {
+        _forceAccountAsManagerInStorage(address(account), owner);
+
+        assertTrue(account.isAccountManager(owner));
+
+        LensAccount(payable(account)).removeOwnerAsManager();
+
+        assertFalse(account.isAccountManager(owner));
+    }
+
+    function test_RemoveAccountManager_Permissionless_IfAccountManagerIsAccountItself() public {
+        _forceAccountAsManagerInStorage(address(account), address(account));
+
+        assertTrue(account.isAccountManager(address(account)));
+
+        LensAccount(payable(account)).removeAccountAsManager();
+
+        assertFalse(account.isAccountManager(address(account)));
+    }
+
+    function _forceAccountAsManagerInStorage(address account, address manager) internal {
+        bytes32 managerAsBytes32 = bytes32(uint256(uint160(manager)));
+        bytes32 managerStorageMappingSlot = 0xf08a5e3d2dd76739ff9f91dc2ff8af2860b120d00f7938b9baa4607e3fee9019;
+        bytes32 slot;
+        // managerStorageMappingSlot mapping access by manager address
+        assembly {
+            mstore(0, managerAsBytes32)
+            mstore(32, managerStorageMappingSlot)
+            slot := keccak256(0, 64)
+        }
+        bytes32 canExecuteTransactionsAsTrue = 0x0000000000000000000000000000000000000000000000000000000000000001;
+        vm.store(account, slot, canExecuteTransactionsAsTrue);
     }
 }
 
