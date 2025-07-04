@@ -22,6 +22,8 @@ bytes32 constant PARAM__AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e310891831
 bytes32 constant PARAM__TOKEN = 0xee737c77be2981e91c179485406e6d793521b20aca5e2137b6c497949a74bc94;
 /// @custom:keccak lens.param.recipients
 bytes32 constant PARAM__RECIPIENTS = 0x7f7e01c87d5278dd08505253491cf5d6b30930036f6afa2ae22a980882f2cac1;
+/// @custom:keccak lens.param.isImmutable
+bytes32 constant PARAM__IS_IMMUTABLE = 0x4d1cad3e438026974130ac84979964dd6019eace55216c3de16bc79e36a4c44b;
 
 contract SimpleCollectActionTest is Test, BaseDeployments {
     address mockFeed;
@@ -31,7 +33,7 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         super.setUp();
     }
 
-    function testCanSetupCollectWithNative(uint256 amount, address recipient) public {
+    function testCanSetupCollectWithNative(uint256 amount, address recipient, bool isImmutable) public {
         vm.assume(recipient != address(0));
         vm.assume(recipient != address(TREASURY_ADDRESS));
         vm.assume(recipient.code.length == 0);
@@ -45,7 +47,8 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         KeyValue[] memory params = _toKeyValueArray(
             KeyValue({key: PARAM__AMOUNT, value: abi.encode(amount)}),
             KeyValue({key: PARAM__TOKEN, value: abi.encode(NATIVE_TOKEN)}),
-            KeyValue({key: PARAM__RECIPIENTS, value: abi.encode(_toRecipientDataArray(recipient))})
+            KeyValue({key: PARAM__RECIPIENTS, value: abi.encode(_toRecipientDataArray(recipient))}),
+            KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(isImmutable)})
         );
 
         uint256 postId = 1;
@@ -54,7 +57,7 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         ActionHub(actionHub).configurePostAction(address(simpleCollectAction), mockFeed, postId, params);
     }
 
-    function testCanCollectWithNative(uint256 amount, address recipient, address collector) public {
+    function testCanCollectWithNative(uint256 amount, address recipient, address collector, bool isImmutable) public {
         vm.assume(recipient != address(0));
         vm.assume(recipient != address(TREASURY_ADDRESS));
         vm.assume(recipient.code.length == 0);
@@ -76,7 +79,8 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         KeyValue[] memory params = _toKeyValueArray(
             KeyValue({key: PARAM__AMOUNT, value: abi.encode(amount)}),
             KeyValue({key: PARAM__TOKEN, value: abi.encode(NATIVE_TOKEN)}),
-            KeyValue({key: PARAM__RECIPIENTS, value: abi.encode(_toRecipientDataArray(recipient))})
+            KeyValue({key: PARAM__RECIPIENTS, value: abi.encode(_toRecipientDataArray(recipient))}),
+            KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(isImmutable)})
         );
 
         uint256 postId = 1;
@@ -111,8 +115,55 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         );
     }
 
-    function testCanCollectAfterEdits() public {
-        KeyValue[] memory params = _emptyKeyValueArray();
+    function testCanCollectAfterEdits_Mutable() public {
+        KeyValue[] memory params = _toKeyValueArray(KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(false)}));
+
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, address(this));
+
+        MockFeed(mockFeed).setContentURI("1");
+        bytes memory result =
+            ActionHub(actionHub).configurePostAction(address(simpleCollectAction), mockFeed, postId, params);
+        CollectActionData memory configurationData = abi.decode(result, (CollectActionData));
+
+        KeyValue[] memory collectParams = _emptyKeyValueArray();
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId1 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("2");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId2 = abi.decode(result, (uint256));
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId3 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("4");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId4 = abi.decode(result, (uint256));
+
+        LensCollectedPost collection = LensCollectedPost(configurationData.collectionAddress);
+
+        string memory latestContentURI = MockFeed(mockFeed).getPost(postId).contentURI;
+
+        assertEq(latestContentURI, "4");
+        assertEq(collection.tokenURI(tokenId1), latestContentURI);
+        assertEq(collection.tokenURI(tokenId2), latestContentURI);
+        assertEq(collection.tokenURI(tokenId3), latestContentURI);
+        assertEq(collection.tokenURI(tokenId4), latestContentURI);
+
+        MockFeed(mockFeed).setContentURI("5");
+        latestContentURI = MockFeed(mockFeed).getPost(postId).contentURI;
+
+        assertEq(latestContentURI, "5");
+        assertEq(collection.tokenURI(tokenId1), latestContentURI);
+        assertEq(collection.tokenURI(tokenId2), latestContentURI);
+        assertEq(collection.tokenURI(tokenId3), latestContentURI);
+        assertEq(collection.tokenURI(tokenId4), latestContentURI);
+    }
+
+    function testCanCollectAfterEdits_Immutable() public {
+        KeyValue[] memory params = _toKeyValueArray(KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(true)}));
 
         uint256 postId = 1;
         MockFeed(mockFeed).setPostAuthor(postId, address(this));
@@ -146,8 +197,57 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         assertEq(collection.tokenURI(tokenId4), "4");
     }
 
-    function testCanCollectAfterEdits_EditBeforeFirstCollect() public {
-        KeyValue[] memory params = _emptyKeyValueArray();
+    function testCanCollectAfterEdits_EditBeforeFirstCollect_Mutable() public {
+        KeyValue[] memory params = _toKeyValueArray(KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(false)}));
+
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, address(this));
+
+        MockFeed(mockFeed).setContentURI("0");
+        bytes memory result =
+            ActionHub(actionHub).configurePostAction(address(simpleCollectAction), mockFeed, postId, params);
+        CollectActionData memory configurationData = abi.decode(result, (CollectActionData));
+
+        MockFeed(mockFeed).setContentURI("1");
+
+        KeyValue[] memory collectParams = _emptyKeyValueArray();
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId1 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("2");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId2 = abi.decode(result, (uint256));
+
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId3 = abi.decode(result, (uint256));
+
+        MockFeed(mockFeed).setContentURI("4");
+        result = ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, collectParams);
+        uint256 tokenId4 = abi.decode(result, (uint256));
+
+        LensCollectedPost collection = LensCollectedPost(configurationData.collectionAddress);
+
+        string memory latestContentURI = MockFeed(mockFeed).getPost(postId).contentURI;
+
+        assertEq(latestContentURI, "4");
+        assertEq(collection.tokenURI(tokenId1), latestContentURI);
+        assertEq(collection.tokenURI(tokenId2), latestContentURI);
+        assertEq(collection.tokenURI(tokenId3), latestContentURI);
+        assertEq(collection.tokenURI(tokenId4), latestContentURI);
+
+        MockFeed(mockFeed).setContentURI("5");
+        latestContentURI = MockFeed(mockFeed).getPost(postId).contentURI;
+
+        assertEq(latestContentURI, "5");
+        assertEq(collection.tokenURI(tokenId1), latestContentURI);
+        assertEq(collection.tokenURI(tokenId2), latestContentURI);
+        assertEq(collection.tokenURI(tokenId3), latestContentURI);
+        assertEq(collection.tokenURI(tokenId4), latestContentURI);
+    }
+
+    function testCanCollectAfterEdits_EditBeforeFirstCollect_Immutable() public {
+        KeyValue[] memory params = _toKeyValueArray(KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(true)}));
 
         uint256 postId = 1;
         MockFeed(mockFeed).setPostAuthor(postId, address(this));
@@ -226,8 +326,8 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
     //     assertEq(collection.tokenURI(tokenId2), "1");
     // }
 
-    function testCollectAfterEdits_PreviousCollectionVersion() public {
-        KeyValue[] memory params = _emptyKeyValueArray();
+    function testCollectAfterEdits_PreviousCollectionVersion(bool isImmutable) public {
+        KeyValue[] memory params = _toKeyValueArray(KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(isImmutable)}));
 
         uint256 postId = 1;
         MockFeed(mockFeed).setPostAuthor(postId, address(this));
@@ -267,5 +367,23 @@ contract SimpleCollectActionTest is Test, BaseDeployments {
         assertEq(collection.tokenURI(tokenId1), "1");
         assertEq(collection.tokenURI(tokenId2), "1");
         assertEq(collection.tokenURI(tokenId3), "1");
+    }
+
+    function test_Collect(bool isImmutable) public {
+        uint256 postId = 1;
+        MockFeed(mockFeed).setPostAuthor(postId, address(this));
+        MockFeed(mockFeed).setContentURI("1");
+
+        // Configure
+        KeyValue[] memory configParams =
+            _toKeyValueArray(KeyValue({key: PARAM__IS_IMMUTABLE, value: abi.encode(isImmutable)}));
+        ActionHub(actionHub).configurePostAction(address(simpleCollectAction), mockFeed, postId, configParams);
+
+        // Collect
+        KeyValue[] memory execParams = _emptyKeyValueArray();
+        ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, execParams);
+
+        // Collect again
+        ActionHub(actionHub).executePostAction(address(simpleCollectAction), mockFeed, postId, execParams);
     }
 }
