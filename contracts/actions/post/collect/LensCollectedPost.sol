@@ -40,8 +40,10 @@ contract LensCollectedPost is LensERC721 {
         COLLECT_ACTION = msg.sender;
         FEED = feed;
         POST_ID = postId;
+        // Getting the URI outside the if to use it as a length validation too.
+        string memory contentURI = _getNonEmptyContentURIFromPost();
         if (isImmutableCollect) {
-            _turnImmutable(_getNonEmptyContentURIFromPost());
+            _turnImmutable(contentURI);
         }
     }
 
