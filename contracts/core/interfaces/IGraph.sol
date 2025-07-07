@@ -74,7 +74,7 @@ interface IGraph is IMetadataBased {
         address account,
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external;
+    ) external payable;
 
     function follow(
         address followerAccount,
@@ -90,7 +90,7 @@ interface IGraph is IMetadataBased {
         address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 

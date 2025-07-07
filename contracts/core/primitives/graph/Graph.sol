@@ -126,7 +126,7 @@ contract Graph is
         address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external virtual override returns (uint256) {
+    ) external payable virtual override usingNativePaymentHelper returns (uint256) {
         require(msg.sender == followerAccount, Errors.InvalidMsgSender());
         uint256 followId = Core._unfollow(followerAccount, accountToUnfollow);
         address source = _processSourceStamp(customParams);

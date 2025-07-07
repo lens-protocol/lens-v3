@@ -47,7 +47,7 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
         address account,
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata ruleChangesProcessingParams
-    ) external virtual override {
+    ) external payable virtual override usingNativePaymentHelper {
         _changeEntityRules(
             $followRulesStorage(account), uint256(uint160(account)), ruleChanges, ruleChangesProcessingParams
         );
