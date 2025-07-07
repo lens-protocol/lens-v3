@@ -18,15 +18,11 @@ docs/
 
 .idea
 
-# Dotenv file
+# .env files, except the example
 .env
-.env.testnet
-.env.mainnet
-
-# Backend .env
-contracts.env
-contracts.testnet.env
-contracts.mainnet.env
+.env.*
+*.env
+!.env.example
 
 # Logs
 logs
