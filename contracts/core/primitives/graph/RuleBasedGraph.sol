@@ -39,7 +39,13 @@ abstract contract RuleBasedGraph is IGraph, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeGraphRules(RuleChange[] calldata ruleChanges) external virtual override {
+    function changeGraphRules(RuleChange[] calldata ruleChanges)
+        external
+        payable
+        virtual
+        override
+        usingNativePaymentHelper
+    {
         _changePrimitiveRules($graphRulesStorage(), ruleChanges);
     }
 

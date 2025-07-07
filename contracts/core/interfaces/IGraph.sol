@@ -68,7 +68,7 @@ interface IGraph is IMetadataBased {
 
     function initialize(string memory metadataURI, IAccessControl accessControl) external;
 
-    function changeGraphRules(RuleChange[] calldata ruleChanges) external;
+    function changeGraphRules(RuleChange[] calldata ruleChanges) external payable;
 
     function changeFollowRules(
         address account,
