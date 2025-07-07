@@ -33,7 +33,13 @@ abstract contract RuleBasedNamespace is INamespace, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external virtual override {
+    function changeNamespaceRules(RuleChange[] calldata ruleChanges)
+        external
+        payable
+        virtual
+        override
+        usingNativePaymentHelper
+    {
         _changePrimitiveRules($namespaceRulesStorage(), ruleChanges);
     }
 

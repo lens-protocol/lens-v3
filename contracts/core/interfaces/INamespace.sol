@@ -77,7 +77,7 @@ interface INamespace is IMetadataBased {
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
-    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external;
+    function changeNamespaceRules(RuleChange[] calldata ruleChanges) external payable;
 
     function createUsername(
         address account,
