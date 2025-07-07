@@ -3,10 +3,15 @@
 pragma solidity ^0.8.26;
 
 import "contracts/core/base/LensERC721.sol";
-import {IERC7572} from "contracts/actions/post/collect/IERC7572.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+
+interface IERC7572 {
+    event ContractURIUpdated();
+
+    function contractURI() external view returns (string memory);
+}
 
 /**
  * @notice A contract that represents a Lens Collected Post.

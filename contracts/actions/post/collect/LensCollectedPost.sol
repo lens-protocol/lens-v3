@@ -3,7 +3,6 @@
 pragma solidity ^0.8.26;
 
 import "contracts/core/base/LensERC721.sol";
-import {IERC7572} from "contracts/actions/post/collect/IERC7572.sol";
 import {IFeed} from "contracts/core/interfaces/IFeed.sol";
 import {ITokenURIProvider} from "contracts/core/interfaces/ITokenURIProvider.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
@@ -27,42 +26,41 @@ struct ContentURISnapshot {
  *
  * We assume tokenIds are sequential and start from 1.
  */
-contract LensCollectedPost is LensERC721, IERC7572 {
+contract LensCollectedPost is LensERC721 {
     event Lens_LensCollectedPost_Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
 
     ContentURISnapshot[] internal _contentURISnapshots;
-    string internal _contractURI;
-    address internal immutable _feed;
-    uint256 internal immutable _postId;
-    address internal immutable _collectAction;
-    bool internal immutable _isImmutable;
+    bool internal _isImmutable;
+    address internal immutable FEED;
+    uint256 internal immutable POST_ID;
+    address internal immutable COLLECT_ACTION;
 
-    constructor(address feed, uint256 postId, bool isImmutable) {
+    constructor(address feed, uint256 postId, bool isImmutableCollect) {
         LensERC721._initialize("Lens Collected Post", "LCP", ITokenURIProvider(address(0)));
-        string memory contentURI = IFeed(feed).getPost(postId).contentURI;
-        require(bytes(contentURI).length > 0, Errors.InvalidParameter());
-        _feed = feed;
-        _postId = postId;
-        _contractURI = contentURI;
-        _collectAction = msg.sender;
-        _isImmutable = isImmutable;
-        if (isImmutable) {
-            _contentURISnapshots.push(ContentURISnapshot(contentURI, 0));
+        COLLECT_ACTION = msg.sender;
+        FEED = feed;
+        POST_ID = postId;
+        // Getting the URI outside the if to use it as a length validation too.
+        string memory contentURI = _getNonEmptyContentURIFromPost();
+        if (isImmutableCollect) {
+            _turnImmutable(contentURI);
         }
-        emit ContractURIUpdated();
     }
 
     function mint(address to, uint256 tokenId) external {
-        require(msg.sender == _collectAction, Errors.InvalidMsgSender());
+        require(msg.sender == COLLECT_ACTION, Errors.InvalidMsgSender());
         _takeContentURISnapshotIfNeeded(tokenId);
         _mint(to, tokenId);
     }
 
-    // Getters
-
-    function contractURI() external view returns (string memory) {
-        return _contractURI;
+    function turnImmutable() external {
+        require(msg.sender == COLLECT_ACTION, Errors.InvalidMsgSender());
+        if (!_isImmutable) {
+            _turnImmutable(_getNonEmptyContentURIFromPost());
+        }
     }
+
+    // Getters
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (_isImmutable) {
@@ -72,26 +70,43 @@ contract LensCollectedPost is LensERC721, IERC7572 {
                     return _contentURISnapshots[i].contentURI;
                 }
             }
-            // contentURISnapshot[0] is set on construction if isImmutable so it's always present and non empty.
+            // contentURISnapshot[0] is always taken when the collection is marked as immutable,
+            // so we can guarantee it's present and non-empty.
             return _contentURISnapshots[0].contentURI;
         } else {
-            // Not immutable - we mirror the contentURI of the post.
-            string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
-            // If content was deleted we fail. You can override this to return the empty URI if preferred.
-            require(bytes(contentURI).length > 0, Errors.DoesNotExist());
-            return contentURI;
+            return _getNonEmptyContentURIFromPost();
         }
+    }
+
+    function getPostId() external view returns (uint256) {
+        return POST_ID;
+    }
+
+    function isImmutable() external view returns (bool) {
+        return _isImmutable;
     }
 
     // Internal
 
+    function _getNonEmptyContentURIFromPost() internal view returns (string memory) {
+        string memory contentURI = IFeed(FEED).getPost(POST_ID).contentURI;
+        require(bytes(contentURI).length > 0, Errors.InvalidParameter());
+        return contentURI;
+    }
+
+    function _turnImmutable(string memory contentURI) internal {
+        _isImmutable = true;
+        _contentURISnapshots.push(ContentURISnapshot(contentURI, 0));
+    }
+
     function _takeContentURISnapshotIfNeeded(uint256 tokenId) internal {
-        // IFeed::getPost will revert if the post was deleted or does not exist.
-        string memory contentURI = IFeed(_feed).getPost(_postId).contentURI;
-        string memory latestContentURISnapshot = _contentURISnapshots[_contentURISnapshots.length - 1].contentURI;
-        bool isContentURIChanged = keccak256(bytes(contentURI)) != keccak256(bytes(latestContentURISnapshot));
-        if (_isImmutable && isContentURIChanged) {
-            _contentURISnapshots.push(ContentURISnapshot(contentURI, tokenId));
+        if (_isImmutable) {
+            // Getting the content URI will revert if the post was deleted or does not exist.
+            string memory contentURI = _getNonEmptyContentURIFromPost();
+            string memory latestContentURISnapshot = _contentURISnapshots[_contentURISnapshots.length - 1].contentURI;
+            if (keccak256(bytes(contentURI)) != keccak256(bytes(latestContentURISnapshot))) {
+                _contentURISnapshots.push(ContentURISnapshot(contentURI, tokenId));
+            }
         }
     }
 
