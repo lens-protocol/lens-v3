@@ -66,6 +66,18 @@ function _toKeyValueArray(KeyValue memory kv0, KeyValue memory kv1, KeyValue mem
     return ret;
 }
 
+function _toKeyValueArray(KeyValue memory kv0, KeyValue memory kv1, KeyValue memory kv2, KeyValue memory kv3)
+    pure
+    returns (KeyValue[] memory)
+{
+    KeyValue[] memory ret = new KeyValue[](4);
+    ret[0] = kv0;
+    ret[1] = kv1;
+    ret[2] = kv2;
+    ret[3] = kv3;
+    return ret;
+}
+
 function _toUint256Array(uint256 n) pure returns (uint256[] memory) {
     uint256[] memory ret = new uint256[](1);
     ret[0] = n;

@@ -486,8 +486,8 @@
   "SimpleCollectActionImpl": {
     "contractName": "SimpleCollectAction",
     "contractType": 0,
-    "address": "0x1b5ADAc187Aa132D80B41E14B7C5b1F7AD794074",
-    "bytecodeHash": "0100055908eb49a159a694571569e5344676d610423f9ce7c3bfe32dd19c55ad",
+    "address": "0x549B53Ee0D0b554bB6Bc436Abc48EA24493FF5B6",
+    "bytecodeHash": "01000563f33301196cca12320f15bebc291856bda025107acba2a93d79b747ca",
     "constructorArguments": [
       "0xc6D57Ee750Ef2ee017a9E985A0C4198bEd16A802"
     ]
@@ -498,7 +498,7 @@
     "contractType": 5,
     "address": "0x1cEE1cd464C4E44e80aCDB0B0e33f88849070F6E",
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
-    "implementation": "0x1b5ADAc187Aa132D80B41E14B7C5b1F7AD794074",
+    "implementation": "0x549B53Ee0D0b554bB6Bc436Abc48EA24493FF5B6",
     "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
     "lensCreate2PreSalt": "lens.contract.SimpleCollectAction",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",

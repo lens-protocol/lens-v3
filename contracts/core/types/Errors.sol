@@ -46,6 +46,7 @@ library Errors {
     error UnexpectedContractImpl();
     error UnexpectedValue();
     error UnsupportedSelector();
+    error UnsupportedOperation();
     error Untrusted();
     error UsernameAssigned();
     error WrongSigner();
