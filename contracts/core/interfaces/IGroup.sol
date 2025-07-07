@@ -90,7 +90,7 @@ interface IGroup is IMetadataBased {
         RuleProcessingParams[] calldata ruleProcessingParams
     ) external payable;
 
-    function changeGroupRules(RuleChange[] calldata ruleChanges) external;
+    function changeGroupRules(RuleChange[] calldata ruleChanges) external payable;
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 
