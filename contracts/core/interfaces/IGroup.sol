@@ -76,7 +76,7 @@ interface IGroup is IMetadataBased {
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function joinGroup(
         address account,
@@ -88,7 +88,7 @@ interface IGroup is IMetadataBased {
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function changeGroupRules(RuleChange[] calldata ruleChanges) external;
 
