@@ -10,6 +10,8 @@ import {Ownable} from "contracts/core/access/Ownable.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
+import {KeyValue} from "contracts/core/types/Types.sol";
+
 contract TokenDistributor is Ownable, Initializable {
     using SafeERC20 for IERC20;
 
@@ -24,7 +26,7 @@ contract TokenDistributor is Ownable, Initializable {
     );
 
     event Lens_TokenDistributor_DistributionCreated(
-        uint256 indexed distributionId, address indexed token, uint256 amount
+        uint256 indexed distributionId, address indexed token, uint256 amount, KeyValue[] params
     );
 
     event Lens_TokenDistributor_DistributionEnded(uint256 indexed distributionId, uint256 withdrawnAmount);
@@ -75,13 +77,19 @@ contract TokenDistributor is Ownable, Initializable {
         emit Lens_TokenDistributor_SignerUpdated(oldSigner, newSigner);
     }
 
-    function createDistribution(address token, uint256 amount) external payable onlyOwner returns (uint256) {
+    function createDistribution(address token, uint256 amount, KeyValue[] calldata params)
+        external
+        payable
+        onlyOwner
+        returns (uint256)
+    {
         uint256 distributionId = ++$storage().lastDistributionId;
         require(amount > 0, Errors.InvalidParameter());
         _pullTokens(token, amount);
         $storage().distributions[distributionId] =
             Distribution({token: token, initialAmount: amount, remainingAmount: amount});
-        emit Lens_TokenDistributor_DistributionCreated(distributionId, token, amount);
+        // So far, KeyValue params are only bypassed to the event for indexers to use.
+        emit Lens_TokenDistributor_DistributionCreated(distributionId, token, amount, params);
         return distributionId;
     }
 

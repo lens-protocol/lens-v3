@@ -3,6 +3,8 @@
 pragma solidity ^0.8.26;
 
 import "forge-std/Test.sol";
+import "../../helpers/TypeHelpers.sol";
+
 import {FuzzZkTest} from "test/helpers/FuzzZkTest.sol";
 import {TokenDistributor} from "contracts/extensions/misc/TokenDistributor.sol";
 import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
@@ -71,7 +73,7 @@ contract TokenDistributorTest is FuzzZkTest {
         assertEq(tokenDistributor.owner(), initializerOwner);
     }
 
-    function testCreateDistribution_withNative(uint256 amount) public {
+    function testCreateDistribution_withNative(uint256 amount, bytes32 paramKey, bytes32 paramValue) public {
         amount = _boundAmount(amount);
         vm.deal(owner, amount);
 
@@ -79,11 +81,16 @@ contract TokenDistributorTest is FuzzZkTest {
 
         uint256 predictedDistributionId = tokenDistributor.getDistributionCount() + 1;
 
+        KeyValue[] memory params = new KeyValue[](1);
+        params[0] = KeyValue({key: paramKey, value: abi.encode(paramValue)});
+
         vm.expectEmit(true, true, true, true);
-        emit TokenDistributor.Lens_TokenDistributor_DistributionCreated(predictedDistributionId, NATIVE_TOKEN, amount);
+        emit TokenDistributor.Lens_TokenDistributor_DistributionCreated(
+            predictedDistributionId, NATIVE_TOKEN, amount, params
+        );
 
         vm.prank(owner);
-        uint256 distributionId = tokenDistributor.createDistribution{value: amount}(NATIVE_TOKEN, amount);
+        uint256 distributionId = tokenDistributor.createDistribution{value: amount}(NATIVE_TOKEN, amount, params);
 
         assertEq(distributionId, predictedDistributionId, "distributionId mismatch");
 
@@ -97,7 +104,7 @@ contract TokenDistributorTest is FuzzZkTest {
         assertEq(distribution.remainingAmount, amount, "distribution remaining amount mismatch");
     }
 
-    function testCreateDistribution_withERC20(uint256 amount) public {
+    function testCreateDistribution_withERC20(uint256 amount, bytes32 paramKey, bytes32 paramValue) public {
         vm.assume(amount > 0);
         mockCurrency.mint(owner, amount);
 
@@ -109,13 +116,16 @@ contract TokenDistributorTest is FuzzZkTest {
         vm.prank(owner);
         mockCurrency.approve(address(tokenDistributor), amount);
 
+        KeyValue[] memory params = new KeyValue[](1);
+        params[0] = KeyValue({key: paramKey, value: abi.encode(paramValue)});
+
         vm.expectEmit(true, true, true, true);
         emit TokenDistributor.Lens_TokenDistributor_DistributionCreated(
-            predictedDistributionId, address(mockCurrency), amount
+            predictedDistributionId, address(mockCurrency), amount, params
         );
 
         vm.prank(owner);
-        uint256 distributionId = tokenDistributor.createDistribution(address(mockCurrency), amount);
+        uint256 distributionId = tokenDistributor.createDistribution(address(mockCurrency), amount, params);
 
         assertEq(distributionId, predictedDistributionId, "distributionId mismatch");
 
@@ -376,7 +386,7 @@ contract TokenDistributorTest is FuzzZkTest {
 
         vm.expectRevert(Errors.InvalidMsgSender.selector);
         vm.prank(nonOwner);
-        tokenDistributor.createDistribution(NATIVE_TOKEN, amount);
+        tokenDistributor.createDistribution(NATIVE_TOKEN, amount, _emptyKeyValueArray());
     }
 
     function testCannot_createDistribution_ifNotOwner_withERC20(address nonOwner, uint256 amount) public {
@@ -388,19 +398,19 @@ contract TokenDistributorTest is FuzzZkTest {
 
         vm.expectRevert(Errors.InvalidMsgSender.selector);
         vm.prank(nonOwner);
-        tokenDistributor.createDistribution(address(mockCurrency), amount);
+        tokenDistributor.createDistribution(address(mockCurrency), amount, _emptyKeyValueArray());
     }
 
     function testCannot_createDistribution_ifAmountIsZero_withNative() public {
         vm.expectRevert(Errors.InvalidParameter.selector);
         vm.prank(owner);
-        tokenDistributor.createDistribution(NATIVE_TOKEN, 0);
+        tokenDistributor.createDistribution(NATIVE_TOKEN, 0, _emptyKeyValueArray());
     }
 
     function testCannot_createDistribution_ifAmountIsZero_withERC20() public {
         vm.expectRevert(Errors.InvalidParameter.selector);
         vm.prank(owner);
-        tokenDistributor.createDistribution(address(mockCurrency), 0);
+        tokenDistributor.createDistribution(address(mockCurrency), 0, _emptyKeyValueArray());
     }
 
     function testCannot_endDistribution_ifNotOwner(address nonOwner, uint256 amount, bool useNative) public {
@@ -645,7 +655,7 @@ contract TokenDistributorTest is FuzzZkTest {
             mockCurrency.approve(address(tokenDistributor), amount);
         }
         vm.prank(owner);
-        return tokenDistributor.createDistribution{value: msgValue}(token, amount);
+        return tokenDistributor.createDistribution{value: msgValue}(token, amount, _emptyKeyValueArray());
     }
 
     // Signature generation
