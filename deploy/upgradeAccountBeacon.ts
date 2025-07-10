@@ -31,10 +31,10 @@ async function deploy() {
       contractName: 'Account',
       contractType: ContractType.Beacon,
       constructorArguments: [
-        // '0x000000000000000000000000000000000000800A', // GHO
-        // '0x6bDc36E20D267Ff0dd6097799f82e78907105e2F', // WGHO
-        '0x000000000000000000000000000000000000800A', // GRASS
-        '0xeee5a340Cdc9c179Db25dea45AcfD5FE8d4d3eB8', // WGRASS
+        '0x000000000000000000000000000000000000800A', // GHO
+        '0x6bDc36E20D267Ff0dd6097799f82e78907105e2F', // WGHO
+        // '0x000000000000000000000000000000000000800A', // GRASS
+        // '0xeee5a340Cdc9c179Db25dea45AcfD5FE8d4d3eB8', // WGRASS
       ],
     },
   ];
