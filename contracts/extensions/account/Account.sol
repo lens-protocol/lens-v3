@@ -650,6 +650,7 @@ contract Account is
     }
 
     function _transferOwnership(address newOwner) internal override {
+        require(newOwner != address(this), Errors.InvalidParameter());
         if (_isAccountManager(newOwner)) {
             _removeAccountManager(newOwner);
         }

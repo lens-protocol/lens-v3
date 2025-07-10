@@ -1907,6 +1907,7 @@ contract AccountTest2 is AccountTestBase {
     function test_transferOwnership(address newOwner) public {
         vm.assume(newOwner != owner);
         vm.assume(newOwner != address(0));
+        vm.assume(newOwner != address(account));
 
         vm.expectRevert();
         IOwnable(address(account)).transferOwnership(newOwner);
@@ -1947,6 +1948,15 @@ contract AccountTest2 is AccountTestBase {
         vm.prank(notOwner);
         vm.expectRevert(Errors.InvalidMsgSender.selector);
         IOwnable(address(account)).transferOwnership(notOwner);
+    }
+
+    function testCannot_transferOwnership_IfNewOwnerIsTheAccountItself() public {
+        address newOwner = address(account);
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+
+        vm.prank(owner);
+        IOwnable(address(account)).transferOwnership(newOwner);
     }
 
     function testCannot_transferOwnership_IfManagerWithFullPermission(address someManager) public {
