@@ -7,7 +7,7 @@ import "../helpers/TypeHelpers.sol";
 import {NATIVE_TOKEN, BPS_MAX} from "contracts/core/types/Constants.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {ActionHub} from "contracts/extensions/actions/ActionHub.sol";
-import {MockFeed} from "test/helpers/MockFeed.sol";
+import {MockFeed} from "test/mocks/MockFeed.sol";
 
 /// @custom:keccak lens.param.amount
 bytes32 constant PARAM__TIP_AMOUNT = 0xc8a06abcb0f2366f32dc2741bdf075c3215e3108918311ec0ac742f1ffd37f49;
