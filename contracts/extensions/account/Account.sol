@@ -318,6 +318,7 @@ contract Account is
         _validateAccountManagerPermissions(permissions);
         require(accountManager != owner(), Errors.InvalidParameter());
         require(accountManager != address(0), Errors.InvalidParameter());
+        require(accountManager != address(this), Errors.InvalidParameter());
         $storage().managerStorage[accountManager].updatePermissionsTo(permissions);
         emit Lens_Account_AccountManagerAdded(accountManager, permissions);
     }
@@ -579,12 +580,18 @@ contract Account is
         }
     }
 
-    // Permissionless function to remove owners set as manager during migration,
-    // as that is an undesired state.
+    // Permissionless function to remove owners set as manager during migration, as that is an undesired state.
     function removeOwnerAsManager() external {
         address owner = owner();
         if (_isAccountManager(owner)) {
             _removeAccountManager(owner);
+        }
+    }
+
+    // Permissionless function to remove accounts that set itself as manager, as that is an undesired state.
+    function removeAccountAsManager() external {
+        if (_isAccountManager(address(this))) {
+            _removeAccountManager(address(this));
         }
     }
 
@@ -643,6 +650,7 @@ contract Account is
     }
 
     function _transferOwnership(address newOwner) internal override {
+        require(newOwner != address(this), Errors.InvalidParameter());
         if (_isAccountManager(newOwner)) {
             _removeAccountManager(newOwner);
         }
