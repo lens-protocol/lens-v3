@@ -24,7 +24,7 @@ async function deploy() {
 
   //////////// SETUP ////////////
 
-  const version = 10001; // => 01 00 01 => 01 . 00 . 01 => 1.0.1
+  const version = 1_00_02; // => 01 00 01 => 01 . 00 . 01 => 1.0.1
 
   const beaconsToUpgrade: ContractInfo[] = [
     {
