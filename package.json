@@ -18,6 +18,7 @@
     "upgrade:local:upgradeAccountBeacon": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeAccountBeacon.ts --network inMemoryNode",
     "upgrade:local:upgradePrimitivesBeacons": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradePrimitivesBeacons.ts --network inMemoryNode",
     "upgrade:local:upgradeFactories": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeFactories.ts --network inMemoryNode",
+    "upgrade:testnet:upgradeAccountBeacon": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeAccountBeacon.ts --network lensSepoliaTestnet",
     "deploy:mainnet:deployAndUpgradeBeacon": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeBeacon.ts --network lensMainnet",
     "deploy:mainnet:single": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deploySingleContract.ts --network lensMainnet",
     "deploy:mainnet:lensCreate2": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployLensCreate2.ts --network lensMainnet",

@@ -11,7 +11,7 @@ import {
     Allowance,
     AllowanceChange
 } from "@extensions/account/IAccount.sol";
-import {Account} from "@extensions/account/Account.sol";
+import {Account as LensAccount} from "@extensions/account/Account.sol";
 import {Feed} from "@core/primitives/feed/Feed.sol";
 import {IFeed, Post, CreatePostParams} from "@core/interfaces/IFeed.sol";
 import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
@@ -83,6 +83,7 @@ contract AccountTestBase is FuzzZkTest, BaseDeployments {
     function _assumeCanBeAddedAsManager(address someManager) internal view {
         vm.assume(someManager != address(0));
         vm.assume(someManager != owner);
+        vm.assume(someManager != address(account));
         vm.assume(account.isAccountManager(someManager) == false);
     }
 
@@ -1906,6 +1907,7 @@ contract AccountTest2 is AccountTestBase {
     function test_transferOwnership(address newOwner) public {
         vm.assume(newOwner != owner);
         vm.assume(newOwner != address(0));
+        vm.assume(newOwner != address(account));
 
         vm.expectRevert();
         IOwnable(address(account)).transferOwnership(newOwner);
@@ -1946,6 +1948,15 @@ contract AccountTest2 is AccountTestBase {
         vm.prank(notOwner);
         vm.expectRevert(Errors.InvalidMsgSender.selector);
         IOwnable(address(account)).transferOwnership(notOwner);
+    }
+
+    function testCannot_transferOwnership_IfNewOwnerIsTheAccountItself() public {
+        address newOwner = address(account);
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+
+        vm.prank(owner);
+        IOwnable(address(account)).transferOwnership(newOwner);
     }
 
     function testCannot_transferOwnership_IfManagerWithFullPermission(address someManager) public {
@@ -2261,6 +2272,40 @@ contract AccountTest3 is AccountTestBase {
     function test_supportsInterface() public view {
         assertTrue(account.supportsInterface(type(IERC1155Receiver).interfaceId));
         assertFalse(account.supportsInterface(0xdeadbeef));
+    }
+
+    function test_RemoveAccountManager_Permissionless_IfAccountManagerIsAccountOwner() public {
+        _forceAccountAsManagerInStorage(address(account), owner);
+
+        assertTrue(account.isAccountManager(owner));
+
+        LensAccount(payable(account)).removeOwnerAsManager();
+
+        assertFalse(account.isAccountManager(owner));
+    }
+
+    function test_RemoveAccountManager_Permissionless_IfAccountManagerIsAccountItself() public {
+        _forceAccountAsManagerInStorage(address(account), address(account));
+
+        assertTrue(account.isAccountManager(address(account)));
+
+        LensAccount(payable(account)).removeAccountAsManager();
+
+        assertFalse(account.isAccountManager(address(account)));
+    }
+
+    function _forceAccountAsManagerInStorage(address account, address manager) internal {
+        bytes32 managerAsBytes32 = bytes32(uint256(uint160(manager)));
+        bytes32 managerStorageMappingSlot = 0xf08a5e3d2dd76739ff9f91dc2ff8af2860b120d00f7938b9baa4607e3fee9019;
+        bytes32 slot;
+        // managerStorageMappingSlot mapping access by manager address
+        assembly {
+            mstore(0, managerAsBytes32)
+            mstore(32, managerStorageMappingSlot)
+            slot := keccak256(0, 64)
+        }
+        bytes32 canExecuteTransactionsAsTrue = 0x0000000000000000000000000000000000000000000000000000000000000001;
+        vm.store(account, slot, canExecuteTransactionsAsTrue);
     }
 }
 

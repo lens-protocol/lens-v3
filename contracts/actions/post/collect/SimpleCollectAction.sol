@@ -3,7 +3,7 @@
 pragma solidity ^0.8.26;
 
 import {ISimpleCollectAction, CollectActionData} from "contracts/actions/post/collect/ISimpleCollectAction.sol";
-import {IFeed} from "contracts/core/interfaces/IFeed.sol";
+import {IFeed, Post} from "contracts/core/interfaces/IFeed.sol";
 import {IGraph} from "contracts/core/interfaces/IGraph.sol";
 import {LensCollectedPost} from "contracts/actions/post/collect/LensCollectedPost.sol";
 import {OwnableMetadataBasedPostAction} from "contracts/actions/post/base/OwnableMetadataBasedPostAction.sol";
@@ -14,7 +14,6 @@ import {Errors} from "contracts/core/types/Errors.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
 import {BPS_MAX} from "contracts/core/types/Constants.sol";
 import {LensPaymentHandler} from "contracts/extensions/fees/LensPaymentHandler.sol";
-import {NATIVE_TOKEN} from "contracts/core/types/Constants.sol";
 
 error InvalidSplits();
 error InvalidRecipient();
@@ -70,11 +69,15 @@ contract SimpleCollectAction is
      * @param recipients Recipient(s) of collect fees.
      * @param referralFeeBps The fee percentage that is distributed to referrals.
      * @param isImmutable If true, it means that:
-     *          - The Post URI is snapshotted at configuration time and cannot be changed later.
+     *          - The Post URI is snapshotted at collect time for each collected NFT.
      *          - Collected posts' NFTs remain permanently available.
-     *          - What you see is what you get; editing the Post URI or deleting the post will disable collection.
+     *          - What you see is what you get (*).
+     *          - Deleting the post will disable further collection.
      *         Note: This immutability is only guaranteed if the URI is hosted on immutable storage. Mutability inherent
      *         to the chosen storage technology exceeds the on-chain verification capabilities.
+     *         (*) WYSIWYG is not preserved for Legacy LensCollectedPost collections. Those will have a snapshot of the
+     *           post at configuration time and, if the post was edited, the NFT would still have same snapshot.
+     *           This decision was made to prevent legacy collections from breaking on editing.
      */
     struct CollectActionConfigureParams {
         uint160 amount; ///////////// (Optional) Default: 0
@@ -141,11 +144,31 @@ contract SimpleCollectAction is
                 storedData.referralFeeBps = configData.referralFeeBps;
                 storedData.followerOnlyGraph = configData.followerOnlyGraph;
                 storedData.endTimestamp = configData.endTimestamp;
-                // Immutability cannot be flipped to true.
-                require(configData.isImmutable == false, Errors.InvalidParameter());
+                if (storedData.currentCollects == 0) {
+                    // Re-deploy collection as a fix for some broken mutable (i.e. isImmutable = false) collections.
+                    storedData.collectionAddress = address(new LensCollectedPost(feed, postId, configData.isImmutable));
+                } else if (configData.isImmutable == true) {
+                    // Tries to turn existing collection immutable, which is not supported for older collections.
+                    _tryTurnImmutable(feed, postId, storedData.collectionAddress);
+                    storedData.isImmutable = true;
+                }
             }
         }
         return abi.encode(storedData);
+    }
+
+    function _tryTurnImmutable(address feed, uint256 postId, address collectionAddress) internal {
+        Post memory post = IFeed(feed).getPostUnchecked(postId);
+        if (post.isDeleted || bytes(post.contentURI).length == 0) {
+            // Call will fail anyways when the collection tries to take the content URI snapshot #0.
+            revert Errors.UnexpectedValue();
+        } else {
+            (bool callSucceeded,) = collectionAddress.call(abi.encodeCall(LensCollectedPost.turnImmutable, ()));
+            if (!callSucceeded) {
+                // Collection is from an older version that does not support turning immutable.
+                revert Errors.UnsupportedOperation();
+            }
+        }
     }
 
     function _execute(address originalMsgSender, address feed, uint256 postId, KeyValue[] calldata params)
@@ -307,16 +330,6 @@ contract SimpleCollectAction is
             require(
                 IGraph(data.followerOnlyGraph).isFollowing(originalMsgSender, IFeed(feed).getPostAuthor(postId)),
                 Errors.NotFollowing()
-            );
-        }
-
-        if (data.isImmutable) {
-            // If post is edited to a different content, we fail so people do not collect an unexpected thing.
-            string memory contentURI = IFeed(feed).getPost(postId).contentURI;
-            require(
-                keccak256(bytes(contentURI))
-                    == keccak256(bytes(LensCollectedPost(data.collectionAddress).tokenURI(data.currentCollects))),
-                Errors.InvalidParameter()
             );
         }
 
