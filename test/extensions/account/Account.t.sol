@@ -21,6 +21,7 @@ import {FuzzZkTest} from "test/helpers/FuzzZkTest.sol";
 import {IOwnable} from "@core/interfaces/IOwnable.sol";
 import {IHarnessAccount, HarnessAccount} from "test/harness/HarnessAccount.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {BeaconProxy} from "@core/upgradeability/BeaconProxy.sol";
 
 contract AccountTestBase is FuzzZkTest, BaseDeployments {
     address owner = makeAddr("OWNER");
@@ -2292,6 +2293,63 @@ contract AccountTest3 is AccountTestBase {
         LensAccount(payable(account)).removeAccountAsManager();
 
         assertFalse(account.isAccountManager(address(account)));
+    }
+
+    function test_cannotInitializeAccount_WithOwnerAsManager() public {
+        address proxyAdmin = makeAddr("PROXY_ADMIN");
+        LensAccount account = LensAccount(payable(new BeaconProxy(proxyAdmin, accountBeacon)));
+        string memory metadataURI = "https://example.com";
+        address[] memory accountManagers = _toAddressArray(owner);
+        AccountManagerPermissions[] memory accountManagersPermissions = new AccountManagerPermissions[](1);
+        accountManagersPermissions[0] = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: true
+        });
+        SourceStamp memory sourceStamp = _emptySourceStamp();
+        KeyValue[] memory extraData = _emptyKeyValueArray();
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
+    }
+
+    function test_cannotInitializeAccount_WithAddressZeroAsManager() public {
+        address proxyAdmin = makeAddr("PROXY_ADMIN");
+        LensAccount account = LensAccount(payable(new BeaconProxy(proxyAdmin, accountBeacon)));
+        string memory metadataURI = "https://example.com";
+        address[] memory accountManagers = _toAddressArray(address(0));
+        AccountManagerPermissions[] memory accountManagersPermissions = new AccountManagerPermissions[](1);
+        accountManagersPermissions[0] = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: true
+        });
+        SourceStamp memory sourceStamp = _emptySourceStamp();
+        KeyValue[] memory extraData = _emptyKeyValueArray();
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
+    }
+
+    function test_cannotInitializeAccount_WithItselfAsManager() public {
+        address proxyAdmin = makeAddr("PROXY_ADMIN");
+        LensAccount account = LensAccount(payable(new BeaconProxy(proxyAdmin, accountBeacon)));
+        string memory metadataURI = "https://example.com";
+        address[] memory accountManagers = _toAddressArray(address(account));
+        AccountManagerPermissions[] memory accountManagersPermissions = new AccountManagerPermissions[](1);
+        accountManagersPermissions[0] = AccountManagerPermissions({
+            canExecuteTransactions: true,
+            canTransferTokens: false,
+            canTransferNative: false,
+            canSetMetadataURI: true
+        });
+        SourceStamp memory sourceStamp = _emptySourceStamp();
+        KeyValue[] memory extraData = _emptyKeyValueArray();
+
+        vm.expectRevert(Errors.InvalidParameter.selector);
+        account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
     }
 
     function _forceAccountAsManagerInStorage(address account, address manager) internal {

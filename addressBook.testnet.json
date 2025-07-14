@@ -78,8 +78,8 @@
   "AccountImpl": {
     "contractName": "Account",
     "contractType": 0,
-    "address": "0x9598ecFc14e6489e6A52425DdEE7C01653643013",
-    "bytecodeHash": "010009d102f1764e358f3eb7c18f57a91e1278219ad7d2af4b8dd567d6f33150",
+    "address": "0x18BAf9d8dA5a140AD2487984f88503bdEA4EFAf8",
+    "bytecodeHash": "010009e7bc8de2c65bc441d92c9c3489065e5f7a42911c9bab9d0c9e643c25d9",
     "constructorArguments": [
       "0x000000000000000000000000000000000000800A",
       "0xeee5a340Cdc9c179Db25dea45AcfD5FE8d4d3eB8"
@@ -131,7 +131,7 @@
       1,
       "0x6ED9f259D7e0056835E1c69f52956B43a85f390a"
     ],
-    "implementation": "0x9598ecFc14e6489e6A52425DdEE7C01653643013"
+    "implementation": "0x18BAf9d8dA5a140AD2487984f88503bdEA4EFAf8"
   },
   "FeedBeacon": {
     "contractName": "Beacon",

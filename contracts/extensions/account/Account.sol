@@ -150,8 +150,8 @@ contract Account is
         SourceStamp memory sourceStamp,
         KeyValue[] calldata extraData
     ) external initializer {
-        _initialize(metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
         _transferOwnership(owner);
+        _initialize(metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
     }
 
     function _initialize(
@@ -162,9 +162,7 @@ contract Account is
         KeyValue[] calldata extraData
     ) internal {
         for (uint256 i = 0; i < accountManagers.length; i++) {
-            _validateAccountManagerPermissions(permissions[i]);
-            $storage().managerStorage[accountManagers[i]].updatePermissionsTo(permissions[i]);
-            emit Lens_Account_AccountManagerAdded(accountManagers[i], permissions[i]);
+            _addAccountManager(accountManagers[i], permissions[i]);
         }
         _setExtraData(extraData);
         if (sourceStamp.source != address(0)) {
@@ -314,13 +312,7 @@ contract Account is
         override
         onlyOwner
     {
-        require(!_isAccountManager(accountManager), Errors.RedundantStateChange());
-        _validateAccountManagerPermissions(permissions);
-        require(accountManager != owner(), Errors.InvalidParameter());
-        require(accountManager != address(0), Errors.InvalidParameter());
-        require(accountManager != address(this), Errors.InvalidParameter());
-        $storage().managerStorage[accountManager].updatePermissionsTo(permissions);
-        emit Lens_Account_AccountManagerAdded(accountManager, permissions);
+        _addAccountManager(accountManager, permissions);
     }
 
     function removeAccountManager(address accountManager) external override {
@@ -593,6 +585,16 @@ contract Account is
         if (_isAccountManager(address(this))) {
             _removeAccountManager(address(this));
         }
+    }
+
+    function _addAccountManager(address accountManager, AccountManagerPermissions memory permissions) internal {
+        require(!_isAccountManager(accountManager), Errors.RedundantStateChange());
+        _validateAccountManagerPermissions(permissions);
+        require(accountManager != owner(), Errors.InvalidParameter());
+        require(accountManager != address(0), Errors.InvalidParameter());
+        require(accountManager != address(this), Errors.InvalidParameter());
+        $storage().managerStorage[accountManager].updatePermissionsTo(permissions);
+        emit Lens_Account_AccountManagerAdded(accountManager, permissions);
     }
 
     function _removeAccountManager(address accountManager) internal {
