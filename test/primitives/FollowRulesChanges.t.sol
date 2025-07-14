@@ -53,11 +53,16 @@ contract FollowRulesChangesTest is RulesTest, BaseDeployments, RuleExecutionTest
             RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
 
         vm.expectRevert(Errors.RedundantStateChange.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IGraph(graphForRules).changeFollowRules(address(this), ruleChanges, _emptyRuleProcessingParamsArray());
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IGraph(graphForRules).changeFollowRules{value: msgValue}(
+            address(this), ruleChanges, _emptyRuleProcessingParamsArray()
+        );
     }
 
     function _primitiveAddress() internal view override returns (address) {

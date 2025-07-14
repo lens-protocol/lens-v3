@@ -11,12 +11,10 @@ import {Errors} from "@core/types/Errors.sol";
 import {LensNativePaymentHelper} from "@extensions/fees/LensNativePaymentHelper.sol";
 
 contract LensNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
-    LensNativePaymentHelper lensNativePaymentHelper;
-
     function setUp() public override {
         super.setUp();
 
-        lensNativePaymentHelper = new LensNativePaymentHelper();
+        lensNativePaymentHelper = payable(new LensNativePaymentHelper());
     }
 
     function test_LensNativePaymentHelper_CanReceiveFunds(uint256 msgValue) public {
@@ -48,7 +46,7 @@ contract LensNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
 
         vm.assume(receiver.balance == 0);
 
-        lensNativePaymentHelper.transferNative(receiver, transferAmount);
+        LensNativePaymentHelper(lensNativePaymentHelper).transferNative(receiver, transferAmount);
 
         assertEq(receiver.balance, transferAmount);
         assertEq(address(lensNativePaymentHelper).balance, initialValue - transferAmount);
@@ -67,7 +65,7 @@ contract LensNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
         assertTrue(callSucceeded);
 
         vm.expectRevert(Errors.NotEnoughBalance.selector);
-        lensNativePaymentHelper.transferNative(address(this), transferAmount);
+        LensNativePaymentHelper(lensNativePaymentHelper).transferNative(address(this), transferAmount);
     }
 
     function test_LensNativePaymentHelper_CanRefundNative(uint256 initialValue, uint256 transferAmount) public {
@@ -85,12 +83,12 @@ contract LensNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
 
         vm.assume(receiver.balance == 0);
 
-        lensNativePaymentHelper.transferNative(receiver, transferAmount);
+        LensNativePaymentHelper(lensNativePaymentHelper).transferNative(receiver, transferAmount);
 
         assertEq(receiver.balance, transferAmount);
         assertEq(address(lensNativePaymentHelper).balance, initialValue - transferAmount);
 
-        lensNativePaymentHelper.refundNative(receiver);
+        LensNativePaymentHelper(lensNativePaymentHelper).refundNative(receiver);
 
         assertEq(address(lensNativePaymentHelper).balance, 0);
         assertEq(receiver.balance, initialValue);

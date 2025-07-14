@@ -664,8 +664,11 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        INamespace(namespaceForRules).changeNamespaceRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        INamespace(namespaceForRules).changeNamespaceRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {

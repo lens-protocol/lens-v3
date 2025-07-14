@@ -29,7 +29,7 @@ import {GroupFactory} from "@extensions/factories/GroupFactory.sol";
 import {NamespaceFactory} from "@extensions/factories/NamespaceFactory.sol";
 import {LensFactory, FactoryConstructorParams, RuleConstructorParams} from "@extensions/factories/LensFactory.sol";
 
-import {CONTRACT__LENS_FEES} from "contracts/core/types/Constants.sol";
+import {CONTRACT__LENS_FEES, CONTRACT__LENS_NATIVE_PAYMENT_HELPER} from "contracts/core/types/Constants.sol";
 import {LENS_CREATE_2_ADDRESS} from "contracts/core/upgradeability/LensCreate2.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
@@ -61,6 +61,7 @@ import {ZkTest} from "test/helpers/ZkTest.sol";
 
 import {MockLensCreate2} from "test/mocks/MockLensCreate2.sol";
 import {EmptyImplementation} from "@core/upgradeability/EmptyImplementation.sol";
+import {LensNativePaymentHelper} from "@extensions/fees/LensNativePaymentHelper.sol";
 
 contract BaseDeployments is ZkTest {
     using stdJson for string;
@@ -113,6 +114,7 @@ contract BaseDeployments is ZkTest {
 
     address lensFeesImpl;
     address lensFees;
+    address payable lensNativePaymentHelper;
 
     AppFactory appFactory;
     AccessControlFactory accessControlFactory;
@@ -247,6 +249,8 @@ contract BaseDeployments is ZkTest {
 
         lensFeesImpl = address(new LensFees(TREASURY_ADDRESS, TREASURY_FEE_BPS));
         lensFees = address(new TransparentUpgradeableProxy(lensFeesImpl, factoriesProxyOwner, ""));
+        lensNativePaymentHelper = payable(new LensNativePaymentHelper());
+        MockLensCreate2(LENS_CREATE_2_ADDRESS).setAddress(CONTRACT__LENS_NATIVE_PAYMENT_HELPER, lensNativePaymentHelper);
         MockLensCreate2(LENS_CREATE_2_ADDRESS).setAddress(CONTRACT__LENS_FEES, lensFees);
 
         _deployImplementations();

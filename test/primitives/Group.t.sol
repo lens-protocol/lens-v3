@@ -197,8 +197,11 @@ contract GroupTest is RulesTest, BaseDeployments, RuleExecutionTest {
         assertFalse(group.isMember(member));
     }
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IGroup(groupForRules).changeGroupRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IGroup(groupForRules).changeGroupRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override(RulesTest) returns (address) {
@@ -610,8 +613,11 @@ contract GroupTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
         assertFalse(group.isMember(member));
     }
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IGroup(groupForRules).changeGroupRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IGroup(groupForRules).changeGroupRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override(RulesTest) returns (address) {

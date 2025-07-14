@@ -54,8 +54,11 @@ contract PostRulesChangesTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public override(RulesTest) {}
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IFeed(feedForRules).changePostRules(postId, ruleChanges, _emptyRuleProcessingParamsArray());
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IFeed(feedForRules).changePostRules{value: msgValue}(postId, ruleChanges, _emptyRuleProcessingParamsArray());
     }
 
     function _primitiveAddress() internal view override returns (address) {
