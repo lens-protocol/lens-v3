@@ -568,4 +568,29 @@ abstract contract RulesTest is FuzzZkTest {
 
         assertEq(ruleBalanceBefore + amount, address(rule).balance);
     }
+
+    function test_TransferNative_OnConfigure(address to, uint256 amount) public {
+        _assumeEOA(to);
+        bytes4 selector = _aValidRuleSelector();
+
+        amount = _boundAmount(amount);
+        vm.deal(address(this), amount);
+
+        uint256 toBalanceBefore = address(to).balance;
+
+        rule.mockToTransferNativeOn(_configureRuleSelector(), to, amount);
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
+
+        _changeRules(ruleChanges, amount);
+
+        assertEq(toBalanceBefore + amount, address(to).balance);
+    }
 }

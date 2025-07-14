@@ -98,12 +98,6 @@ contract AccountTestBase is FuzzZkTest, BaseDeployments {
         vm.prank(owner);
         account.addAccountManager(someManager, basicPermissionSet);
     }
-
-    function _assumeEOA(address someAddress) internal view {
-        assumeNotForgeAddress(someAddress);
-        vm.assume(someAddress.code.length == 0);
-        vm.assume(uint160(someAddress) > type(uint16).max); // skip system contracts
-    }
 }
 
 contract AccountTest is AccountTestBase {
