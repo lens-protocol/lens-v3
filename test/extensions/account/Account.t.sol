@@ -2295,7 +2295,7 @@ contract AccountTest3 is AccountTestBase {
         assertFalse(account.isAccountManager(address(account)));
     }
 
-    function test_InitializeAccount_WithOwnerAsManager_OwnerIsRemovedFromManagers() public {
+    function test_cannotInitializeAccount_WithOwnerAsManager() public {
         address proxyAdmin = makeAddr("PROXY_ADMIN");
         LensAccount account = LensAccount(payable(new BeaconProxy(proxyAdmin, accountBeacon)));
         string memory metadataURI = "https://example.com";
@@ -2310,9 +2310,8 @@ contract AccountTest3 is AccountTestBase {
         SourceStamp memory sourceStamp = _emptySourceStamp();
         KeyValue[] memory extraData = _emptyKeyValueArray();
 
+        vm.expectRevert(Errors.InvalidParameter.selector);
         account.initialize(owner, metadataURI, accountManagers, accountManagersPermissions, sourceStamp, extraData);
-
-        assertFalse(account.isAccountManager(owner));
     }
 
     function test_cannotInitializeAccount_WithAddressZeroAsManager() public {

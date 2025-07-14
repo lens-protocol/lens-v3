@@ -150,8 +150,8 @@ contract Account is
         SourceStamp memory sourceStamp,
         KeyValue[] calldata extraData
     ) external initializer {
-        _initialize(metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
         _transferOwnership(owner);
+        _initialize(metadataURI, accountManagers, accountManagerPermissions, sourceStamp, extraData);
     }
 
     function _initialize(
