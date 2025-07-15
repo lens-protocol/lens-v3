@@ -814,6 +814,68 @@
       "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D"
     ]
   },
+  "AccessControlFactoryImpl": {
+    "contractName": "AccessControlFactory",
+    "contractType": 0,
+    "address": "0xaA8Ab6A278131269036C9C895F238aEeCA3b0e15",
+    "bytecodeHash": "0100009b368754fa46c15b4cbf7242c7e962e51e41e71d8b213e30d64115b040",
+    "constructorArguments": [
+      "0x06E5EA7600B334895dA2045E13e3C0f67388909A"
+    ]
+  },
+  "AccountFactoryImpl": {
+    "contractName": "AccountFactory",
+    "contractType": 0,
+    "address": "0xc7C012486602805Bf2868c723f92738854479249",
+    "bytecodeHash": "0100013fe0c10217534420fe662391504cca15a95ca85fe0d241954cb504f032",
+    "constructorArguments": [
+      "0x4aE8eAEa3A12E6246b80F5Bbe6aa569c981952c1",
+      "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330"
+    ]
+  },
+  "AppFactoryImpl": {
+    "contractName": "AppFactory",
+    "contractType": 0,
+    "address": "0x8A8751AE96B24bfF0cC32C888d27D9297eD72d38",
+    "bytecodeHash": "0100012b7d5d99a214f260199cb12302aba878e919cfea4a657cb653600e8043",
+    "constructorArguments": [
+      "0x0895c68261Aa3E26C70C54Ea3b111d96FeB34fc7",
+      "0xB48811Ef915fe2842C71e84D5566Dd9F5b7E8B4e"
+    ]
+  },
+  "FeedFactoryImpl": {
+    "contractName": "FeedFactory",
+    "contractType": 0,
+    "address": "0x42479ff8cE8aFE9bDBa6282a79aF8E7A0276FC8a",
+    "bytecodeHash": "0100018fda80e7f06267ee059829be945314d979bb1449ba84d803ac5c1b5e4b",
+    "constructorArguments": [
+      "0x940b8E3Efe263A863B7Cd3f452A94E962e11c8a3",
+      "0x744DF745850F22c7E31892Cd7894b6789969047D",
+      "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D"
+    ]
+  },
+  "GraphFactoryImpl": {
+    "contractName": "GraphFactory",
+    "contractType": 0,
+    "address": "0xBa4E17aa60B15c9bF5C6F7b8801b49aB1030d581",
+    "bytecodeHash": "0100018f10ed5cd2a8797762ed0a4b5573f8f2b9ec78ce2f633b8f970f883dab",
+    "constructorArguments": [
+      "0xc28f232D86EEde9F33B0083fFCf9ec8Ef0f98ce9",
+      "0x5BC7BD8a2dD06016C444c6248135b949a7B7A115",
+      "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D"
+    ]
+  },
+  "NamespaceFactoryImpl": {
+    "contractName": "NamespaceFactory",
+    "contractType": 0,
+    "address": "0x87F93A9601c5933b7f473F509dabB990087B1D00",
+    "bytecodeHash": "010001e10010abe4247cef30bdc5f31468dbffc2caaee42ef367666a952e6ef6",
+    "constructorArguments": [
+      "0x1a0cF59005eDb06F922B5E169a90E4DC5c91e988",
+      "0x4e8856CF35a730C282eDbFA467B9060d8eF3c094",
+      "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D"
+    ]
+  },
   "LensFactoryImpl": {
     "contractName": "LensFactory",
     "contractType": 0,
