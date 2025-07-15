@@ -854,5 +854,26 @@
     "implementation": "0x38Dc515EEaaeb0160Ff9F0CA4d326Dd04Ba32791",
     "proxyAdmin": "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
     "lensCreate2PreSalt": "lens.contract.LensNativePaymentHelper"
+  },
+  "AccountDependentLock": {
+    "name": "AccountDependentLock",
+    "contractName": "DependentLock",
+    "contractType": 4,
+    "address": "0xde72E3Af47861407698c5dDeA56848DC464607cf",
+    "bytecodeHash": "010000655fd79795903807b27899062bc6704ed77b32707ff1d2461fa6235f1b",
+    "constructorArguments": [
+      "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
+      true
+    ]
+  },
+  "AccountProxyAdminForOwnable": {
+    "name": "AccountProxyAdminForOwnable",
+    "contractName": "ProxyAdminForOwnable",
+    "contractType": 4,
+    "address": "0x33ceab12026d7293ECDc9427d5c56722de9CF269",
+    "bytecodeHash": "010000dd57bbbe1eba7124e108803a13491259b1d4bce6215d2521139eb416dc",
+    "constructorArguments": [
+      "0xde72E3Af47861407698c5dDeA56848DC464607cf"
+    ]
   }
 }
