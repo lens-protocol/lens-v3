@@ -97,7 +97,7 @@ contract BaseDeployments is ZkTest {
     address primitivesOwner = vm.envOr("PRIMITIVES_OWNER", makeAddr("PRIMITIVES_OWNER"));
     address lensCreate2ProxyAdmin = vm.envOr("LENS_CREATE_2_PROXY_ADMIN", makeAddr("LENS_CREATE_2_PROXY_ADMIN"));
 
-    address accountProxyAdmin;
+    address accountProxyAdminForOwnable;
 
     address appImpl;
     address accountImpl;
@@ -152,6 +152,13 @@ contract BaseDeployments is ZkTest {
 
     address simpleCollectActionImpl;
     address simpleCollectAction;
+
+    // TODO: Add deployment of these to non-fork tests
+    address lensGlobalApp;
+    address lensGlobalFeed;
+    address lensGlobalGraph;
+    address lensGlobalGroup;
+    address lensGlobalNamespace;
 
     address TREASURY_ADDRESS = vm.envOr("TREASURY_ADDRESS", makeAddr("TREASURY_ADDRESS"));
     uint16 TREASURY_FEE_BPS = uint16(vm.envOr("TREASURY_FEE_BPS", uint256(150)));
@@ -209,7 +216,7 @@ contract BaseDeployments is ZkTest {
         console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
         accountLock = json.readAddress(".AccountLock.address");
-        accountProxyAdmin = json.readAddress(".AccountProxyAdmin.address");
+        accountProxyAdminForOwnable = json.readAddress(".AccountProxyAdminForOwnable.address");
         feedLock = json.readAddress(".FeedLock.address");
         graphLock = json.readAddress(".GraphLock.address");
         groupLock = json.readAddress(".GroupLock.address");
@@ -224,6 +231,7 @@ contract BaseDeployments is ZkTest {
         _loadFactoryImplementations();
         _loadFactoryProxies();
         _loadActions();
+        _loadGlobalPrimitives();
 
         accountBlockingRule = json.readAddress(".AccountBlockingRule.address");
         groupGatedFeedRule = json.readAddress(".GroupGatedFeedRule.address");
@@ -238,7 +246,7 @@ contract BaseDeployments is ZkTest {
         console.log("Deploying new contracts");
         appLock = address(new Lock(proxyAdminLockOwner, true));
         accountLock = address(new DependentLock(proxyAdminLockOwner, true));
-        accountProxyAdmin = address(new ProxyAdminForOwnable(accountLock));
+        accountProxyAdminForOwnable = address(new ProxyAdminForOwnable(accountLock));
         feedLock = address(new Lock(proxyAdminLockOwner, true));
         graphLock = address(new Lock(proxyAdminLockOwner, true));
         groupLock = address(new Lock(proxyAdminLockOwner, true));
@@ -442,6 +450,15 @@ contract BaseDeployments is ZkTest {
         graphFactoryImpl = json.readAddress(".GraphFactoryImpl.address");
         groupFactoryImpl = json.readAddress(".GroupFactoryImpl.address");
         namespaceFactoryImpl = json.readAddress(".NamespaceFactoryImpl.address");
+    }
+
+    function _loadGlobalPrimitives() internal {
+        console.log("Loading global primitives");
+        lensGlobalApp = json.readAddress(".LensGlobalApp.address");
+        lensGlobalFeed = json.readAddress(".LensGlobalFeed.address");
+        lensGlobalGraph = json.readAddress(".LensGlobalGraph.address");
+        lensGlobalGroup = json.readAddress(".LensGlobalGroup.address");
+        lensGlobalNamespace = json.readAddress(".LensGlobalNamespace.address");
     }
 
     function _deployFactoryProxies() internal {
