@@ -7,6 +7,7 @@ import {IOwnable} from "contracts/core/interfaces/IOwnable.sol";
 import {BeaconProxy} from "contracts/core/upgradeability/BeaconProxy.sol";
 import {CallLib} from "contracts/core/libraries/CallLib.sol";
 import {Errors} from "contracts/core/types/Errors.sol";
+import {SELECTOR_BYTE_LENGTH} from "contracts/core/types/Constants.sol";
 
 /**
  * Contract to ensure that the proxy admin is synced with the underlying contract's owner.
@@ -26,11 +27,9 @@ contract ProxyAdminForOwnable {
 
     function call(address to, uint256 value, bytes calldata data) external payable returns (bytes memory) {
         require(msg.sender == IOwnable(to).owner(), Errors.InvalidMsgSender());
-        bytes4 selector = bytes4(data[:4]);
-
+        bytes4 selector = bytes4(data[:SELECTOR_BYTE_LENGTH]);
         // Require the contract to be unlocked to do anything at all
         require(LOCK.isLocked(to) == false, Errors.Locked());
-
         // You can only call the following functions of the BeaconProxy:
         require(
             selector == BeaconProxy.proxy__changeProxyAdmin.selector || selector == BeaconProxy.proxy__setBeacon.selector
