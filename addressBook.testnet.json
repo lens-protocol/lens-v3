@@ -932,8 +932,8 @@
     "name": "AccountProxyAdminForOwnable",
     "contractName": "ProxyAdminForOwnable",
     "contractType": 4,
-    "address": "0x33ceab12026d7293ECDc9427d5c56722de9CF269",
-    "bytecodeHash": "010000dd57bbbe1eba7124e108803a13491259b1d4bce6215d2521139eb416dc",
+    "address": "0x4bFDd757f5a4aE65bC9FC75474aE3a6690a340F3",
+    "bytecodeHash": "010000dd91301abcd2cc7f69861cef1849cd769769f79402c3a63c64d5e9007e",
     "constructorArguments": [
       "0xde72E3Af47861407698c5dDeA56848DC464607cf"
     ]
