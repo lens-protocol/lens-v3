@@ -24,6 +24,7 @@
     "deploy:mainnet:lensCreate2": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployLensCreate2.ts --network lensMainnet",
     "deploy:mainnet:manyWithCreate2": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployManyWithCreate2.ts --network lensMainnet",
     "deploy:mainnet:upgradeSingle": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeSingleContract.ts --network lensMainnet",
+    "deploy:mainnet:proxyAdminForOwnable": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployProxyAdminForOwnable.ts --network lensMainnet",
     "deploy:testnet:single": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deploySingleContract.ts --network lensSepoliaTestnet",
     "deploy:testnet:upgradeSingle": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeSingleContract.ts --network lensSepoliaTestnet",
     "deploy:testnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deploy.ts --network lensSepoliaTestnet",
