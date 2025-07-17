@@ -463,6 +463,8 @@ contract TokenDistributorTest is FuzzZkTest {
         uint256 blockTimestamp,
         uint256 sigDeadline
     ) public {
+        _boundBlockTimestamp(blockTimestamp);
+        _boundBlockTimestamp(sigDeadline);
         vm.assume(sigDeadline < blockTimestamp);
         vm.warp(blockTimestamp);
         amount = _boundAmount(amount);
