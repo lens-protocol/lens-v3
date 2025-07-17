@@ -43,7 +43,7 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -89,7 +89,7 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -233,6 +233,6 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   }
 ]

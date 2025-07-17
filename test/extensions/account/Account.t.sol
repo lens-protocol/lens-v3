@@ -382,8 +382,7 @@ contract AccountTest is AccountTestBase {
         vm.assume(someManager.balance == 0);
         address newAddress = makeAddr("NEW_ADDRESS");
         uint256 forGas = 1 ether;
-        // Bound msgValue [0, 2^95), as test contract's native balance is 2^96, and vm.deal has issues in zksync foundry
-        vm.assume(amount > 0 && amount <= 1 << 95);
+        amount = _boundAmount(amount);
         vm.deal(someManager, amount + forGas);
 
         assertEq(someManager.balance, amount + forGas);

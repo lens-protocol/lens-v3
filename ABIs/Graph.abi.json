@@ -1515,6 +1515,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidSourceStampOriginalMsgSender",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "LimitReached",
     "inputs": []
   },

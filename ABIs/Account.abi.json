@@ -1,7 +1,18 @@
 [
   {
     "type": "constructor",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "nativeGHO",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "wrappedGHO",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "stateMutability": "nonpayable"
   },
   {
@@ -18,12 +29,22 @@
         "internalType": "bytes4"
       },
       {
-        "name": "data",
+        "name": "encodedParams",
         "type": "bytes",
         "internalType": "bytes"
       }
     ],
     "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
       {
         "name": "",
         "type": "address",
@@ -42,7 +63,7 @@
         "internalType": "address"
       },
       {
-        "name": "accountManagerPermissions",
+        "name": "permissions",
         "type": "tuple",
         "internalType": "struct AccountManagerPermissions",
         "components": [
@@ -137,7 +158,7 @@
     "name": "canSetMetadataURI",
     "inputs": [
       {
-        "name": "accountManager",
+        "name": "executor",
         "type": "address",
         "internalType": "address"
       }
@@ -150,6 +171,73 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "changeAllowance",
+    "inputs": [
+      {
+        "name": "allowanceChanges",
+        "type": "tuple[]",
+        "internalType": "struct AllowanceChange[]",
+        "components": [
+          {
+            "name": "spender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "allowanceDecreases",
+            "type": "tuple[]",
+            "internalType": "struct Allowance[]",
+            "components": [
+              {
+                "name": "currency",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "byAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "allowanceIncreases",
+            "type": "tuple[]",
+            "internalType": "struct Allowance[]",
+            "components": [
+              {
+                "name": "currency",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "byAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "clearAllAllowances",
+    "inputs": [
+      {
+        "name": "managers",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -215,6 +303,30 @@
       }
     ],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "getAccountManagerAllowance",
+    "inputs": [
+      {
+        "name": "accountManager",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -571,6 +683,13 @@
   },
   {
     "type": "function",
+    "name": "removeOwnerAsManager",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setExtraData",
     "inputs": [
       {
@@ -826,6 +945,69 @@
   },
   {
     "type": "event",
+    "name": "Lens_Account_AllAllowancesCleared",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Account_AllowanceDecreased",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newAllowance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Account_AllowanceIncreased",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newAllowance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Lens_Account_ExtraDataAdded",
     "inputs": [
       {
@@ -1047,6 +1229,11 @@
   {
     "type": "error",
     "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientAllowance",
     "inputs": []
   },
   {

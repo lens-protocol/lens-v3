@@ -51,7 +51,7 @@ async function deploy() {
   const oldImplementation = await hre.upgrades.erc1967.getImplementationAddress(transparentUpgradeableProxyAddress);
   console.log(`Old implementation in the Proxy: ${oldImplementation}`);
 
-  if (oldImplementationInTheAddressBook !== oldImplementation) {
+  if (oldImplementationInTheAddressBook!.toLowerCase() !== oldImplementation.toLowerCase()) {
     throw new Error(`Old implementation in the Address Book (${oldImplementationInTheAddressBook}) is not the same as the old implementation in the Proxy (${oldImplementation}).\nMaybe it was upgraded before? Or address book is outdated?`);
   }
 
