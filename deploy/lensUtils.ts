@@ -3,6 +3,7 @@ import { deployContract, getProvider, getWallet } from './utils';
 import { keccak256, toUtf8Bytes, Wallet } from 'ethers';
 import * as hre from 'hardhat';
 import { ethers } from 'hardhat';
+import readline from 'readline';
 
 export enum ContractType {
   Implementation,
@@ -737,6 +738,19 @@ export function generateEnvFile() {
   }
 
   fs.writeFileSync('contracts.env', output);
+}
+
+export async function promptForConfirmation(query: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) => {
+    rl.question(query, (answer) => {
+      rl.close();
+      resolve(answer.trim().toLowerCase() === 'y');
+    });
+  });
 }
 
 function calculateBytecodeHash(bytecode: string): string {

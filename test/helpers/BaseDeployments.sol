@@ -33,6 +33,9 @@ import {CONTRACT__LENS_FEES} from "contracts/core/types/Constants.sol";
 import {LENS_CREATE_2_ADDRESS} from "contracts/core/upgradeability/LensCreate2.sol";
 
 import {Lock} from "contracts/core/upgradeability/Lock.sol";
+import {DependentLock} from "contracts/core/upgradeability/DependentLock.sol";
+import {ProxyAdminForOwnable} from "contracts/core/upgradeability/ProxyAdminForOwnable.sol";
+
 import {Beacon} from "contracts/core/upgradeability/Beacon.sol";
 
 import {AccountBlockingRule} from "contracts/rules/AccountBlockingRule.sol";
@@ -94,6 +97,8 @@ contract BaseDeployments is ZkTest {
     address primitivesOwner = vm.envOr("PRIMITIVES_OWNER", makeAddr("PRIMITIVES_OWNER"));
     address lensCreate2ProxyAdmin = vm.envOr("LENS_CREATE_2_PROXY_ADMIN", makeAddr("LENS_CREATE_2_PROXY_ADMIN"));
 
+    address accountProxyAdminForOwnable;
+
     address appImpl;
     address accountImpl;
     address feedImpl;
@@ -124,6 +129,7 @@ contract BaseDeployments is ZkTest {
 
     LensFactory lensFactory;
 
+    address lensFactoryImpl;
     address accessControlFactoryImpl;
     address accountFactoryImpl;
     address appFactoryImpl;
@@ -148,6 +154,13 @@ contract BaseDeployments is ZkTest {
     address simpleCollectActionImpl;
     address simpleCollectAction;
 
+    // TODO: Add deployment of these to non-fork tests
+    address lensGlobalApp;
+    address lensGlobalFeed;
+    address lensGlobalGraph;
+    address lensGlobalGroup;
+    address lensGlobalNamespace;
+
     address TREASURY_ADDRESS = vm.envOr("TREASURY_ADDRESS", makeAddr("TREASURY_ADDRESS"));
     uint16 TREASURY_FEE_BPS = uint16(vm.envOr("TREASURY_FEE_BPS", uint256(150)));
 
@@ -156,10 +169,41 @@ contract BaseDeployments is ZkTest {
     MockCurrency someCurrency;
     MockNft someNft;
 
+    function _temporaryPostForkActions() internal {
+        // accountFactoryImpl = address(new AccountFactory(accountBeacon, accountProxyAdminForOwnable));
+        // vm.prank(factoriesProxyOwner);
+        // ITransparentUpgradeableProxy(address(accountFactory)).upgradeTo(accountFactoryImpl);
+
+        // lensFactoryImpl = address(
+        //     new LensFactory({
+        //         factories: FactoryConstructorParams({
+        //             accessControlFactory: accessControlFactory,
+        //             accountFactory: accountFactory,
+        //             appFactory: appFactory,
+        //             groupFactory: groupFactory,
+        //             feedFactory: feedFactory,
+        //             graphFactory: graphFactory,
+        //             namespaceFactory: namespaceFactory
+        //         }),
+        //         rules: RuleConstructorParams({
+        //             accountBlockingRule: accountBlockingRule,
+        //             groupGatedFeedRule: groupGatedFeedRule,
+        //             usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+        //             banMemberGroupRule: banMemberGroupRule,
+        //             addRemovePidGroupRule: addRemovePidGroupRule,
+        //             usernameReservedNamespaceRule: usernameReservedNamespaceRule
+        //         })
+        //     })
+        // );
+        // vm.prank(factoriesProxyOwner);
+        // ITransparentUpgradeableProxy(address(lensFactory)).upgradeTo(lensFactoryImpl);
+    }
+
     function setUp() public virtual {
         if (isFork()) {
             _loadAddressBookJson();
             _loadFromFork();
+            _temporaryPostForkActions();
         } else {
             _deployMockLensCreate2();
             _deployNewContracts();
@@ -203,7 +247,8 @@ contract BaseDeployments is ZkTest {
     function _loadFromFork() internal {
         console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
-        accountLock = json.readAddress(".AccountLock.address");
+        accountLock = json.readAddress(".AccountDependentLock.address");
+        accountProxyAdminForOwnable = json.readAddress(".AccountProxyAdminForOwnable.address");
         feedLock = json.readAddress(".FeedLock.address");
         graphLock = json.readAddress(".GraphLock.address");
         groupLock = json.readAddress(".GroupLock.address");
@@ -218,6 +263,7 @@ contract BaseDeployments is ZkTest {
         _loadFactoryImplementations();
         _loadFactoryProxies();
         _loadActions();
+        _loadGlobalPrimitives();
 
         accountBlockingRule = json.readAddress(".AccountBlockingRule.address");
         groupGatedFeedRule = json.readAddress(".GroupGatedFeedRule.address");
@@ -231,7 +277,8 @@ contract BaseDeployments is ZkTest {
     function _deployNewContracts() internal {
         console.log("Deploying new contracts");
         appLock = address(new Lock(proxyAdminLockOwner, true));
-        accountLock = address(new Lock(proxyAdminLockOwner, true));
+        accountLock = address(new DependentLock(proxyAdminLockOwner, true));
+        accountProxyAdminForOwnable = address(new ProxyAdminForOwnable(accountLock));
         feedLock = address(new Lock(proxyAdminLockOwner, true));
         graphLock = address(new Lock(proxyAdminLockOwner, true));
         groupLock = address(new Lock(proxyAdminLockOwner, true));
@@ -307,7 +354,7 @@ contract BaseDeployments is ZkTest {
             )
         );
 
-        address lensFactoryImpl = address(
+        lensFactoryImpl = address(
             new LensFactory({
                 factories: FactoryConstructorParams({
                     accessControlFactory: accessControlFactory,
@@ -435,6 +482,15 @@ contract BaseDeployments is ZkTest {
         graphFactoryImpl = json.readAddress(".GraphFactoryImpl.address");
         groupFactoryImpl = json.readAddress(".GroupFactoryImpl.address");
         namespaceFactoryImpl = json.readAddress(".NamespaceFactoryImpl.address");
+    }
+
+    function _loadGlobalPrimitives() internal {
+        console.log("Loading global primitives");
+        lensGlobalApp = json.readAddress(".LensGlobalApp.address");
+        lensGlobalFeed = json.readAddress(".LensGlobalFeed.address");
+        lensGlobalGraph = json.readAddress(".LensGlobalGraph.address");
+        lensGlobalGroup = json.readAddress(".LensGlobalGroup.address");
+        lensGlobalNamespace = json.readAddress(".LensGlobalNamespace.address");
     }
 
     function _deployFactoryProxies() internal {

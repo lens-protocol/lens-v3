@@ -29,6 +29,10 @@ contract MockUniversal {
     }
 
     fallback() external {
+        _fallback();
+    }
+
+    function _fallback() internal virtual {
         if (_revertNextCall) {
             delete _revertNextCall;
             if (bytes(_errorMessage).length == 0) {
