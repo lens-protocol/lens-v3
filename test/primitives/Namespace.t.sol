@@ -875,6 +875,48 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
         return false;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function onERC721Received(
+        address, /* operator */
+        address, /* from */
+        uint256, /* tokenId */
+        bytes calldata /* data */
+    ) external pure returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
+
+contract NamespaceTestII is BaseDeployments {
+    /// @custom:keccak lens.permission.AssignUsername
+    uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
+
+    INamespace namespace;
+
+    address account = makeAddr("ACCOUNT");
+    address namespaceOwner = makeAddr("NAMESPACE_OWNER");
+
+    MockAccessControl mockAccessControl;
+
+    function setUp() public override(BaseDeployments) {
+        BaseDeployments.setUp();
+
+        namespace = INamespace(
+            lensFactory.deployNamespace({
+                namespace: "bitcoin",
+                metadataURI: "satoshi://nakamoto",
+                owner: namespaceOwner,
+                admins: _emptyAddressArray(),
+                rules: _emptyRuleChangeArray(),
+                extraData: _emptyKeyValueArray(),
+                nftName: "Bitcoin",
+                nftSymbol: "BTC"
+            })
+        );
+
+        mockAccessControl = new MockAccessControl();
+    }
+
     function test_CannotCreateUsername_WithInvalidCharset(bytes1 invalidChar, uint8 charToReplacePosition) public {
         string memory validCharset = "abcdefghijklmnopqrstuvwxyz-0123456789_";
         vm.assume(charToReplacePosition < 38);
@@ -916,48 +958,6 @@ contract NamespaceTest is RulesTest, BaseDeployments, RuleExecutionTest {
             ruleProcessingParams: _emptyRuleProcessingParamsArray(),
             extraData: _emptyKeyValueArray()
         });
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    function onERC721Received(
-        address, /* operator */
-        address, /* from */
-        uint256, /* tokenId */
-        bytes calldata /* data */
-    ) external pure returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-}
-
-contract NamespaceTestII is BaseDeployments {
-    /// @custom:keccak lens.permission.AssignUsername
-    uint256 constant PID__ASSIGN_USERNAME = uint256(0x6ed127ecda9c702e81990b9c822ee95d9238c4141f2d4fbaa05c6ba3df0ec6ce);
-
-    INamespace namespace;
-
-    address account = makeAddr("ACCOUNT");
-    address namespaceOwner = makeAddr("NAMESPACE_OWNER");
-
-    MockAccessControl mockAccessControl;
-
-    function setUp() public override(BaseDeployments) {
-        BaseDeployments.setUp();
-
-        namespace = INamespace(
-            lensFactory.deployNamespace({
-                namespace: "bitcoin",
-                metadataURI: "satoshi://nakamoto",
-                owner: namespaceOwner,
-                admins: _emptyAddressArray(),
-                rules: _emptyRuleChangeArray(),
-                extraData: _emptyKeyValueArray(),
-                nftName: "Bitcoin",
-                nftSymbol: "BTC"
-            })
-        );
-
-        mockAccessControl = new MockAccessControl();
     }
 
     function test_AssignUsername_ToAnotherAccount_ControlledThroughOwnable() public {
@@ -1180,6 +1180,15 @@ contract NamespaceTestII is BaseDeployments {
             unassignUsernameRuleProcessingParams: _emptyRuleProcessingParamsArray(),
             assignRuleProcessingParams: _emptyRuleProcessingParamsArray()
         });
+    }
+
+    function _isInCharset(bytes1 char, string memory charset) internal pure returns (bool) {
+        for (uint256 i = 0; i < bytes(charset).length; i++) {
+            if (char == bytes1(bytes(charset)[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
