@@ -129,6 +129,7 @@ contract BaseDeployments is ZkTest {
 
     LensFactory lensFactory;
 
+    address lensFactoryImpl;
     address accessControlFactoryImpl;
     address accountFactoryImpl;
     address appFactoryImpl;
@@ -168,10 +169,41 @@ contract BaseDeployments is ZkTest {
     MockCurrency someCurrency;
     MockNft someNft;
 
+    function _temporaryPostForkActions() internal {
+        // accountFactoryImpl = address(new AccountFactory(accountBeacon, accountProxyAdminForOwnable));
+        // vm.prank(factoriesProxyOwner);
+        // ITransparentUpgradeableProxy(address(accountFactory)).upgradeTo(accountFactoryImpl);
+
+        // lensFactoryImpl = address(
+        //     new LensFactory({
+        //         factories: FactoryConstructorParams({
+        //             accessControlFactory: accessControlFactory,
+        //             accountFactory: accountFactory,
+        //             appFactory: appFactory,
+        //             groupFactory: groupFactory,
+        //             feedFactory: feedFactory,
+        //             graphFactory: graphFactory,
+        //             namespaceFactory: namespaceFactory
+        //         }),
+        //         rules: RuleConstructorParams({
+        //             accountBlockingRule: accountBlockingRule,
+        //             groupGatedFeedRule: groupGatedFeedRule,
+        //             usernameSimpleCharsetRule: usernameSimpleCharsetRule,
+        //             banMemberGroupRule: banMemberGroupRule,
+        //             addRemovePidGroupRule: addRemovePidGroupRule,
+        //             usernameReservedNamespaceRule: usernameReservedNamespaceRule
+        //         })
+        //     })
+        // );
+        // vm.prank(factoriesProxyOwner);
+        // ITransparentUpgradeableProxy(address(lensFactory)).upgradeTo(lensFactoryImpl);
+    }
+
     function setUp() public virtual {
         if (isFork()) {
             _loadAddressBookJson();
             _loadFromFork();
+            _temporaryPostForkActions();
         } else {
             _deployMockLensCreate2();
             _deployNewContracts();
@@ -215,7 +247,7 @@ contract BaseDeployments is ZkTest {
     function _loadFromFork() internal {
         console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
-        accountLock = json.readAddress(".AccountLock.address");
+        accountLock = json.readAddress(".AccountDependentLock.address");
         accountProxyAdminForOwnable = json.readAddress(".AccountProxyAdminForOwnable.address");
         feedLock = json.readAddress(".FeedLock.address");
         graphLock = json.readAddress(".GraphLock.address");
@@ -322,7 +354,7 @@ contract BaseDeployments is ZkTest {
             )
         );
 
-        address lensFactoryImpl = address(
+        lensFactoryImpl = address(
             new LensFactory({
                 factories: FactoryConstructorParams({
                     accessControlFactory: accessControlFactory,
