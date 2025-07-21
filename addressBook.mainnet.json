@@ -89,29 +89,29 @@
   "FeedImpl": {
     "contractName": "Feed",
     "contractType": 0,
-    "address": "0x53DbB795cE5a922A86b0bBBb820f365F2151CE4B",
-    "bytecodeHash": "0100127fd673b97e5babc7333411c6748faa8b4ea8bc9304598bf867c51fb08a",
+    "address": "0x35c283825A8157362A1E2e2986C7E4ce2A9B742b",
+    "bytecodeHash": "010012e169a8a9d84bc5f1a23d1d795fd3f5a65a85b042ec7d28f56a4e15999e",
     "constructorArguments": []
   },
   "GraphImpl": {
     "contractName": "Graph",
     "contractType": 0,
-    "address": "0x24b55E16c90E1F6C441F0a25c2A64bB83b6e1A73",
-    "bytecodeHash": "01000b052e66f746f88d131b156ecf0c2c332d89514536df79623ba46957f9dc",
+    "address": "0xf1E38F8C92Ef37585BceF08FbD59e64f5a4B1871",
+    "bytecodeHash": "01000b750b0b373c5a40ede6620146a69c27bb13eaab9a9dfaaa9d0ed2cdac35",
     "constructorArguments": []
   },
   "GroupImpl": {
     "contractName": "Group",
     "contractType": 0,
-    "address": "0x01469AFC10D5F03cC3E73ae2B350893C2bd257Ef",
-    "bytecodeHash": "01000bc7e08c2268d04ac88072daacd5fd1e857c8e69a4dbd94048a861686cbc",
+    "address": "0x39aAfc30684956BC872E6109877650817Da74b5F",
+    "bytecodeHash": "01000c4da12cd1b2c976c4e0890dde5eed341afd7f6ab24da0d87ce334ec1449",
     "constructorArguments": []
   },
   "NamespaceImpl": {
     "contractName": "Namespace",
     "contractType": 0,
-    "address": "0x3b670D827E2D9c665e8eB28e7758A24C2048FD91",
-    "bytecodeHash": "010014bf117fe9d7564b133bea19b45a44e21a83f6fa728880b2bc759c550e32",
+    "address": "0xe3afBf23d2054e13A1c0373061945b8cc024B968",
+    "bytecodeHash": "010014d3613b11cbecc120b975baae6d7bf21384b62d3499f4b6571ba7af9ece",
     "constructorArguments": []
   },
   "AppBeacon": {
@@ -148,7 +148,7 @@
       1,
       "0xD2545381D7C71365ce4ec2D23C0f93783F10D236"
     ],
-    "implementation": "0x53DbB795cE5a922A86b0bBBb820f365F2151CE4B"
+    "implementation": "0x35c283825A8157362A1E2e2986C7E4ce2A9B742b"
   },
   "GraphBeacon": {
     "contractName": "Beacon",
@@ -160,7 +160,7 @@
       1,
       "0x5BB20A05c3632253D3a857e82f876EdA4F867D92"
     ],
-    "implementation": "0x24b55E16c90E1F6C441F0a25c2A64bB83b6e1A73"
+    "implementation": "0xf1E38F8C92Ef37585BceF08FbD59e64f5a4B1871"
   },
   "GroupBeacon": {
     "contractName": "Beacon",
@@ -172,7 +172,7 @@
       1,
       "0x5975911600f6E9c8EAF284a5e8EB719fD3A9E5b1"
     ],
-    "implementation": "0x01469AFC10D5F03cC3E73ae2B350893C2bd257Ef"
+    "implementation": "0x39aAfc30684956BC872E6109877650817Da74b5F"
   },
   "NamespaceBeacon": {
     "contractName": "Beacon",
@@ -184,7 +184,7 @@
       1,
       "0x701E3f4553D11978dC36163FEcBB1a327C6a2CFE"
     ],
-    "implementation": "0x3b670D827E2D9c665e8eB28e7758A24C2048FD91"
+    "implementation": "0xe3afBf23d2054e13A1c0373061945b8cc024B968"
   },
   "AccessControlFactory": {
     "name": "AccessControlFactory",
