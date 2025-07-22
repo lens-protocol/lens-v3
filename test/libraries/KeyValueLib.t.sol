@@ -18,11 +18,7 @@ contract KeyValueLibTest is Test {
         end[1] = KeyValue(bytes32(bytes1(0x03)), abi.encode("value3", 69, 71));
         end[2] = KeyValue(bytes32(bytes1(0x04)), abi.encode("value4", 69, 71, address(0xc0ffee)));
 
-        KeyValueLibTest(this).concatAndAssert_1(start, end);
-    }
-
-    function concatAndAssert_1(KeyValue[] calldata start, KeyValue[] calldata end) external pure {
-        KeyValue[] memory concatenatedResult = start.concat(end);
+        KeyValue[] memory concatenatedResult = KeyValueLibTest(this).concatThroughLib(start, end);
 
         assertEq(concatenatedResult.length, 4);
 
@@ -43,11 +39,7 @@ contract KeyValueLibTest is Test {
         KeyValue[] memory end = new KeyValue[](1);
         end[0] = KeyValue(bytes32(bytes1(0x02)), abi.encode(2));
 
-        KeyValueLibTest(this).concatAndAssert_2(start, end);
-    }
-
-    function concatAndAssert_2(KeyValue[] calldata start, KeyValue[] calldata end) external pure {
-        KeyValue[] memory concatenatedResult = start.concat(end);
+        KeyValue[] memory concatenatedResult = KeyValueLibTest(this).concatThroughLib(start, end);
 
         assertEq(concatenatedResult.length, 2);
 
@@ -60,5 +52,13 @@ contract KeyValueLibTest is Test {
         assertEq(abi.decode(concatenatedResult[0].value, (uint256)), 1);
         assertEq(concatenatedResult[1].key, bytes32(bytes1(0x02)));
         assertEq(abi.decode(concatenatedResult[1].value, (uint256)), 2);
+    }
+
+    function concatThroughLib(KeyValue[] calldata start, KeyValue[] calldata end)
+        external
+        pure
+        returns (KeyValue[] memory)
+    {
+        return start.concat(end);
     }
 }

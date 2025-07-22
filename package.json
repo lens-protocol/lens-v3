@@ -55,9 +55,9 @@
     "coverage:report:filtered": "bash filtered-coverage.sh",
     "prepare": "husky",
     "format": "forge fmt",
-    "prod:abis": "npm run abis && cp -r out/abis ./ABIs",
-    "abis": "forge build --out ./out/__ABIS__ --skip 'test/**/*.sol' --extra-output-files abi && ts-node ./parseAbisToBackendFolders.ts",
-    "bind": "forge bind --bindings-path ./out/__BINDINGS__ --alloy --skip 'test/**/*.sol'",
+    "prod:abis": "rm -rf ./ABIs && npm run abis && cp -r out/abis ./ABIs",
+    "abis": "rm -rf ./out && forge build --out ./out/__ABIS__ --skip 'test/**/*.sol' --extra-output-files abi && ts-node ./parseAbisToBackendFolders.ts",
+    "bind": "rm -rf ./out && forge bind --bindings-path ./out/__BINDINGS__ --alloy --skip 'test/**/*.sol'",
     "build-and-bind": "npm run bind && npm run abis"
   },
   "devDependencies": {

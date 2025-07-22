@@ -176,7 +176,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -425,7 +425,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -511,7 +511,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -992,7 +992,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -1293,7 +1293,7 @@
       }
     ],
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -1433,6 +1433,25 @@
       },
       {
         "name": "flavour",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_ERC721_Initialized",
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "symbol",
         "type": "string",
         "indexed": false,
         "internalType": "string"
@@ -2214,6 +2233,11 @@
   },
   {
     "type": "error",
+    "name": "FailedToTransferNative",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidConfigSalt",
     "inputs": []
   },
@@ -2225,6 +2249,11 @@
   {
     "type": "error",
     "name": "InvalidParameter",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSourceStampOriginalMsgSender",
     "inputs": []
   },
   {

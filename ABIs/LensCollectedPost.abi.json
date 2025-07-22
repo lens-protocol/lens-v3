@@ -396,6 +396,25 @@
   },
   {
     "type": "event",
+    "name": "Lens_ERC721_Initialized",
+    "inputs": [
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Lens_ERC721_TokenURIProviderSet",
     "inputs": [
       {

@@ -78,8 +78,8 @@
   "AccountImpl": {
     "contractName": "Account",
     "contractType": 0,
-    "address": "0x9598ecFc14e6489e6A52425DdEE7C01653643013",
-    "bytecodeHash": "010009d102f1764e358f3eb7c18f57a91e1278219ad7d2af4b8dd567d6f33150",
+    "address": "0x18BAf9d8dA5a140AD2487984f88503bdEA4EFAf8",
+    "bytecodeHash": "010009e7bc8de2c65bc441d92c9c3489065e5f7a42911c9bab9d0c9e643c25d9",
     "constructorArguments": [
       "0x000000000000000000000000000000000000800A",
       "0xeee5a340Cdc9c179Db25dea45AcfD5FE8d4d3eB8"
@@ -134,7 +134,7 @@
       1,
       "0x6ED9f259D7e0056835E1c69f52956B43a85f390a"
     ],
-    "implementation": "0x9598ecFc14e6489e6A52425DdEE7C01653643013"
+    "implementation": "0x18BAf9d8dA5a140AD2487984f88503bdEA4EFAf8"
   },
   "FeedBeacon": {
     "contractName": "Beacon",
@@ -860,5 +860,24 @@
     "implementation": "0x38Dc515EEaaeb0160Ff9F0CA4d326Dd04Ba32791",
     "proxyAdmin": "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
     "lensCreate2PreSalt": "lens.contract.LensNativePaymentHelper"
+  },
+  "TokenDistributorImpl": {
+    "contractName": "TokenDistributor",
+    "contractType": 0,
+    "address": "0xc46d2caa738AF0E29621f334D378278212eC6fF2",
+    "bytecodeHash": "01000257dc2971b2e7eba280f6a411cb4aceeef8841141a457f62f5c83e00b0d",
+    "constructorArguments": [
+      "0x0000000000000000000000000000000000000000"
+    ]
+  },
+  "TokenDistributor": {
+    "name": "TokenDistributor",
+    "contractName": "TransparentUpgradeableProxy",
+    "contractType": 7,
+    "address": "0x2a705184A6Bb7Dd185E4534d79E441B3edA1082c",
+    "implementation": "0xc46d2caa738AF0E29621f334D378278212eC6fF2",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "proxyAdmin": "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
+    "lensCreate2PreSalt": "lens.contract.TokenDistributor"
   }
 }

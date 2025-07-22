@@ -8,7 +8,7 @@
     "name": "addAccountManager",
     "inputs": [
       {
-        "name": "_accountManager",
+        "name": "accountManager",
         "type": "address",
         "internalType": "address"
       },
@@ -83,6 +83,73 @@
   },
   {
     "type": "function",
+    "name": "changeAllowance",
+    "inputs": [
+      {
+        "name": "allowanceChanges",
+        "type": "tuple[]",
+        "internalType": "struct AllowanceChange[]",
+        "components": [
+          {
+            "name": "spender",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "allowanceDecreases",
+            "type": "tuple[]",
+            "internalType": "struct Allowance[]",
+            "components": [
+              {
+                "name": "currency",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "byAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          },
+          {
+            "name": "allowanceIncreases",
+            "type": "tuple[]",
+            "internalType": "struct Allowance[]",
+            "components": [
+              {
+                "name": "currency",
+                "type": "address",
+                "internalType": "address"
+              },
+              {
+                "name": "byAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "clearAllAllowances",
+    "inputs": [
+      {
+        "name": "managers",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "executeTransaction",
     "inputs": [
       {
@@ -145,6 +212,30 @@
       }
     ],
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "getAccountManagerAllowance",
+    "inputs": [
+      {
+        "name": "accountManager",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -355,7 +446,7 @@
     "name": "removeAccountManager",
     "inputs": [
       {
-        "name": "_accountManager",
+        "name": "accountManager",
         "type": "address",
         "internalType": "address"
       }
@@ -406,7 +497,7 @@
     "name": "setMetadataURI",
     "inputs": [
       {
-        "name": "_metadataURI",
+        "name": "metadataURI",
         "type": "string",
         "internalType": "string"
       },
@@ -601,6 +692,69 @@
             "internalType": "bool"
           }
         ]
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Account_AllAllowancesCleared",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Account_AllowanceDecreased",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newAllowance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Lens_Account_AllowanceIncreased",
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newAllowance",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false

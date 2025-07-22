@@ -54,7 +54,7 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -100,7 +100,7 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -214,7 +214,7 @@
         "internalType": "bytes"
       }
     ],
-    "stateMutability": "nonpayable"
+    "stateMutability": "payable"
   },
   {
     "type": "function",
@@ -277,6 +277,11 @@
   {
     "type": "error",
     "name": "AlreadyInitialized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FailedToTransferNative",
     "inputs": []
   },
   {

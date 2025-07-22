@@ -203,7 +203,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadFromFork() internal {
-        console.log("Loading from fork");
+        // LOG: console.log("Loading from fork");
         appLock = json.readAddress(".AppLock.address");
         accountLock = json.readAddress(".AccountLock.address");
         feedLock = json.readAddress(".FeedLock.address");
@@ -231,7 +231,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _deployNewContracts() internal {
-        console.log("Deploying new contracts");
+        // LOG: console.log("Deploying new contracts");
         appLock = address(new Lock(proxyAdminLockOwner, true));
         accountLock = address(new Lock(proxyAdminLockOwner, true));
         feedLock = address(new Lock(proxyAdminLockOwner, true));
@@ -339,11 +339,11 @@ contract BaseDeployments is ZkTest {
 
         _deployFactoryImplementations();
         _setFactoryImplementationsToProxies();
-        console.log("Finished deploying new contracts");
+        // LOG: console.log("Finished deploying new contracts");
     }
 
     function _deployImplementations() internal {
-        console.log("Deploying implementations");
+        // LOG: console.log("Deploying implementations");
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
@@ -356,7 +356,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadImplementations() internal {
-        console.log("Loading implementations");
+        // LOG: console.log("Loading implementations");
         simpleAccessControl = IAccessControl(new RoleBasedAccessControl({owner: address(this)}));
         simpleTokenURIProvider = new LensUsernameTokenURIProvider();
 
@@ -369,7 +369,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _deployActions() internal {
-        console.log("Deploying actions");
+        // LOG: console.log("Deploying actions");
         tippingAccountActionImpl = address(new TippingAccountAction(actionHub));
         tippingAccountAction =
             address(new TransparentUpgradeableProxy(tippingAccountActionImpl, factoriesProxyOwner, ""));
@@ -382,7 +382,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadActions() internal {
-        console.log("Loading actions");
+        // LOG: console.log("Loading actions");
         tippingAccountActionImpl = json.readAddress(".TippingAccountActionImpl.address");
         tippingAccountAction = json.readAddress(".TippingAccountAction.address");
 
@@ -394,7 +394,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _deployBeacons() internal {
-        console.log("Deploying beacons");
+        // LOG: console.log("Deploying beacons");
         appBeacon = address(new Beacon(beaconOwner, 1, appImpl));
         accountBeacon = address(new Beacon(beaconOwner, 1, accountImpl));
         feedBeacon = address(new Beacon(beaconOwner, 1, feedImpl));
@@ -404,7 +404,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadBeacons() internal {
-        console.log("Loading beacons");
+        // LOG: console.log("Loading beacons");
         appBeacon = json.readAddress(".AppBeacon.address");
         accountBeacon = json.readAddress(".AccountBeacon.address");
         feedBeacon = json.readAddress(".FeedBeacon.address");
@@ -414,7 +414,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _deployFactoryImplementations() internal {
-        console.log("Deploying factory implementations");
+        // LOG: console.log("Deploying factory implementations");
         accessControlFactoryImpl = address(new AccessControlFactory(accessControlLock));
 
         accountFactoryImpl = address(new AccountFactory(accountBeacon, accountLock));
@@ -431,7 +431,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadFactoryImplementations() internal {
-        console.log("Loading factory implementations");
+        // LOG: console.log("Loading factory implementations");
         accessControlFactoryImpl = json.readAddress(".AccessControlFactoryImpl.address");
         accountFactoryImpl = json.readAddress(".AccountFactoryImpl.address");
         appFactoryImpl = json.readAddress(".AppFactoryImpl.address");
@@ -442,7 +442,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _deployFactoryProxies() internal {
-        console.log("Deploying factory proxies");
+        // LOG: console.log("Deploying factory proxies");
         TransparentUpgradeableProxy accessControlFactoryProxy =
             new TransparentUpgradeableProxy(accessControlFactoryImpl, factoriesProxyOwner, "");
         accessControlFactory = AccessControlFactory(address(accessControlFactoryProxy));
@@ -473,7 +473,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _loadFactoryProxies() internal {
-        console.log("Loading factory proxies");
+        // LOG: console.log("Loading factory proxies");
         accessControlFactory = AccessControlFactory(json.readAddress(".AccessControlFactory.address"));
         accountFactory = AccountFactory(json.readAddress(".AccountFactory.address"));
         appFactory = AppFactory(json.readAddress(".AppFactory.address"));
@@ -484,7 +484,7 @@ contract BaseDeployments is ZkTest {
     }
 
     function _setFactoryImplementationsToProxies() internal {
-        console.log("Setting factory implementations to proxies");
+        // LOG: console.log("Setting factory implementations to proxies");
         vm.startPrank(factoriesProxyOwner);
         ITransparentUpgradeableProxy(address(accessControlFactory)).upgradeTo(accessControlFactoryImpl);
         ITransparentUpgradeableProxy(address(appFactory)).upgradeTo(appFactoryImpl);
