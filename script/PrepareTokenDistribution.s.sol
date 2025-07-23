@@ -11,10 +11,10 @@ import {KeyValue} from "contracts/extensions/misc/TokenDistributor.sol";
 import {NATIVE_TOKEN, SELECTOR_BYTE_LENGTH} from "contracts/core/types/Constants.sol";
 
 /// @dev Run this script using the following command:
-///   forge script script/PrepareTokenDistribution.s.sol
+///   forge script script/PrepareTokenDistribution.s.sol --zksync --suppress-warnings assemblycreate --rpc-url https://api.lens.matterhosted.dev/ -vvvvv
 contract PrepareTokenDistribution is Script {
     /// @dev How many tokens should be allocated for each distribution period (e.g. you create a distribution with
-    /// 10K GHO, with 1K sent each day, you would set it to 1_000 * 10^18)
+    /// 10K GHO, with 1K sent each day, you would set it to 1_000e18)
     /// @custom:keccak lens.param.amount_allocated_per_batch
     bytes32 constant PARAM__AMOUNT_ALLOCATED_PER_BATCH =
         0x6b4066c61a2f7e3c5ca790dccaa57d2e863321fbf0584afe8095116695f3317f;
@@ -36,7 +36,11 @@ contract PrepareTokenDistribution is Script {
     /// @custom:keccak lens.param.ends_at
     bytes32 constant PARAM__ENDS_AT = 0xcda52eac4bed4794dbef6554969a07005da129cf93e3faf0522856e765c7b774;
 
-    function run() external pure {
+    address constant TOKEN_DISTRIBUTOR = 0x2a705184A6Bb7Dd185E4534d79E441B3edA1082c;
+
+    address constant MULTISIG = 0xDA1F6A04fDF31b9B9AD4F6E4cc85Dcf1D5365DA6;
+
+    function run() external {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// S E T U P /////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,27 +48,30 @@ contract PrepareTokenDistribution is Script {
         // Native GHO
         address token = NATIVE_TOKEN;
 
-        // 277,680 GHO
-        uint256 totalAmountToAllocate = 277_680e18;
+        // 20 GHO
+        uint256 totalAmountToAllocate = 20e18;
 
         // Extra parameters
 
-        // 69,420 GHO
-        uint256 amountAllocatedPerBatch = 69_420e18;
+        // 1 GHO
+        uint256 amountAllocatedPerBatch = 1e18;
 
         // Distribute weekly
-        uint256 distributeEvery = 7 days;
+        uint256 distributeEvery = 10 minutes;
 
-        // Start at: Tue Jul 22 2025 03:00:00 GMT+0000 - You can use https://www.unixtimestamp.com/
-        uint256 startsAt = 1753153200;
+        // Start at: Wed Jul 23 2025 17:30:00 GMT+0000 - You can use https://www.unixtimestamp.com/
+        uint256 startsAt = 1753291800;
 
-        // End at: Wed Aug 13 2025 03:00:00 GMT+0000 - You can use https://www.unixtimestamp.com/
-        uint256 endsAt = 1755054000;
+        // End at: Wed Jul 23 2025 21:30:00 GMT+0000 - You can use https://www.unixtimestamp.com/
+        uint256 endsAt = startsAt + 4 hours;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        console.log("\nToken: ", token);
+        console.log("\nTotal amount to allocate: ", totalAmountToAllocate);
+        console.log("\n- - - - -");
         console.log("\nlens.param.amount_allocated_per_batch", amountAllocatedPerBatch);
         console.log("\nlens.param.distribute_every", distributeEvery);
         console.log("\nlens.param.starts_at", startsAt);
@@ -84,6 +91,39 @@ contract PrepareTokenDistribution is Script {
 
         console.log("\n\n\nCalldata without selector: \n");
         console.logBytes(_getCalldataWithoutSelector(encodeCall));
+
+        _handleMultisigBalance(totalAmountToAllocate);
+
+        vm.prank(MULTISIG);
+        (bool success, bytes memory data) = address(TOKEN_DISTRIBUTOR).call{value: totalAmountToAllocate}(encodeCall);
+
+        if (success) {
+            uint256 distributionId = abi.decode(data, (uint256));
+            console.log("\n\n\nDistribution ID: \n");
+            console.log(distributionId);
+        } else {
+            revert("Failed to create distribution");
+        }
+    }
+
+    function _handleMultisigBalance(uint256 totalAmountToAllocate) internal {
+        uint256 multisigBalance = address(MULTISIG).balance;
+
+        console.log("\n\n\nMultisig balance: \n");
+        console.log(multisigBalance);
+
+        if (multisigBalance < totalAmountToAllocate) {
+            string memory answer = vm.prompt(
+                "\nMultisig does not have enough balance. Do you want to increase the balance for this tx simulation? (Y/n)"
+            );
+            if (keccak256(bytes(answer)) == keccak256(bytes("Y")) || bytes(answer).length == 0) {
+                vm.deal(MULTISIG, totalAmountToAllocate);
+            } else {
+                revert("\nYou need to top up the multisig balance to run this in production");
+            }
+        } else {
+            console.log("\nMultisig has enough balance to run this in production");
+        }
     }
 
     function _getCalldataWithoutSelector(bytes memory encodeCall) public pure returns (bytes memory) {
