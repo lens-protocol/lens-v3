@@ -670,6 +670,13 @@
   },
   {
     "type": "function",
+    "name": "removeAccountAsManager",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "removeAccountManager",
     "inputs": [
       {

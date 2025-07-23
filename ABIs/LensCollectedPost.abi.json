@@ -13,7 +13,7 @@
         "internalType": "uint256"
       },
       {
-        "name": "isImmutable",
+        "name": "isImmutableCollect",
         "type": "bool",
         "internalType": "bool"
       }
@@ -59,19 +59,6 @@
   },
   {
     "type": "function",
-    "name": "contractURI",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "getApproved",
     "inputs": [
       {
@@ -91,6 +78,19 @@
   },
   {
     "type": "function",
+    "name": "getPostId",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "isApprovedForAll",
     "inputs": [
       {
@@ -104,6 +104,19 @@
         "internalType": "address"
       }
     ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isImmutable",
+    "inputs": [],
     "outputs": [
       {
         "name": "",
@@ -282,7 +295,7 @@
     "name": "tokenURI",
     "inputs": [
       {
-        "name": "",
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -316,6 +329,13 @@
         "internalType": "uint256"
       }
     ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "turnImmutable",
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -386,12 +406,6 @@
         "internalType": "uint256"
       }
     ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "ContractURIUpdated",
-    "inputs": [],
     "anonymous": false
   },
   {

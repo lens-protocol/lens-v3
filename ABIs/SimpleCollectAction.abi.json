@@ -431,5 +431,15 @@
     "type": "error",
     "name": "RedundantStateChange",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnexpectedValue",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnsupportedOperation",
+    "inputs": []
   }
 ]
