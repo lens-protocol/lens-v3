@@ -824,13 +824,14 @@
     ]
   },
   "AccountFactoryImpl": {
+    "name": "AccountFactoryImpl",
     "contractName": "AccountFactory",
     "contractType": 0,
-    "address": "0xc7C012486602805Bf2868c723f92738854479249",
-    "bytecodeHash": "0100013fe0c10217534420fe662391504cca15a95ca85fe0d241954cb504f032",
+    "address": "0xD086BEdAac1f9C060c2e92D475516325230b58C5",
+    "bytecodeHash": "0100011fc70c82d535171066583c0114d6005b0930dfa28cb16d1d8e3c960573",
     "constructorArguments": [
       "0x4aE8eAEa3A12E6246b80F5Bbe6aa569c981952c1",
-      "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330"
+      "0x4bFDd757f5a4aE65bC9FC75474aE3a6690a340F3"
     ]
   },
   "AppFactoryImpl": {
@@ -877,10 +878,11 @@
     ]
   },
   "LensFactoryImpl": {
+    "name": "LensFactoryImpl",
     "contractName": "LensFactory",
     "contractType": 0,
-    "address": "0xa9484f961f2896cA9FFA6AAE1F93bC789F2fAc03",
-    "bytecodeHash": "01000adde0971c1be05ffeaa09a4e0cecb0daef50614fb6315f335a439423c2e",
+    "address": "0x1A725172DAA3fE159C6e8814A93a857D9d696e92",
+    "bytecodeHash": "01000aa9b60e3078929c176f32f7025772cb61e0794c363ed29e9bf2ea2675d5",
     "constructorArguments": [
       {
         "accessControlFactory": "0x5eb740362F17815Ae67EBcA6420Cbb350f714C3E",
