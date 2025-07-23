@@ -221,6 +221,11 @@
   },
   {
     "type": "error",
+    "name": "UnsupportedOperation",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "UnsupportedSelector",
     "inputs": []
   },
