@@ -33,7 +33,13 @@ abstract contract RuleBasedGroup is IGroup, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeGroupRules(RuleChange[] calldata ruleChanges) external virtual override {
+    function changeGroupRules(RuleChange[] calldata ruleChanges)
+        external
+        payable
+        virtual
+        override
+        usingNativePaymentHelper
+    {
         _changePrimitiveRules($groupRulesStorage(), ruleChanges);
     }
 

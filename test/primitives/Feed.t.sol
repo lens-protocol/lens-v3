@@ -922,8 +922,11 @@ contract FeedTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IFeed(feedForRules).changeFeedRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {
@@ -1831,8 +1834,11 @@ contract FeedTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IFeed(feedForRules).changeFeedRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {
@@ -2137,8 +2143,11 @@ contract FeedTest3 is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IFeed(feedForRules).changeFeedRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {
@@ -2921,8 +2930,11 @@ contract FeedTest4 is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IFeed(feedForRules).changeFeedRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IFeed(feedForRules).changeFeedRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {

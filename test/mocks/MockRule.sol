@@ -11,13 +11,25 @@ import {IPostRule} from "@core/interfaces/IPostRule.sol";
 import {KeyValue} from "@core/types/Types.sol";
 import {RuleChange} from "@core/types/Types.sol";
 import {CreatePostParams, EditPostParams} from "@core/interfaces/IFeed.sol";
+import {LensRulePaymentHandler} from "@extensions/fees/LensRulePaymentHandler.sol";
+import {NATIVE_TOKEN} from "@core/types/Constants.sol";
 
 interface IPrimitiveRule {
     function configure(bytes32 configSalt, KeyValue[] calldata ruleParams) external;
 }
 
-contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowRule, IPostRule {
+contract MockRule is
+    LensRulePaymentHandler,
+    INamespaceRule,
+    IGraphRule,
+    IFeedRule,
+    IGroupRule,
+    IFollowRule,
+    IPostRule
+{
     mapping(bytes4 => bool) internal _shouldSelectorRevert;
+    mapping(bytes4 => uint256) internal _nativeAmountToPullBySelector;
+    mapping(bytes4 => address) internal _nativeRecipientBySelector;
 
     function mockToRevertOn(bytes4 selector) external {
         _shouldSelectorRevert[selector] = true;
@@ -27,32 +39,51 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         _shouldSelectorRevert[selector] = false;
     }
 
-    fallback() external {
+    function mockToPullNativeOn(bytes4 selector, uint256 amount) external {
+        _nativeAmountToPullBySelector[selector] = amount;
+        _nativeRecipientBySelector[selector] = address(this);
+    }
+
+    function mockToTransferNativeOn(bytes4 selector, address to, uint256 amount) external {
+        _nativeAmountToPullBySelector[selector] = amount;
+        _nativeRecipientBySelector[selector] = to;
+    }
+
+    fallback() external payable {
         require(!_shouldSelectorRevert[msg.sig]);
+    }
+
+    receive() external payable {}
+
+    function _transferNativeIfNeeded(bytes4 selector) internal {
+        uint256 amount = _nativeAmountToPullBySelector[selector];
+        if (amount > 0) {
+            _sendToken(NATIVE_TOKEN, address(0), _nativeRecipientBySelector[selector], amount);
+        }
     }
 
     function configure(bytes32, /* configSalt */ KeyValue[] calldata /* ruleParams */ )
         external
-        view
         override(IFeedRule, IGraphRule, IGroupRule, INamespaceRule)
     {
         require(!_shouldSelectorRevert[IPrimitiveRule.configure.selector]);
+        _transferNativeIfNeeded(IPrimitiveRule.configure.selector);
     }
 
     function configure(bytes32, /* configSalt */ uint256, /* postId */ KeyValue[] calldata /* ruleParams */ )
         external
-        view
         override
     {
         require(!_shouldSelectorRevert[IPostRule.configure.selector]);
+        _transferNativeIfNeeded(IPostRule.configure.selector);
     }
 
     function configure(bytes32, /* configSalt */ address, /* account */ KeyValue[] calldata /* ruleParams */ )
         external
-        view
         override
     {
         require(!_shouldSelectorRevert[IFollowRule.configure.selector]);
+        _transferNativeIfNeeded(IFollowRule.configure.selector);
     }
 
     function processCreation(
@@ -62,8 +93,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[INamespaceRule.processCreation.selector]);
+        _transferNativeIfNeeded(INamespaceRule.processCreation.selector);
     }
 
     function processRemoval(
@@ -72,8 +104,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[INamespaceRule.processRemoval.selector]);
+        _transferNativeIfNeeded(INamespaceRule.processRemoval.selector);
     }
 
     function processAssigning(
@@ -83,8 +116,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[INamespaceRule.processAssigning.selector]);
+        _transferNativeIfNeeded(INamespaceRule.processAssigning.selector);
     }
 
     function processUnassigning(
@@ -94,8 +128,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         string calldata, /* username */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[INamespaceRule.processUnassigning.selector]);
+        _transferNativeIfNeeded(INamespaceRule.processUnassigning.selector);
     }
 
     function processFollow(
@@ -105,8 +140,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* accountToFollow */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override(IFollowRule, IGraphRule) {
+    ) external override(IFollowRule, IGraphRule) {
         require(!_shouldSelectorRevert[IGraphRule.processFollow.selector]);
+        _transferNativeIfNeeded(IGraphRule.processFollow.selector);
     }
 
     function processUnfollow(
@@ -116,8 +152,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* accountToUnfollow */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IGraphRule.processUnfollow.selector]);
+        _transferNativeIfNeeded(IGraphRule.processUnfollow.selector);
     }
 
     function processFollowRuleChanges(
@@ -125,8 +162,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* account */
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IGraphRule.processFollowRuleChanges.selector]);
+        _transferNativeIfNeeded(IGraphRule.processFollowRuleChanges.selector);
     }
 
     function processCreatePost(
@@ -135,8 +173,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         CreatePostParams calldata, /* postParams */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IFeedRule.processCreatePost.selector]);
+        _transferNativeIfNeeded(IFeedRule.processCreatePost.selector);
     }
 
     function processEditPost(
@@ -145,8 +184,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         EditPostParams calldata, /* postParams */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IFeedRule.processEditPost.selector]);
+        _transferNativeIfNeeded(IFeedRule.processEditPost.selector);
     }
 
     function processDeletePost(
@@ -154,8 +194,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         uint256, /* postId */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IFeedRule.processDeletePost.selector]);
+        _transferNativeIfNeeded(IFeedRule.processDeletePost.selector);
     }
 
     function processPostRuleChanges(
@@ -163,8 +204,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         uint256, /* postId */
         RuleChange[] calldata, /* ruleChanges */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IFeedRule.processPostRuleChanges.selector]);
+        _transferNativeIfNeeded(IFeedRule.processPostRuleChanges.selector);
     }
 
     function processAddition(
@@ -173,8 +215,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IGroupRule.processAddition.selector]);
+        _transferNativeIfNeeded(IGroupRule.processAddition.selector);
     }
 
     function processRemoval(
@@ -183,8 +226,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IGroupRule.processRemoval.selector]);
+        _transferNativeIfNeeded(IGroupRule.processRemoval.selector);
     }
 
     function processJoining(
@@ -192,8 +236,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IGroupRule.processJoining.selector]);
+        _transferNativeIfNeeded(IGroupRule.processJoining.selector);
     }
 
     function processLeaving(
@@ -201,8 +246,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         address, /* account */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IGroupRule.processLeaving.selector]);
+        _transferNativeIfNeeded(IGroupRule.processLeaving.selector);
     }
 
     function processCreatePost(
@@ -212,8 +258,9 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         CreatePostParams calldata, /* postParams */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IPostRule.processCreatePost.selector]);
+        _transferNativeIfNeeded(IPostRule.processCreatePost.selector);
     }
 
     function processEditPost(
@@ -223,7 +270,8 @@ contract MockRule is INamespaceRule, IGraphRule, IFeedRule, IGroupRule, IFollowR
         EditPostParams calldata, /* postParams */
         KeyValue[] calldata, /* primitiveParams */
         KeyValue[] calldata /* ruleParams */
-    ) external view override {
+    ) external override {
         require(!_shouldSelectorRevert[IPostRule.processEditPost.selector]);
+        _transferNativeIfNeeded(IPostRule.processEditPost.selector);
     }
 }

@@ -13,12 +13,11 @@ import {CONTRACT__LENS_NATIVE_PAYMENT_HELPER} from "@core/types/Constants.sol";
 import {Errors} from "@core/types/Errors.sol";
 
 contract PayableUsingNativePaymentHelperTest is FuzzZkTest, BaseDeployments {
-    address lensNativePaymentHelper;
-
     function setUp() public override {
         super.setUp();
 
-        lensNativePaymentHelper = ILensCreate2(LENS_CREATE_2_ADDRESS).getAddress(CONTRACT__LENS_NATIVE_PAYMENT_HELPER);
+        lensNativePaymentHelper =
+            payable(ILensCreate2(LENS_CREATE_2_ADDRESS).getAddress(CONTRACT__LENS_NATIVE_PAYMENT_HELPER));
     }
 
     function test_PayableUsingNativePaymentHelper_SendsMsgValueToNativePaymentHelper(uint256 msgValue) public {

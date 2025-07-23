@@ -68,13 +68,13 @@ interface IGraph is IMetadataBased {
 
     function initialize(string memory metadataURI, IAccessControl accessControl) external;
 
-    function changeGraphRules(RuleChange[] calldata ruleChanges) external;
+    function changeGraphRules(RuleChange[] calldata ruleChanges) external payable;
 
     function changeFollowRules(
         address account,
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external;
+    ) external payable;
 
     function follow(
         address followerAccount,
@@ -83,14 +83,14 @@ interface IGraph is IMetadataBased {
         RuleProcessingParams[] calldata graphRulesProcessingParams,
         RuleProcessingParams[] calldata followRulesProcessingParams,
         KeyValue[] calldata extraData
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     function unfollow(
         address followerAccount,
         address accountToUnfollow,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata graphRulesProcessingParams
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 

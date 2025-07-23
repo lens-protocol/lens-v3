@@ -24,14 +24,14 @@ import {
 
     //////////// SETUP ////////////
 
-    const version = 10000; // 1.0.0
+    const version = 1_00_01; // 1.0.1
 
     const beaconsToUpgrade: ContractInfo[] = [
-        {
-            contractName: 'App',
-            contractType: ContractType.Beacon,
-            constructorArguments: []
-        },
+        // {
+        //     contractName: 'App',
+        //     contractType: ContractType.Beacon,
+        //     constructorArguments: []
+        // },
         {
             contractName: 'Feed',
             contractType: ContractType.Beacon,

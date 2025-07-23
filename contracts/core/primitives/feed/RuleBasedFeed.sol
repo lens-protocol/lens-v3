@@ -40,7 +40,13 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
 
     ////////////////////////////  CONFIGURATION FUNCTIONS  ////////////////////////////
 
-    function changeFeedRules(RuleChange[] calldata ruleChanges) external virtual override {
+    function changeFeedRules(RuleChange[] calldata ruleChanges)
+        external
+        payable
+        virtual
+        override
+        usingNativePaymentHelper
+    {
         _changePrimitiveRules($feedRulesStorage(), ruleChanges);
     }
 
@@ -48,7 +54,7 @@ abstract contract RuleBasedFeed is IFeed, RuleBasedPrimitive {
         uint256 postId,
         RuleChange[] calldata ruleChanges,
         RuleProcessingParams[] calldata feedRulesParams
-    ) external virtual override {
+    ) external payable virtual override usingNativePaymentHelper {
         _changeEntityRules($postRulesStorage(postId), postId, ruleChanges, feedRulesParams);
     }
 

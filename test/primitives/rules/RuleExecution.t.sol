@@ -15,7 +15,7 @@ abstract contract RuleExecutionTest is Test {
     MockRule rule3;
     MockRule rule4;
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal virtual;
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue) internal virtual;
 
     function _configureRuleSelector() internal virtual returns (bytes4);
 
@@ -90,7 +90,7 @@ abstract contract RuleExecutionTest is Test {
             rule4.mockToRevertOn(executionSelector);
         }
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         vm.startPrank(prankCaller);
 

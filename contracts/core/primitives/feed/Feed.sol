@@ -123,7 +123,7 @@ contract Feed is
         RuleProcessingParams[] memory feedRulesParams,
         RuleProcessingParams[] memory rootPostRulesParams,
         RuleProcessingParams[] memory quotedPostRulesParams
-    ) external virtual override returns (uint256) {
+    ) external payable virtual override usingNativePaymentHelper returns (uint256) {
         require(msg.sender == postParams.author, Errors.InvalidMsgSender());
         (uint256 postId, uint256 localSequentialId, uint256 rootPostId) = Core._createPost(postParams);
         _validateExpectedPostIdIfPresent(customParams, postId);
@@ -172,7 +172,7 @@ contract Feed is
         RuleProcessingParams[] memory feedRulesParams,
         RuleProcessingParams[] memory rootPostRulesParams,
         RuleProcessingParams[] memory quotedPostRulesParams
-    ) external virtual override {
+    ) external payable virtual override usingNativePaymentHelper {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;
         // You can have this if you want to allow moderator editing:
@@ -204,7 +204,7 @@ contract Feed is
         uint256 postId,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata feedRulesParams
-    ) external virtual override {
+    ) external payable virtual override usingNativePaymentHelper {
         require(Core._postExists(postId), Errors.DoesNotExist());
         address author = Core.$storage().posts[postId].author;
         require(msg.sender == author || _hasAccess(msg.sender, PID__REMOVE_POST), Errors.InvalidMsgSender());

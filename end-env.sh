@@ -12,15 +12,15 @@ if [ -f .env ]; then
 fi
 
 if [ "$(cat .env.active)" == "mainnet" ]; then
-  cp addressbook.json addressbook.mainnet.json
-  echo "○ addressbook.json copied to addressbook.mainnet.json"
+  cp addressBook.json addressBook.mainnet.json
+  echo "○ addressBook.json copied to addressBook.mainnet.json"
   echo "⦿ Mainnet environment ended"
 else
-  cp addressbook.json addressbook.testnet.json
-  echo "○ addressbook.json copied to addressbook.testnet.json"
+  cp addressBook.json addressBook.testnet.json
+  echo "○ addressBook.json copied to addressBook.testnet.json"
   echo "⦿ Testnet environment ended"
 fi
 
-rm addressbook.json
+rm addressBook.json
 
 rm .env.active

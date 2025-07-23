@@ -70,27 +70,27 @@ interface IGroup is IMetadataBased {
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function removeMember(
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function joinGroup(
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
     function leaveGroup(
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external;
+    ) external payable;
 
-    function changeGroupRules(RuleChange[] calldata ruleChanges) external;
+    function changeGroupRules(RuleChange[] calldata ruleChanges) external payable;
 
     function setExtraData(KeyValue[] calldata extraDataToSet) external;
 

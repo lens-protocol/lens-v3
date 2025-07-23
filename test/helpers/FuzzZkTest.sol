@@ -16,6 +16,12 @@ contract FuzzZkTest is ZkTest {
         return bound(amount, 0, 1 << 95);
     }
 
+    function _assumeEOA(address someAddress) internal view {
+        assumeNotForgeAddress(someAddress);
+        vm.assume(someAddress.code.length == 0);
+        vm.assume(uint160(someAddress) > type(uint16).max); // skip system contracts
+    }
+
     function _boundBlockTimestamp(uint256 blockTimestamp) internal pure returns (uint256) {
         // Bound block timestamp (0, 2^64), as vm.warp expects a timestamp smaller than 2^64
         return bound(blockTimestamp, 1, 1 << 64 - 1);

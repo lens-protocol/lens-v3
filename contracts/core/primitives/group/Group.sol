@@ -10,7 +10,6 @@ import {RuleBasedGroup} from "contracts/core/primitives/group/RuleBasedGroup.sol
 import {AccessControlled} from "contracts/core/access/AccessControlled.sol";
 import {ExtraDataBased} from "contracts/core/base/ExtraDataBased.sol";
 import {Events} from "contracts/core/types/Events.sol";
-import {IGroupRule} from "contracts/core/interfaces/IGroupRule.sol";
 import {SourceStampBased} from "contracts/core/base/SourceStampBased.sol";
 import {MetadataBased} from "contracts/core/base/MetadataBased.sol";
 import {Initializable} from "contracts/core/upgradeability/Initializable.sol";
@@ -124,7 +123,7 @@ contract Group is
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         _addMember(account, customParams, ruleProcessingParams, _processSourceStamp(customParams));
     }
 
@@ -132,7 +131,7 @@ contract Group is
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         _removeMember(account, customParams, ruleProcessingParams, _processSourceStamp(customParams));
     }
 
@@ -140,7 +139,7 @@ contract Group is
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._grantMembership(account);
         _processMemberJoining(msg.sender, account, customParams, ruleProcessingParams);
@@ -152,7 +151,7 @@ contract Group is
         address account,
         KeyValue[] calldata customParams,
         RuleProcessingParams[] calldata ruleProcessingParams
-    ) external override {
+    ) external payable override usingNativePaymentHelper {
         require(msg.sender == account, Errors.InvalidMsgSender());
         uint256 membershipId = Core._revokeMembership(account);
         _processMemberLeaving(msg.sender, account, customParams, ruleProcessingParams);

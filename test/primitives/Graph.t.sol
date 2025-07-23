@@ -572,8 +572,11 @@ contract GraphTest is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IGraph(graphForRules).changeGraphRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IGraph(graphForRules).changeGraphRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {
@@ -1149,8 +1152,11 @@ contract GraphTest2 is RulesTest, BaseDeployments, RuleExecutionTest {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _changeRules(RuleChange[] memory ruleChanges) internal override(RulesTest, RuleExecutionTest) {
-        IGraph(graphForRules).changeGraphRules(ruleChanges);
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue)
+        internal
+        override(RulesTest, RuleExecutionTest)
+    {
+        IGraph(graphForRules).changeGraphRules{value: msgValue}(ruleChanges);
     }
 
     function _primitiveAddress() internal view override returns (address) {

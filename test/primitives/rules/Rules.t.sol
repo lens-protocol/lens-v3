@@ -8,9 +8,10 @@ import {Rule, RuleChange, RuleConfigurationChange, RuleSelectorChange, KeyValue}
 import {MockAccessControlLib} from "test/helpers/MockAccessControlLib.sol";
 import {MockRule} from "test/mocks/MockRule.sol";
 import {Errors} from "@core/types/Errors.sol";
+import {FuzzZkTest} from "test/helpers/FuzzZkTest.sol";
 
-abstract contract RulesTest is Test {
-    function _changeRules(RuleChange[] memory ruleChanges) internal virtual;
+abstract contract RulesTest is FuzzZkTest {
+    function _changeRules(RuleChange[] memory ruleChanges, uint256 msgValue) internal virtual;
 
     function _primitiveAddress() internal virtual returns (address);
 
@@ -59,7 +60,7 @@ abstract contract RulesTest is Test {
         });
         ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         bytes4[] memory selectors = _getPrimitiveSupportedRuleSelectors();
         for (uint256 i = 0; i < selectors.length; i++) {
@@ -88,7 +89,7 @@ abstract contract RulesTest is Test {
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(1, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
@@ -100,7 +101,7 @@ abstract contract RulesTest is Test {
             selectorChanges: _emptyRuleSelectorChangeArray()
         });
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(1, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
@@ -123,7 +124,7 @@ abstract contract RulesTest is Test {
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(2, _getPrimitiveRules(selector, false).length);
@@ -147,7 +148,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
         ruleChanges[1].selectorChanges[1] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(2, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
@@ -169,7 +170,7 @@ abstract contract RulesTest is Test {
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(2, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
@@ -195,7 +196,7 @@ abstract contract RulesTest is Test {
         ruleChanges[1].selectorChanges[1] =
             RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(2, _getPrimitiveRules(selector, false).length);
@@ -214,7 +215,7 @@ abstract contract RulesTest is Test {
         ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
 
         vm.expectRevert(Errors.RuleNotConfigured.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_DisableSelectorForUnconfiguredRule() public {
@@ -231,7 +232,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
 
         vm.expectRevert(Errors.RedundantStateChange.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_DisableSelectorThatIsAlreadyDisabled() public {
@@ -248,75 +249,8 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
 
         vm.expectRevert(Errors.RedundantStateChange.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
-
-    // function test_Cannot_ChangeRules_SettingASingleRuleAsAnyOfRule() public {
-    //     bytes4 selector = _aValidRuleSelector();
-
-    //     RuleChange[] memory ruleChanges = new RuleChange[](1);
-    //     ruleChanges[0] = RuleChange({
-    //         ruleAddress: address(rule),
-    //         configSalt: bytes32(0),
-    //         configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-    //         selectorChanges: new RuleSelectorChange[](1)
-    //     });
-    //     ruleChanges[0].selectorChanges[0] =
-    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
-
-    //     // Ensure has zero anyOf rules before applying the rule changes
-    //     assertEq(0, _getPrimitiveRules(selector, false).length);
-
-    //     vm.expectRevert(Errors.SingleAnyOfRule.selector);
-    //     _changeRules(ruleChanges);
-    // }
-
-    // function test_Cannot_ChangeRules_IfFinalStateHasSingleAnyOfRule() public {
-    //     bytes4 selector = _aValidRuleSelector();
-
-    //     // Ensure has zero anyOf rules before applying the rule changes
-    //     assertEq(0, _getPrimitiveRules(selector, false).length);
-
-    //     RuleChange[] memory ruleChanges = new RuleChange[](3);
-    //     ruleChanges[0] = RuleChange({
-    //         ruleAddress: address(rule),
-    //         configSalt: bytes32(0),
-    //         configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
-    //         selectorChanges: new RuleSelectorChange[](1)
-    //     });
-    //     ruleChanges[0].selectorChanges[0] =
-    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
-    //     ruleChanges[1] = ruleChanges[0];
-    //     ruleChanges[2] = ruleChanges[0];
-
-    //     // Ensure has zero anyOf rules before applying the rule changes
-    //     assertEq(0, _getPrimitiveRules(selector, false).length);
-
-    //     _changeRules(ruleChanges);
-    //     // Ensure has three anyOf rules after applying the first rule changes
-    //     assertEq(3, _getPrimitiveRules(selector, false).length);
-
-    //     ruleChanges = new RuleChange[](2);
-    //     ruleChanges[0] = RuleChange({
-    //         ruleAddress: address(rule),
-    //         configSalt: bytes32(uint256(1)),
-    //         configurationChanges: RuleConfigurationChange({configure: false, ruleParams: new KeyValue[](0)}),
-    //         selectorChanges: new RuleSelectorChange[](1)
-    //     });
-    //     ruleChanges[0].selectorChanges[0] =
-    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
-    //     ruleChanges[1] = RuleChange({
-    //         ruleAddress: address(rule),
-    //         configSalt: bytes32(uint256(3)),
-    //         configurationChanges: RuleConfigurationChange({configure: false, ruleParams: new KeyValue[](0)}),
-    //         selectorChanges: new RuleSelectorChange[](1)
-    //     });
-    //     ruleChanges[1].selectorChanges[0] =
-    //         RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
-
-    //     vm.expectRevert(Errors.SingleAnyOfRule.selector);
-    //     _changeRules(ruleChanges);
-    // }
 
     function test_Cannot_ChangeRules_IfTotalAmountOfRulesIsExceeded() public {
         bytes4 selector = _aValidRuleSelector();
@@ -340,7 +274,7 @@ abstract contract RulesTest is Test {
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         // Ensure has three anyOf rules after applying the first rule changes
         uint256 amountOfRules = _getPrimitiveRules(selector, false).length + _getPrimitiveRules(selector, true).length;
@@ -356,7 +290,7 @@ abstract contract RulesTest is Test {
         ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
 
         vm.expectRevert(Errors.LimitReached.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_IfNotHasAccessToChangeRulesPid() public virtual {
@@ -377,7 +311,7 @@ abstract contract RulesTest is Test {
         });
 
         vm.expectRevert(Errors.AccessDenied.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_IfNonZeroConfigSaltIsPassed_ForARuleThatWasNotConfiguredYet() public {
@@ -390,7 +324,7 @@ abstract contract RulesTest is Test {
         });
 
         vm.expectRevert(Errors.InvalidConfigSalt.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_IfSelectorNotAllowed() public {
@@ -405,7 +339,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: bytes4(0x12345678), isRequired: true, enabled: true});
 
         vm.expectRevert(Errors.UnsupportedSelector.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_IfConfigureCallReverts() public {
@@ -421,7 +355,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: _aValidRuleSelector(), isRequired: true, enabled: true});
 
         vm.expectRevert(Errors.ConfigureCallReverted.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_IfSwitchingAnEnabledSelectorFromAnyOfToRequiredInASingleSelectorChange() public {
@@ -441,7 +375,7 @@ abstract contract RulesTest is Test {
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(2, _getPrimitiveRules(selector, false).length);
@@ -462,7 +396,7 @@ abstract contract RulesTest is Test {
         ruleChanges[1].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
 
         vm.expectRevert(Errors.SelectorEnabledForDifferentRuleType.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_IfSwitchingAnEnabledSelectorFromRequiredToAnyOfInASingleSelectorChange() public {
@@ -481,7 +415,7 @@ abstract contract RulesTest is Test {
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(2, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
@@ -504,7 +438,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
 
         vm.expectRevert(Errors.SelectorEnabledForDifferentRuleType.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_DisableSelectorThatIsNotEnabled() public virtual {
@@ -521,7 +455,7 @@ abstract contract RulesTest is Test {
         ruleChanges[0].selectorChanges[0] =
             RuleSelectorChange({ruleSelector: enabledSelector, isRequired: true, enabled: true});
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(1, _getPrimitiveRules(enabledSelector, true).length);
         assertEq(0, _getPrimitiveRules(enabledSelector, false).length);
@@ -538,7 +472,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: disabledSelector, isRequired: true, enabled: false});
 
         vm.expectRevert(Errors.RedundantStateChange.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_DisableSelectorOnRequiredRulesThatIsEnabledForAnyOfRules() public {
@@ -555,7 +489,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: true});
         ruleChanges[1] = ruleChanges[0];
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(0, _getPrimitiveRules(selector, true).length);
         assertEq(2, _getPrimitiveRules(selector, false).length);
@@ -578,7 +512,7 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: false});
 
         vm.expectRevert(Errors.SelectorEnabledForDifferentRuleType.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
     }
 
     function test_Cannot_ChangeRules_DisableSelectorOnAnyOfRulesThatIsEnabledForRequiredRules() public {
@@ -593,7 +527,7 @@ abstract contract RulesTest is Test {
         });
         ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
 
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
 
         assertEq(1, _getPrimitiveRules(selector, true).length);
         assertEq(0, _getPrimitiveRules(selector, false).length);
@@ -608,6 +542,55 @@ abstract contract RulesTest is Test {
             RuleSelectorChange({ruleSelector: selector, isRequired: false, enabled: false});
 
         vm.expectRevert(Errors.SelectorEnabledForDifferentRuleType.selector);
-        _changeRules(ruleChanges);
+        _changeRules(ruleChanges, 0);
+    }
+
+    function test_PullNative_OnConfigure(uint256 amount) public {
+        bytes4 selector = _aValidRuleSelector();
+
+        amount = _boundAmount(amount);
+        vm.deal(address(this), amount);
+
+        uint256 ruleBalanceBefore = address(rule).balance;
+
+        rule.mockToPullNativeOn(_configureRuleSelector(), amount);
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
+
+        _changeRules(ruleChanges, amount);
+
+        assertEq(ruleBalanceBefore + amount, address(rule).balance);
+    }
+
+    function test_TransferNative_OnConfigure(address to, uint256 amount) public {
+        _assumeEOA(to);
+        bytes4 selector = _aValidRuleSelector();
+
+        amount = _boundAmount(amount);
+        vm.deal(address(this), amount);
+
+        uint256 toBalanceBefore = address(to).balance;
+
+        rule.mockToTransferNativeOn(_configureRuleSelector(), to, amount);
+
+        RuleChange[] memory ruleChanges = new RuleChange[](1);
+        ruleChanges[0] = RuleChange({
+            ruleAddress: address(rule),
+            configSalt: bytes32(0),
+            configurationChanges: RuleConfigurationChange({configure: true, ruleParams: new KeyValue[](0)}),
+            selectorChanges: new RuleSelectorChange[](1)
+        });
+        ruleChanges[0].selectorChanges[0] = RuleSelectorChange({ruleSelector: selector, isRequired: true, enabled: true});
+
+        _changeRules(ruleChanges, amount);
+
+        assertEq(toBalanceBefore + amount, address(to).balance);
     }
 }
