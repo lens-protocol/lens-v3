@@ -158,7 +158,6 @@ contract BaseDeployments is ZkTest {
     address lensGlobalApp;
     address lensGlobalFeed;
     address lensGlobalGraph;
-    address lensGlobalGroup;
     address lensGlobalNamespace;
 
     address TREASURY_ADDRESS = vm.envOr("TREASURY_ADDRESS", makeAddr("TREASURY_ADDRESS"));
@@ -169,34 +168,10 @@ contract BaseDeployments is ZkTest {
     MockCurrency someCurrency;
     MockNft someNft;
 
-    function _temporaryPostForkActions() internal {
-        // accountFactoryImpl = address(new AccountFactory(accountBeacon, accountProxyAdminForOwnable));
-        // vm.prank(factoriesProxyOwner);
-        // ITransparentUpgradeableProxy(address(accountFactory)).upgradeTo(accountFactoryImpl);
-
-        // lensFactoryImpl = address(
-        //     new LensFactory({
-        //         factories: FactoryConstructorParams({
-        //             accessControlFactory: accessControlFactory,
-        //             accountFactory: accountFactory,
-        //             appFactory: appFactory,
-        //             groupFactory: groupFactory,
-        //             feedFactory: feedFactory,
-        //             graphFactory: graphFactory,
-        //             namespaceFactory: namespaceFactory
-        //         }),
-        //         rules: RuleConstructorParams({
-        //             accountBlockingRule: accountBlockingRule,
-        //             groupGatedFeedRule: groupGatedFeedRule,
-        //             usernameSimpleCharsetRule: usernameSimpleCharsetRule,
-        //             banMemberGroupRule: banMemberGroupRule,
-        //             addRemovePidGroupRule: addRemovePidGroupRule,
-        //             usernameReservedNamespaceRule: usernameReservedNamespaceRule
-        //         })
-        //     })
-        // );
-        // vm.prank(factoriesProxyOwner);
-        // ITransparentUpgradeableProxy(address(lensFactory)).upgradeTo(lensFactoryImpl);
+    function _temporaryPostForkActions() internal virtual {
+        // Override this in fork tests to apply any actions that should be done after initializing the fork, but before
+        // running the tests.
+        // For example: upgrading the implementations, etc.
     }
 
     function setUp() public virtual {
@@ -482,6 +457,7 @@ contract BaseDeployments is ZkTest {
         graphFactoryImpl = json.readAddress(".GraphFactoryImpl.address");
         groupFactoryImpl = json.readAddress(".GroupFactoryImpl.address");
         namespaceFactoryImpl = json.readAddress(".NamespaceFactoryImpl.address");
+        lensFactoryImpl = json.readAddress(".LensFactoryImpl.address");
     }
 
     function _loadGlobalPrimitives() internal {
@@ -489,7 +465,6 @@ contract BaseDeployments is ZkTest {
         lensGlobalApp = json.readAddress(".LensGlobalApp.address");
         lensGlobalFeed = json.readAddress(".LensGlobalFeed.address");
         lensGlobalGraph = json.readAddress(".LensGlobalGraph.address");
-        lensGlobalGroup = json.readAddress(".LensGlobalGroup.address");
         lensGlobalNamespace = json.readAddress(".LensGlobalNamespace.address");
     }
 

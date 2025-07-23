@@ -308,6 +308,12 @@
     "contractType": 3,
     "address": "0x1aA55B9042f08f45825dC4b651B64c9F98Af4615"
   },
+  "LensGlobalApp": {
+    "name": "LensGlobalApp",
+    "contractName": "App",
+    "contractType": 3,
+    "address": "0x8A5Cc31180c37078e1EbA2A23c861Acf351a97cE"
+  },
   "AccessControlFactoryImpl": {
     "contractName": "AccessControlFactory",
     "contractType": 0,
