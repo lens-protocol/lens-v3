@@ -41,6 +41,7 @@ import {UsernameSimpleCharsetNamespaceRule} from "contracts/rules/namespace/User
 import {BanMemberGroupRule} from "contracts/rules/group/BanMemberGroupRule.sol";
 import {AdditionRemovalPidGroupRule} from "contracts/rules/group/AdditionRemovalPidGroupRule.sol";
 import {UsernameReservedNamespaceRule} from "contracts/rules/namespace/UsernameReservedNamespaceRule.sol";
+import {WhitelistedSignersNamespaceRule} from "contracts/rules/namespace/WhitelistedSignersNamespaceRule.sol";
 
 import {TippingAccountAction} from "contracts/actions/account/TippingAccountAction.sol";
 import {TippingPostAction} from "contracts/actions/post/TippingPostAction.sol";
@@ -140,6 +141,7 @@ contract BaseDeployments is ZkTest {
     address banMemberGroupRule;
     address addRemovePidGroupRule;
     address usernameReservedNamespaceRule;
+    address whitelistedSignersNamespaceRule;
 
     address tippingAccountActionImpl;
     address tippingAccountAction;
@@ -227,6 +229,7 @@ contract BaseDeployments is ZkTest {
         banMemberGroupRule = json.readAddress(".BanMemberGroupRule.address");
         addRemovePidGroupRule = json.readAddress(".AdditionRemovalPidGroupRule.address");
         usernameReservedNamespaceRule = json.readAddress(".UsernameReservedNamespaceRule.address");
+        whitelistedSignersNamespaceRule = json.readAddress(".WhitelistedSignersNamespaceRule.address");
         lensFactory = LensFactory(json.readAddress(".LensFactory.address"));
     }
 
@@ -307,6 +310,17 @@ contract BaseDeployments is ZkTest {
                 rulesProxyOwner,
                 abi.encodeWithSelector(
                     UsernameReservedNamespaceRule.initialize.selector, rulesOwner, "uri://UsernameReservedNamespaceRule"
+                )
+            )
+        );
+        whitelistedSignersNamespaceRule = address(
+            new TransparentUpgradeableProxy(
+                address(new WhitelistedSignersNamespaceRule()),
+                rulesProxyOwner,
+                abi.encodeWithSelector(
+                    WhitelistedSignersNamespaceRule.initialize.selector,
+                    rulesOwner,
+                    "uri://WhitelistedSignersNamespaceRule"
                 )
             )
         );
