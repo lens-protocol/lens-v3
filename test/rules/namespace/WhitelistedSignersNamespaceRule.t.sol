@@ -12,6 +12,7 @@ import {WhitelistedSignersNamespaceRule} from "@rules/namespace/WhitelistedSigne
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {RuleChange, RuleSelectorChange} from "@core/types/Types.sol";
 import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 /// @custom:keccak lens.param.accessControl
 bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
@@ -134,6 +135,13 @@ contract WhitelistedSignersNamespaceRuleTest is BaseDeployments {
             ) == false
         );
 
+        assumeNotForgeAddress(nonWhitelistedSigner);
+        vm.assume(uint160(nonWhitelistedSigner) > type(uint16).max); // skip system contracts
+        if (nonWhitelistedSigner.code.length != 0) {
+            vm.assumeNoRevert();
+            IERC721ReceiverUpgradeable(nonWhitelistedSigner).onERC721Received(address(namespace), address(0), 1, "");
+        }
+
         vm.prank(nonWhitelistedSigner);
         vm.expectRevert(Errors.RequiredRuleReverted.selector);
         namespace.createUsername(
@@ -152,6 +160,13 @@ contract WhitelistedSignersNamespaceRuleTest is BaseDeployments {
                 address(namespace), bytes32(uint256(3)), whitelistedSigner
             ) == false
         );
+
+        assumeNotForgeAddress(whitelistedSigner);
+        vm.assume(uint160(whitelistedSigner) > type(uint16).max); // skip system contracts
+        if (whitelistedSigner.code.length != 0) {
+            vm.assumeNoRevert();
+            IERC721ReceiverUpgradeable(whitelistedSigner).onERC721Received(address(namespace), address(0), 1, "");
+        }
 
         KeyValue[] memory ruleParams = new KeyValue[](1);
         ruleParams[0] =
