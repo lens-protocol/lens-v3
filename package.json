@@ -45,6 +45,8 @@
     "deployAndUpgrade:mainnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeTransparentUpgradeableProxy.ts --network lensMainnet",
     "deployAndUpgrade:testnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeTransparentUpgradeableProxy.ts --network lensSepoliaTestnet",
     "deployAndUpgrade:local": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script deployAndUpgradeTransparentUpgradeableProxy.ts --network inMemoryNode",
+    "deploy:local:rules": "hardhat compile && hardhat deploy-zksync --script deployRules.ts --network inMemoryNode",
+    "deploy:testnet:rules": "hardhat compile && hardhat deploy-zksync --script deployRules.ts --network lensSepoliaTestnet",
     "interact:mainnet": "hardhat compile && hardhat deploy-zksync --script interact.ts --network lensMainnet",
     "interact:local": "hardhat compile && hardhat deploy-zksync --script interact.ts --network inMemoryNode",
     "compile": "hardhat compile",
