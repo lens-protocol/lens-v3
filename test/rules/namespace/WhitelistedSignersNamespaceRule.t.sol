@@ -11,7 +11,7 @@ import {BaseDeployments} from "test/helpers/BaseDeployments.sol";
 import {WhitelistedSignersNamespaceRule} from "@rules/namespace/WhitelistedSignersNamespaceRule.sol";
 import {MockAccessControl} from "test/mocks/MockAccessControl.sol";
 import {RuleChange, RuleSelectorChange} from "@core/types/Types.sol";
-import {INamespaceRule} from "@core/interfaces/INamespacerule.sol";
+import {INamespaceRule} from "@core/interfaces/INamespaceRule.sol";
 
 /// @custom:keccak lens.param.accessControl
 bytes32 constant PARAM__ACCESS_CONTROL = 0xcf3b0fab90208e4185bf857e0f943f6672abffb7d0898e0750beeeb991ae35fa;
