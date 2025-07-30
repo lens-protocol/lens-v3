@@ -46,8 +46,8 @@ contract UsernameReservedNamespaceRule is OwnableMetadataBasedRule, Initializabl
         0xa08559feca4ccbf88f5987d492116b3568a32a24d348dca81dc1af9040c43847;
 
     struct Storage {
-        mapping(address group => mapping(bytes32 configSalt => address accessControl)) accessControl;
-        mapping(address group => mapping(bytes32 configSalt => mapping(string username => bool reserved)))
+        mapping(address namespace => mapping(bytes32 configSalt => address accessControl)) accessControl;
+        mapping(address namespace => mapping(bytes32 configSalt => mapping(string username => bool reserved)))
             isUsernameReserved;
     }
 
