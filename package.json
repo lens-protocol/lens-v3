@@ -57,6 +57,8 @@
     "transferFactoryOwnershipsToEOA:mainnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script transferFactoryOwnershipsToEOA.ts --network lensMainnet",
     "transferFactoryOwnershipsToEOA:testnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script transferFactoryOwnershipsToEOA.ts --network lensSepoliaTestnet",
     "transferFactoryOwnershipsToEOA:local": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script transferFactoryOwnershipsToEOA.ts --network inMemoryNode",
+    "upgrade:factoriesFromLensAccount:testnet": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeFactoriesFromLensAccount.ts --network lensSepoliaTestnet",
+    "upgrade:factoriesFromLensAccount:local": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeFactoriesFromLensAccount.ts --network inMemoryNode",
     "compile": "hardhat compile",
     "clean": "hardhat clean",
     "test": "hardhat test --network hardhat",

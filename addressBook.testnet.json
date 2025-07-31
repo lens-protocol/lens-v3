@@ -198,7 +198,8 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0x"
     ],
-    "address": "0xE55C2154d1766a9C6319dBD989C89867b0457358"
+    "address": "0xE55C2154d1766a9C6319dBD989C89867b0457358",
+    "implementation": "0xD086BEdAac1f9C060c2e92D475516325230b58C5"
   },
   "AppFactory": {
     "name": "AppFactory",
@@ -361,7 +362,8 @@
       "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
       "0x"
     ],
-    "address": "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D"
+    "address": "0x408BC8704Ce76DDcd00cf3a83Acd24de4101eE2D",
+    "implementation": "0x1A725172DAA3fE159C6e8814A93a857D9d696e92"
   },
   "LensFees": {
     "name": "LensFactory",
