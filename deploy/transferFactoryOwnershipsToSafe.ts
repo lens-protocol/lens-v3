@@ -1,18 +1,21 @@
 // To run this script:
 // 1. Make sure your .env file has PROXY_ADMIN_PRIVATE_KEY (current owner) and LENS_PROXY_ADMIN (new owner) set.
-// 2. Run: npx hardhat run deploy/transferFactoryOwnershipsToEOA.ts --network <your_network_name>
+// 2. Run: npx hardhat run deploy/transferFactoryOwnershipsToSafe.ts --network <your_network_name>
 
 import {
     loadContractAddressFromAddressBook,
     promptForConfirmation,
+    getContractBytecodeHashByAddress
   } from './lensUtils';
   import { getWallet } from './utils';
   import * as hre from 'hardhat';
   import { ethers, Wallet } from 'ethers';
   import 'dotenv/config';
 
+  const safeBytecodeHash = '0100003b6cfa15bd7d1cae1c9c022074524d7785d34859ad0576d8fab4305d4f';
+
   async function deploy() {
-    console.log('\n\x1b[33m--- Transfer Factory Ownerships to EOA Script ---\x1b[0m');
+    console.log('\n\x1b[33m--- Transfer Factory Ownerships to Safe Script ---\x1b[0m');
 
     // --- 1. Check Network ---
     const chainId = Number((await hre.ethers.provider.getNetwork()).chainId);
@@ -34,27 +37,19 @@ import {
     }
 
     // --- 2. Load Wallets & Addresses from .env ---
-    const lensAccountAddress = process.env.LENS_PROXY_ADMIN;
-    if (!lensAccountAddress) {
-      throw new Error('\x1b[31mLENS_PROXY_ADMIN is not set in .env file. This is the Lens Account.\x1b[0m');
+    const currentAdminPk = process.env.PROXY_ADMIN_PRIVATE_KEY;
+    if (!currentAdminPk) {
+      throw new Error('\x1b[31mPROXY_ADMIN_PRIVATE_KEY not set in .env file. This is the current owner.\x1b[0m');
     }
 
-    const lensAccountOwnerPk = process.env.PROXY_ADMIN_PRIVATE_KEY;
-    if (!lensAccountOwnerPk) {
-      throw new Error('\x1b[31mPROXY_ADMIN_PRIVATE_KEY not set in .env file. This is the current owner of the Lens Account.\x1b[0m');
+    const newAdminAddress = process.env.LENS_PROXY_ADMIN;
+    if (!newAdminAddress || !ethers.isAddress(newAdminAddress)) {
+      throw new Error('\x1b[31mLENS_PROXY_ADMIN is not set or is not a valid address in .env file. This is the new owner.\x1b[0m');
     }
 
-    const lensAccountOwnerWallet = getWallet(lensAccountOwnerPk);
-    const lensAccountOwnerAddress = await lensAccountOwnerWallet.getAddress();
-    console.log(`\x1b[36mSigner (Current Lens Account Owner): ${lensAccountOwnerAddress}\x1b[0m`);
-
-    // Get the owner of the Lens Account that will be the new admin
-    const accountArtifact = await hre.artifacts.readArtifact('IOwnable');
-    const accountContract = new ethers.Contract(lensAccountAddress, accountArtifact.abi, lensAccountOwnerWallet);
-    const accountOwner = await accountContract.owner();
-    if (accountOwner.toLowerCase() !== lensAccountOwnerAddress.toLowerCase()) {
-      throw new Error('\x1b[31mThe Lens Account is not owned by the current owner.\x1b[0m');
-    }
+    const currentAdminWallet = getWallet(currentAdminPk);
+    const currentAdminAddress = await currentAdminWallet.getAddress();
+    console.log(`\x1b[36mSigner (Current Admin): ${currentAdminAddress}\x1b[0m`);
 
     // --- 3. Load Factory Contracts from Address Book ---
     console.log('\x1b[36mLoading contract addresses from addressBook.json...\x1b[0m');
@@ -77,18 +72,50 @@ import {
         `\t\x1b[36m- ${factory.name} at ${factory.address} has admin: ${onChainAdmin}\x1b[0m`
       );
 
-      if (onChainAdmin.toLowerCase() !== lensAccountAddress.toLowerCase()) {
+      if (onChainAdmin.toLowerCase() !== currentAdminAddress.toLowerCase()) {
         throw new Error(
-          `\x1b[31mOwnership mismatch for ${factory.name}! Expected Lens Account (${lensAccountAddress}) but found ${onChainAdmin}. Aborting.\x1b[0m`
+          `\x1b[31mOwnership mismatch for ${factory.name}! Expected ${currentAdminAddress} but found ${onChainAdmin}. Aborting.\x1b[0m`
         );
       }
     }
-    console.log('\x1b[32mCurrent ownership by Lens Account verified successfully.\x1b[0m');
-
-    const newAdminAddress = lensAccountOwnerAddress;
+    console.log('\x1b[32mCurrent ownership verified successfully.\x1b[0m');
 
     // --- 5. User Confirmation Prompt ---
     console.log(`\n\x1b[36mThe new Proxy Admin for these factories will be: ${newAdminAddress}\x1b[0m`);
+
+    // Get the bytecode hash of the Safe Account that will be the new admin
+    const accountBytecodeHash = await getContractBytecodeHashByAddress(newAdminAddress);
+    if (accountBytecodeHash !== safeBytecodeHash) {
+      throw new Error(`\x1b[31mThis is not a Safe Account - bytecode hash differs from expected: ${safeBytecodeHash} (expected) vs ${accountBytecodeHash} (actual)\x1b[0m`);
+    } else {
+      console.log(`\x1b[36mThis is a Safe Account with bytecode hash: ${accountBytecodeHash}\x1b[0m`);
+    }
+
+    // getOwners() of the Safe Account
+    const safeAbi = [
+      {
+        type: "function",
+        name: "getOwners",
+        inputs: [],
+        outputs: [{ type: "address[]", name: "owners" }],
+        stateMutability: "view",
+      },
+      {
+        type: "function",
+        name: "getThreshold",
+        inputs: [],
+        outputs: [{ type: "uint256", name: "threshold" }],
+        stateMutability: "view",
+      },
+    ];
+    const safeContract = new ethers.Contract(newAdminAddress, safeAbi, currentAdminWallet);
+    const owners = await safeContract.getOwners();
+    const threshold = await safeContract.getThreshold();
+    console.log(`\x1b[36mOwners of the Safe Account:\x1b[0m`);
+    for (const owner of owners) {
+      console.log(`\t${owner}`);
+    }
+    console.log(`\x1b[36mThreshold of the Safe Account: ${threshold} out of ${owners.length} owners\x1b[0m`);
 
     const confirmed = await promptForConfirmation(
       '\x1b[33mDo you want to proceed with the ownership transfer? (y/n): \x1b[0m'
@@ -101,23 +128,15 @@ import {
 
     // --- 6. Execute Transfer ---
     console.log('\n\x1b[32mProceeding with ownership transfer...\x1b[0m');
-
     const proxyArtifact = await hre.artifacts.readArtifact('ITransparentUpgradeableProxy');
-    const lensAccountArtifact = await hre.artifacts.readArtifact('Account');
 
-    // Create array of transactions for batch execution
-    const transactions = factoriesToTransfer.map(factory => ({
-      target: factory.address!,
-      value: 0,
-      data: new ethers.Interface(proxyArtifact.abi).encodeFunctionData('changeAdmin', [newAdminAddress])
-    }));
-
-    // Execute all transfers in one transaction via Account
-    const lensAccountInstance = new ethers.Contract(lensAccountAddress, lensAccountArtifact.abi, lensAccountOwnerWallet);
-    const tx = await lensAccountInstance.executeTransactions(transactions);
-    await tx.wait();
-
-    console.log(`\t\x1b[32m✔ Admin changed for all factories in one transaction. Tx: ${tx.hash}\x1b[0m`);
+    for (const factory of factoriesToTransfer) {
+      console.log(`\tChanging admin for ${factory.name}...`);
+      const proxyContract = new ethers.Contract(factory.address!, proxyArtifact.abi, currentAdminWallet);
+      const tx = await proxyContract.changeAdmin(newAdminAddress);
+      await tx.wait();
+      console.log(`\t\x1b[32m✔ Admin for ${factory.name} changed. Tx: ${tx.hash}\x1b[0m`);
+    }
 
     // --- 7. Verify New Ownership ---
     console.log('\n\x1b[33mVerifying new ownership of proxies...\x1b[0m');

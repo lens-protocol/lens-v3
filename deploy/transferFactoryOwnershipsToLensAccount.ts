@@ -1,6 +1,6 @@
 // To run this script:
 // 1. Make sure your .env file has PROXY_ADMIN_PRIVATE_KEY (current owner) and LENS_PROXY_ADMIN (new owner) set.
-// 2. Run: npx hardhat run deploy/transferFactoryOwnerships.ts --network <your_network_name>
+// 2. Run: npx hardhat run deploy/transferFactoryOwnershipsToLensAccount.ts --network <your_network_name>
 
 import {
     loadContractAddressFromAddressBook,
@@ -12,7 +12,7 @@ import {
   import 'dotenv/config';
 
   async function deploy() {
-    console.log('\n\x1b[33m--- Transfer Factory Ownerships Script ---\x1b[0m');
+    console.log('\n\x1b[33m--- Transfer Factory Ownerships to Lens Account Script ---\x1b[0m');
 
     // --- 1. Check Network ---
     const chainId = Number((await hre.ethers.provider.getNetwork()).chainId);
