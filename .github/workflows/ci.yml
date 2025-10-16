@@ -6,13 +6,17 @@ concurrency:
 
 on:
   push:
-    branches: 
+    branches:
       - master
       - development
   pull_request:
-    branches: 
+    branches:
       - master
       - development
+
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
