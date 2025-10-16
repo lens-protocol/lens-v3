@@ -104,7 +104,10 @@
     "path-to-regexp": "^6.3.0",
     "cross-spawn": "^7.0.5",
     "undici": "^5.28.5",
-    "micromatch": "^4.0.8"
+    "micromatch": "^4.0.8",
+    "brace-expansion": "^1.1.12",
+    "tmp": "^0.2.4",
+    "cookie": "^0.7.0"
   },
   "dependencies": {
     "hardhat-ignore-warnings": "^0.2.12",
