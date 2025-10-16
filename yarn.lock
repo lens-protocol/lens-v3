@@ -835,13 +835,10 @@
     sinon-chai "^3.7.0"
     zksync-ethers "^6.15.0"
 
-"@matterlabs/zksync-contracts@^28.0.1":
-  version "28.0.1"
-  resolved "https://registry.yarnpkg.com/@matterlabs/zksync-contracts/-/zksync-contracts-28.0.1.tgz#cba25b3f78040649167237bf409f6df36ed4270d"
-  integrity sha512-WomRTQPED/soIH6nsexs8y/BIUjj9226x33kAfXXSSFUpK1EFjJQ9fshYTPZ/RMKTa4BuVVBakh4kuvl4HoabA==
-  dependencies:
-    "@openzeppelin/contracts" "=5.2.0"
-    "@openzeppelin/contracts-v4" "npm:@openzeppelin/contracts@4.9.6"
+"@matterlabs/zksync-contracts@^0.6.1":
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/@matterlabs/zksync-contracts/-/zksync-contracts-0.6.2.tgz#e883ea327de640c1738ec713785c007179510d89"
+  integrity sha512-I05OdN+BVS5rXgNnvHy0FAXPvwlReJLq4ZakyYIrZcDx+I1w1eTfBtvyLf0AcmUYbUwCz4mvR0f0bkk4PqBwHg==
 
 "@matterlabs/zksync-telemetry-js@git+https://github.com/matter-labs/zksync-telemetry-js.git#2fd9edbe6b9a5e0c2caeda4b04dd5631d7546a11":
   version "1.0.0"
@@ -1509,16 +1506,6 @@
   version "4.9.6"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.6.tgz#38b21708a719da647de4bb0e4802ee235a0d24df"
   integrity sha512-m4iHazOsOCv1DgM7eD7GupTJ+NFVujRZt1wzddDPSVGpWdKq1SKkla5htKG7+IS4d2XOCtzkUNwRZ7Vq5aEUMA==
-
-"@openzeppelin/contracts-v4@npm:@openzeppelin/contracts@4.9.6":
-  version "4.9.6"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.6.tgz#2a880a24eb19b4f8b25adc2a5095f2aa27f39677"
-  integrity sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA==
-
-"@openzeppelin/contracts@=5.2.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-5.2.0.tgz#bd020694218202b811b0ea3eec07277814c658da"
-  integrity sha512-bxjNie5z89W1Ea0NZLZluFh8PrFNn9DH8DQlujEok2yjsOlraUPKID5p1Wk3qdNbf6XkQ1Os2RvfiHrrXLHWKA==
 
 "@openzeppelin/contracts@^4.9.2":
   version "4.9.6"

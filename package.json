@@ -69,7 +69,7 @@
     "@matterlabs/hardhat-zksync-telemetry": "^1.1.1",
     "@matterlabs/hardhat-zksync-upgradable": "^1.10.0",
     "@matterlabs/hardhat-zksync-verify": "^1.9.1",
-    "@matterlabs/zksync-contracts": "^28.0.1",
+    "@matterlabs/zksync-contracts": "^0.6.1",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-foundry": "^1.1.2",
     "@nomicfoundation/hardhat-verify": "^2.1.1",
