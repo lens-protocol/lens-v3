@@ -126,3 +126,6 @@ Contains contracts implementing Lens Rules. These also serve as examples of how 
 ### Actions
 
 Contains contracts implementing Lens Actions. These also serve as examples of how developers could build their own Actions.
+> Note: In Lens v3, open actions attached to a publication are executed atomically.
+> If any attached action reverts, the entire publication transaction is reverted.
+
