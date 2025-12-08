@@ -3,71 +3,85 @@
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xB19B9df023a9D372728cFc70847DBBB9AD59337f",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "AccountLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x793e4aeB8fd54f5Eb2B185f25F7767D417Ba5B94",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "FeedLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xA22DC11ED96Ce8f6c26a2361926910d5b8c56299",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "GraphLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x64ab11f8bAe0f75f071EfcE027E8AB3633252902",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "GroupLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xe6939785c7b36394B35e72E13B86F17b5223B75d",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "NamespaceLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0x8d2eb35e3f4c10fEe90640C6051064426f368d16",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "AccessControlLock": {
     "contractName": "Lock",
     "contractType": 4,
     "address": "0xC00c2b2F3b7e6DAe4a45823361c460c5735Fc984",
-    "bytecodeHash": "0x6427573887b655b3adb88ad3c5fbd84aaf8c78429a4394e6314a7447e9e3a70f",
+    "bytecodeHash": "0x010000e9235de2012d8a55635778a6e713af014ea1b8ec9cf7cd870f1b92bdeb",
     "constructorArguments": [
       "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
       true
-    ]
+    ],
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lockStatus": "LOCKED"
   },
   "AppImpl": {
     "contractName": "App",
@@ -124,7 +138,11 @@
       1,
       "0xE7e494707cDA8f3767d45EFB6187440d64a471B4"
     ],
-    "implementation": "0xBF3773B6a2B4ac8c1D3e38B6f362bD4B74398b6C"
+    "implementation": "0xBF3773B6a2B4ac8c1D3e38B6f362bD4B74398b6C",
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10000,
+    "implBytecodeHash": "0x010008316245ddac0e9789a6492ff8d599a5ee8d95bac82feba2b7fec271bb5d"
   },
   "AccountBeacon": {
     "contractName": "Beacon",
@@ -136,7 +154,11 @@
       1,
       "0xEE68eFA6E190d9660Ac9de06A46f4Fa2BE967a2B"
     ],
-    "implementation": "0x6b7CD0beC10f8F7D3ECD8159f978a42ab97Ac4cA"
+    "implementation": "0x6b7CD0beC10f8F7D3ECD8159f978a42ab97Ac4cA",
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10002,
+    "implBytecodeHash": "0x010009e7bc8de2c65bc441d92c9c3489065e5f7a42911c9bab9d0c9e643c25d9"
   },
   "FeedBeacon": {
     "contractName": "Beacon",
@@ -148,7 +170,11 @@
       1,
       "0xD2545381D7C71365ce4ec2D23C0f93783F10D236"
     ],
-    "implementation": "0x35c283825A8157362A1E2e2986C7E4ce2A9B742b"
+    "implementation": "0x35c283825A8157362A1E2e2986C7E4ce2A9B742b",
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "implBytecodeHash": "0x010012e169a8a9d84bc5f1a23d1d795fd3f5a65a85b042ec7d28f56a4e15999e"
   },
   "GraphBeacon": {
     "contractName": "Beacon",
@@ -160,7 +186,11 @@
       1,
       "0x5BB20A05c3632253D3a857e82f876EdA4F867D92"
     ],
-    "implementation": "0xf1E38F8C92Ef37585BceF08FbD59e64f5a4B1871"
+    "implementation": "0xf1E38F8C92Ef37585BceF08FbD59e64f5a4B1871",
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "implBytecodeHash": "0x01000b750b0b373c5a40ede6620146a69c27bb13eaab9a9dfaaa9d0ed2cdac35"
   },
   "GroupBeacon": {
     "contractName": "Beacon",
@@ -172,7 +202,11 @@
       1,
       "0x5975911600f6E9c8EAF284a5e8EB719fD3A9E5b1"
     ],
-    "implementation": "0x39aAfc30684956BC872E6109877650817Da74b5F"
+    "implementation": "0x39aAfc30684956BC872E6109877650817Da74b5F",
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "implBytecodeHash": "0x01000c4da12cd1b2c976c4e0890dde5eed341afd7f6ab24da0d87ce334ec1449"
   },
   "NamespaceBeacon": {
     "contractName": "Beacon",
@@ -184,7 +218,11 @@
       1,
       "0x701E3f4553D11978dC36163FEcBB1a327C6a2CFE"
     ],
-    "implementation": "0xe3afBf23d2054e13A1c0373061945b8cc024B968"
+    "implementation": "0xe3afBf23d2054e13A1c0373061945b8cc024B968",
+    "owner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "implBytecodeHash": "0x010014d3613b11cbecc120b975baae6d7bf21384b62d3499f4b6571ba7af9ece"
   },
   "AccessControlFactory": {
     "name": "AccessControlFactory",
@@ -197,7 +235,13 @@
     ],
     "address": "0x0d028419c270C2d366929f459418a4905D1B778F",
     "implementation": "0x2c87697FACd319959BEA999dd2cC7d27342F3554",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100009bc5e03a9d6dbc17603b260f101a56edb4bf3813c234ec0902fc05871a",
+    "proxyAdminOwnerType": "EOA"
   },
   "AccountFactory": {
     "name": "AccountFactory",
@@ -210,7 +254,12 @@
     ],
     "address": "0x26C7fd63B06deb4F9E4B5955D540767b9Ac7bbaa",
     "implementation": "0xE238cEFc68F9CD55061a8Ab7E339cF9178dFf55B",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xa36Ba0Fd8cD35266A5E6CEdfB7E969BeEED32d64",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": true,
+    "implBytecodeHash": "0x0100013fecb801d0a470f042e48e5716171db31795d00ed6ce66549993279636",
+    "proxyAdminOwnerType": "contract"
   },
   "AppFactory": {
     "name": "AppFactory",
@@ -223,7 +272,13 @@
     ],
     "address": "0xB3b7502C47E16a1E3c6d660b73006f45Ec327B0B",
     "implementation": "0x7599371450F2D8e0d47a9A1cceba263c07326500",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100012959d510e16f88f996e427e147a2076c10571d02c7fd38399161162e23",
+    "proxyAdminOwnerType": "EOA"
   },
   "FeedFactory": {
     "name": "FeedFactory",
@@ -236,7 +291,13 @@
     ],
     "address": "0x591c6e036a6bC92C6bF0d1dB991D06E74C2B9a6A",
     "implementation": "0xB86fD4e2e4B6497Be2124060E8876F6e2270D517",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100018f9fb058b9904ed7a35e8ef8a06d4145e472e4da91176b41909e90987f",
+    "proxyAdminOwnerType": "EOA"
   },
   "GraphFactory": {
     "name": "GraphFactory",
@@ -249,7 +310,13 @@
     ],
     "address": "0x837E95c3A69Cd6efa3eCDE87A3a07801AAB25Ba0",
     "implementation": "0x6D47B89d2b42680091C71c2B518e497727D60a5A",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100018f400567035955df35dae5f2c5a6f3cf39a8f933b5cc9a0f19d4b79e43",
+    "proxyAdminOwnerType": "EOA"
   },
   "GroupFactory": {
     "name": "GroupFactory",
@@ -262,7 +329,13 @@
     ],
     "address": "0x9810C41e805164f30b58395b2Af976B3229b0CE6",
     "implementation": "0xd789934b2200ac1fC54Ba89fa24E2aE7BCEf6Be5",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010001910c4a1821d9e322fa4ecae90b94aef9ec31f2601a6b4006eaf686ccbb",
+    "proxyAdminOwnerType": "EOA"
   },
   "NamespaceFactory": {
     "name": "NamespaceFactory",
@@ -275,7 +348,13 @@
     ],
     "address": "0x3155ccbeefbA266a4B6060fB1F9d4b8591d1De3F",
     "implementation": "0x840C2394546C410AAe6D14D127CF8f14B5ed041C",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010001e171d1591de05bb735d42ea8bae8cda712945ea8e69a6137afaae32690",
+    "proxyAdminOwnerType": "EOA"
   },
   "LensFactory": {
     "name": "LensFactory",
@@ -288,25 +367,76 @@
     ],
     "address": "0x1fa75D26819Ac733bf7B1C1B36C3F8aEF32d2Cc0",
     "implementation": "0xd28bBAd2Cd8047d09cEB72FDE7f372e89DC3525F",
-    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755"
+    "bytecodeHash": "0100013707b8f7501be6433983f2351501bf5403d0bf6192a6aa30b041e18755",
+    "proxyAdmin": "0xa36Ba0Fd8cD35266A5E6CEdfB7E969BeEED32d64",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": true,
+    "implBytecodeHash": "0x01000adde0971c1be05ffeaa09a4e0cecb0daef50614fb6315f335a439423c2e",
+    "proxyAdminOwnerType": "contract",
+    "proxyAdminOwner": "0xa36Ba0Fd8cD35266A5E6CEdfB7E969BeEED32d64"
   },
   "LensGlobalFeed": {
     "name": "LensGlobalFeed",
     "contractName": "Feed",
     "contractType": 3,
-    "address": "0xcB5E109FFC0E15565082d78E68dDDf2573703580"
+    "address": "0xcB5E109FFC0E15565082d78E68dDDf2573703580",
+    "proxyAdmin": "0x779637148bF919fcAA886b154033375e0E58E5F3",
+    "implementation": "0x35c283825A8157362A1E2e2986C7E4ce2A9B742b",
+    "bytecodeHash": "0x01000155f66491daa99fa97065b64ee60faa4153f0b1a805839a1922c55aa130",
+    "proxyType": "BeaconProxy",
+    "proxyAdminIsContract": true,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beacon": "0xe8Cb8DA8d2Ea4C5A40E6d8D4F3181AfdB9409D66",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "autoUpgrade": true,
+    "accessControl": "0x873aa7B4E8000dE3cdF27D33D9662eB0542bddB6",
+    "accessControlOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "accessControlType": "OwnerAdminOnlyAccessControl",
+    "implBytecodeHash": "0x010012e169a8a9d84bc5f1a23d1d795fd3f5a65a85b042ec7d28f56a4e15999e",
+    "proxyAdminOwnerType": "contract"
   },
   "LensGlobalGraph": {
     "name": "LensGlobalGraph",
     "contractName": "Graph",
     "contractType": 3,
-    "address": "0x433025d9718302E7B2e1853D712d96F00764513F"
+    "address": "0x433025d9718302E7B2e1853D712d96F00764513F",
+    "proxyAdmin": "0x5eb4A88e061205Be727E7c8EEFD48EA14774aCb0",
+    "implementation": "0xf1E38F8C92Ef37585BceF08FbD59e64f5a4B1871",
+    "bytecodeHash": "0x01000155f66491daa99fa97065b64ee60faa4153f0b1a805839a1922c55aa130",
+    "proxyType": "BeaconProxy",
+    "proxyAdminIsContract": true,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beacon": "0x3195c60A6869C3614949EE02eE21116891CF6c17",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "autoUpgrade": true,
+    "accessControl": "0x46946a7A6535041Ae43d3AEEEca7fF89D8EDE7E8",
+    "accessControlOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "accessControlType": "OwnerAdminOnlyAccessControl",
+    "implBytecodeHash": "0x01000b750b0b373c5a40ede6620146a69c27bb13eaab9a9dfaaa9d0ed2cdac35",
+    "proxyAdminOwnerType": "contract"
   },
   "LensGlobalNamespace": {
     "name": "LensGlobalNamespace",
     "contractName": "Namespace",
     "contractType": 3,
-    "address": "0x1aA55B9042f08f45825dC4b651B64c9F98Af4615"
+    "address": "0x1aA55B9042f08f45825dC4b651B64c9F98Af4615",
+    "proxyAdmin": "0x576Cac536B1D1Cf0c6aB0f8d711aa79539F155CE",
+    "implementation": "0xe3afBf23d2054e13A1c0373061945b8cc024B968",
+    "bytecodeHash": "0x01000155f66491daa99fa97065b64ee60faa4153f0b1a805839a1922c55aa130",
+    "proxyType": "BeaconProxy",
+    "proxyAdminIsContract": true,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beacon": "0xD381e0d1500bA1bddc2593CB8044eff3a68AB486",
+    "beaconOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "beaconDefaultVersion": 10001,
+    "autoUpgrade": true,
+    "accessControl": "0x69ED620464Ea22c6a00bd09C97AA002075038aB9",
+    "accessControlOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "accessControlType": "OwnerAdminOnlyAccessControl",
+    "implBytecodeHash": "0x010014d3613b11cbecc120b975baae6d7bf21384b62d3499f4b6571ba7af9ece",
+    "proxyAdminOwnerType": "contract"
   },
   "AccessControlFactoryImpl": {
     "contractName": "AccessControlFactory",
@@ -416,7 +546,12 @@
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
     "implementation": "0x4596724eA4bA9Cac81CDcD0d1ca860a3a92248b5",
     "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-    "lensCreate2PreSalt": "lens.contract.ActionHub"
+    "lensCreate2PreSalt": "lens.contract.ActionHub",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010006cd37e8116ecfb153d64729eaace5c7e8aea3dfeb634ee1868915c34de1",
+    "proxyAdminOwnerType": "EOA"
   },
   "LensFeesImpl": {
     "name": "LensFeesImpl",
@@ -437,7 +572,12 @@
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
     "implementation": "0xE23292bEA6bb5874A839a7E1FfB7301657353187",
     "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-    "lensCreate2PreSalt": "lens.contract.LensFees"
+    "lensCreate2PreSalt": "lens.contract.LensFees",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100003f061fd7d7ae8d5f11c374ec6a6db99871ca367c4e876f604f622ba768",
+    "proxyAdminOwnerType": "EOA"
   },
   "TippingAccountActionImpl": {
     "contractName": "TippingAccountAction",
@@ -459,7 +599,12 @@
     "lensCreate2PreSalt": "lens.contract.TippingAccountAction",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x01000243838fab50056ed45e5aea999346e2a63d2e5a3bd1e8610f51b5cbe6a3",
+    "proxyAdminOwnerType": "EOA"
   },
   "TippingPostActionImpl": {
     "contractName": "TippingPostAction",
@@ -481,7 +626,12 @@
     "lensCreate2PreSalt": "lens.contract.TippingPostAction",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x01000251e092a6a6b3c436a3139f50481bec608db733c90615100454d0e75925",
+    "proxyAdminOwnerType": "EOA"
   },
   "SimpleCollectActionImpl": {
     "contractName": "SimpleCollectAction",
@@ -503,7 +653,12 @@
     "lensCreate2PreSalt": "lens.contract.SimpleCollectAction",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x01000563f33301196cca12320f15bebc291856bda025107acba2a93d79b747ca",
+    "proxyAdminOwnerType": "EOA"
   },
   "AccountBlockingRuleImpl": {
     "name": "AccountBlockingRuleImpl",
@@ -524,7 +679,12 @@
     "lensCreate2PreSalt": "lens.contract.AccountBlockingRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100022d3fbba6dd203f95e4584213cebe9581bcf5679f9bfa28eb4135f559f9",
+    "proxyAdminOwnerType": "EOA"
   },
   "AdditionRemovalPidGroupRuleImpl": {
     "name": "AdditionRemovalPidGroupRuleImpl",
@@ -545,7 +705,12 @@
     "lensCreate2PreSalt": "lens.contract.AdditionRemovalPidGroupRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010001cfe7d947face04740d52d4275cde020e090bc8602d3a2fce361709a3fd",
+    "proxyAdminOwnerType": "EOA"
   },
   "BanMemberGroupRuleImpl": {
     "name": "BanMemberGroupRuleImpl",
@@ -566,7 +731,12 @@
     "lensCreate2PreSalt": "lens.contract.BanMemberGroupRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010003b3e06083dd2f2f1f00463117dfa37a1c87b5e30365f24d6d25e47fd6a4",
+    "proxyAdminOwnerType": "EOA"
   },
   "GroupGatedFeedRuleImpl": {
     "name": "GroupGatedFeedRuleImpl",
@@ -587,7 +757,12 @@
     "lensCreate2PreSalt": "lens.contract.GroupGatedFeedRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010001a5dd18b3bfbd985b04ad6ab06a52d3a49b3e3e4288cf8f3933445a517d",
+    "proxyAdminOwnerType": "EOA"
   },
   "UsernameLengthNamespaceRuleImpl": {
     "name": "UsernameLengthNamespaceRuleImpl",
@@ -608,7 +783,12 @@
     "lensCreate2PreSalt": "lens.contract.UsernameLengthNamespaceRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100020b2e44c64e5badde1714869539df5bab6bc570e66dc11b9bf58e02ee0e",
+    "proxyAdminOwnerType": "EOA"
   },
   "UsernameReservedNamespaceRuleImpl": {
     "name": "UsernameReservedNamespaceRuleImpl",
@@ -629,7 +809,12 @@
     "lensCreate2PreSalt": "lens.contract.UsernameReservedNamespaceRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010002a9f9cd83b054ec0688b20e3aa29961b036af6ddc1ec73391c7198adf12",
+    "proxyAdminOwnerType": "EOA"
   },
   "UsernameSimpleCharsetNamespaceRuleImpl": {
     "name": "UsernameSimpleCharsetNamespaceRuleImpl",
@@ -650,7 +835,12 @@
     "lensCreate2PreSalt": "lens.contract.UsernameSimpleCharsetNamespaceRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010001599f9b7baa17ff00d9e593dcb798099a536250e67dca35bf528c28d7ed",
+    "proxyAdminOwnerType": "EOA"
   },
   "SimplePaymentFeedRuleImpl": {
     "contractName": "SimplePaymentFeedRule",
@@ -670,7 +860,12 @@
     "lensCreate2PreSalt": "lens.contract.SimplePaymentFeedRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010003334e2a747339505d6b451bb6a6df098bfe24cb91818187bb4fdf21be59",
+    "proxyAdminOwnerType": "EOA"
   },
   "TokenGatedFeedRuleImpl": {
     "name": "TokenGatedFeedRuleImpl",
@@ -691,7 +886,12 @@
     "lensCreate2PreSalt": "lens.contract.TokenGatedFeedRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010002256bc9d9acc49b146c2f668b85302755e1c3773b58e50fda55713f5a8d",
+    "proxyAdminOwnerType": "EOA"
   },
   "TokenGatedGraphRuleImpl": {
     "name": "TokenGatedGraphRuleImpl",
@@ -712,7 +912,12 @@
     "lensCreate2PreSalt": "lens.contract.TokenGatedGraphRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100021f8e7da4dfe40a92f267180296095caee7eebedb90ffd19f23c5666d0c",
+    "proxyAdminOwnerType": "EOA"
   },
   "FollowersOnlyPostRuleImpl": {
     "name": "FollowersOnlyPostRuleImpl",
@@ -733,7 +938,12 @@
     "lensCreate2PreSalt": "lens.contract.FollowersOnlyPostRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010002b547bbdf274ea30edc7a2ad6e06964625d657e14e4f5450285b197d69a",
+    "proxyAdminOwnerType": "EOA"
   },
   "GroupGatedGraphRuleImpl": {
     "contractName": "GroupGatedGraphRule",
@@ -753,7 +963,12 @@
     "lensCreate2PreSalt": "lens.contract.GroupGatedGraphRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010001d5d19bbfd1e792b80bb6506d59e513029ffa576e16f801d5f842f4d464",
+    "proxyAdminOwnerType": "EOA"
   },
   "SimplePaymentFollowRuleImpl": {
     "contractName": "SimplePaymentFollowRule",
@@ -773,7 +988,12 @@
     "lensCreate2PreSalt": "lens.contract.SimplePaymentFollowRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010002c7d27f6670806f244caa5cd804e13157f7a34e9fdb240084d59af83ab3",
+    "proxyAdminOwnerType": "EOA"
   },
   "TokenGatedFollowRuleImpl": {
     "contractName": "TokenGatedFollowRule",
@@ -793,7 +1013,12 @@
     "lensCreate2PreSalt": "lens.contract.TokenGatedFollowRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100019d1cb95e3f008697097c6a9dc1a55925c8876522aaef20b604dc02aff6",
+    "proxyAdminOwnerType": "EOA"
   },
   "MembershipApprovalGroupRuleImpl": {
     "contractName": "MembershipApprovalGroupRule",
@@ -813,7 +1038,12 @@
     "lensCreate2PreSalt": "lens.contract.MembershipApprovalGroupRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010002a32b8ca7bbc92be9a6530d14546a6f1996942d167e06fa28e27a8436dd",
+    "proxyAdminOwnerType": "EOA"
   },
   "SimplePaymentGroupRuleImpl": {
     "contractName": "SimplePaymentGroupRule",
@@ -833,7 +1063,12 @@
     "lensCreate2PreSalt": "lens.contract.SimplePaymentGroupRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100032f90907a81767064af305c44ddb87aa6c5916f2a23e6b58da2fb026a0d",
+    "proxyAdminOwnerType": "EOA"
   },
   "TokenGatedGroupRuleImpl": {
     "contractName": "TokenGatedGroupRule",
@@ -853,7 +1088,12 @@
     "lensCreate2PreSalt": "lens.contract.TokenGatedGroupRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100025de19d0db556b0c64e7dfec465cf0ea1b3b9ded0302bd845455ca6626e",
+    "proxyAdminOwnerType": "EOA"
   },
   "TokenGatedNamespaceRuleImpl": {
     "contractName": "TokenGatedNamespaceRule",
@@ -873,7 +1113,12 @@
     "lensCreate2PreSalt": "lens.contract.TokenGatedNamespaceRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x01000245e1021cc33b60fe869738ce5f4c1ad913bed5224c1bfaf559c8b4fe90",
+    "proxyAdminOwnerType": "EOA"
   },
   "UsernamePricePerLengthNamespaceRuleImpl": {
     "contractName": "UsernamePricePerLengthNamespaceRule",
@@ -893,7 +1138,12 @@
     "lensCreate2PreSalt": "lens.contract.UsernamePricePerLengthNamespaceRule",
     "initializerCalldata": "0xf399e22e000000000000000000000000f129e522edf091d6d66f28429af41a8f030aad4c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000",
     "owner": "0xf129e522Edf091d6D66f28429aF41A8F030aaD4c",
-    "metadataURI": ""
+    "metadataURI": "",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x010003a1de222c705607b2ddf722662d227ce4f21298a493f65f29e66b0a420e",
+    "proxyAdminOwnerType": "EOA"
   },
   "GroupFactoryImpl": {
     "contractName": "GroupFactory",
@@ -918,9 +1168,14 @@
     "contractType": 4,
     "address": "0x1cCf0A481e3824E271C4b89a79E00c838D4A465B",
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
-    "implementation": "0x38Dc515EEaaeb0160Ff9F0CA4d326Dd04Ba32791",
-    "proxyAdmin": "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
-    "lensCreate2PreSalt": "lens.contract.LensNativePaymentHelper"
+    "implementation": "0xf14155b9F77E2302A8a849038B94891F98909C7b",
+    "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "lensCreate2PreSalt": "lens.contract.LensNativePaymentHelper",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x0100004de0da6148331eb239c0d9d93abcec5e55e16f5e90c088dc3a24a9cf2d",
+    "proxyAdminOwnerType": "EOA"
   },
   "TokenDistributorImpl": {
     "contractName": "TokenDistributor",
@@ -938,6 +1193,12 @@
     "implementation": "0xC76589dcaaf4e4A2B83EF0f1cb6514e8fB5Db958",
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
     "proxyAdmin": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
-    "lensCreate2PreSalt": "lens.contract.TokenDistributor"
+    "lensCreate2PreSalt": "lens.contract.TokenDistributor",
+    "owner": "0xDA1F6A04fDF31b9B9AD4F6E4cc85Dcf1D5365DA6",
+    "proxyType": "EIP1967",
+    "proxyAdminIsContract": false,
+    "proxyAdminOwner": "0xaAFa8246dE0ae0e7b81125db325e9B39BED43B49",
+    "implBytecodeHash": "0x01000257dc2971b2e7eba280f6a411cb4aceeef8841141a457f62f5c83e00b0d",
+    "proxyAdminOwnerType": "EOA"
   }
 }
