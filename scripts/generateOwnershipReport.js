@@ -125,7 +125,7 @@ function generateOwnershipTable() {
 // ============================================================
 function generateProxyTable() {
   const headers = [
-    'Contract', 'Type', 'ProxyType', 'ProxyAdmin', 'ProxyAdminOwner',
+    'Contract', 'Type', 'Address', 'ProxyType', 'ProxyAdmin', 'ProxyAdminOwner',
     'Implementation', 'ImplBytecodeHash',
     'Beacon', 'BeaconOwner', 'BeaconVersion', 'AutoUpgrade'
   ];
@@ -135,6 +135,7 @@ function generateProxyTable() {
     .map(c => [
       c.name,
       ContractTypeNames[c.contractType] || 'Unknown',
+      c.address || '-',
       c.proxyType || '-',
       c.proxyAdmin || '-',
       c.proxyAdminOwner || '-',
