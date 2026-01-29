@@ -1,128 +1,96 @@
-```
-                                              @@@@@@@@@
-                                        @@@@@@@@@@@@@@@@@@@@@
-                                    @@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                                @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-              @@@@@@@@@@@       @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@
-        @@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@
-      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@              @@@@@@@@@@@@@@              @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@          @@@@@@@   @@@@@@@@@         @@@@@@    @@@@@@@@@@@@@@@@@@@@@@@@@
-  @@@@@@@@@@@@@@@@@@@@@@  @@        @@@@@@@@  @@@@@@   @       @@@@@@@@   @@@@@@@@@@@@@@@@@@@@@@
-    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@            @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-                                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-```
-
 # Lens Protocol V3
+
+Lens Protocol V3 is the modular evolution of the Lens social graph, designed with a modular architecture centered around Accounts, Primitives, Actions, and Rules.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) & [Yarn](https://yarnpkg.com/)
+- [Foundry](https://getfoundry.sh/) (for `forge` commands)
 
 ## Setup
 
-### 1. Clone the Repository
-
-```
-git clone git@github.com:lens-protocol/lens-v3.git
-```
-
-or
-
-```
+### 1. Clone & Install
+```bash
 git clone https://github.com/lens-protocol/lens-v3.git
-```
-
-### 2. Install dependencies
-
-```
-yarn
-```
-
-### 3. Compile
-
-To compile the project to be ready for a zkSync's zkEVM deployment, run:
+cd lens-v3
+yarn install
 
 ```
+
+### 2. Compile
+
+You can compile for standard development or specifically for zkSync deployment.
+
+```bash
+# Standard Compile
 npx hardhat compile
-```
 
-or
-
-```
+# zkSync Deployment Compile
 forge b --zksync --suppress-warnings assemblycreate
-```
-
-### 4. Test
 
 ```
+
+### 3. Test
+
+```bash
 yarn coverage:report:filtered -vvv
-```
-
-### 5. Deploy
-
-Fill the .env with your private key, your .env should look like this:
 
 ```
-WALLET_PRIVATE_KEY=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+
+### 4. Deploy
+
+1. **Configure Environment:**
+Create a `.env` file and add your private key:
+```bash
+WALLET_PRIVATE_KEY=0xYourPrivateKeyHere
+
 ```
 
-Make sure your wallet has enough GRASS on Lens Testnet Network to deploy the contracts.
 
-Run the following command, which deploys the full protocol with all present Rules & Actions, and also the Global Feed, Graph, and Username primitives.
-
-```
+2. **Fund Your Wallet:**
+Get **GRASS** tokens from the [Lens Faucet](https://lens.xyz/docs/chain/using-lens-chain).
+3. **Run Deployment:**
+```bash
 yarn run deploy
+
 ```
 
-## Lens Core Structure
 
-The concept of Lens V3 is based on the following assumptions:
-- Every EVM account is a Profile now (in Lens V2 a profile was an NFT)
-- Accounts can be smart wallets (and in Lens Dashboard they are by default) and support bespoke Lens Social features (like account managers, etc.)
-- The Protocol itself is a set of primitives (Feed, Graph, Group, Namespace) which are not necessarily connected with each other and each might be an entry point (in Lens V2 everything was all in the same LensHub contract which was an entry point for everything)
-- The Protocol can be extended by developing new flavors of the primitives, Actions and Rules that can be applied to these primitives
-- Action is assumed to be any contract that interacts with The Protocol
-- Rule is seen more as a restrictive extension of the Protocol
-- Our Primitive implementations (flavors) are RuleBased, so they all support adding Rules (with AND/OR chaining) and process them on set interactions
 
-### Primitives
+---
+
+## Architecture Overview
+
+Lens V3 moves away from the monolithic design of V2 (where everything was in `LensHub`) to a modular system based on these assumptions:
+
+* **Profiles are Accounts:** Every EVM account is now a Profile (unlike V2, where profiles were NFTs).
+* **Smart Wallets:** Accounts are designed to be smart wallets by default.
+* **Decoupled Primitives:** The Protocol is a set of distinct primitives (**Feed, Graph, Group, Namespace**) that are not strictly coupled.
+* **Extensibility:**
+* **Actions:** Contracts that interact with the protocol.
+* **Rules:** Restrictive logic (AND/OR chaining) applied to primitives.
+
+
 
 ## Project Structure
 
-The `contracts/` folder is divided into several main folders: `actions/`, `core/`, `extensions/`, `migration/` and `rules/`.
-In the future, some of these folders might live under its own repository; during this early stages of Lens Protocol V3 development they coexist in this repo.
+The repository is organized into the following core directories:
 
-### Core
+```text
+contracts/
+├── actions/      # Example implementations of Lens Actions
+├── core/         # Base Primitives (Feed, Group, Graph, Namespace)
+├── extensions/   # Implementations for Lens Dashboard & Social Protocol
+├── migration/    # Unsafe primitives used only for initial migration
+└── rules/        # Example implementations of Lens Rules
 
-Contains the main contracts that make up the base Lens Protocol. These contracts are envisioned as non-opinionated and flexible, allowing for a wide range of use cases.
-They already are "Lens-Flavoured", but the "Core"-core contracts are still split separately as FeedCode, GroupCore, GraphCore, NamespaceCore.
-We expect developers to build upon them, inherit from them, extend the functionality, and be creative with them.
+```
 
-### Migration
+### Component Details
 
-Contains modified versions of the Feed and Graph primitives, which do not do any checks and just fill up the storage during the initial migration.
-The migration would be run by us and nobody else could access the network during that time (so it's assumed to be safe to have no access control or checks).
-
-### Extensions
-
-Contains the bespoke implementations of contracts for Lens Dashboard and initial version of Lens Social Protocol.
-These contracts are opinionated and are designed to achieve the best experience while using the Lens Dashboard.
-These also serve as examples of how developers could build on top of the Core contracts.
-
-### Rules
-
-Contains contracts implementing Lens Rules. These also serve as examples of how developers could build their own Rules.
-
-### Actions
-
-Contains contracts implementing Lens Actions. These also serve as examples of how developers could build their own Actions.
+* **Core:** Non-opinionated base contracts (`FeedCode`, `GroupCore`, etc.) meant to be extended.
+* **Extensions:** Opinionated contracts designed specifically for the Lens Dashboard experience.
+* **Migration:** Simplified versions of primitives used strictly for data migration (no access control).
+```
+```
