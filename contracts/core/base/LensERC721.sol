@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
-// Copyright (C) 2024 Lens Labs. All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-only
 // Modified from OpenZeppelin's v4.9.0 contracts
 pragma solidity ^0.8.26;
 

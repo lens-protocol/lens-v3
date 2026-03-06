@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
 # For mainnet run:
 #  ./start-env mainnet
 # For testnet run:

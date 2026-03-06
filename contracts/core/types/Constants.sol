@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
-// Copyright (C) 2024 Lens Labs. All Rights Reserved.
+// SPDX-License-Identifier: GPL-3.0-only
 pragma solidity ^0.8.26;
 
 // 100.00% represented as Basis Points, each Basis Point is 0.01%

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { deployLensContract, ContractType, ContractInfo, loadContractAddressFromAddressBook, loadContractFromAddressBook, saveContractToAddressBook } from './lensUtils';
 import { getWallet } from './utils';
 import * as hre from 'hardhat';

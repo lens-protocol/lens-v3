@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import deployImplementations from './deployImplementations';
 import deployFactories from './deployFactories';
 import { deployLensPrimitives, deployLensAccessControl, deployLensActionHub } from './deployAux';

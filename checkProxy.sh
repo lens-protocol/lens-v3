@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+
 if [ -z "$1" ]; then
   echo "Usage: $0 <proxy-address>"
   exit 1

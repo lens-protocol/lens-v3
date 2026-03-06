@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
 ### START TEMPORAL FIX FOR COVERAGE - PART I ###
 mv 'contracts/migration/WhitelistedAddresses.sol' 'contracts/migration/WhitelistedAddresses.sol.bak' 
 echo 'pragma solidity ^0.8.26; import "contracts/core/types/Errors.sol"; library WhitelistedAddresses { function requireWhitelisted(address account) internal pure { require(isWhitelisted(account), Errors.InvalidMsgSender()); } function isWhitelisted(address account) internal pure returns (bool) { return account == address(0x76Ba7483A15F4bA358D38eC14B80bCeB7193A190); } }' > 'contracts/migration/WhitelistedAddresses.sol'
