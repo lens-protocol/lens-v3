@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
 # To generate the filtered coverage report run the following command:
 #                                                   
 #   yarn coverage:report:filtered -vvv

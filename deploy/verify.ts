@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 // function deployAccount(
 //     address owner, 0xB2b033701F9FbcF51ce3e4866C6605aCE3a4f3C7
 //     string calldata metadataURI, "https://devnet.irys.xyz/GLzhFVr9nAQ7svCzJds2TNiJXeCBf3NVgT82XZuBUsch"

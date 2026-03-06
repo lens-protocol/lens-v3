@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { HardhatUserConfig } from 'hardhat/config';
 
 import '@matterlabs/hardhat-zksync';

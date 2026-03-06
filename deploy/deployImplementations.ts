@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { deployLensContract, ContractType, ContractInfo } from './lensUtils';
 
 export default async function deployImplementations(DEPLOYING_MIGRATION: boolean): Promise<void> {

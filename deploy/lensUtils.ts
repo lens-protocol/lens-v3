@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import fs from 'fs';
 import { deployContract, getProvider, getWallet } from './utils';
 import { keccak256, toUtf8Bytes, Wallet } from 'ethers';

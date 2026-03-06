@@ -3,7 +3,7 @@
   "description": "The lens v3 contracts",
   "private": true,
   "author": "avara",
-  "license": "UNLICENSED. Copyright (C) 2024 Lens Labs. All Rights Reserved.",
+  "license": "GPL-3.0-only",
   "scripts": {
     "upgrade:mainnet:upgradeAccountBeacon": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradeAccountBeacon.ts --network lensMainnet",
     "upgrade:mainnet:upgradePrimitivesBeacons": "hardhat compile && DEPLOY_FR=true hardhat deploy-zksync --script upgradePrimitivesBeacons.ts --network lensMainnet",

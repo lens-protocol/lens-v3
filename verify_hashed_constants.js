@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 const fs = require('fs');
 const path = require('path');
 const { keccak256, toUtf8Bytes } = require('ethers'); // Import directly in ethers v6.x

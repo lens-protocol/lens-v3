@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+
 source .env
 
 # Define factories as key-value pairs in the format "name:address"

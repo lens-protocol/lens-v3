@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { Deployer } from '@matterlabs/hardhat-zksync';
 import { ContractType, ContractInfo, saveContractToAddressBook } from './lensUtils';
 import { deployContract, getWallet, LOCAL_RICH_WALLETS } from './utils';

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { Provider, Wallet } from 'zksync-ethers';
 import * as hre from 'hardhat';
 import { Deployer } from '@matterlabs/hardhat-zksync';

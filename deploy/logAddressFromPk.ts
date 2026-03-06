@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { ethers } from 'ethers';
 import { getWallet } from './utils';
 
