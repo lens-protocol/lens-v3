@@ -109,6 +109,11 @@ const contracts: ContractInfo[] = [
     contractType: ContractType.Rule,
     constructorArguments: [],
   },
+  {
+    contractName: 'WhitelistedSignersNamespaceRule',
+    contractType: ContractType.Rule,
+    constructorArguments: [],
+  }
 ];
 
 export async function deployRules(rulesOwner: string): Promise<void> {
@@ -131,3 +136,22 @@ export async function deployRulesImplsAndUpgrade(proxyAdminWallet: Wallet): Prom
     await deployImplAndUpgradeTransparentProxy(proxyAdminWallet, contract);
   }
 }
+
+async function deploy() {
+  const rulesOwner = process.env.RULES_OWNER;
+  if (!rulesOwner) {
+    throw new Error('RULES_OWNER not found in environment variables');
+  }
+  await deployRules(rulesOwner);
+}
+
+if (require.main === module) {
+  deploy()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
+
+export default deploy;

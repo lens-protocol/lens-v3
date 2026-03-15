@@ -195,6 +195,11 @@
     ],
     "address": "0x5eb740362F17815Ae67EBcA6420Cbb350f714C3E"
   },
+  "AccessControlFactoryImpl": {
+    "contractName": "AccessControlFactory",
+    "contractType": 0,
+    "address": "0xaA8Ab6A278131269036C9C895F238aEeCA3b0e15"
+  },
   "AccountFactory": {
     "name": "AccountFactory",
     "contractName": "TransparentUpgradeableProxy",
@@ -205,6 +210,11 @@
       "0x"
     ],
     "address": "0xE55C2154d1766a9C6319dBD989C89867b0457358"
+  },
+  "AccountFactoryImpl": {
+    "contractName": "AccountFactory",
+    "contractType": 0,
+    "address": "0xc7C012486602805Bf2868c723f92738854479249"
   },
   "AppFactory": {
     "name": "AppFactory",
@@ -217,6 +227,11 @@
     ],
     "address": "0xc650f3CcfF7801F5e95a99B99AAbD2f6319d38ed"
   },
+  "AppFactoryImpl": {
+    "contractName": "AppFactory",
+    "contractType": 0,
+    "address": "0x8A8751AE96B24bfF0cC32C888d27D9297eD72d38"
+  },
   "FeedFactory": {
     "name": "FeedFactory",
     "contractName": "TransparentUpgradeableProxy",
@@ -227,6 +242,11 @@
       "0x"
     ],
     "address": "0xb8169FB0FaB6a699854fd4fD2457b990988E1372"
+  },
+  "FeedFactoryImpl": {
+    "contractName": "FeedFactory",
+    "contractType": 0,
+    "address": "0x42479ff8cE8aFE9bDBa6282a79aF8E7A0276FC8a"
   },
   "GraphFactory": {
     "name": "GraphFactory",
@@ -239,6 +259,11 @@
     ],
     "address": "0x7cbB07bD2E80A27c59Ed707B79024cC5e54dEaF0"
   },
+  "GraphFactoryImpl": {
+    "contractName": "GraphFactory",
+    "contractType": 0,
+    "address": "0xBa4E17aa60B15c9bF5C6F7b8801b49aB1030d581"
+  },
   "GroupFactory": {
     "name": "GroupFactory",
     "contractName": "TransparentUpgradeableProxy",
@@ -250,6 +275,11 @@
     ],
     "address": "0xEF51808f8a2399282CDd156E897473b282998a29"
   },
+  "GroupFactoryImpl": {
+    "contractName": "GroupFactory",
+    "contractType": 0,
+    "address": "0x045EC0032F012300749bC245DD18894103607848"
+  },
   "NamespaceFactory": {
     "name": "NamespaceFactory",
     "contractName": "TransparentUpgradeableProxy",
@@ -260,6 +290,11 @@
       "0x"
     ],
     "address": "0xb69CBb69041a30216e2fe13E9700b32761b859C3"
+  },
+  "NamespaceFactoryImpl": {
+    "contractName": "NamespaceFactory",
+    "contractType": 0,
+    "address": "0x87F93A9601c5933b7f473F509dabB990087B1D00"
   },
   "AccountBlockingRuleImpl": {
     "name": "AccountBlockingRuleImpl",
@@ -879,5 +914,26 @@
     "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
     "proxyAdmin": "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
     "lensCreate2PreSalt": "lens.contract.TokenDistributor"
+  },
+  "WhitelistedSignersNamespaceRuleImpl": {
+    "name": "WhitelistedSignersNamespaceRuleImpl",
+    "contractName": "WhitelistedSignersNamespaceRule",
+    "contractType": 0,
+    "address": "0xb37c535Fdf6076f2fE5C423986de1C36e46d64a4",
+    "bytecodeHash": "010002631fc465d6ead18de639c94b270bbb44b0dabce1ca21e57073f911c77d",
+    "constructorArguments": []
+  },
+  "WhitelistedSignersNamespaceRule": {
+    "contractName": "TransparentUpgradeableProxy",
+    "contractType": 6,
+    "address": "0x7d9D74F82127913143dc9b8fDF04579D4BbB36fB",
+    "bytecodeHash": "0100013563c32f6591729c797a1eb4ea04ec4335149038fcdd57555dfad6e96c",
+    "constructorArguments": [
+      "0xb37c535Fdf6076f2fE5C423986de1C36e46d64a4",
+      "0xcB6C7b2E340D50701d45d55507f19A5cE5d72330",
+      "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "implementation": "0xb37c535Fdf6076f2fE5C423986de1C36e46d64a4",
+    "initializerCalldata": "0xf399e22e000000000000000000000000cb6c7b2e340d50701d45d55507f19a5ce5d7233000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000"
   }
 }

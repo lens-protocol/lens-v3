@@ -4,6 +4,7 @@ pragma solidity ^0.8.26;
 import {
     RuleSelectorChange,
     RuleChange,
+    RuleConfigurationChange,
     RuleProcessingParams,
     SourceStamp,
     KeyValue,
@@ -155,5 +156,44 @@ function _toRuleProcessingParamsArray(RuleProcessingParams memory ruleProcessing
 {
     RuleProcessingParams[] memory ret = new RuleProcessingParams[](1);
     ret[0] = ruleProcessingParams;
+    return ret;
+}
+
+function _toRuleSelectorChangeArray(RuleSelectorChange memory ruleSelectorChange)
+    pure
+    returns (RuleSelectorChange[] memory)
+{
+    RuleSelectorChange[] memory ret = new RuleSelectorChange[](1);
+    ret[0] = ruleSelectorChange;
+    return ret;
+}
+
+function _toRuleChangeArray(
+    address ruleAddress,
+    uint256 configSalt,
+    KeyValue[] memory ruleParams,
+    RuleSelectorChange memory ruleSelectorChange
+) pure returns (RuleChange[] memory) {
+    RuleChange[] memory ret = new RuleChange[](1);
+    ret[0] = RuleChange({
+        ruleAddress: ruleAddress,
+        configSalt: bytes32(configSalt),
+        configurationChanges: RuleConfigurationChange({configure: true, ruleParams: ruleParams}),
+        selectorChanges: _toRuleSelectorChangeArray(ruleSelectorChange)
+    });
+    return ret;
+}
+
+function _toRuleChangeArray(address ruleAddress, uint256 configSalt, KeyValue[] memory ruleParams)
+    pure
+    returns (RuleChange[] memory)
+{
+    RuleChange[] memory ret = new RuleChange[](1);
+    ret[0] = RuleChange({
+        ruleAddress: ruleAddress,
+        configSalt: bytes32(configSalt),
+        configurationChanges: RuleConfigurationChange({configure: true, ruleParams: ruleParams}),
+        selectorChanges: _emptyRuleSelectorChangeArray()
+    });
     return ret;
 }
